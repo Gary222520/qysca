@@ -1,0 +1,9 @@
+DROP DATABASE IF EXISTS qysca;
+CREATE DATABASE qysca;
+USE qysca;
+DROP TABLE IF EXISTS `example`;
+CREATE TABLE `example` (
+    `uuid` VARCHAR(255) NOT NULL PRIMARY KEY,
+    `number` INT NOT NULL UNIQUE,
+    `info` VARCHAR(100) NOT NULL
+);
