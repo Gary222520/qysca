@@ -1,22 +1,22 @@
 <template>
   <a-layout style="min-height: 100vh">
-    <a-layout-sider :collapsed="data.collapsed" :trigger="null" collapsible>
-      <a-menu class="menu" v-model:selectedKeys="data.selectedKeys" theme="light" mode="inline" @click="handleMenu">
-        <div class="title">
-          <img style="width: 40px" src="@/assets/logo_big.png" />
-          <span class="text" v-if="!data.collapsed">QYSCA</span>
-        </div>
+    <a-layout-sider :collapsed="data.collapsed" :trigger="null" collapsible style="background: #fff">
+      <div class="title">
+        <img style="width: 40px" src="@/assets/logo_big.png" />
+        <div class="title_text" v-if="!data.collapsed">QYSCA</div>
+      </div>
+      <a-menu v-model:selectedKeys="data.selectedKeys" theme="light" mode="inline" @click="handleMenu">
         <a-menu-item key="summary">
           <AppstoreOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ data.menu[0].breadcrumb }}</span>
+          <span>{{ data.menu[0].meta.breadcrumb }}</span>
         </a-menu-item>
         <a-menu-item key="scan">
           <SearchOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ data.menu[1].breadcrumb }}</span>
+          <span>{{ data.menu[1].meta.breadcrumb }}</span>
         </a-menu-item>
         <a-menu-item key="application">
           <ScheduleOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ data.menu[2].breadcrumb }}</span>
+          <span>{{ data.menu[2].meta.breadcrumb }}</span>
         </a-menu-item>
       </a-menu>
     </a-layout-sider>
@@ -26,7 +26,7 @@
         <menu-fold-outlined v-else class="trigger" @click="() => (data.collapsed = !data.collapsed)" />
       </a-layout-header>
       <a-layout-content class="content">
-        <router-view></router-view>
+        <router-view />
       </a-layout-content>
     </a-layout>
   </a-layout>
@@ -55,7 +55,7 @@ export default {
     const router = useRouter()
     const data = reactive({
       collapsed: false,
-      selectedKeys: [router.currentRoute.value.name],
+      selectedKeys: [router.currentRoute.value.meta.menu],
       menu: computed(() => {
         return routes.find((item) => item.breadcrumb === '首页')?.children
       })
@@ -83,15 +83,14 @@ export default {
   align-items: center;
   padding-left: 20px;
 }
-.title .text {
+.title_text {
+  height: 40px;
+  line-height: 40px;
   font-weight: bold;
   font-size: 30px;
   margin-left: 10px;
   color: #6f005f;
   font-family: 'Arial Rounded MT';
-}
-.menu {
-  height: 100%;
 }
 .menu_icon {
   width: 18px;
