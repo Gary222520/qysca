@@ -1,7 +1,6 @@
 package nju.edu.cn.qysca.service.example;
 
-import nju.edu.cn.qysca.domain.example.ExampleDO;
-import org.springframework.transaction.annotation.Transactional;
+import nju.edu.cn.qysca.domain.example.ExampleDTO;
 
 import java.util.List;
 
@@ -10,10 +9,10 @@ public interface ExampleService {
     /**
      * 新增一条记录
      *
-     * @param exampleDO 示例数据对象
-     * @return ExampleDO 新增的记录
+     * @param exampleDTO 示例数据对象
+     * @return ExampleDTO 新增的记录
      */
-    ExampleDO addOne(ExampleDO exampleDO);
+    ExampleDTO addOne(ExampleDTO exampleDTO);
 
     /**
      * 删除一条记录
@@ -25,31 +24,31 @@ public interface ExampleService {
     /**
      * 更新一条记录
      *
-     * @param exampleDO 示例数据对象
-     * @return ExampleDO 更新后的记录
+     * @param exampleDTO 示例数据对象
+     * @return ExampleDTO 更新后的记录
      */
-    ExampleDO updateOne(ExampleDO exampleDO);
+    ExampleDTO updateOne(ExampleDTO exampleDTO);
 
     /**
      * 查询所有记录
      *
-     * @return List<ExampleDO> 所有记录
+     * @return List<ExampleDTO> 所有记录
      */
-    List<ExampleDO> findAll();
+    List<ExampleDTO> findAll();
 
     /**
      * 根据info查询记录
      *
      * @param info 信息
-     * @return List<ExampleDO> 查询到的记录
+     * @return List<ExampleDTO> 查询到的记录
      */
-    List<ExampleDO> findByInfo(String info);
+    List<ExampleDTO> findByInfo(String info);
 
     /**
      * 根据规则查询记录（number<=5且info中不含有特定字符串string）
      *
      * @param string 特定字符串
-     * @return List<ExampleDO> 查询到的记录
+     * @return List<ExampleDTO> 查询到的记录
      */
-    List<ExampleDO> findByRule(String string);
+    List<ExampleDTO> findByRule(String string);
 }

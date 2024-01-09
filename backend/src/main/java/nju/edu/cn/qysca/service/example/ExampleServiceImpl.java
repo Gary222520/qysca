@@ -1,13 +1,12 @@
 package nju.edu.cn.qysca.service.example;
 
 import nju.edu.cn.qysca.dao.example.ExampleDao;
-import nju.edu.cn.qysca.domain.example.ExampleDO;
+import nju.edu.cn.qysca.domain.example.ExampleDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.Id;
 import java.util.List;
 
 @Service
@@ -19,13 +18,13 @@ public class ExampleServiceImpl implements ExampleService {
     /**
      * 新增一条记录
      *
-     * @param exampleDO 示例数据对象
-     * @return ExampleDO 新增的记录
+     * @param exampleDTO 示例数据对象
+     * @return ExampleDTO 新增的记录
      */
     @Override
     @Transactional
-    public ExampleDO addOne(ExampleDO exampleDO) {
-        return exampleDao.save(exampleDO);
+    public ExampleDTO addOne(ExampleDTO exampleDTO) {
+        return exampleDao.save(exampleDTO);
     }
 
     /**
@@ -45,26 +44,26 @@ public class ExampleServiceImpl implements ExampleService {
     /**
      * 更新一条记录
      *
-     * @param exampleDO 示例数据对象
-     * @return ExampleDO 更新后的记录
+     * @param exampleDTO 示例数据对象
+     * @return ExampleDTO 更新后的记录
      */
     @Override
     @Transactional
-    public ExampleDO updateOne(ExampleDO exampleDO) {
-        if (!exampleDao.existsById(exampleDO.getUuid())) {
+    public ExampleDTO updateOne(ExampleDTO exampleDTO) {
+        if (!exampleDao.existsById(exampleDTO.getUuid())) {
             throw new PlatformException(400, "更新失败，该记录不存在");
         }
-        exampleDao.deleteById(exampleDO.getUuid());
-        return exampleDao.save(exampleDO);
+        exampleDao.deleteById(exampleDTO.getUuid());
+        return exampleDao.save(exampleDTO);
     }
 
     /**
      * 查询所有记录
      *
-     * @return List<ExampleDO> 所有记录
+     * @return List<ExampleDTO> 所有记录
      */
     @Override
-    public List<ExampleDO> findAll() {
+    public List<ExampleDTO> findAll() {
         return exampleDao.findAll();
     }
 
@@ -72,10 +71,10 @@ public class ExampleServiceImpl implements ExampleService {
      * 根据info查询记录
      *
      * @param info 信息
-     * @return List<ExampleDO> 查询到的记录
+     * @return List<ExampleDTO> 查询到的记录
      */
     @Override
-    public List<ExampleDO> findByInfo(String info) {
+    public List<ExampleDTO> findByInfo(String info) {
         return exampleDao.findByInfo(info);
     }
 
@@ -83,10 +82,10 @@ public class ExampleServiceImpl implements ExampleService {
      * 根据规则查询记录（number<=5且info中不含有特定字符串string）
      *
      * @param string 特定字符串
-     * @return List<ExampleDO> 查询到的记录
+     * @return List<ExampleDTO> 查询到的记录
      */
     @Override
-    public List<ExampleDO> findByRule(String string) {
+    public List<ExampleDTO> findByRule(String string) {
         return exampleDao.findByRule(string);
     }
 

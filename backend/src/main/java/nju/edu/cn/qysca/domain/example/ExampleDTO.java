@@ -12,7 +12,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Table(name = "example")
 @ApiModel(description = "演示POJO类的ExampleDO")
-public class ExampleDO implements Serializable {
+public class ExampleDTO implements Serializable {
 
     @Id
     @GenericGenerator(name = "idGenerator", strategy = "uuid")
