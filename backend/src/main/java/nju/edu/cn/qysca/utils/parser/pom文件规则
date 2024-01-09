@@ -1,0 +1,69 @@
+
+注意：规则可能并不完全，需要以实际为准，需要有新的发现。
+
+一个最简单的pom是：
+--------------------------------------------------------
+    <project>
+
+        <parent> （可选）
+            <groupId>
+            <artifactId>
+            <version>
+        </parent>
+
+        <groupId>
+        <artifactId>
+        <version>
+
+        <properties> （可选）
+            <xxx> value1 </xxx>
+            <yyy> value2 </yyy>
+        </properties>
+
+        <dependencies> （可选）
+            <dependency>
+                <groupId>
+                <artifactId>
+                <version>
+            </dependency>
+            <!-- 其他依赖 -->
+        </dependencies>
+
+        <dependencyManagement> （可选）
+            <dependencies>
+                 <dependency>
+                    <groupId>
+                    <artifactId>
+                    <version>
+                 </dependency>
+            </dependencies>
+        </dependencyManagement>
+
+    </project>
+
+--------------------------------------------------------
+一个组件的依赖包括 直接依赖 + 继承依赖（parent的依赖，可以算作自己的直接依赖） + 传递依赖（依赖的依赖）
+
+正常解析的流程是：
+    0.
+    1. 解析当前pom，记录该组件结点(存进csv-1)，下载pom
+    2. 如果有 project > parent, 则组建出parent的pom的url，然后跳转过去，先解析parent的pom (到步骤0)
+    3. 遍历 project > dependencies > dependency
+        3.1 记录依赖关系（存进csv-2）
+        3.2 组建出dependency的pom的url，然后跳转过去，解析dependency的pom (到步骤0)
+
+现在有以下一些特殊情况：
+    1. 缺少 project > groupId ， 此时groupId则为 project > parent > groupId, 如果还没有则认为是错误的
+    2. project > dependencies > dependency > version 的值为${xxx}
+       2.1 如果值为${project.version}, 则该值 =  project > version
+       2.2 否则，则应该从 project > properties 中寻找对应的<xxx>标签，
+       2.3 如果还找不到，则认为是错误的
+    3. project > dependencies > dependency > version 的值缺失
+       3.1 如果 dependencyManagement > dependencies > dependency(groupId 和 artifactId能对应上) 存在，则该值为 dependencyManagement > dependencies > dependency > version 的值, 这个值也可能是${xxx}
+       3.2 如果找不到, 则应该跳转到parent的pom中, 重复3.1的步骤
+       3.3 如果没parent了还找不到, 则认为是错误的
+
+另外对dependencyManagement的理解：
+    1. dependencyManagement中的dependency并不能算作真正的依赖，而只是一个声明（因此没有依赖关系）
+    2. 其作用是为子组件的依赖提供一个默认的版本，子组件的依赖可以不填写版本而是默认用该版本，子组件也可以覆盖这个版本
+    3. 子组件可以继承父组件的dependencyManagement，但是子组件的dependencyManagement的优先级更高
