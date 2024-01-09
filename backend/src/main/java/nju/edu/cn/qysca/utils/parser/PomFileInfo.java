@@ -15,7 +15,7 @@ public class PomFileInfo {
         this.artifactId = artifactId;
         this.version = version;
         this.pomUrl = pomUrl;
-        this.dependencies = new ArrayList<>();
+        // this.dependencies = new ArrayList<>();
     }
 
     public void setDependencies(List<PomFileInfo> dependencies) {
