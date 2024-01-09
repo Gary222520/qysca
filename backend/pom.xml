@@ -90,6 +90,16 @@
 			<version>4.13</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- neo4j -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-neo4j</artifactId>
+		</dependency>
+		<!-- mongoDB -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+		</dependency>
 		<!-- jsoup 爬虫 -->
 		<dependency>
 			<groupId>org.jsoup</groupId>
