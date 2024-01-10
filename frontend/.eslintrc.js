@@ -59,6 +59,7 @@ module.exports = {
     'template-curly-spacing': 'off',
     indent: 'off',
     'vue/multi-word-component-names': 'off',
-    'vue/no-v-model-argument': 0
+    'vue/no-v-model-argument': 0,
+    'no-unused-vars': 'off'
   }
 }
