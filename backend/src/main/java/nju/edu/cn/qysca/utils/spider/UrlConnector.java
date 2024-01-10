@@ -18,6 +18,7 @@ public class UrlConnector {
 
     /**
      * 给定一个url地址，爬取其内容至一个document
+     *
      * @param url url地址
      * @return Document org.jsoup.nodes.Document
      */
@@ -27,8 +28,7 @@ public class UrlConnector {
             //Thread.sleep(sleepTime);
             // 连接到url并获取其内容
             return Jsoup.connect(url).get();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -36,7 +36,8 @@ public class UrlConnector {
 
     /**
      * 给定一个url地址，下载其内容至一个地址
-     * @param url url地址
+     *
+     * @param url             url地址
      * @param destinationPath 目的地址/下载地址
      */
     public static void downloadFile(String url, String destinationPath) {
@@ -55,7 +56,7 @@ public class UrlConnector {
             } finally {
                 httpClient.close();
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
