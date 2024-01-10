@@ -25,6 +25,7 @@
                 <groupId>
                 <artifactId>
                 <version>
+                <scope> （可选，默认为compile）
             </dependency>
             <!-- 其他依赖 -->
         </dependencies>

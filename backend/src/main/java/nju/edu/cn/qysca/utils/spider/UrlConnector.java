@@ -1,14 +1,18 @@
 package nju.edu.cn.qysca.utils.spider;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+
+import static org.springframework.core.io.buffer.DataBufferUtils.readInputStream;
 
 public class UrlConnector {
     /**
@@ -34,30 +38,65 @@ public class UrlConnector {
         return null;
     }
 
-    /**
-     * 给定一个url地址，下载其内容至一个地址
-     *
-     * @param url             url地址
-     * @param destinationPath 目的地址/下载地址
-     */
-    public static void downloadFile(String url, String destinationPath) {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpGet httpGet = new HttpGet(url);
 
+    /**
+     * 从指定Url中下载文件
+     *
+     * @param urlStr   目标url
+     * @param fileName 文件名
+     * @param savePath 保存目录
+     */
+    public static void downLoadFromUrl(String urlStr, String fileName, String savePath) {
         try {
-            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-                if (response.getStatusLine().getStatusCode() == 200) {
-                    try (FileOutputStream fileOutputStream = new FileOutputStream(destinationPath)) {
-                        response.getEntity().writeTo(fileOutputStream);
-                    }
-                } else {
-                    System.err.println("Failed to download POM file. HTTP status code: " + response.getStatusLine().getStatusCode());
-                }
-            } finally {
-                httpClient.close();
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            //设置超时间为3秒
+            conn.setConnectTimeout(3 * 1000);
+            //防止屏蔽程序抓取而返回403错误
+            conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0; Windows NT; DigExt)");
+
+            //得到输入流
+            InputStream inputStream = conn.getInputStream();
+            //获取自己数组
+            byte[] getData = readInputStream(inputStream);
+
+            //文件保存位置
+            File saveDir = new File(savePath);
+            if (!saveDir.exists()) {
+                saveDir.mkdir();
             }
+            File file = new File(saveDir + File.separator + fileName);
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            fileOutputStream.write(getData);
+            if (fileOutputStream != null) {
+                fileOutputStream.close();
+            }
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            System.out.println("info:" + url + " download success");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+
+    /**
+     * 从输入流中获取字节数组
+     *
+     * @param inputStream
+     * @return byte[]
+     * @throws IOException
+     */
+    private static byte[] readInputStream(InputStream inputStream) throws IOException {
+        byte[] buffer = new byte[1024];
+        int len = 0;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        while ((len = inputStream.read(buffer)) != -1) {
+            bos.write(buffer, 0, len);
+        }
+        bos.close();
+        return bos.toByteArray();
+    }
+
 }

@@ -1,7 +1,9 @@
 package nju.edu.cn.qysca.utils.parser;
 
+import nju.edu.cn.qysca.utils.CsvWriter;
 import nju.edu.cn.qysca.utils.spider.PomSpider;
 
+import nju.edu.cn.qysca.utils.spider.UrlConnector;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
@@ -22,20 +24,40 @@ public class PomParser {
 
     /**
      * 解析PomModel，递归查找所有依赖
+     * 还会将pom节点与依赖关系写入csv
+     * 还会下载该份pom
      *
      * @param model pom-model
      */
-    public static void parsePomModel(Model model) {
-        // 获取其基本信息
+    public static void parsePomModel(Model model, String pomUrl) {
         if (model == null) {
             System.err.println("pom-model is null");
             return;
         }
+        // 获取其基本信息
+        String groupId = model.getGroupId();
+        // groupId和version如果为空，则默认为parent的groupId和version
+        if (groupId == null)
+            groupId = model.getParent().getGroupId();
+        String artifactId = model.getArtifactId();
+        ;
+        String version = model.getVersion();
+        if (version == null)
+            version = model.getParent().getVersion();
+        String name = model.getName();
+
+        // 创建pomNode，写入csv
+        PomNode pomNode = new PomNode(groupId, artifactId, version, name, pomUrl);
+        CsvWriter csvWriter = new CsvWriter("backend/src/main/resources/csv/poms.csv", PomNode.headers);
+        csvWriter.writePomNode(pomNode);
+
+        // 下载pom
+        UrlConnector.downLoadFromUrl(pomUrl, groupId + "." + artifactId + "-" + version + ".pom", "backend/src/main/resources/poms");
 
         // 首先需要查找<parent>项目中的所有依赖，并不断递归查找<parent>
         if (model.getParent() != null) {
             String parentPomUrl = getParentPomUrl(model);
-            parsePomModel(PomSpider.getPomModel(parentPomUrl));
+            parsePomModel(PomSpider.getPomModel(parentPomUrl), parentPomUrl);
         }
 
         // 获取其所有依赖
@@ -43,16 +65,29 @@ public class PomParser {
         for (Dependency dependency : dependencies) {
 
             // 获取依赖的groupId、artifactId、version
-            String groupId = dependency.getGroupId();
-            String artifact = dependency.getArtifactId();
-            String version = getDependencyVersion(model, dependency);
+            String dependencyGroupId = dependency.getGroupId();
+            String dependencyArtifactId = dependency.getArtifactId();
+            String dependencyVersion = getDependencyVersion(model, dependency);
+            // 获取依赖的scope，默认为compile
+            String dependencyScope = dependency.getScope();
+            if (dependencyScope == null)
+                dependencyScope = "compile";
 
             // 获取依赖的pom文件url，
             // 并调用parsePomModel方法，递归解析依赖
-            String dependencyUrl = buildUrl(groupId, artifact, version);
+            String dependencyUrl = buildUrl(dependencyGroupId, dependencyArtifactId, dependencyVersion);
             String dependencyPomUrl = PomSpider.findPomFileUrlInDirectory(dependencyUrl);
             System.out.println("New dependency pom url found: " + dependencyPomUrl);
-            parsePomModel(PomSpider.getPomModel(dependencyPomUrl));
+
+            // 将依赖关系写入csv
+            // todo 目前这样只会写直接依赖关系，如果是继承依赖，则会写成parent和dependency的关系
+            PomNode dependencyPomNode = new PomNode(dependencyGroupId, dependencyArtifactId, dependencyVersion, "", dependencyPomUrl);
+            PomDependencyNode pomDependencyNode = new PomDependencyNode(pomNode, dependencyPomNode, dependencyScope);
+            CsvWriter csvWriter2 = new CsvWriter("backend/src/main/resources/csv/dependencies.csv", PomDependencyNode.headers);
+            csvWriter2.writePomDependencyNode(pomDependencyNode);
+
+            // 继续解析依赖的pom
+            parsePomModel(PomSpider.getPomModel(dependencyPomUrl), dependencyPomUrl);
         }
 
     }
@@ -151,6 +186,16 @@ public class PomParser {
         }
         Model parentModel = PomSpider.getPomModel(parentPomUrl);
         return getDependencyVersionFromDependencyManagement(parentModel, dependency);
+    }
+
+    /**
+     * 将 maven-model（实际为pom文件）写到指定目的地址
+     *
+     * @param model
+     * @param destinationPath 目的地址
+     */
+    private static void writeFile(Model model, String destinationPath) {
+
     }
 //
 //    /**

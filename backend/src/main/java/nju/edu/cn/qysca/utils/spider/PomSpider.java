@@ -39,6 +39,7 @@ public class PomSpider {
             System.err.println("Failed to convert Pom file to a maven model: " + pomUrl);
             e.printStackTrace();
         }
+
         return model;
     }
 
@@ -61,16 +62,6 @@ public class PomSpider {
 //        // 以org.jsoup.nodes.Document返回其内容
 //        return (Document) UrlConnector.getDocumentByUrl(pomUrl);
 //    }
-
-    /**
-     * 通过url获取pom文件，下载到指定目录下
-     *
-     * @param pomUrl       pom文件的url
-     * @param downloadPath 下载路径
-     */
-    public static void getPomAndDownload(String pomUrl, String downloadPath) {
-        //todo
-    }
 
     /**
      * 在指定目录url下查找.pom文件

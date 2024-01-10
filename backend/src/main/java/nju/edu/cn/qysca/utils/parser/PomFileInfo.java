@@ -3,6 +3,10 @@ package nju.edu.cn.qysca.utils.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 应该暂时废弃
+ * 用于存储pom文件信息
+ */
 public class PomFileInfo {
     private final String groupId;
     private final String artifactId;
