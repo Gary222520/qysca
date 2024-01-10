@@ -5,10 +5,10 @@
 </template>
 
 <style>
-::-webkit-scrollbar {
+/* ::-webkit-scrollbar {
   display: none;
-}
+} */
 body {
-  overflow: hidden;
+  margin: 0;
 }
 </style>
