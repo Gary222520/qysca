@@ -100,6 +100,18 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
 		</dependency>
+		<!-- jsoup 爬虫 -->
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.15.3</version>
+		</dependency>
+		<!-- httpclient 用以下载url地址文件 -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.14</version>
+		</dependency>
 		<!--maven-model 解析pom -->
 		<dependency>
 			<groupId>org.apache.maven</groupId>
