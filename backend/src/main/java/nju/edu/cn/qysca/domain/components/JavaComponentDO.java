@@ -1,5 +1,4 @@
 package nju.edu.cn.qysca.domain.components;
-
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -7,9 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.neo4j.core.schema.*;
 
+import java.io.Serializable;
 import java.util.*;
-
-import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 import static org.springframework.data.neo4j.core.schema.Relationship.Direction.OUTGOING;
 
 @Data
@@ -17,7 +15,7 @@ import static org.springframework.data.neo4j.core.schema.Relationship.Direction.
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel(description = "Java组件节点DO")
-public class JavaComponentDO {
+public class JavaComponentDO implements Serializable {
     @Id
     @GeneratedValue(generatorRef = "neo4jIdGenerator")
     @ApiModelProperty(value = "uuid", example = "0BAC7D48D1A8124D99F14805CE32DFF4")
@@ -35,8 +33,15 @@ public class JavaComponentDO {
     @ApiModelProperty(value = "版本号", example = "2.2")
     private String version;
 
+    @Property
+    @ApiModelProperty(value = "是否开源", example = "true")
+    private boolean openSource=true;
+
     @Relationship(type = "depends", direction = OUTGOING)
     private Set<JavaComponentDO> dependencies = new HashSet<>();
+
+    @Relationship(type = "hasParent", direction = OUTGOING)
+    private Set<JavaComponentDO> parents = new HashSet<>();
 
     // 以下内容均为可选字段
 

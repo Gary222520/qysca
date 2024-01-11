@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.util;
+package nju.edu.cn.qysca.utils;
 
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;

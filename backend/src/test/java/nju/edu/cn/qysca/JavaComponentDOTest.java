@@ -11,23 +11,29 @@ public class JavaComponentDOTest {
     @Autowired
     private JavaComponentDao javaComponentDao;
 
+    /**
+     * 测试写入结点
+     */
     @Test
     public void test1() {
         JavaComponentDO javaComponentDO= new JavaComponentDO();
-        javaComponentDO.setGroupId("org.hamcrest");
-        javaComponentDO.setArtifactId("hamcrest-core");
-        javaComponentDO.setVersion("2.2");
+        javaComponentDO.setGroupId("fw.org.ss");
+        javaComponentDO.setArtifactId("redod-mm");
+        javaComponentDO.setVersion("2.4.0");
         javaComponentDO.getLicenseNames().add("BSD License 3");
         javaComponentDO.getLicenseNames().add("The Apache Software License, Version 2.0");
         javaComponentDO.getLicenseUrls().add("http://opensource.org/licenses/BSD-3-Clause");
         javaComponentDO.getLicenseUrls().add("https://www.apache.org/licenses/LICENSE-2.0.txt");
-        javaComponentDO.setName("Hamcrest Core");
-        javaComponentDO.setAuthor("Joe Walnes,Nat Pryce,Steve Freeman");
-        javaComponentDO.setDescription("Core Hamcrest API - deprecated, please use \"hamcrest\" instead");
-        javaComponentDO.setUrl("http://hamcrest.org/JavaHamcrest/");
+        javaComponentDO.setName("REDOD MM");
+        javaComponentDO.setAuthor("Hong Liu");
+        javaComponentDO.setDescription("Try My Best");
+        javaComponentDO.setUrl("http://mybest.com");
         javaComponentDao.save(javaComponentDO);
     }
 
+    /**
+     * 测试写入结点和关系
+     */
     @Test
     public void test2() {
         JavaComponentDO javaComponentDO1= new JavaComponentDO();
@@ -66,8 +72,27 @@ public class JavaComponentDOTest {
         javaComponentDO3.setDescription("a test component");
         javaComponentDO3.setUrl("http://www.example.com/");
 
+        javaComponentDO1.getDependencies().add(javaComponentDO2);
+        javaComponentDO1.getDependencies().add(javaComponentDO3);
+        javaComponentDO1.getParents().add(javaComponentDO3);
         javaComponentDao.save(javaComponentDO1);
-        javaComponentDao.save(javaComponentDO2);
-        javaComponentDao.save(javaComponentDO3);
+    }
+
+
+    /**
+     * 测试原生查询语句
+     */
+    @Test
+    public void test3(){
+        JavaComponentDO res=javaComponentDao.myMethod("org.example.nju","jackson","1.5.4");
+        System.out.println(res.getId());
+    }
+
+    /**
+     * 测试删图
+     */
+    @Test
+    public void test4(){
+        javaComponentDao.deleteGraph();
     }
 }
