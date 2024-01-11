@@ -2,59 +2,73 @@
   <div class="main">
     <div class="title">项目管理</div>
     <a-card class="content_card">
-      <div class="content">
-        <a-button @click="addProject"><PlusOutlined />新建项目</a-button>
-        <a-collapse class="collapse" v-model:activeKey="data.activeKey" :bordered="false" accordion>
-          <a-collapse-panel v-for="(project, index) in data.projects" class="collapse_panel" :key="index">
-            <template #header>
-              <div class="collapse_header">
+      <div class="operations">
+        <a-button type="primary" @click="addProject"><PlusOutlined />新建项目</a-button>
+        <a-input-search
+          v-model:value="data.search.name"
+          placeholder="请输入项目名称"
+          style="width: 250px"></a-input-search>
+      </div>
+      <a-collapse class="collapse" v-model:activeKey="data.activeKey" :bordered="false" accordion>
+        <a-collapse-panel v-for="(project, index) in data.projects" class="collapse_panel" :key="index">
+          <template #header>
+            <div class="collapse_header">
+              <div style="display: flex; align-items: center">
                 <div style="margin-right: 10px; font-size: 18px">{{ project.name }}</div>
-                <a-button style="margin-left: 10px; display: flex; align-items: center" @click.stop="upgrade(project)">
+                <a-button
+                  type="primary"
+                  style="margin-left: 10px; display: flex; align-items: center"
+                  @click.stop="upgrade(project)">
                   <RocketOutlined :style="{ fontSize: '18px', color: '#fff' }" />版本升级
                 </a-button>
               </div>
-            </template>
-            <a-table :data-source="project.data" :columns="data.columns" bordered>
-              <template #bodyCell="{ column, record }">
-                <template v-if="column.key === 'action'">
-                  <div style="display: flex">
-                    <div class="action_icon">
-                      <a-tooltip>
-                        <template #title>详情</template>
-                        <FileTextOutlined
-                          :style="{ fontSize: '18px', color: '#6f005f' }"
-                          @click="showDetail(project, record)" />
-                      </a-tooltip>
-                    </div>
-                    <div class="action_icon">
-                      <a-tooltip>
-                        <template #title>更新</template>
-                        <SyncOutlined
-                          :style="{ fontSize: '18px', color: '#6f005f' }"
-                          @click="changeVersion(project, record)" />
-                      </a-tooltip>
-                    </div>
-                    <div class="action_icon">
-                      <a-tooltip>
-                        <template #title>删除</template>
-                        <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个版本吗？">
-                          <template #cancelButton>
-                            <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
-                          </template>
-                          <template #okButton>
-                            <a-button danger type="primary" size="small" @click="deleteVersion(record)">删除</a-button>
-                          </template>
-                          <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
-                        </a-popconfirm>
-                      </a-tooltip>
-                    </div>
+              <div style="display: flex; align-items: center">
+                <a-button type="primary" danger @click.stop="deleteProject(project)">
+                  <WarningOutlined />删除
+                </a-button>
+              </div>
+            </div>
+          </template>
+          <a-table :data-source="project.data" :columns="data.columns" bordered>
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'action'">
+                <div style="display: flex">
+                  <div class="action_icon">
+                    <a-tooltip>
+                      <template #title>详情</template>
+                      <FileTextOutlined
+                        :style="{ fontSize: '18px', color: '#6f005f' }"
+                        @click="showDetail(project, record)" />
+                    </a-tooltip>
                   </div>
-                </template>
+                  <div class="action_icon">
+                    <a-tooltip>
+                      <template #title>更新</template>
+                      <SyncOutlined
+                        :style="{ fontSize: '18px', color: '#6f005f' }"
+                        @click="changeVersion(project, record)" />
+                    </a-tooltip>
+                  </div>
+                  <div class="action_icon">
+                    <a-tooltip>
+                      <template #title>删除</template>
+                      <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个版本吗？">
+                        <template #cancelButton>
+                          <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
+                        </template>
+                        <template #okButton>
+                          <a-button danger type="primary" size="small" @click="deleteVersion(record)">删除</a-button>
+                        </template>
+                        <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+                      </a-popconfirm>
+                    </a-tooltip>
+                  </div>
+                </div>
               </template>
-            </a-table>
-          </a-collapse-panel>
-        </a-collapse>
-      </div>
+            </template>
+          </a-table>
+        </a-collapse-panel>
+      </a-collapse>
       <div class="pagination">
         <a-pagination
           v-model:current="pagination.current"
@@ -67,6 +81,7 @@
     <AddModal ref="addModal"></AddModal>
     <ChangeModal ref="changeModal"></ChangeModal>
     <UpgradeModal ref="upgradeModal"></UpgradeModal>
+    <DeleteModal ref="deleteModal"></DeleteModal>
   </div>
 </template>
 
@@ -77,17 +92,20 @@ import {
   SyncOutlined,
   DeleteOutlined,
   UpSquareOutlined,
-  RocketOutlined
+  RocketOutlined,
+  WarningOutlined
 } from '@ant-design/icons-vue'
 import { reactive, ref } from 'vue'
 import AddModal from './components/AddModal.vue'
 import ChangeModal from './components/ChangeModal.vue'
 import UpgradeModal from './components/UpgradeModal.vue'
+import DeleteModal from './components/DeleteModal.vue'
 import { useRouter } from 'vue-router'
 
 const addModal = ref()
 const changeModal = ref()
 const upgradeModal = ref()
+const deleteModal = ref()
 const router = useRouter()
 const data = reactive({
   columns: [
@@ -157,7 +175,10 @@ const data = reactive({
     }
   ],
   activeKey: '0',
-  detail: false
+  detail: false,
+  search: {
+    name: ''
+  }
 })
 const pagination = reactive({
   current: 1,
@@ -169,6 +190,9 @@ const addProject = () => {
 }
 const upgrade = (project) => {
   upgradeModal.value.open(project)
+}
+const deleteProject = (project) => {
+  deleteModal.value.open(project)
 }
 const showDetail = (project, record) => {
   router.push({
@@ -187,7 +211,7 @@ const deleteVersion = (record) => {
 }
 </script>
 
-<style lang="less" scoped>
+<style scoped>
 .main {
   position: relative;
   height: 100%;
@@ -203,18 +227,13 @@ const deleteVersion = (record) => {
   height: calc(100% - 32px);
   overflow-y: scroll;
 }
+.operations {
+  display: flex;
+  justify-content: space-between;
+}
 .pagination {
   display: flex;
   justify-content: right;
-}
-:deep(.ant-btn) {
-  border: 0;
-  background-color: #6f005f;
-  color: #fff;
-}
-:deep(.ant-btn):hover {
-  opacity: 0.8;
-  color: #fff;
 }
 .cancel_btn:hover {
   border-color: #6f005f;
@@ -240,17 +259,15 @@ const deleteVersion = (record) => {
   height: 50px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   font-weight: bold;
 }
 .action_icon {
   margin-right: 10px;
 }
-/* 表格分页样式 */
-:deep(.ant-pagination .ant-pagination-item-active) {
-  border-color: #6f005f;
-  color: #6f005f;
-}
-:deep(.ant-pagination .ant-pagination-item-active a) {
-  color: #6f005f !important;
-}
 </style>
+<style scoped src="@/atdv/pagination.css"></style>
+<style scoped src="@/atdv/input.css"></style>
+<style scoped src="@/atdv/input-search.css"></style>
+<style scoped src="@/atdv/primary-btn.css"></style>
+<style scoped src="@/atdv/delete-btn.css"></style>

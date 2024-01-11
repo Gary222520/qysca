@@ -258,35 +258,6 @@ defineExpose({ open })
 .steps {
   width: 150px;
 }
-/* 步骤条样式 */
-:deep(.ant-steps.ant-steps-vertical > .ant-steps-item) {
-  min-height: 100px;
-}
-:deep(.ant-steps-item-container) {
-  pointer-events: none;
-}
-:deep(.ant-steps .ant-steps-item-process .ant-steps-item-icon) {
-  background-color: #6f005f;
-  border: transparent;
-}
-:deep(.ant-steps .ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-tail::after) {
-  background-color: #6f005f;
-}
-:deep(.ant-steps .ant-steps-item-finish .ant-steps-item-icon) {
-  background-color: rgba(111, 0, 95, 0.1);
-  border-color: rgba(111, 0, 95, 0.1);
-}
-:deep(.ant-steps .ant-steps-item-finish .ant-steps-item-icon > .ant-steps-icon) {
-  color: #6f005f;
-}
-/* 输入框样式 */
-:deep(.ant-input:hover) {
-  border-color: #6f005f;
-}
-:deep(.ant-input:focus) {
-  border-color: #6f005f;
-  box-shadow: 0 0 0 2px rgba(111, 0, 95, 0.1);
-}
 .content {
   width: 600px;
   display: flex;
@@ -365,3 +336,5 @@ defineExpose({ open })
   color: #6f005f;
 }
 </style>
+<style scoped src="@/atdv/steps.css"></style>
+<style scoped src="@/atdv/input.css"></style>

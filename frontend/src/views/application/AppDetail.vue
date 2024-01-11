@@ -42,7 +42,7 @@
               v-model:value="data.search.name"
               placeholder="请输入组件名称"
               style="width: 250px"></a-input-search>
-            <a-button class="export_btn"><ExportOutlined />导出Excel</a-button>
+            <a-button type="primary" style="margin-left: 10px"><ExportOutlined />导出Excel</a-button>
           </div>
         </div>
         <div style="margin-top: 20px">
@@ -117,7 +117,6 @@ onMounted(() => {
   })
   changeMode('tree')
 })
-defineExpose({ open })
 </script>
 
 <style lang="less" scoped>
@@ -152,18 +151,6 @@ defineExpose({ open })
   display: flex;
   justify-content: space-between;
 }
-.export_btn {
-  margin-left: 10px;
-  background-color: #6f005f;
-  color: #fff;
-  border-color: #6f005f;
-}
-.export_btn:hover {
-  background-color: #6f005f;
-  color: #fff;
-  border-color: #6f005f;
-  opacity: 0.8;
-}
 /* 选择框样式 */
 :deep(.ant-select-selector:hover) {
   border-color: #6f005f !important;
@@ -188,32 +175,7 @@ defineExpose({ open })
 :deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before) {
   background-color: #6f005f;
 }
-/* 输入框样式 */
-:deep(.ant-input:hover) {
-  border-color: #6f005f;
-}
-:deep(.ant-input:focus) {
-  border-color: #6f005f;
-  box-shadow: 0 0 0 2px rgba(111, 0, 95, 0.1);
-}
-/* 输入框搜索按钮样式 */
-:deep(
-    .ant-input-search
-      > .ant-input-group
-      > .ant-input-group-addon:last-child
-      .ant-input-search-button:not(.ant-btn-primary)
-  ) {
-  width: 50px;
-  background-color: #6f005f;
-  color: #fff;
-  border-color: #6f005f;
-}
-:deep(
-    .ant-input-search
-      > .ant-input-group
-      > .ant-input-group-addon:last-child
-      .ant-input-search-button:not(.ant-btn-primary):hover
-  ) {
-  opacity: 0.8;
-}
 </style>
+<style scoped src="@/atdv/primary-btn.css"></style>
+<style scoped src="@/atdv/input.css"></style>
+<style scoped src="@/atdv/input-search.css"></style>

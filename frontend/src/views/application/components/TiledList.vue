@@ -53,12 +53,5 @@ defineExpose({ show, hide })
 .column_name:hover {
   color: #6f005f;
 }
-/* 表格分页样式 */
-:deep(.ant-pagination .ant-pagination-item-active) {
-  border-color: #6f005f;
-  color: #6f005f;
-}
-:deep(.ant-pagination .ant-pagination-item-active a) {
-  color: #6f005f !important;
-}
 </style>
+<style scoped src="@/atdv/pagination.css"></style>
