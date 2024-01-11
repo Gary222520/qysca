@@ -13,9 +13,9 @@ public class SpiderTests {
         // 这个url特殊规则比较多
         //String pomUrl = "https://repo1.maven.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.8.1/maven-compiler-plugin-3.8.1.pom";
         //这个url比较常规
-        // String pomUrl = "https://repo1.maven.org/maven2/garden/ephemeral/dsstore/dsstore-gradle-plugin/0.0.5/dsstore-gradle-plugin-0.0.5.pom";
+         String pomUrl = "https://repo1.maven.org/maven2/garden/ephemeral/dsstore/dsstore-gradle-plugin/0.0.5/dsstore-gradle-plugin-0.0.5.pom";
 
-        String pomUrl = "https://repo1.maven.org/maven2/org/sonatype/sisu/sisu-inject-plexus/1.4.2/sisu-inject-plexus-1.4.2.pom";
+        //String pomUrl = "https://repo1.maven.org/maven2/org/sonatype/sisu/sisu-inject-plexus/1.4.2/sisu-inject-plexus-1.4.2.pom";
 
         //String pomUrl = "https://repo1.maven.org/maven2/org/apache/maven/maven-model/2.0/maven-model-2.0.pom";
 

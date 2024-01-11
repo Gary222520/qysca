@@ -1,23 +1,21 @@
 package nju.edu.cn.qysca.utils.parser;
 
-import io.swagger.models.auth.In;
 import nju.edu.cn.qysca.utils.CsvWriter;
+import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import nju.edu.cn.qysca.utils.spider.PomSpider;
 
 import nju.edu.cn.qysca.utils.spider.UrlConnector;
 import org.apache.maven.model.Dependency;
-import org.apache.maven.model.DependencyManagement;
+import org.apache.maven.model.License;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class PomParser {
 
@@ -29,15 +27,15 @@ public class PomParser {
     /**
      * csv pom信息地址
      */
-    private static final String CSV_POM_INFO_PATH = "backend/src/main/resources/csv/pomInfo.csv";
+    private static final String CSV_JAVA_COMPONENT_NODE_PATH = "backend/src/main/resources/csv/pomInfo.csv";
     /**
      * csv pom依赖关系地址
      */
-    private static final String CSV_POM_DEPENDENCY_PATH = "backend/src/main/resources/csv/pomDependency.csv";
+    private static final String CSV_DEPENDS_RELATIONSHIP_PATH = "backend/src/main/resources/csv/pomDependency.csv";
     /**
      * csv pom父子关系地址
      */
-    private static final String CSV_POM_PARENT_PATH = "backend/src/main/resources/csv/pomParent.csv";
+    private static final String CSV_HAS_PARENT_RELATIONSHIP_PATH = "backend/src/main/resources/csv/pomParent.csv";
     /**
      * pom文件保存目录
      */
@@ -62,6 +60,12 @@ public class PomParser {
      */
     private int new_pom_count;
 
+    private List<JavaComponentNode> javaComponentNodeList;
+
+    private List<DependsRelationship> dependsRelationshipList;
+
+    private List<HasParentRelationship> hasParentRelationshipList;
+
     /**
      *  解析pom文件，递归解析所有依赖，被解析过的pom会写入list文件，避免重复解析
      *  还会将pom节点与依赖关系写入csv
@@ -75,7 +79,20 @@ public class PomParser {
         // 在每次解析前，获取所有解析过的pom
         pomRecords = readPomRecords();
         newPomRecords = new HashSet<>();
+        // 准备记录Java组件、依赖关系、父子关系
+        javaComponentNodeList = new ArrayList<>();
+        dependsRelationshipList = new ArrayList<>();
+        hasParentRelationshipList = new ArrayList<>();
+
+        //解析pom文件
         parsePomModel(PomSpider.getPomModel(pomUrl), pomUrl);
+
+        //将Java组件、依赖关系、父子关系写入csv
+        CsvWriter.writeJavaComponentList(javaComponentNodeList, CSV_JAVA_COMPONENT_NODE_PATH);
+        CsvWriter.writeDependsRelationshipList(dependsRelationshipList, CSV_DEPENDS_RELATIONSHIP_PATH);
+        CsvWriter.writeHasParentRelationshipList(hasParentRelationshipList, CSV_HAS_PARENT_RELATIONSHIP_PATH);
+        System.out.println("csv写入完成");
+
         // 解析完成后，将新发现的pom记录入文件
         writePomRecords(newPomRecords);
         System.out.println("解析结束，新发现的pom数量为: "+ new_pom_count);
@@ -137,11 +154,10 @@ public class PomParser {
         if (model.getVersion() == null)
             model.setVersion(model.getParent().getVersion());
 
-        // 获取其基本信息
+        // 获取其GAV
         String groupId = model.getGroupId();
         String artifactId = model.getArtifactId();
         String version = model.getVersion();
-        String name = model.getName();
 
         // 检查pom是否被记录过，如果被记录过就跳过，否则记录
         if (pomRecords.contains(groupId + ":" + artifactId + ":" + version)){
@@ -150,29 +166,44 @@ public class PomParser {
         pomRecords.add(groupId + ":" + artifactId + ":" + version);
         newPomRecords.add(groupId + ":" + artifactId + ":" + version);
 
-        System.out.println("New Pom Url: " + pomUrl);
+        System.out.println("New Pom Url found: " + pomUrl);
         new_pom_count++;
 
         // 下载pom
         UrlConnector.downLoadFromUrl(pomUrl, groupId + "." + artifactId + "-" + version + ".pom", POM_FILE_SAVE_PATH);
 
-        // 创建pomNode，写入csv
-        PomNode pomNode = new PomNode(groupId, artifactId, version, name, pomUrl);
-        CsvWriter csvWriter = new CsvWriter(CSV_POM_INFO_PATH, PomNode.headers);
-        csvWriter.writePomNode(pomNode);
+        // 获取pom中的基本信息
+        String id = UUIDGenerator.getUUID();     // id通过UUID生成
+        String openSource = "TRUE";
+        List<String> licenseNames = model.getLicenses().stream().map(License::getName).collect(Collectors.toList());
+        List<String> licenseUrls = model.getLicenses().stream().map(License::getUrl).collect(Collectors.toList());
+        String name = model.getName();
+        String author = "";  //todo pom里面貌似没有<author>？
+        String description = model.getDescription(); // todo 有些description似乎还有换行？
+        String url = model.getUrl();
+
+        // 创建java组件并记录
+        JavaComponentNode javaComponentNode = new JavaComponentNode(id, groupId, artifactId, version, openSource, licenseNames, licenseUrls, name, author, description, url);
+        javaComponentNodeList.add(javaComponentNode);
 
         // 首先需要查找<parent>项目中的所有依赖，并不断递归查找<parent>
         if (model.getParent() != null) {
-
             String parentPomUrl = getParentPomUrl(model);
-            // 将子父关系写入csv
-            PomNode parentPomNode = new PomNode(model.getParent().getGroupId(), model.getParent().getArtifactId(), model.getParent().getVersion(), "", parentPomUrl);
-            PomParentNode pomParentNode = new PomParentNode(pomNode, parentPomNode);
-            CsvWriter csvWriter1 = new CsvWriter(CSV_POM_PARENT_PATH, PomNode.headers);
-            csvWriter1.writePomParentNode(pomParentNode);
+            if (parentPomUrl != null) {
+                // 获取parent的groupId、artifactId、version
+                String parentGroupId = model.getParent().getGroupId();
+                String parentArtifactId = model.getParent().getArtifactId();
+                String parentVersion = model.getParent().getVersion();
 
-            // 解析parent的pom
-            parsePomModel(PomSpider.getPomModel(parentPomUrl), parentPomUrl);
+                // 创建父子关系并记录
+                HasParentRelationship hasParentRelationship = new HasParentRelationship(groupId, artifactId, version, parentGroupId, parentArtifactId, parentVersion);
+                hasParentRelationshipList.add(hasParentRelationship);
+
+                // 解析parent的pom
+                parsePomModel(PomSpider.getPomModel(parentPomUrl), parentPomUrl);
+            } else {
+                System.err.println("can't find parent pom in " + pomUrl);
+            }
         }
 
         // 获取其所有依赖
@@ -196,12 +227,10 @@ public class PomParser {
             String dependencyUrl = buildUrl(dependencyGroupId, dependencyArtifactId, dependencyVersion);
             String dependencyPomUrl = PomSpider.findPomFileUrlInDirectory(dependencyUrl);
 
-            // 将依赖关系写入csv
+            // 创建依赖关系并记录
             // 只会写直接依赖关系 (不包括继承parent的依赖）
-            PomNode dependencyPomNode = new PomNode(dependencyGroupId, dependencyArtifactId, dependencyVersion, "", dependencyPomUrl);
-            PomDependencyNode pomDependencyNode = new PomDependencyNode(pomNode, dependencyPomNode, dependencyScope);
-            CsvWriter csvWriter2 = new CsvWriter(CSV_POM_DEPENDENCY_PATH, PomDependencyNode.headers);
-            csvWriter2.writePomDependencyNode(pomDependencyNode);
+            DependsRelationship dependsRelationship = new DependsRelationship(groupId, artifactId, version, dependencyGroupId, dependencyArtifactId, dependencyVersion);
+            dependsRelationshipList.add(dependsRelationship);
 
             // 继续解析依赖的pom
             parsePomModel(PomSpider.getPomModel(dependencyPomUrl), dependencyPomUrl);
