@@ -33,11 +33,11 @@ public class PomParser {
     /**
      * csv pom依赖关系地址
      */
-    private static final String CSV_POM_DEPENDENCY_PATH = "backend/src/main/resources/csv/pomDependency";
+    private static final String CSV_POM_DEPENDENCY_PATH = "backend/src/main/resources/csv/pomDependency.csv";
     /**
      * csv pom父子关系地址
      */
-    private static final String CSV_POM_PARENT_PATH = "backend/src/main/resources/csv/pomParent";
+    private static final String CSV_POM_PARENT_PATH = "backend/src/main/resources/csv/pomParent.csv";
     /**
      * pom文件保存目录
      */
@@ -69,6 +69,8 @@ public class PomParser {
      * @param pomUrl
      */
     public void parsePom(String pomUrl){
+
+        System.out.println("开始解析pom: "+ pomUrl);
         new_pom_count = 0;
         // 在每次解析前，获取所有解析过的pom
         pomRecords = readPomRecords();
@@ -77,6 +79,7 @@ public class PomParser {
         // 解析完成后，将新发现的pom记录入文件
         writePomRecords(newPomRecords);
         System.out.println("解析结束，新发现的pom数量为: "+ new_pom_count);
+        System.out.println();
     }
 
     /**
@@ -234,7 +237,7 @@ public class PomParser {
             else {
                 // 否则则在<properties>下寻找<xxx>
                 String propertyName = dependencyGroupId.substring(2, dependencyGroupId.length() - 1);
-                dependencyGroupId = model.getProperties().getProperty(propertyName);
+                dependencyGroupId = getValueFromProperties(model, propertyName);
             }
         }
         return dependencyGroupId;
@@ -275,13 +278,30 @@ public class PomParser {
             } else {
                 //否则如${spring.version},则在<properties>下寻找<spring.version>
                 String propertyName = dependency.getVersion().substring(2, dependency.getVersion().length() - 1);
-                version = model.getProperties().getProperty(propertyName);
+                version = getValueFromProperties(model,propertyName);
             }
         } else {
             // 直接写明了版本号
             version = dependency.getVersion();
         }
         return version;
+    }
+
+    /**
+     * 从<properties>中寻找值，在model中找不到则会从parent去找
+     *
+     * @param model pom model
+     * @param propertyName 要查找的propertyName
+     * @return value
+     */
+    private static String getValueFromProperties(Model model, String propertyName){
+        String value = model.getProperties().getProperty(propertyName);
+        if (value == null){
+            String parentPomUrl = getParentPomUrl(model);
+            Model parentModel = PomSpider.getPomModel(parentPomUrl);
+            return getValueFromProperties(parentModel, propertyName);
+        }
+        return value;
     }
 
     /**
@@ -303,9 +323,7 @@ public class PomParser {
 
                 // 在dependencyManagement中寻找对应的依赖，
                 if (dependencyInDM.getGroupId().equals(dependency.getGroupId()) && dependencyInDM.getArtifactId().equals(dependency.getArtifactId())) {
-
                     version = dependencyInDM.getVersion();
-
                     return version;
                 }
             }
@@ -314,9 +332,6 @@ public class PomParser {
         if (model.getParent() != null) {
             String parentPomUrl = getParentPomUrl(model);
             Model parentModel = PomSpider.getPomModel(parentPomUrl);
-            if (parentPomUrl == null || parentModel == null) {
-                System.err.println("can't find version of Dependency " + dependency.getGroupId() + "/" + dependency.getArtifactId() + " in PomFile: " + buildUrl(model.getGroupId(), model.getArtifactId(), model.getVersion()));
-            }
             return getDependencyVersionFromDependencyManagement(parentModel, dependency);
         }
         // 没有parent，version查不到，报错

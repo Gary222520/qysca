@@ -9,6 +9,8 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PomSpider {
 
@@ -67,14 +69,45 @@ public class PomSpider {
 
         //遍历目录下文件，找到其中以.pom结尾的文件
         for (Element fileElement : fileElements) {
-            String fileUrl = fileElement.absUrl("href");
+            String fileAbsUrl = fileElement.absUrl("href");
             // 一般含-javadoc的不是需要的pom文件，这样的处理可能比较简单了
-            if (fileUrl.endsWith(".pom") && !fileUrl.contains("-javadoc")) {
-                return fileUrl;
+            if (fileAbsUrl.endsWith(".pom") && !fileAbsUrl.contains("-javadoc")) {
+                return fileAbsUrl;
             }
         }
         System.err.println("No .pom file found in \"" + directoryUrl + "\"");
         return null;
     }
 
+
+    /**
+     * 在指定目录url下，获取所有版本的pomUrl
+     * 例如 directoryUrl为 https://repo1.maven.org/maven2/junit/junit， 那么其获得其下面每个版本的一份pom文件的url
+     * @param directoryUrl 目录url
+     * @return 返回所有版本的pomUrl
+     */
+    public static List<String> findAllPomUrlInDirectory(String directoryUrl) {
+        List<String>  pomUrls = new ArrayList<>();
+
+        Document document = UrlConnector.getDocumentByUrl(directoryUrl);
+        // 确认url存在
+        if (document == null) {
+            System.err.println("\"" + directoryUrl + "\" is not a valid url.");
+            return new ArrayList<>();
+        }
+
+        // 获取目录下所有文件
+        Elements fileElements = document.select("a[href]");
+        //遍历目录下文件，找到其中的子目录（也就是某一版本的目录）
+        for (Element fileElement : fileElements) {
+            String fileAbsUrl = fileElement.absUrl("href");
+            String fileText = fileElement.ownText();
+            if (fileText.endsWith("/") && !fileText.endsWith("../")) {
+                // 找到这一版本的目录下的pom文件
+                String pomUrl = findPomFileUrlInDirectory(fileAbsUrl);
+                pomUrls.add(pomUrl);
+            }
+        }
+        return pomUrls;
+    }
 }
