@@ -1,7 +1,7 @@
 package nju.edu.cn.qysca.utils.parser;
 
 /**
- * 表示依赖关系
+ * 表示pom见的依赖关系
  */
 public class PomDependencyNode {
 

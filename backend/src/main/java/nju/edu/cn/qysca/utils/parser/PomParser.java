@@ -1,5 +1,6 @@
 package nju.edu.cn.qysca.utils.parser;
 
+import io.swagger.models.auth.In;
 import nju.edu.cn.qysca.utils.CsvWriter;
 import nju.edu.cn.qysca.utils.spider.PomSpider;
 
@@ -12,8 +13,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PomParser {
 
@@ -23,40 +27,148 @@ public class PomParser {
     private static final String MAVEN_REPO_ROOT_URL = "https://repo1.maven.org/maven2/";
 
     /**
-     * 解析PomModel，递归查找所有依赖
+     * csv pom信息地址
+     */
+    private static final String CSV_POM_INFO_PATH = "backend/src/main/resources/csv/pomInfo.csv";
+    /**
+     * csv pom依赖关系地址
+     */
+    private static final String CSV_POM_DEPENDENCY_PATH = "backend/src/main/resources/csv/pomDependency";
+    /**
+     * csv pom父子关系地址
+     */
+    private static final String CSV_POM_PARENT_PATH = "backend/src/main/resources/csv/pomParent";
+    /**
+     * pom文件保存目录
+     */
+    private static final String POM_FILE_SAVE_PATH = "backend/src/main/resources/pomFiles";
+
+    /**
+     * （解析过的）pom记录文件地址
+     */
+    private static final String RECORD_FILE_PATH = "backend/src/main/resources/pom_record_list.txt";
+    /**
+     * 用以记录所有被解析过的pom文件（以GAV三维坐标为key），来源于pom记录文件中
+     * 未来可能改为从数据库查
+     */
+    private Set<String> pomRecords;
+    /**
+     * 用以记录在一次parsePom中新发现的pom文件，方便重新写入pom记录文件中
+     * 未来可能使用数据库后，就不需要了
+     */
+    private Set<String> newPomRecords;
+    /**
+     * 记录在一次pom解析过程中新发现的pom数量
+     */
+    private int new_pom_count;
+
+    /**
+     *  解析pom文件，递归解析所有依赖，被解析过的pom会写入list文件，避免重复解析
+     *  还会将pom节点与依赖关系写入csv
+     *  还会下载该份pom
+     * @param pomUrl
+     */
+    public void parsePom(String pomUrl){
+        new_pom_count = 0;
+        // 在每次解析前，获取所有解析过的pom
+        pomRecords = readPomRecords();
+        newPomRecords = new HashSet<>();
+        parsePomModel(PomSpider.getPomModel(pomUrl), pomUrl);
+        // 解析完成后，将新发现的pom记录入文件
+        writePomRecords(newPomRecords);
+        System.out.println("解析结束，新发现的pom数量为: "+ new_pom_count);
+    }
+
+    /**
+     * 从pom记录文件中读取所有被解析过的pom文件
+     * @return pomRecords
+     */
+    private Set<String> readPomRecords() {
+        Set<String> pomRecords = new HashSet<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(RECORD_FILE_PATH))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                pomRecords.add(line);
+            }
+            System.out.println("Read Pom Records From " + RECORD_FILE_PATH);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return pomRecords;
+    }
+
+    /**
+     * 向pom记录文件中写入新的pom记录
+     * @param newPomRecords 新的pom记录
+     */
+    private void writePomRecords(Set<String> newPomRecords) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(RECORD_FILE_PATH, true))) {
+            // 将新的集合写回到文件
+            for (String pomKey : newPomRecords) {
+                writer.write(pomKey);
+                writer.newLine();
+            }
+            System.out.println("Write New Pom Records Back Into " + RECORD_FILE_PATH);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 解析PomModel，递归查找并解析所有依赖
      * 还会将pom节点与依赖关系写入csv
      * 还会下载该份pom
      *
      * @param model pom-model
      */
-    public static void parsePomModel(Model model, String pomUrl) {
+    public void parsePomModel(Model model, String pomUrl) {
         if (model == null) {
             System.err.println("pom-model is null");
             return;
         }
+
+        // 首先将model的一些基本信息填充完整
+        // groupId和version如果为空，则默认为parent的groupId和version
+        if (model.getGroupId() == null)
+            model.setGroupId(model.getParent().getGroupId());
+        if (model.getVersion() == null)
+            model.setVersion(model.getParent().getVersion());
+
         // 获取其基本信息
         String groupId = model.getGroupId();
-        // groupId和version如果为空，则默认为parent的groupId和version
-        if (groupId == null)
-            groupId = model.getParent().getGroupId();
         String artifactId = model.getArtifactId();
-        ;
         String version = model.getVersion();
-        if (version == null)
-            version = model.getParent().getVersion();
         String name = model.getName();
+
+        // 检查pom是否被记录过，如果被记录过就跳过，否则记录
+        if (pomRecords.contains(groupId + ":" + artifactId + ":" + version)){
+            return;
+        }
+        pomRecords.add(groupId + ":" + artifactId + ":" + version);
+        newPomRecords.add(groupId + ":" + artifactId + ":" + version);
+
+        System.out.println("New Pom Url: " + pomUrl);
+        new_pom_count++;
+
+        // 下载pom
+        UrlConnector.downLoadFromUrl(pomUrl, groupId + "." + artifactId + "-" + version + ".pom", POM_FILE_SAVE_PATH);
 
         // 创建pomNode，写入csv
         PomNode pomNode = new PomNode(groupId, artifactId, version, name, pomUrl);
-        CsvWriter csvWriter = new CsvWriter("backend/src/main/resources/csv/poms.csv", PomNode.headers);
+        CsvWriter csvWriter = new CsvWriter(CSV_POM_INFO_PATH, PomNode.headers);
         csvWriter.writePomNode(pomNode);
-
-        // 下载pom
-        UrlConnector.downLoadFromUrl(pomUrl, groupId + "." + artifactId + "-" + version + ".pom", "backend/src/main/resources/poms");
 
         // 首先需要查找<parent>项目中的所有依赖，并不断递归查找<parent>
         if (model.getParent() != null) {
+
             String parentPomUrl = getParentPomUrl(model);
+            // 将子父关系写入csv
+            PomNode parentPomNode = new PomNode(model.getParent().getGroupId(), model.getParent().getArtifactId(), model.getParent().getVersion(), "", parentPomUrl);
+            PomParentNode pomParentNode = new PomParentNode(pomNode, parentPomNode);
+            CsvWriter csvWriter1 = new CsvWriter(CSV_POM_PARENT_PATH, PomNode.headers);
+            csvWriter1.writePomParentNode(pomParentNode);
+
+            // 解析parent的pom
             parsePomModel(PomSpider.getPomModel(parentPomUrl), parentPomUrl);
         }
 
@@ -64,26 +176,28 @@ public class PomParser {
         List<Dependency> dependencies = model.getDependencies();
         for (Dependency dependency : dependencies) {
 
+            //先将model的dependency的信息填充完整
+            dependency.setGroupId(getDependencyGroupId(model, dependency));
+            dependency.setVersion(getDependencyVersion(model, dependency));
+
             // 获取依赖的groupId、artifactId、version
             String dependencyGroupId = dependency.getGroupId();
             String dependencyArtifactId = dependency.getArtifactId();
-            String dependencyVersion = getDependencyVersion(model, dependency);
+            String dependencyVersion = dependency.getVersion();
             // 获取依赖的scope，默认为compile
             String dependencyScope = dependency.getScope();
             if (dependencyScope == null)
                 dependencyScope = "compile";
 
             // 获取依赖的pom文件url，
-            // 并调用parsePomModel方法，递归解析依赖
             String dependencyUrl = buildUrl(dependencyGroupId, dependencyArtifactId, dependencyVersion);
             String dependencyPomUrl = PomSpider.findPomFileUrlInDirectory(dependencyUrl);
-            System.out.println("New dependency pom url found: " + dependencyPomUrl);
 
             // 将依赖关系写入csv
-            // todo 目前这样只会写直接依赖关系，如果是继承依赖，则会写成parent和dependency的关系
+            // 只会写直接依赖关系 (不包括继承parent的依赖）
             PomNode dependencyPomNode = new PomNode(dependencyGroupId, dependencyArtifactId, dependencyVersion, "", dependencyPomUrl);
             PomDependencyNode pomDependencyNode = new PomDependencyNode(pomNode, dependencyPomNode, dependencyScope);
-            CsvWriter csvWriter2 = new CsvWriter("backend/src/main/resources/csv/dependencies.csv", PomDependencyNode.headers);
+            CsvWriter csvWriter2 = new CsvWriter(CSV_POM_DEPENDENCY_PATH, PomDependencyNode.headers);
             csvWriter2.writePomDependencyNode(pomDependencyNode);
 
             // 继续解析依赖的pom
@@ -100,8 +214,30 @@ public class PomParser {
      */
     private static String getParentPomUrl(Model model) {
         Parent parent = model.getParent();
+        if (parent == null) {
+            return null;
+        }
         String parentUrl = buildUrl(parent.getGroupId(), parent.getArtifactId(), parent.getVersion());
         return PomSpider.findPomFileUrlInDirectory(parentUrl);
+    }
+
+    /**
+     * 获取某一依赖的groupId
+     */
+    private static String getDependencyGroupId(Model model, Dependency dependency) {
+        String dependencyGroupId = dependency.getGroupId();
+        if (dependencyGroupId.startsWith("${") && dependencyGroupId.endsWith("}")){
+            // 为${xxx}形式
+            if (dependencyGroupId.equals("${project.groupId}") || dependencyGroupId.equals("${pom.groupId}"))
+                // 如果写的是${project.groupId}，则直接返回pom中的groupId
+                dependencyGroupId = model.getGroupId();
+            else {
+                // 否则则在<properties>下寻找<xxx>
+                String propertyName = dependencyGroupId.substring(2, dependencyGroupId.length() - 1);
+                dependencyGroupId = model.getProperties().getProperty(propertyName);
+            }
+        }
+        return dependencyGroupId;
     }
 
     /**
@@ -112,6 +248,14 @@ public class PomParser {
      * @return 依赖的版本
      */
     private static String getDependencyVersion(Model model, Dependency dependency) {
+
+        // 首先将model的一些基本信息填充完整
+        // groupId和version如果为空，则默认为parent的groupId和version
+        if (model.getGroupId() == null)
+            model.setGroupId(model.getParent().getGroupId());
+        if (model.getVersion() == null)
+            model.setVersion(model.getParent().getVersion());
+
         // 关于版本号的一般流程：
         // 1. 未写版本号，则需要在<dependencyManagement>寻找，未找到则继续在parent的<dependencyManagement>找
         // 2. 写${xxx}形式，如<version>${spring.version}</version>,则在<properties>下寻找<spring.version>
@@ -128,11 +272,8 @@ public class PomParser {
             if (dependency.getVersion().equals("${project.version}")) {
                 // 如果写的是${project.version}，则直接返回pom中的version
                 version = model.getVersion();
-                // 但有些pom不写version，默认使用其parent的version
-                if (version == null)
-                    version = model.getParent().getVersion();
             } else {
-                //否则如<version>${spring.version}</version>,则在<properties>下寻找<spring.version>
+                //否则如${spring.version},则在<properties>下寻找<spring.version>
                 String propertyName = dependency.getVersion().substring(2, dependency.getVersion().length() - 1);
                 version = model.getProperties().getProperty(propertyName);
             }
@@ -156,36 +297,46 @@ public class PomParser {
         if (model.getDependencyManagement() != null && model.getDependencyManagement().getDependencies() != null) {
             List<Dependency> dependenciesInDm = model.getDependencyManagement().getDependencies();
             for (Dependency dependencyInDM : dependenciesInDm) {
+                // 先将model的dependencyManagement中的dependency的信息填充完整
+                dependencyInDM.setGroupId(getDependencyGroupId(model, dependencyInDM));
+                dependencyInDM.setVersion(getDependencyVersion(model, dependencyInDM));
+
                 // 在dependencyManagement中寻找对应的依赖，
                 if (dependencyInDM.getGroupId().equals(dependency.getGroupId()) && dependencyInDM.getArtifactId().equals(dependency.getArtifactId())) {
 
                     version = dependencyInDM.getVersion();
-                    if (version.startsWith("${") && version.endsWith("}")) {
-                        // ${xxx}形式
-                        if (version.equals("${project.version}")) {
-                            // 如果写的是${project.version}，则直接返回pom中的version
-                            version = model.getVersion();
-                            // 但有些pom不写version，默认使用其parent的version
-                            if (version == null)
-                                version = model.getParent().getVersion();
-                        } else {
-                            //否则如<version>${spring.version}</version>,则在<properties>下寻找<spring.version>
-                            String propertyName = version.substring(2, version.length() - 1);
-                            version = model.getProperties().getProperty(propertyName);
-                        }
-
-                    }
+//                    if (version.startsWith("${") && version.endsWith("}")) {
+//                        // ${xxx}形式
+//                        if (version.equals("${project.version}")) {
+//                            // 如果写的是${project.version}，则直接返回pom中的version
+//                            version = model.getVersion();
+//                            // 但有些pom不写version，默认使用其parent的version
+//                            if (version == null)
+//                                version = model.getParent().getVersion();
+//                        } else {
+//                            //否则如${spring.version},则在<properties>下寻找<spring.version>
+//                            String propertyName = version.substring(2, version.length() - 1);
+//                            version = model.getProperties().getProperty(propertyName);
+//                        }
+//
+//                    }
                     return version;
                 }
             }
         }
         // 没找到，则继续到parent的dependencyManagement中找
-        String parentPomUrl = getParentPomUrl(model);
-        if (parentPomUrl == null) {
-            System.err.println();
+        if (model.getParent() != null) {
+            String parentPomUrl = getParentPomUrl(model);
+            Model parentModel = PomSpider.getPomModel(parentPomUrl);
+            if (parentPomUrl == null || parentModel == null) {
+                System.err.println("can't find version of Dependency " + dependency.getGroupId() + "/" + dependency.getArtifactId() + " in PomFile: " + buildUrl(model.getGroupId(), model.getArtifactId(), model.getVersion()));
+            }
+            return getDependencyVersionFromDependencyManagement(parentModel, dependency);
         }
-        Model parentModel = PomSpider.getPomModel(parentPomUrl);
-        return getDependencyVersionFromDependencyManagement(parentModel, dependency);
+        // 没有parent，version查不到，报错
+        System.err.println("can't find version of Dependency " + dependency.getGroupId() + "/" + dependency.getArtifactId() + " in PomFile: " + buildUrl(model.getGroupId(), model.getArtifactId(), model.getVersion()));
+
+        return null;
     }
 
     /**
@@ -304,7 +455,7 @@ public class PomParser {
 //                //如果写的是${project.version}，则直接返回pom中的version
 //                version = getElementValue(pomDocument, "project > version");
 //            } else {
-//                // todo 如果propertyName含特殊符号，如${slf4j.version},竟然就找不到
+//                // 如果propertyName含特殊符号，如${slf4j.version},竟然就找不到
 //                version = getElementValue(pomDocument, "project > properties > " + propertyName);
 //            }
 //            return version;

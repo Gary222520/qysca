@@ -71,6 +71,9 @@ public class PomSpider {
      */
     public static String findPomFileUrlInDirectory(String directoryUrl) {
 
+        // todo 有时目录下可能有多个pom，如何找到正确的那个pom
+        // https://repo1.maven.org/maven2/org/apache/maven/maven/2.0/
+
         Document document = UrlConnector.getDocumentByUrl(directoryUrl);
 
         // 确认url存在
@@ -85,7 +88,8 @@ public class PomSpider {
         //遍历目录下文件，找到其中以.pom结尾的文件
         for (Element fileElement : fileElements) {
             String fileUrl = fileElement.absUrl("href");
-            if (fileUrl.endsWith(".pom")) {
+            // 一般含-javadoc的不是需要的pom文件，这样的处理可能比较简单了
+            if (fileUrl.endsWith(".pom") && !fileUrl.contains("-javadoc")) {
                 return fileUrl;
             }
         }

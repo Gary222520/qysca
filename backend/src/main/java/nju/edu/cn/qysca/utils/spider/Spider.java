@@ -38,8 +38,8 @@ public class Spider {
 
         List<String> urlList = readLinesFromFile(DEFAULT_URL_LIST_PATH);
         for (String url : urlList) {
-            Model model = PomSpider.getPomModel(url);
-            PomParser.parsePomModel(model, url);
+            PomParser pomParser = new PomParser();
+            pomParser.parsePom(url);
         }
 
 

@@ -2,6 +2,7 @@ package nju.edu.cn.qysca.utils;
 
 import nju.edu.cn.qysca.utils.parser.PomDependencyNode;
 import nju.edu.cn.qysca.utils.parser.PomNode;
+import nju.edu.cn.qysca.utils.parser.PomParentNode;
 import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties;
 
 import java.io.*;
@@ -35,11 +36,22 @@ public class CsvWriter {
         write(line);
     }
 
+    /**
+     *  写入csv文件
+     * @param pomParentNode
+     */
+    public void writePomParentNode(PomParentNode pomParentNode) {
+        String line = pomParentNode.getSon().getGroupId() + "," + pomParentNode.getSon().getArtifactId() + "," + pomParentNode.getSon().getVersion()
+                + "," + pomParentNode.getParent().getGroupId() + "," + pomParentNode.getParent().getArtifactId() + "," + pomParentNode.getParent().getVersion();
+        write(line);
+    }
+
 
     /**
      * 私有方法，写入csv文件
      * @param line
      */
+
     private void write(String line){
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(new File(filePath), true));
@@ -54,4 +66,5 @@ public class CsvWriter {
             e.printStackTrace();
         }
     }
+
 }
