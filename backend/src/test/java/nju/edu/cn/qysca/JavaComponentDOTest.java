@@ -84,7 +84,7 @@ public class JavaComponentDOTest {
      */
     @Test
     public void test3(){
-        JavaComponentDO res=javaComponentDao.myMethod("org.example.nju","jackson","1.5.4");
+        JavaComponentDO res=javaComponentDao.findNodeByGAV("org.example.nju","jackson","1.5.4");
         System.out.println(res.getId());
     }
 

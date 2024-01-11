@@ -20,17 +20,13 @@ public interface JavaComponentDao extends Neo4jRepository<JavaComponentDO, Strin
      * @return JavaComponentDO 查询结果
      */
     @Query("MATCH (n:JavaComponent) WHERE n.groupId = $groupId AND n.artifactId = $artifactId AND n.version = $version RETURN n LIMIT 1")
-    JavaComponentDO myMethod(@Param("groupId") String groupId,
-                             @Param("artifactId") String artifactId,
-                             @Param("version") String version);
+    JavaComponentDO findNodeByGAV(@Param("groupId") String groupId,
+                                  @Param("artifactId") String artifactId,
+                                  @Param("version") String version);
 
     /**
      * 删除图数据库中的所有结点和边
      */
     @Query("MATCH (n) DETACH DELETE n")
     void deleteGraph();
-
-    @Query("")
-    List<JavaComponentDO> findNodesRecursion();
-
 }
