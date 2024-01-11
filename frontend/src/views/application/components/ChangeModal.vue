@@ -4,10 +4,10 @@
       <div style="font-size: 20px">更新版本信息</div>
     </template>
     <a-radio-group v-model:value="data.tab" style="margin-top: 15px; margin-left: 25px">
-      <a-radio-button value="项目信息">项目信息</a-radio-button>
+      <a-radio-button value="版本信息">版本信息</a-radio-button>
       <a-radio-button value="文件重传">文件重传</a-radio-button>
     </a-radio-group>
-    <div v-show="data.tab === '项目信息'" style="margin-top: 25px">
+    <div v-show="data.tab === '版本信息'" style="margin-top: 25px">
       <a-form :model="formState" ref="formRef" name="project" :label-col="{ span: 5 }">
         <a-form-item label="项目名称" name="name">
           <a-input v-model:value="formState.name" style="width: 350px" disabled />
@@ -68,7 +68,7 @@ import { CloudUploadOutlined } from '@ant-design/icons-vue'
 const data = reactive({
   open: false,
   record: {},
-  tab: '项目信息'
+  tab: '版本信息'
 })
 const formRef = ref()
 const formState = reactive({
@@ -116,7 +116,7 @@ const submit = () => {
       close()
     })
     .catch(() => {
-      data.tab = '项目信息'
+      data.tab = '版本信息'
     })
 }
 defineExpose({ open })
@@ -138,14 +138,6 @@ defineExpose({ open })
 }
 :deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before) {
   background-color: #6f005f;
-}
-/* 输入框样式 */
-:deep(.ant-input:hover) {
-  border-color: #6f005f;
-}
-:deep(.ant-input:focus) {
-  border-color: #6f005f;
-  box-shadow: 0 0 0 2px rgba(111, 0, 95, 0.1);
 }
 .upload {
   display: flex;
@@ -198,3 +190,4 @@ defineExpose({ open })
   color: #6f005f;
 }
 </style>
+<style scoped src="@/atdv/input.css"></style>
