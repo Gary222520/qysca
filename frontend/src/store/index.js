@@ -6,16 +6,56 @@ export default createStore({
       {
         name: '项目1',
         data: [
-          { version: '2.0.1', language: 'java', target: 'pom.xml', build: 'maven', time: 'xxx', comment: 'xxxxx' },
-          { version: '2.0.0', language: 'java', target: 'pom.xml', build: 'maven', time: 'xxx', comment: 'xxxxx' },
-          { version: '1.0.0', language: 'java', target: 'pom.xml', build: 'maven', time: 'xxx', comment: 'xxxxx' }
+          {
+            version: '2.0.1',
+            language: 'java',
+            target: 'pom.xml',
+            tool: 'maven',
+            time: 'xxx',
+            comment: 'xxxxx',
+            popconfirm: false
+          },
+          {
+            version: '2.0.0',
+            language: 'java',
+            target: 'pom.xml',
+            tool: 'maven',
+            time: 'xxx',
+            comment: 'xxxxx',
+            popconfirm: false
+          },
+          {
+            version: '1.0.0',
+            language: 'java',
+            target: 'pom.xml',
+            tool: 'maven',
+            time: 'xxx',
+            comment: 'xxxxx',
+            popconfirm: false
+          }
         ]
       },
       {
         name: '项目2',
         data: [
-          { version: '2.0.0', language: 'python', target: 'zip', build: 'pip', time: 'xxx', comment: 'xxxxx' },
-          { version: '1.0.0', language: 'python', target: 'zip', build: 'pip', time: 'xxx', comment: 'xxxxx' }
+          {
+            version: '2.0.0',
+            language: 'python',
+            target: 'zip',
+            tool: 'pip',
+            time: 'xxx',
+            comment: 'xxxxx',
+            popconfirm: false
+          },
+          {
+            version: '1.0.0',
+            language: 'python',
+            target: 'zip',
+            tool: 'pip',
+            time: 'xxx',
+            comment: 'xxxxx',
+            popconfirm: false
+          }
         ]
       }
     ]

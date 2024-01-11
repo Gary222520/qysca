@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.util;
+package nju.edu.cn.qysca.utils.idGenerator;
 
 import org.springframework.data.neo4j.core.schema.IdGenerator;
 import org.springframework.stereotype.Component;

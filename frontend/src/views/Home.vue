@@ -1,22 +1,26 @@
 <template>
   <a-layout style="min-height: 100vh">
-    <a-layout-sider :collapsed="data.collapsed" :trigger="null" collapsible style="background: #fff">
+    <a-layout-sider class="sider" :collapsed="data.collapsed" :trigger="null" collapsible>
       <div class="title">
         <img style="width: 40px" src="@/assets/logo_big.png" />
         <div class="title_text" v-if="!data.collapsed">QYSCA</div>
       </div>
       <a-menu v-model:selectedKeys="data.selectedKeys" theme="light" mode="inline" @click="handleMenu">
         <a-menu-item key="summary">
-          <AppstoreOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ data.menu[0].meta.breadcrumb }}</span>
+          <PieChartOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('summary') }}</span>
         </a-menu-item>
         <a-menu-item key="scan">
           <SearchOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ data.menu[1].meta.breadcrumb }}</span>
+          <span>{{ getTitle('scan') }}</span>
         </a-menu-item>
         <a-menu-item key="application">
           <ScheduleOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ data.menu[2].meta.breadcrumb }}</span>
+          <span>{{ getTitle('application') }}</span>
+        </a-menu-item>
+        <a-menu-item key="component">
+          <AppstoreOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('component') }}</span>
         </a-menu-item>
       </a-menu>
     </a-layout-sider>
@@ -32,8 +36,8 @@
   </a-layout>
 </template>
 
-<script>
-import { reactive, computed } from 'vue'
+<script setup>
+import { reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import routes from '@/router/routeTable'
 import {
@@ -41,40 +45,37 @@ import {
   SearchOutlined,
   ScheduleOutlined,
   MenuUnfoldOutlined,
-  MenuFoldOutlined
+  MenuFoldOutlined,
+  PieChartOutlined
 } from '@ant-design/icons-vue'
-export default {
-  components: {
-    AppstoreOutlined,
-    SearchOutlined,
-    ScheduleOutlined,
-    MenuUnfoldOutlined,
-    MenuFoldOutlined
-  },
-  setup() {
-    const router = useRouter()
-    const data = reactive({
-      collapsed: false,
-      selectedKeys: [router.currentRoute.value.meta.menu],
-      menu: computed(() => {
-        return routes.find((item) => item.breadcrumb === '首页')?.children
-      })
-    })
-    const handleMenu = ({ item, key, keyPath }) => {
-      router.push(`/home/${key}`)
-    }
-    return { data, routes, handleMenu }
-  }
+
+const router = useRouter()
+const data = reactive({
+  collapsed: false,
+  selectedKeys: [router.currentRoute.value.meta.menu]
+})
+const handleMenu = ({ item, key, keyPath }) => {
+  router.push(`/home/${key}`)
+}
+const getTitle = (key) => {
+  const homeRoutes = routes.find((item) => item.name === 'home')
+  return homeRoutes.children.find((item) => item.name === key)?.meta.title
 }
 </script>
 
 <style lang="less" scoped>
+.sider {
+  background: #fff;
+}
 .header {
   background: #fff;
   padding: 0 20px;
   height: 50px;
   display: flex;
   align-items: center;
+}
+.content {
+  margin: 15px;
 }
 .title {
   background-color: #fff;
@@ -109,8 +110,5 @@ export default {
   background-color: #6f005f;
   color: #fff;
   font-weight: 700;
-}
-.content {
-  margin: 15px;
 }
 </style>

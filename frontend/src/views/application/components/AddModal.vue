@@ -1,5 +1,5 @@
 <template>
-  <a-modal class="modal" v-model:open="data.open" width="800px" :footer="null">
+  <a-modal v-model:open="data.open" width="800px" :footer="null">
     <template #title>
       <div style="font-size: 20px">新建项目</div>
     </template>
@@ -134,14 +134,13 @@
           <a-upload
             v-if="data.tool === 'maven'"
             class="uploader"
-            name="pom"
+            name="maven"
             action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
             accept=".xml"
             v-model:file-list="upload.fileList"
             :progress="upload.progress"
             :max-count="1"
-            @change="(info) => handleUpload(info, 'pom')"
-            @remove="reUpload">
+            @change="(info) => handleUpload(info, 'maven')">
             <div style="height: calc(100% - 45px); padding-top: 45px">
               <CloudUploadOutlined :style="{ fontSize: '30px' }" />
               <div class="upload_text">pom.xml</div>
@@ -171,141 +170,93 @@
   </a-modal>
 </template>
 
-<script>
-import { reactive, ref } from 'vue'
+<script setup>
+import { reactive, ref, defineExpose } from 'vue'
 import { CloudUploadOutlined } from '@ant-design/icons-vue'
-export default {
-  components: {
-    CloudUploadOutlined
-  },
-  setup() {
-    const data = reactive({
-      open: false,
-      currentStep: 0,
-      steps: [{ title: '选择语言' }, { title: '选择工具' }, { title: '项目信息' }, { title: '上传文件' }],
-      language: 'java',
-      tool: 'maven'
-    })
-    const formRef = ref()
-    const formState = reactive({
-      name: '',
-      version: '1.0.0',
-      comment: ''
-    })
-    const upload = reactive({
-      fileList: [],
-      progress: {
-        strokeColor: {
-          '0%': '#108ee9',
-          '100%': '#87d068'
-        },
-        strokeWidth: 3,
-        format: (percent) => `${parseFloat(percent.toFixed(2))}%`,
-        class: 'test'
-      }
-    })
-    const open = () => {
-      data.open = true
-    }
-    const close = () => {
-      data.open = false
-    }
-    const clear = () => {
-      data.currentStep = 0
-      formState.name = ''
-      formState.version = '1.0.0'
-      formState.comment = ''
-      upload.fileList = []
-    }
-    const selectLanguage = (language) => {
-      data.language = language
-      next()
-    }
-    const selectTool = (tool) => {
-      data.tool = tool
-      next()
-    }
-    const validateVersion = async (_rule, value) => {
-      const reg = /^[1-9]\d?(\.([1-9]?\d)){2}$/
-      if (value === '') {
-        return Promise.reject(new Error('请输入版本编号'))
-      } else if (!reg.test(value)) {
-        return Promise.reject(new Error('版本编号格式为x.x.x（1-99.0-99.0-99）'))
-      } else {
-        return Promise.resolve()
-      }
-    }
-    const validateForm = () => {
-      formRef.value
-        .validate()
-        .then(() => {
-          next()
-        })
-        .catch(() => {})
-    }
-    const handleUpload = (info, type) => {}
-    const back = () => {
-      data.currentStep -= 1
-    }
-    const next = () => {
-      data.currentStep += 1
-    }
-    const submit = () => {
-      data.open = false
-      setTimeout(() => {
-        clear()
-      }, 500)
-    }
-    return {
-      data,
-      formState,
-      formRef,
-      upload,
-      open,
-      close,
-      selectLanguage,
-      selectTool,
-      validateVersion,
-      validateForm,
-      handleUpload,
-      back,
-      next,
-      submit
-    }
+
+const data = reactive({
+  open: false,
+  currentStep: 0,
+  steps: [{ title: '选择语言' }, { title: '选择工具' }, { title: '项目信息' }, { title: '上传文件' }],
+  language: 'java',
+  tool: 'maven'
+})
+const formRef = ref()
+const formState = reactive({
+  name: '',
+  version: '1.0.0',
+  comment: ''
+})
+const upload = reactive({
+  fileList: [],
+  progress: {
+    strokeColor: {
+      '0%': '#108ee9',
+      '100%': '#87d068'
+    },
+    strokeWidth: 3,
+    format: (percent) => `${parseFloat(percent.toFixed(2))}%`,
+    class: 'test'
+  }
+})
+const open = () => {
+  data.open = true
+}
+const close = () => {
+  data.open = false
+}
+const clear = () => {
+  data.currentStep = 0
+  formState.name = ''
+  formState.version = '1.0.0'
+  formState.comment = ''
+  upload.fileList = []
+}
+const selectLanguage = (language) => {
+  data.language = language
+  next()
+}
+const selectTool = (tool) => {
+  data.tool = tool
+  next()
+}
+const validateVersion = async (_rule, value) => {
+  const reg = /^[1-9]\d?(\.([1-9]?\d)){2}$/
+  if (value === '') {
+    return Promise.reject(new Error('请输入版本编号'))
+  } else if (!reg.test(value)) {
+    return Promise.reject(new Error('版本编号格式为x.x.x（1-99.0-99.0-99）'))
+  } else {
+    return Promise.resolve()
   }
 }
+const validateForm = () => {
+  formRef.value
+    .validate()
+    .then(() => {
+      next()
+    })
+    .catch(() => {})
+}
+const handleUpload = (info, type) => {}
+const back = () => {
+  data.currentStep -= 1
+}
+const next = () => {
+  data.currentStep += 1
+}
+const submit = () => {
+  data.open = false
+  setTimeout(() => {
+    clear()
+  }, 500)
+}
+defineExpose({ open })
 </script>
 
 <style lang="less" scoped>
 .steps {
   width: 150px;
-}
-:deep(.ant-steps.ant-steps-vertical > .ant-steps-item) {
-  min-height: 100px;
-}
-:deep(.ant-steps-item-container) {
-  pointer-events: none;
-}
-:deep(.ant-steps .ant-steps-item-process .ant-steps-item-icon) {
-  background-color: #6f005f;
-  border: transparent;
-}
-:deep(.ant-steps .ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-tail::after) {
-  background-color: #6f005f;
-}
-:deep(.ant-steps .ant-steps-item-finish .ant-steps-item-icon) {
-  background-color: rgba(111, 0, 95, 0.1);
-  border-color: rgba(111, 0, 95, 0.1);
-}
-:deep(.ant-steps .ant-steps-item-finish .ant-steps-item-icon > .ant-steps-icon) {
-  color: #6f005f;
-}
-:deep(.ant-input:hover) {
-  border-color: #6f005f;
-}
-:deep(.ant-input:focus) {
-  border-color: #6f005f;
-  box-shadow: 0 0 0 2px rgba(111, 0, 95, 0.1);
 }
 .content {
   width: 600px;
@@ -340,6 +291,7 @@ export default {
   margin-left: 40px;
   margin-bottom: 20px;
 }
+/* 上传文件样式 */
 :deep(.ant-upload-wrapper .ant-upload-select) {
   width: 150px;
   height: 150px;
@@ -384,3 +336,5 @@ export default {
   color: #6f005f;
 }
 </style>
+<style scoped src="@/atdv/steps.css"></style>
+<style scoped src="@/atdv/input.css"></style>
