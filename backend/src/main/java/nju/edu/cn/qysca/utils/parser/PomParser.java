@@ -124,7 +124,7 @@ public class PomParser {
      *
      * @param model pom-model
      */
-    public void parsePomModel(Model model, String pomUrl) {
+    private void parsePomModel(Model model, String pomUrl) {
         if (model == null) {
             System.err.println("pom-model is null");
             return;
@@ -231,14 +231,11 @@ public class PomParser {
         String dependencyGroupId = dependency.getGroupId();
         if (dependencyGroupId.startsWith("${") && dependencyGroupId.endsWith("}")){
             // 为${xxx}形式
-            if (dependencyGroupId.equals("${project.groupId}") || dependencyGroupId.equals("${pom.groupId}"))
-                // 如果写的是${project.groupId}，则直接返回pom中的groupId
+            String propertyName = dependencyGroupId.substring(2, dependencyGroupId.length() - 1);
+            dependencyGroupId = getValueFromProperties(model, propertyName);
+            if (dependencyGroupId.equals("project.groupId") || dependencyGroupId.equals("pom.groupId"))
+                // 如果写的是${project.groupId} 或 ${pom.groupId}，则直接返回pom中的groupId
                 dependencyGroupId = model.getGroupId();
-            else {
-                // 否则则在<properties>下寻找<xxx>
-                String propertyName = dependencyGroupId.substring(2, dependencyGroupId.length() - 1);
-                dependencyGroupId = getValueFromProperties(model, propertyName);
-            }
         }
         return dependencyGroupId;
     }
@@ -272,13 +269,11 @@ public class PomParser {
 
         } else if (dependency.getVersion().startsWith("${") && dependency.getVersion().endsWith("}")) {
             // ${xxx}形式
-            if (dependency.getVersion().equals("${project.version}")) {
-                // 如果写的是${project.version}，则直接返回pom中的version
+            String propertyName = dependency.getVersion().substring(2, dependency.getVersion().length() - 1);
+            version = getValueFromProperties(model,propertyName);
+            if (version.equals("project.version") || version.equals("pom.version")){
+                // 如果写的是${project.version}或者${pom.version}，则直接返回pom中的version
                 version = model.getVersion();
-            } else {
-                //否则如${spring.version},则在<properties>下寻找<spring.version>
-                String propertyName = dependency.getVersion().substring(2, dependency.getVersion().length() - 1);
-                version = getValueFromProperties(model,propertyName);
             }
         } else {
             // 直接写明了版本号
@@ -295,11 +290,24 @@ public class PomParser {
      * @return value
      */
     private static String getValueFromProperties(Model model, String propertyName){
+        if (propertyName.equals("project.version") || propertyName.equals("pom.version") || propertyName.equals("project.groupId") || propertyName.equals("project.artifactId"))
+            return propertyName;
+
         String value = model.getProperties().getProperty(propertyName);
         if (value == null){
+            // 在自己的properties中找不到，则尝试去parent中找
             String parentPomUrl = getParentPomUrl(model);
+            if (parentPomUrl == null){
+                // 如果不管怎样在properties中找不到，则直接返回propertyName（例如 project.version）
+                return propertyName;
+            }
             Model parentModel = PomSpider.getPomModel(parentPomUrl);
             return getValueFromProperties(parentModel, propertyName);
+        }
+
+        // 有可能在<properties>中还是${xxx}，那就递归地要在查一次
+        if (value.startsWith("${") && value.endsWith("}")){
+            return getValueFromProperties(model, value.substring(2, value.length() - 1));
         }
         return value;
     }

@@ -18,12 +18,15 @@ public class Spider {
 
         List<String> directoryUrlList = readLinesFromFile(DEFAULT_URL_LIST_PATH);
         for (String directoryUrl : directoryUrlList) {
-
+            if (directoryUrl.startsWith("//"))
+                continue;
+            System.out.println("开始爬取并解析： "+ directoryUrl);
             List<String> pomUrlList =  PomSpider.findAllPomUrlInDirectory(directoryUrl);
             PomParser pomParser = new PomParser();
             for (String pomUrl : pomUrlList){
                 pomParser.parsePom(pomUrl);
             }
+            System.out.println();
         }
     }
 
