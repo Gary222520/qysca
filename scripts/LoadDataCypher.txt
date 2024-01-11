@@ -1,0 +1,39 @@
+// clear data
+MATCH (n) DETACH DELETE n;
+
+// create unique constrains
+CREATE CONSTRAINT IF NOT EXISTS FOR (n:JavaComponent) REQUIRE (n.id) IS UNIQUE;
+CREATE CONSTRAINT IF NOT EXISTS FOR (n:JavaComponent) REQUIRE (n.groupId,n.artifactId,n.version) IS UNIQUE;
+
+// create indexes
+CREATE INDEX IF NOT EXISTS FOR (n:JavaComponent) ON n.groupId;
+CREATE INDEX IF NOT EXISTS FOR (n:JavaComponent) ON n.artifactId;
+CREATE INDEX IF NOT EXISTS FOR (n:JavaComponent) ON n.name;
+
+// load Java Component Nodes
+:auto LOAD CSV WITH HEADERS FROM 'https://box.nju.edu.cn/f/4581efd5ae754598a2ca/?dl=1' AS line
+CALL{
+WITH line
+CREATE (:JavaComponent{id: line.id, groupId: line.groupId, artifactId: line.artifactId, version: line.version, openSource: toBoolean(line.openSource), licenseNames: split(line.licenseNames, ';'), licenseUrls: split(line.licenseUrls, ';'), name: line.name,author: line.author, description: line.description, url: line.url})
+}IN TRANSACTIONS OF 10000 ROWS
+RETURN COUNT(*);
+
+// create depends realationships
+:auto LOAD CSV WITH HEADERS FROM 'https://box.nju.edu.cn/f/0f9cd7ac65474ba58369/?dl=1' AS line
+CALL{
+WITH line
+MATCH (f:JavaComponent {id: line.fid})
+MATCH (t:JavaComponent {id: line.tid})
+MERGE (f)-[:depends]->(t)
+}IN TRANSACTIONS OF 10000 ROWS
+RETURN COUNT(*);
+
+// create hasParent realationships
+:auto LOAD CSV WITH HEADERS FROM 'https://box.nju.edu.cn/f/d25314ee218643358f38/?dl=1' AS line
+CALL{
+WITH line
+MATCH (f:JavaComponent {id: line.fid})
+MATCH (t:JavaComponent {id: line.tid})
+MERGE (f)-[:hasParent]->(t)
+}IN TRANSACTIONS OF 10000 ROWS
+RETURN COUNT(*);
