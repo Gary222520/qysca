@@ -22,8 +22,8 @@ RETURN COUNT(*);
 :auto LOAD CSV WITH HEADERS FROM 'https://box.nju.edu.cn/f/0f9cd7ac65474ba58369/?dl=1' AS line
 CALL{
 WITH line
-MATCH (f:JavaComponent {id: line.fid})
-MATCH (t:JavaComponent {id: line.tid})
+MATCH (f:JavaComponent {groupId: line.fg, artifactId: line.fa, version: line.fv})
+MATCH (t:JavaComponent {groupId: line.tg, artifactId: line.ta, version: line.tv})
 MERGE (f)-[:depends]->(t)
 }IN TRANSACTIONS OF 10000 ROWS
 RETURN COUNT(*);
@@ -32,8 +32,8 @@ RETURN COUNT(*);
 :auto LOAD CSV WITH HEADERS FROM 'https://box.nju.edu.cn/f/d25314ee218643358f38/?dl=1' AS line
 CALL{
 WITH line
-MATCH (f:JavaComponent {id: line.fid})
-MATCH (t:JavaComponent {id: line.tid})
+MATCH (f:JavaComponent {groupId: line.fg, artifactId: line.fa, version: line.fv})
+MATCH (t:JavaComponent {groupId: line.tg, artifactId: line.ta, version: line.tv})
 MERGE (f)-[:hasParent]->(t)
 }IN TRANSACTIONS OF 10000 ROWS
 RETURN COUNT(*);
