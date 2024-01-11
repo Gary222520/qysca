@@ -7,16 +7,20 @@
       </div>
       <a-menu v-model:selectedKeys="data.selectedKeys" theme="light" mode="inline" @click="handleMenu">
         <a-menu-item key="summary">
-          <AppstoreOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ data.menu[0].meta.breadcrumb }}</span>
+          <PieChartOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('summary') }}</span>
         </a-menu-item>
         <a-menu-item key="scan">
           <SearchOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ data.menu[1].meta.breadcrumb }}</span>
+          <span>{{ getTitle('scan') }}</span>
         </a-menu-item>
         <a-menu-item key="application">
           <ScheduleOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ data.menu[2].meta.breadcrumb }}</span>
+          <span>{{ getTitle('application') }}</span>
+        </a-menu-item>
+        <a-menu-item key="component">
+          <AppstoreOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('component') }}</span>
         </a-menu-item>
       </a-menu>
     </a-layout-sider>
@@ -33,7 +37,7 @@
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue'
+import { reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import routes from '@/router/routeTable'
 import {
@@ -41,19 +45,21 @@ import {
   SearchOutlined,
   ScheduleOutlined,
   MenuUnfoldOutlined,
-  MenuFoldOutlined
+  MenuFoldOutlined,
+  PieChartOutlined
 } from '@ant-design/icons-vue'
 
 const router = useRouter()
 const data = reactive({
   collapsed: false,
-  selectedKeys: [router.currentRoute.value.meta.menu],
-  menu: computed(() => {
-    return routes.find((item) => item.breadcrumb === '首页')?.children
-  })
+  selectedKeys: [router.currentRoute.value.meta.menu]
 })
 const handleMenu = ({ item, key, keyPath }) => {
   router.push(`/home/${key}`)
+}
+const getTitle = (key) => {
+  const homeRoutes = routes.find((item) => item.name === 'home')
+  return homeRoutes.children.find((item) => item.name === key)?.meta.title
 }
 </script>
 

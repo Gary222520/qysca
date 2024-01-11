@@ -1,0 +1,19 @@
+:deep(
+    .ant-input-search
+      > .ant-input-group
+      > .ant-input-group-addon:last-child
+      .ant-input-search-button:not(.ant-btn-primary)
+  ) {
+  width: 50px;
+  background-color: #6f005f;
+  color: #fff;
+  border-color: #6f005f;
+}
+:deep(
+    .ant-input-search
+      > .ant-input-group
+      > .ant-input-group-addon:last-child
+      .ant-input-search-button:not(.ant-btn-primary):hover
+  ) {
+  opacity: 0.8;
+}
