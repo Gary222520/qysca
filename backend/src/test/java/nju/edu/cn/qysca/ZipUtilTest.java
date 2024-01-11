@@ -1,6 +1,6 @@
 package nju.edu.cn.qysca;
 
-import nju.edu.cn.qysca.util.ZipUtil;
+import nju.edu.cn.qysca.utils.ZipUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.util;
+package nju.edu.cn.qysca.utils.idGenerator;
 
 import java.util.UUID;
 

@@ -1,6 +1,6 @@
 package nju.edu.cn.qysca;
 
-import nju.edu.cn.qysca.util.JarUtil;
+import nju.edu.cn.qysca.utils.JarUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
