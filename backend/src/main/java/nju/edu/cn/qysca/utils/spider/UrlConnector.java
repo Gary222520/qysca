@@ -74,7 +74,6 @@ public class UrlConnector {
             if (inputStream != null) {
                 inputStream.close();
             }
-            System.out.println("info:" + url + " download success");
         } catch (IOException e) {
             e.printStackTrace();
         }
