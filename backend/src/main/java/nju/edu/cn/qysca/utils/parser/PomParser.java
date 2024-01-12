@@ -224,10 +224,18 @@ public class PomParser {
             String dependencyScope = dependency.getScope();
             if (dependencyScope == null)
                 dependencyScope = "compile";
+            // 获取依赖的optional，默认为FALSE
+            String dependencyOptional = dependency.getOptional();
+            if (dependencyOptional == null)
+                dependencyOptional = "FALSE";
 
             // 获取依赖的pom文件url，
             String dependencyUrl = buildUrl(dependencyGroupId, dependencyArtifactId, dependencyVersion);
             String dependencyPomUrl = PomSpider.findPomFileUrlInDirectory(dependencyUrl);
+            if (dependencyPomUrl == null){
+                System.err.println("can't build dependency model of " + dependencyGroupId + ":" + dependencyArtifactId + ":" + dependencyVersion + " in pom file: " + pomUrl);
+                continue;
+            }
 
             Model dependencyModel = PomSpider.getPomModel(dependencyPomUrl);
             if (dependencyModel == null){
@@ -237,7 +245,7 @@ public class PomParser {
 
             // 创建依赖关系并记录
             // 只会写直接依赖关系 (不包括继承parent的依赖）
-            DependsRelationship dependsRelationship = new DependsRelationship(groupId, artifactId, version, dependencyGroupId, dependencyArtifactId, dependencyVersion);
+            DependsRelationship dependsRelationship = new DependsRelationship(groupId, artifactId, version, dependencyGroupId, dependencyArtifactId, dependencyVersion, dependencyScope, dependencyOptional);
             dependsRelationshipList.add(dependsRelationship);
 
             // 继续解析依赖的pom
@@ -270,8 +278,8 @@ public class PomParser {
             // 为${xxx}形式
             String propertyName = dependencyGroupId.substring(2, dependencyGroupId.length() - 1);
             dependencyGroupId = getValueFromProperties(model, propertyName);
-            if (dependencyGroupId.equals("project.groupId") || dependencyGroupId.equals("pom.groupId"))
-                // 如果写的是${project.groupId} 或 ${pom.groupId}，则直接返回pom中的groupId
+            if (dependencyGroupId.equals("project.groupId") || dependencyGroupId.equals("pom.groupId") || dependencyGroupId.equals("groupId"))
+                // 如果写的是${project.groupId} 或 ${pom.groupId} 或 ${groupId}，则直接返回pom中的groupId
                 dependencyGroupId = model.getGroupId();
             if (dependencyGroupId.equals("project.parent.groupId"))
                 dependencyGroupId = model.getParent().getGroupId();
@@ -310,8 +318,8 @@ public class PomParser {
             // ${xxx}形式
             String propertyName = dependency.getVersion().substring(2, dependency.getVersion().length() - 1);
             version = getValueFromProperties(model,propertyName);
-            if (version.equals("project.version") || version.equals("pom.version")){
-                // 如果写的是${project.version}或者${pom.version}，则直接返回pom中的version
+            if (version.equals("project.version") || version.equals("pom.version") || version.equals("version")){
+                // 如果写的是${project.version}或者${pom.version}或者${version}，则直接返回pom中的version
                 version = model.getVersion();
             }
             if (version.equals("project.parent.version"))
@@ -331,7 +339,9 @@ public class PomParser {
      * @return value
      */
     private static String getValueFromProperties(Model model, String propertyName){
-        if (propertyName.equals("project.version") || propertyName.equals("pom.version") || propertyName.equals("project.groupId") || propertyName.equals("pom.groupId") || propertyName.equals("project.parent.groupId") || propertyName.equals("project.parent.version"))
+        if (propertyName.equals("project.version") || propertyName.equals("pom.version") || propertyName.equals("project.groupId")
+                || propertyName.equals("pom.groupId") || propertyName.equals("project.parent.groupId") || propertyName.equals("project.parent.version")
+                || propertyName.equals("groupId") || propertyName.equals("version"))
             return propertyName;
 
         String value = model.getProperties().getProperty(propertyName);

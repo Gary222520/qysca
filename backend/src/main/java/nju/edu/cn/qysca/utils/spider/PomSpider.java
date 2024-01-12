@@ -62,9 +62,7 @@ public class PomSpider {
 
         Document document = UrlConnector.getDocumentByUrl(directoryUrl);
 
-        // 确认url存在
         if (document == null) {
-            System.err.println("\"" + directoryUrl + "\" is not a valid url.");
             return null;
         }
 

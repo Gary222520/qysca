@@ -33,9 +33,9 @@ public class UrlConnector {
             // 连接到url并获取其内容
             return Jsoup.connect(url).get();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("can't visit or it is invalid: " + url);
+            return null;
         }
-        return null;
     }
 
 
