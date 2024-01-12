@@ -28,15 +28,15 @@ public class PomParser {
     /**
      * csv pom信息地址
      */
-    private static final String CSV_JAVA_COMPONENT_NODE_PATH = "backend/src/main/resources/csv/pomInfo.csv";
+    private static final String CSV_JAVA_COMPONENT_NODE_PATH = "backend/src/main/resources/csv/JavaComponentNodes.csv";
     /**
      * csv pom依赖关系地址
      */
-    private static final String CSV_DEPENDS_RELATIONSHIP_PATH = "backend/src/main/resources/csv/pomDependency.csv";
+    private static final String CSV_DEPENDS_RELATIONSHIP_PATH = "backend/src/main/resources/csv/dependsRelationships.csv";
     /**
      * csv pom父子关系地址
      */
-    private static final String CSV_HAS_PARENT_RELATIONSHIP_PATH = "backend/src/main/resources/csv/pomParent.csv";
+    private static final String CSV_HAS_PARENT_RELATIONSHIP_PATH = "backend/src/main/resources/csv/hasParentRelationships.csv";
     /**
      * pom文件保存目录
      */
@@ -179,12 +179,12 @@ public class PomParser {
         List<String> licenseNames = model.getLicenses().stream().map(License::getName).collect(Collectors.toList());
         List<String> licenseUrls = model.getLicenses().stream().map(License::getUrl).collect(Collectors.toList());
         String name = model.getName();
-        String author = model.getDevelopers().stream().map(Developer::getName).collect(Collectors.joining(";")); // 用developer表示作者，多个作者之间用分号分隔
+        List<String> developers = model.getDevelopers().stream().map(Developer::getName).collect(Collectors.toList());
         String description = model.getDescription();
         String url = model.getUrl();
 
         // 创建java组件并记录
-        JavaComponentNode javaComponentNode = new JavaComponentNode(id, groupId, artifactId, version, openSource, licenseNames, licenseUrls, name, author, description, url);
+        JavaComponentNode javaComponentNode = new JavaComponentNode(id, groupId, artifactId, version, openSource, licenseNames, licenseUrls, name, developers, description, url, pomUrl);
         javaComponentNodeList.add(javaComponentNode);
 
         // 首先需要查找<parent>项目中的所有依赖，并不断递归查找<parent>
@@ -273,6 +273,8 @@ public class PomParser {
             if (dependencyGroupId.equals("project.groupId") || dependencyGroupId.equals("pom.groupId"))
                 // 如果写的是${project.groupId} 或 ${pom.groupId}，则直接返回pom中的groupId
                 dependencyGroupId = model.getGroupId();
+            if (dependencyGroupId.equals("project.parent.groupId"))
+                dependencyGroupId = model.getParent().getGroupId();
         }
         return dependencyGroupId;
     }
@@ -312,6 +314,8 @@ public class PomParser {
                 // 如果写的是${project.version}或者${pom.version}，则直接返回pom中的version
                 version = model.getVersion();
             }
+            if (version.equals("project.parent.version"))
+                version = model.getParent().getVersion();
         } else {
             // 直接写明了版本号
             version = dependency.getVersion();
@@ -327,18 +331,18 @@ public class PomParser {
      * @return value
      */
     private static String getValueFromProperties(Model model, String propertyName){
-        if (propertyName.equals("project.version") || propertyName.equals("pom.version") || propertyName.equals("project.groupId") || propertyName.equals("project.artifactId"))
+        if (propertyName.equals("project.version") || propertyName.equals("pom.version") || propertyName.equals("project.groupId") || propertyName.equals("pom.groupId") || propertyName.equals("project.parent.groupId") || propertyName.equals("project.parent.version"))
             return propertyName;
 
         String value = model.getProperties().getProperty(propertyName);
         if (value == null){
             // 在自己的properties中找不到，则尝试去parent中找
             String parentPomUrl = getParentPomUrl(model);
-            if (parentPomUrl == null){
-                // 如果不管怎样在properties中找不到，则直接返回propertyName（例如 project.version）
+            Model parentModel = PomSpider.getPomModel(parentPomUrl);
+            if (parentModel == null){
+                // 如果不管怎样在properties中找不到，则直接返回propertyName
                 return propertyName;
             }
-            Model parentModel = PomSpider.getPomModel(parentPomUrl);
             return getValueFromProperties(parentModel, propertyName);
         }
 
@@ -377,6 +381,9 @@ public class PomParser {
         if (model.getParent() != null) {
             String parentPomUrl = getParentPomUrl(model);
             Model parentModel = PomSpider.getPomModel(parentPomUrl);
+            if (parentModel == null){
+                return null;
+            }
             return getDependencyVersionFromDependencyManagement(parentModel, dependency);
         }
         // 没有parent，version查不到，报错

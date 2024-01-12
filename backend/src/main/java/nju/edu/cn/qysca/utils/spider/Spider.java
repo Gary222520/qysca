@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Spider {
@@ -22,6 +23,7 @@ public class Spider {
                 continue;
             System.out.println("开始爬取并解析： "+ directoryUrl);
             List<String> pomUrlList =  PomSpider.findAllPomUrlInDirectory(directoryUrl);
+            Collections.reverse(pomUrlList); // 从高版本往低版本爬取
             PomParser pomParser = new PomParser();
             for (String pomUrl : pomUrlList){
                 pomParser.parsePom(pomUrl);
