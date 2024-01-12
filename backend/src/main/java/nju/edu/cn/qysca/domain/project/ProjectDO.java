@@ -1,10 +1,11 @@
-package nju.edu.cn.qysca.domain.components;
+package nju.edu.cn.qysca.domain.project;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nju.edu.cn.qysca.domain.components.ComponentDependencyTreeDO;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
@@ -53,5 +54,5 @@ public class ProjectDO {
 
     @Field("dependencies")
     @ApiModelProperty(value = "依赖组件列表", example = "")
-    private List<DependencyComponentDO> dependencies;
+    private List<ComponentDependencyTreeDO> dependencies;
 }
