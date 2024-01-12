@@ -1,51 +1,24 @@
 package nju.edu.cn.qysca.utils;
 
-import nju.edu.cn.qysca.utils.parser.PomDependencyNode;
-import nju.edu.cn.qysca.utils.parser.PomNode;
-import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties;
+import nju.edu.cn.qysca.utils.parser.DependsRelationship;
+import nju.edu.cn.qysca.utils.parser.JavaComponentNode;
+import nju.edu.cn.qysca.utils.parser.HasParentRelationship;
 
 import java.io.*;
+import java.util.List;
 
 public class CsvWriter {
-    private final String filePath;
-    private final String[] headers;
-
-    public CsvWriter(String filePath, String[] headers){
-        this.filePath = filePath;
-        this.headers = headers;
-    }
-
     /**
      * 写入csv文件
-     * @param pomNode
+     * @param javaComponentNodeList
      */
-    public void writePomNode(PomNode pomNode){
-        String line = pomNode.getGroupId() + "," + pomNode.getArtifactId() + "," + pomNode.getVersion() + "," + pomNode.getName() + "," + pomNode.getPomUrl();
-        write(line);
-    }
-
-    /**
-     * 写入csv文件
-     * @param pomDependencyNode
-     */
-    public void writePomDependencyNode(PomDependencyNode pomDependencyNode){
-        String line = pomDependencyNode.getPomNodeA().getGroupId() + "," + pomDependencyNode.getPomNodeA().getArtifactId() + "," + pomDependencyNode .getPomNodeA().getVersion()
-                + "," + pomDependencyNode.getPomNodeB().getGroupId() + "," + pomDependencyNode.getPomNodeB().getArtifactId() + "," + pomDependencyNode.getPomNodeB().getVersion()
-                + "," + pomDependencyNode.getScope();
-        write(line);
-    }
-
-
-    /**
-     * 私有方法，写入csv文件
-     * @param line
-     */
-    private void write(String line){
+    public static void writeJavaComponentList(List<JavaComponentNode> javaComponentNodeList, String filePath){
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(new File(filePath), true));
-            writer.newLine();
-
-            writer.write(line);
+            for (JavaComponentNode javaComponentNode : javaComponentNodeList) {
+                writer.newLine();
+                writer.write(javaComponentNode.toCsvString());
+            }
             writer.flush();
             writer.close();
         } catch (FileNotFoundException e){
@@ -54,4 +27,46 @@ public class CsvWriter {
             e.printStackTrace();
         }
     }
+
+    /**
+     * 写入csv文件
+     * @param dependsRelationshipList
+     */
+    public static void writeDependsRelationshipList(List<DependsRelationship> dependsRelationshipList, String filePath){
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(new File(filePath), true));
+            for (DependsRelationship dependsRelationship : dependsRelationshipList) {
+                writer.newLine();
+                writer.write(dependsRelationship.toCsvString());
+            }
+            writer.flush();
+            writer.close();
+        } catch (FileNotFoundException e){
+            System.err.println("没有找到指定csv文件:" + filePath);
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * 写入csv文件
+     * @param hasParentRelationshipList
+     */
+    public static void writeHasParentRelationshipList(List<HasParentRelationship> hasParentRelationshipList, String filePath){
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(new File(filePath), true));
+            for (HasParentRelationship hasParentRelationship : hasParentRelationshipList) {
+                writer.newLine();
+                writer.write(hasParentRelationship.toCsvString());
+            }
+            writer.flush();
+            writer.close();
+        } catch (FileNotFoundException e){
+            System.err.println("没有找到指定csv文件:" + filePath);
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
 }
