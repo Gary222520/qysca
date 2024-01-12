@@ -1,13 +1,22 @@
 package nju.edu.cn.qysca;
 
 import nju.edu.cn.qysca.dao.components.JavaComponentDao;
+import nju.edu.cn.qysca.domain.components.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.components.ComponentGavDTO;
 import nju.edu.cn.qysca.domain.components.JavaComponentDO;
+import nju.edu.cn.qysca.service.components.ComponentsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.List;
+
 @SpringBootTest
 public class JavaComponentDOTest {
+
+    @Autowired
+    private ComponentsService componentsService;
+
     @Autowired
     private JavaComponentDao javaComponentDao;
 
@@ -25,7 +34,7 @@ public class JavaComponentDOTest {
         javaComponentDO.getLicenseUrls().add("http://opensource.org/licenses/BSD-3-Clause");
         javaComponentDO.getLicenseUrls().add("https://www.apache.org/licenses/LICENSE-2.0.txt");
         javaComponentDO.setName("REDOD MM");
-        javaComponentDO.setAuthor("Hong Liu");
+        javaComponentDO.setDevelopers(List.of("Hong Liu"));
         javaComponentDO.setDescription("Try My Best");
         javaComponentDO.setUrl("http://mybest.com");
         javaComponentDao.save(javaComponentDO);
@@ -48,7 +57,7 @@ public class JavaComponentDOTest {
         javaComponentDO1.getLicenseUrls().add("http://opensource.org/licenses/BSD-3-Clause");
         javaComponentDO1.getLicenseUrls().add("https://www.apache.org/licenses/LICENSE-2.0.txt");
         javaComponentDO1.setName("Hamcrest Core");
-        javaComponentDO1.setAuthor("Joe Walnes,Nat Pryce,Steve Freeman");
+        javaComponentDO1.setDevelopers(List.of("Joe Walnes,Nat Pryce,Steve Freeman"));
         javaComponentDO1.setDescription("Core Hamcrest API - deprecated, please use \"hamcrest\" instead");
         javaComponentDO1.setUrl("http://hamcrest.org/JavaHamcrest/");
 
@@ -58,7 +67,7 @@ public class JavaComponentDOTest {
         javaComponentDO2.getLicenseNames().add("BSD License 3");
         javaComponentDO2.getLicenseUrls().add("http://opensource.org/licenses/BSD-3-Clause");
         javaComponentDO2.setName("My Jackson");
-        javaComponentDO2.setAuthor("Jia Le");
+        javaComponentDO2.setDevelopers(List.of("Jia Le"));
         javaComponentDO2.setDescription("a test component");
         javaComponentDO2.setUrl("http://www.example.com/");
 
@@ -68,7 +77,7 @@ public class JavaComponentDOTest {
         javaComponentDO3.getLicenseNames().add("The Apache Software License, Version 2.0");
         javaComponentDO3.getLicenseUrls().add("https://www.apache.org/licenses/LICENSE-2.0.txt");
         javaComponentDO3.setName("Console of Dom");
-        javaComponentDO3.setAuthor("Tian Yao");
+        javaComponentDO3.setDevelopers(List.of("Tian Yao"));
         javaComponentDO3.setDescription("a test component");
         javaComponentDO3.setUrl("http://www.example.com/");
 
@@ -94,5 +103,39 @@ public class JavaComponentDOTest {
     @Test
     public void test4(){
         javaComponentDao.deleteGraph();
+    }
+
+
+    @Test
+    public void test5(){
+        String groupId="org.slf4j";
+        String artifactId="slf4j-api";
+        String version="2.0.9";
+        List<JavaComponentDO> res=javaComponentDao.findAllDependenciesByGav(groupId,artifactId,version);
+        System.out.println(res.size());
+    }
+
+    @Test
+    public void test6(){
+        String groupId="junit";
+        String artifactId="junit";
+        String version="4.13.1";
+        List<JavaComponentDO> res1=javaComponentDao.findAdjacentDependencyByGAV(groupId,artifactId,version);
+        List<JavaComponentDO> res2=javaComponentDao.findAdjacentParentByGAV(groupId,artifactId,version);
+        System.out.println(res1.size());
+        System.out.println(res2.size());
+    }
+
+    /**
+     * 测试展示树形结构服务
+     */
+    @Test
+    public void test7(){
+        String groupId="org.slf4j";
+        String artifactId="slf4j-api";
+        String version="2.0.9";
+        ComponentGavDTO componentGavDTO=new ComponentGavDTO(groupId,artifactId,version);
+        ComponentDependencyTreeDO ans=componentsService.getComponentTreeByGAV(componentGavDTO);
+        System.out.println(ans.getDependencies().size());
     }
 }

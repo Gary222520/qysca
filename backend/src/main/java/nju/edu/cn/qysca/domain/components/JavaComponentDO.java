@@ -58,14 +58,18 @@ public class JavaComponentDO implements Serializable {
     private String name;
 
     @Property
-    @ApiModelProperty(value = "作者", example = "Joe Walnes,Nat Pryce,Steve Freeman")
-    private String author;
+    @ApiModelProperty(value = "开发者", example = "{Joe Walnes,Nat Pryce,Steve Freeman}")
+    private List<String> developers= new ArrayList<>();
 
     @Property
     @ApiModelProperty(value = "描述", example = "Core Hamcrest API - deprecated, please use \"hamcrest\" instead")
     private String description;
 
     @Property
-    @ApiModelProperty(value = "组件链接", example = "http://hamcrest.org/JavaHamcrest/")
+    @ApiModelProperty(value = "组件连接", example = "http://hamcrest.org/JavaHamcrest/")
     private String url;
+
+    @Property
+    @ApiModelProperty(value = "获取地址链接", example = "https://repo1.maven.org/maven2/org/hamcrest/hamcrest-core/2.2/hamcrest-core-2.2.pom")
+    private String pomUrl;
 }

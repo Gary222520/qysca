@@ -1,6 +1,6 @@
 package nju.edu.cn.qysca.dao.Mongo;
 
-import nju.edu.cn.qysca.domain.components.ProjectDO;
+import nju.edu.cn.qysca.domain.project.ProjectDO;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
