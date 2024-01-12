@@ -1,13 +1,15 @@
 import axios from 'axios'
 
-const request = (method, url, config) => {
-  return axios.create({
+export const baseURL = 'http://localhost:9090'
+export const request = (method, url, config) => {
+  return axios({
+    headers: {
+      'Content-Type': 'application/json'
+    },
     method,
     url,
     ...config,
-    baseURL: process.env.VUE_APP_API_BASE_URL,
+    baseURL,
     timeout: 60000
   })
 }
-
-export default request
