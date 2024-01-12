@@ -1,8 +1,8 @@
 package nju.edu.cn.qysca;
 
 import nju.edu.cn.qysca.dao.Mongo.ProjectDao;
-import nju.edu.cn.qysca.domain.components.DependencyComponentDO;
-import nju.edu.cn.qysca.domain.components.ProjectDO;
+import nju.edu.cn.qysca.domain.components.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.project.ProjectDO;
 import nju.edu.cn.qysca.service.project.ProjectService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,17 +30,17 @@ public class MongoProjectTest {
         projectDO.setId("0BAC7D48D1A8124D99F14805CE32DFF6");
         projectDO.setName("test");
         projectDO.setVersion("1.0.0");
-        List<DependencyComponentDO> dependencies = new ArrayList<>();
-        DependencyComponentDO dependencyComponentDO = new DependencyComponentDO();
-        dependencyComponentDO.setName("dam-core");
-        dependencyComponentDO.setVersion("1.0.0");
-        List<DependencyComponentDO> componentDependencies = new ArrayList<>();
-        DependencyComponentDO componentDependencyDO = new DependencyComponentDO();
+        List<ComponentDependencyTreeDO> dependencies = new ArrayList<>();
+        ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
+        componentDependencyTreeDO.setName("dam-core");
+        componentDependencyTreeDO.setVersion("1.0.0");
+        List<ComponentDependencyTreeDO> componentDependencies = new ArrayList<>();
+        ComponentDependencyTreeDO componentDependencyDO = new ComponentDependencyTreeDO();
         componentDependencyDO.setName("dam-core-dependency");
         componentDependencyDO.setVersion("1.0.0");
         componentDependencies.add(componentDependencyDO);
-        dependencyComponentDO.setDependencies(componentDependencies);
-        dependencies.add(dependencyComponentDO);
+        componentDependencyTreeDO.setDependencies(componentDependencies);
+        dependencies.add(componentDependencyTreeDO);
         projectDO.setDependencies(dependencies);
         projectDao.save(projectDO);
     }
