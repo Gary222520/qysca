@@ -1,15 +1,28 @@
-const { defineConfig } = require('@vue/cli-service')
-module.exports = defineConfig({
-  transpileDependencies: true,
+// const { defineConfig } = require('@vue/cli-service')
+// module.exports = defineConfig({
+//   transpileDependencies: true,
+//   devServer: {
+//     port: 9000,
+//     proxy: {
+//       '/qysca': {
+//         target: 'http://localhost:9090',
+//         ws: true,
+//         changeOrigin: true,
+//         pathRewrite: { '^/qysca': '' }
+//       }
+//     }
+//   }
+// })
+module.exports = {
   devServer: {
     port: 9000,
     proxy: {
-      '/api': {
+      '/qysca': {
         target: 'http://localhost:9090',
-        ws: false,
+        ws: true,
         changeOrigin: true,
-        pathRewrite: { '^/api': '' }
+        pathRewrite: { '^/qysca': '' }
       }
     }
   }
-})
+}

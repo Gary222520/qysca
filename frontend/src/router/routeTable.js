@@ -42,6 +42,12 @@ const routes = [
         name: 'component',
         meta: { menu: 'component', title: '组件管理' },
         component: Component
+      },
+      {
+        path: 'upload',
+        name: 'upload',
+        meta: { menu: 'upload', title: '组件管理' },
+        component: () => import('@/components/Upload.vue')
       }
     ]
   }
