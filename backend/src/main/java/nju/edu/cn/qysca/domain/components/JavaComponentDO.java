@@ -38,7 +38,7 @@ public class JavaComponentDO implements Serializable {
     private boolean openSource=true;
 
     @Relationship(type = "depends", direction = OUTGOING)
-    private Set<JavaComponentDO> dependencies = new HashSet<>();
+    private Set<JavaComponentDependencyDO> dependencies = new HashSet<>();
 
     @Relationship(type = "hasParent", direction = OUTGOING)
     private Set<JavaComponentDO> parents = new HashSet<>();
