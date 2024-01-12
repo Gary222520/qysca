@@ -63,6 +63,7 @@
 
 <script setup>
 import { reactive, ref, defineExpose } from 'vue'
+import { UpdateVersion } from '@/api/frontend'
 import { CloudUploadOutlined } from '@ant-design/icons-vue'
 
 const data = reactive({

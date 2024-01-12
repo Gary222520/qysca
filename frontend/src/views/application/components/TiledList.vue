@@ -13,6 +13,7 @@
 
 <script setup>
 import { reactive, ref, defineExpose } from 'vue'
+import { GetProjectTiled } from '@/api/frontend'
 import Drawer from './Drawer.vue'
 
 const drawer = ref()
@@ -30,12 +31,22 @@ const data = reactive({
   columns: [
     { title: '组件名称', dataIndex: 'name', key: 'name' },
     { title: '版本', dataIndex: 'version', key: 'version' },
+    { title: 'groupId', dataIndex: 'groupId', key: 'groupId' },
+    { title: 'artifactId', dataIndex: 'artifactId', key: 'artifactId' },
     { title: '语言', dataIndex: 'language', key: 'language' },
+    { title: '是否开源', dataIndex: 'openSource', key: 'openSource' },
     { title: '依赖方式', dataIndex: 'depend', key: 'depend' }
   ]
 })
-const show = () => {
+const show = (projectName, version) => {
   data.visible = true
+  GetProjectTiled({ projectName, version })
+    .then((res) => {
+      console.log('GetProjectTree', res)
+    })
+    .catch((e) => {
+      // message.error(e)
+    })
 }
 const hide = () => {
   data.visible = false
