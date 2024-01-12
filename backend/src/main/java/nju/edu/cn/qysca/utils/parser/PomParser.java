@@ -3,10 +3,11 @@ package nju.edu.cn.qysca.utils.parser;
 import nju.edu.cn.qysca.utils.CsvWriter;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import nju.edu.cn.qysca.utils.spider.PomSpider;
-
 import nju.edu.cn.qysca.utils.spider.UrlConnector;
+
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.License;
+import org.apache.maven.model.Developer;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
 
@@ -178,8 +179,8 @@ public class PomParser {
         List<String> licenseNames = model.getLicenses().stream().map(License::getName).collect(Collectors.toList());
         List<String> licenseUrls = model.getLicenses().stream().map(License::getUrl).collect(Collectors.toList());
         String name = model.getName();
-        String author = "";  //todo pom里面貌似没有<author>？
-        String description = model.getDescription(); // todo 有些description似乎还有换行？
+        String author = model.getDevelopers().stream().map(Developer::getName).collect(Collectors.joining(";")); // 用developer表示作者，多个作者之间用分号分隔
+        String description = model.getDescription();
         String url = model.getUrl();
 
         // 创建java组件并记录
@@ -189,7 +190,8 @@ public class PomParser {
         // 首先需要查找<parent>项目中的所有依赖，并不断递归查找<parent>
         if (model.getParent() != null) {
             String parentPomUrl = getParentPomUrl(model);
-            if (parentPomUrl != null) {
+            Model parentModel = PomSpider.getPomModel(parentPomUrl);
+            if (parentModel != null) {
                 // 获取parent的groupId、artifactId、version
                 String parentGroupId = model.getParent().getGroupId();
                 String parentArtifactId = model.getParent().getArtifactId();
@@ -200,9 +202,9 @@ public class PomParser {
                 hasParentRelationshipList.add(hasParentRelationship);
 
                 // 解析parent的pom
-                parsePomModel(PomSpider.getPomModel(parentPomUrl), parentPomUrl);
+                parsePomModel(parentModel, parentPomUrl);
             } else {
-                System.err.println("can't find parent pom in " + pomUrl);
+                System.err.println("can't find parent in pom file: " + pomUrl);
             }
         }
 
@@ -227,13 +229,19 @@ public class PomParser {
             String dependencyUrl = buildUrl(dependencyGroupId, dependencyArtifactId, dependencyVersion);
             String dependencyPomUrl = PomSpider.findPomFileUrlInDirectory(dependencyUrl);
 
+            Model dependencyModel = PomSpider.getPomModel(dependencyPomUrl);
+            if (dependencyModel == null){
+                System.err.println("can't build dependency model of " + dependencyGroupId + ":" + dependencyArtifactId + ":" + dependencyVersion + " in pom file: " + pomUrl);
+                continue;
+            }
+
             // 创建依赖关系并记录
             // 只会写直接依赖关系 (不包括继承parent的依赖）
             DependsRelationship dependsRelationship = new DependsRelationship(groupId, artifactId, version, dependencyGroupId, dependencyArtifactId, dependencyVersion);
             dependsRelationshipList.add(dependsRelationship);
 
             // 继续解析依赖的pom
-            parsePomModel(PomSpider.getPomModel(dependencyPomUrl), dependencyPomUrl);
+            parsePomModel(dependencyModel, dependencyPomUrl);
         }
 
     }

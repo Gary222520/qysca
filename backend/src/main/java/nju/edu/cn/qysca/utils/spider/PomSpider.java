@@ -30,6 +30,10 @@ public class PomSpider {
 
         // 使用jsoup获取pom文件
         Document jsoupDocument = UrlConnector.getDocumentByUrl(pomUrl);
+        if (jsoupDocument == null) {
+            System.err.println("\"" + pomUrl + "\" is not a valid url or a pom file.");
+            return null;
+        }
         String pomString = jsoupDocument.outerHtml();
 
         // 转化为maven-model
@@ -37,12 +41,12 @@ public class PomSpider {
         try {
             MavenXpp3Reader reader = new MavenXpp3Reader();
             model = reader.read(new StringReader(pomString));
+            return model;
         } catch (IOException | XmlPullParserException e) {
             System.err.println("Failed to convert Pom file to a maven model: " + pomUrl);
             e.printStackTrace();
+            return null;
         }
-
-        return model;
     }
 
     /**
@@ -82,7 +86,7 @@ public class PomSpider {
 
     /**
      * 在指定目录url下，获取所有版本的pomUrl
-     * 例如 directoryUrl为 https://repo1.maven.org/maven2/junit/junit， 那么其获得其下面每个版本的一份pom文件的url
+     * 例如 directoryUrl为 https://repo1.maven.org/maven2/junit/junit/， 那么其获得其下面每个版本的一份pom文件的url
      * @param directoryUrl 目录url
      * @return 返回所有版本的pomUrl
      */

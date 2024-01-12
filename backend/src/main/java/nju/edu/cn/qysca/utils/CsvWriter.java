@@ -16,8 +16,8 @@ public class CsvWriter {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(new File(filePath), true));
             for (JavaComponentNode javaComponentNode : javaComponentNodeList) {
-                writer.write(javaComponentNode.toCsvString());
                 writer.newLine();
+                writer.write(javaComponentNode.toCsvString());
             }
             writer.flush();
             writer.close();
@@ -36,8 +36,8 @@ public class CsvWriter {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(new File(filePath), true));
             for (DependsRelationship dependsRelationship : dependsRelationshipList) {
-                writer.write(dependsRelationship.toCsvString());
                 writer.newLine();
+                writer.write(dependsRelationship.toCsvString());
             }
             writer.flush();
             writer.close();
@@ -57,8 +57,8 @@ public class CsvWriter {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(new File(filePath), true));
             for (HasParentRelationship hasParentRelationship : hasParentRelationshipList) {
-                writer.write(hasParentRelationship.toCsvString());
                 writer.newLine();
+                writer.write(hasParentRelationship.toCsvString());
             }
             writer.flush();
             writer.close();
