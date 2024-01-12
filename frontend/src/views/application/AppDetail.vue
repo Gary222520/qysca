@@ -93,12 +93,12 @@ const changeVersion = (value) => {
 }
 const changeMode = (mode) => {
   if (mode === 'tree') {
-    treeList.value.show()
+    treeList.value.show(data.project.name, data.version.version)
     tiledList.value.hide()
   }
   if (mode === 'tiled') {
     treeList.value.hide()
-    tiledList.value.show()
+    tiledList.value.show(data.project.name, data.version.version)
   }
 }
 onMounted(() => {

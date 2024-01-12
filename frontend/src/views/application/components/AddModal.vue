@@ -131,33 +131,9 @@
       </div>
       <div v-if="data.currentStep === 3">
         <div class="upload">
-          <a-upload
-            v-if="data.tool === 'maven'"
-            class="uploader"
-            name="maven"
-            action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
-            accept=".xml"
-            v-model:file-list="upload.fileList"
-            :progress="upload.progress"
-            :max-count="1"
-            @change="(info) => handleUpload(info, 'maven')">
-            <div style="height: calc(100% - 45px); padding-top: 45px">
-              <CloudUploadOutlined :style="{ fontSize: '30px' }" />
-              <div class="upload_text">pom.xml</div>
-            </div>
-          </a-upload>
-          <a-upload v-if="data.tool === 'jar'" class="uploader">
-            <div style="height: calc(100% - 45px); padding-top: 45px">
-              <CloudUploadOutlined :style="{ fontSize: '30px' }" />
-              <div class="upload_text">jar包</div>
-            </div>
-          </a-upload>
-          <a-upload v-if="data.tool === 'zip'" class="uploader">
-            <div style="height: calc(100% - 45px); padding-top: 45px">
-              <CloudUploadOutlined :style="{ fontSize: '30px' }" />
-              <div class="upload_text">zip文件</div>
-            </div>
-          </a-upload>
+          <div v-if="data.tool === 'maven'">
+            <Upload ref="uploadRef"></Upload>
+          </div>
         </div>
       </div>
     </div>
@@ -172,8 +148,11 @@
 
 <script setup>
 import { reactive, ref, defineExpose } from 'vue'
+import { AddProject } from '@/api/frontend'
 import { CloudUploadOutlined } from '@ant-design/icons-vue'
+import Upload from './Upload.vue'
 
+const uploadRef = ref()
 const data = reactive({
   open: false,
   currentStep: 0,
@@ -187,18 +166,6 @@ const formState = reactive({
   version: '1.0.0',
   comment: ''
 })
-const upload = reactive({
-  fileList: [],
-  progress: {
-    strokeColor: {
-      '0%': '#108ee9',
-      '100%': '#87d068'
-    },
-    strokeWidth: 3,
-    format: (percent) => `${parseFloat(percent.toFixed(2))}%`,
-    class: 'test'
-  }
-})
 const open = () => {
   data.open = true
 }
@@ -210,7 +177,7 @@ const clear = () => {
   formState.name = ''
   formState.version = '1.0.0'
   formState.comment = ''
-  upload.fileList = []
+  uploadRef.value.clear()
 }
 const selectLanguage = (language) => {
   data.language = language
@@ -238,7 +205,6 @@ const validateForm = () => {
     })
     .catch(() => {})
 }
-const handleUpload = (info, type) => {}
 const back = () => {
   data.currentStep -= 1
 }
@@ -286,29 +252,9 @@ defineExpose({ open })
   margin-top: 5px;
 }
 .upload {
-  display: flex;
-  align-items: center;
+  width: 500px;
   margin-left: 40px;
   margin-bottom: 20px;
-}
-/* 上传文件样式 */
-:deep(.ant-upload-wrapper .ant-upload-select) {
-  width: 150px;
-  height: 150px;
-  text-align: center;
-  border: 1px dashed #d9d9d9;
-  border-radius: 8px;
-  background-color: rgba(0, 0, 0, 0.02);
-  margin-right: 25px;
-  cursor: pointer;
-}
-:deep(.ant-upload-wrapper .ant-upload-list .ant-upload-list-item-container) {
-  width: 250px;
-  margin-right: 10px;
-}
-.upload_text {
-  margin-top: 8px;
-  color: #666;
 }
 .button {
   display: flex;

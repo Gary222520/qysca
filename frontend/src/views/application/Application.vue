@@ -57,7 +57,9 @@
                           <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
                         </template>
                         <template #okButton>
-                          <a-button danger type="primary" size="small" @click="deleteVersion(record)">删除</a-button>
+                          <a-button danger type="primary" size="small" @click="deleteVersion(project, record)">
+                            删除
+                          </a-button>
                         </template>
                         <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
                       </a-popconfirm>
@@ -95,12 +97,35 @@ import {
   RocketOutlined,
   WarningOutlined
 } from '@ant-design/icons-vue'
-import { reactive, ref } from 'vue'
+import { message } from 'ant-design-vue'
+import { reactive, ref, onMounted } from 'vue'
+import { GetProjectList, GetProjectInfo, DeleteVersion } from '@/api/frontend'
 import AddModal from './components/AddModal.vue'
 import ChangeModal from './components/ChangeModal.vue'
 import UpgradeModal from './components/UpgradeModal.vue'
 import DeleteModal from './components/DeleteModal.vue'
 import { useRouter } from 'vue-router'
+
+onMounted(async () => {
+  let projectNames = []
+  await GetProjectList()
+    .then((res) => {
+      console.log('GetProjectList', res)
+      projectNames = res.data
+    })
+    .catch((e) => {
+      // message.error(e)
+    })
+  projectNames.forEach((projectName) => {
+    GetProjectInfo({ projectName })
+      .then((res) => {
+        console.log('GetProjectInfo', res)
+      })
+      .catch((e) => {
+        // message.error(e)
+      })
+  })
+})
 
 const addModal = ref()
 const changeModal = ref()
@@ -206,7 +231,14 @@ const showDetail = (project, record) => {
 const changeVersion = (project, record) => {
   changeModal.value.open(project, record)
 }
-const deleteVersion = (record) => {
+const deleteVersion = (project, record) => {
+  DeleteVersion({ projectName: project.name, version: record.version })
+    .then((res) => {
+      console.log('DeleteVersion', res)
+    })
+    .catch((e) => {
+      // message.error(e)
+    })
   record.popconfirm = false
 }
 </script>
