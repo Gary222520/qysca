@@ -16,6 +16,7 @@
 
 <script setup>
 import { reactive, defineExpose } from 'vue'
+import { DeleteVersion } from '@/api/frontend'
 import { WarningOutlined } from '@ant-design/icons-vue'
 
 const data = reactive({

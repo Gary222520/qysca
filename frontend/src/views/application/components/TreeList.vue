@@ -10,9 +10,12 @@
       <template #switcherIcon="{ switcherCls }">
         <DownOutlined :class="switcherCls" :style="{ fontSize: '14px' }" />
       </template>
-      <template #icon="{ isLeaf }">
-        <template v-if="isLeaf"><FileOutlined :style="{ fontSize: '16px' }" /></template>
-        <template v-if="!isLeaf"><FolderOpenOutlined :style="{ fontSize: '16px' }" /></template>
+      <template #icon>
+        <ExperimentOutlined :style="{ fontSize: '16px' }" />
+      </template>
+      <template #title="{ title, version }">
+        {{ title }}
+        <a-tag>{{ version }}</a-tag>
       </template>
     </a-tree>
     <Drawer ref="drawer"></Drawer>
@@ -21,90 +24,64 @@
 
 <script setup>
 import { reactive, ref, defineExpose } from 'vue'
-import { DownOutlined, FolderOpenOutlined, FileOutlined } from '@ant-design/icons-vue'
+import { GetProjectTree, ShowTree } from '@/api/frontend'
+import { DownOutlined, ExperimentOutlined } from '@ant-design/icons-vue'
 import Drawer from './Drawer.vue'
+import { message } from 'ant-design-vue'
 
 const drawer = ref()
 const data = reactive({
   visible: true,
-  treeData: [
-    {
-      title: 'parent 1',
-      key: '0-0',
-      isLeaf: false,
-      children: [
-        {
-          title: 'parent 1-0',
-          key: '0-0-0',
-          isLeaf: false,
-          children: [
-            { title: 'leaf', key: '0-0-0-0', isLeaf: true },
-            { title: 'leaf', key: '0-0-0-1', isLeaf: true },
-            { title: 'leaf', key: '0-0-0-2', isLeaf: true }
-          ]
-        },
-        {
-          title: 'parent 1-1',
-          key: '0-0-1',
-          isLeaf: false,
-          children: [{ title: 'leaf', key: '0-0-1-0', isLeaf: true }]
-        },
-        {
-          title: 'parent 1-2',
-          key: '0-0-2',
-          isLeaf: false,
-          children: [
-            { title: 'leaf', key: '0-0-2-0', isLeaf: true },
-            { title: 'leaf', key: '0-0-2-1', isLeaf: true }
-          ]
-        }
-      ]
-    },
-    {
-      title: 'parent 2',
-      key: '0-1',
-      isLeaf: false,
-      children: [
-        {
-          title: 'parent 2-0',
-          key: '0-1-0',
-          isLeaf: false,
-          children: [
-            { title: 'leaf', key: '0-1-0-0', isLeaf: true },
-            { title: 'leaf', key: '0-1-0-1', isLeaf: true },
-            { title: 'leaf', key: '0-1-0-2', isLeaf: true }
-          ]
-        },
-        {
-          title: 'parent 2-1',
-          key: '0-1-1',
-          isLeaf: false,
-          children: [{ title: 'leaf', key: '0-1-1-0', isLeaf: true }]
-        },
-        {
-          title: 'parent 2-2',
-          key: '0-1-2',
-          isLeaf: false,
-          children: [
-            { title: 'leaf', key: '0-1-2-0', isLeaf: true },
-            { title: 'leaf', key: '0-1-2-1', isLeaf: true }
-          ]
-        }
-      ]
-    }
-  ],
+  treeData: [],
   expandedKeys: [],
   selectedKeys: []
 })
-const show = () => {
+const show = (projectName, version) => {
   data.visible = true
+  GetProjectTree({ projectName, version })
+    .then((res) => {
+      console.log('GetProjectTree', res)
+    })
+    .catch((e) => {
+      // message.error(e)
+    })
+  ShowTree({
+    groupId: 'org.slf4j',
+    artifactId: 'slf4j-api',
+    version: '2.0.9'
+  })
+    .then((res) => {
+      // console.log('ShowTree', res)
+      const resData = res.data.data
+      const treeData = createTree([resData], 0, 0)
+      data.treeData = treeData
+    })
+    .catch((e) => {
+      message.error(e)
+    })
+}
+const createTree = (arr, preKey) => {
+  const treeData = []
+  arr.forEach((item, index) => {
+    const key = `${preKey}-${index}`
+    const data = {
+      ...item,
+      title: item.name,
+      key,
+      children: createTree(item.dependencies, key)
+    }
+    if (data.children.length === 0) delete data.children
+    delete data.dependencies
+    treeData.push(data)
+  })
+  return treeData
 }
 const hide = () => {
   data.visible = false
 }
 const selectNode = (selectedKeys, e) => {
   drawer.value.open({ name: e.node.title })
-  // data.selectedKeys = []
+  data.selectedKeys = []
 }
 defineExpose({ show, hide })
 </script>
