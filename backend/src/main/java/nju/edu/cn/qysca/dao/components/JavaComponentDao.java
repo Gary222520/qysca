@@ -24,9 +24,47 @@ public interface JavaComponentDao extends Neo4jRepository<JavaComponentDO, Strin
                                   @Param("artifactId") String artifactId,
                                   @Param("version") String version);
 
+
+    /**
+     * 查询指定GAV的邻接依赖结点信息
+     * @param groupId    组织id
+     * @param artifactId 工件id
+     * @param version    版本号
+     * @return List<JavaComponentDO> 查询结果
+     */
+    @Query("MATCH (:JavaComponent{groupId:$groupId,artifactId:$artifactId,version:$version})-[:depends]->(m:JavaComponent) RETURN m")
+    List<JavaComponentDO> findAdjacentDependencyByGAV(@Param("groupId") String groupId,
+                                              @Param("artifactId") String artifactId,
+                                              @Param("version") String version);
+
+    /**
+     * 查询指定GAV的邻接父母结点信息
+     * @param groupId    组织id
+     * @param artifactId 工件id
+     * @param version    版本号
+     * @return List<JavaComponentDO> 查询结果
+     */
+    @Query("MATCH (:JavaComponent{groupId:$groupId,artifactId:$artifactId,version:$version})-[:hasParent]->(m:JavaComponent) RETURN m")
+    List<JavaComponentDO> findAdjacentParentByGAV(@Param("groupId") String groupId,
+                                                        @Param("artifactId") String artifactId,
+                                                        @Param("version") String version);
+
+    /**
+     * 查询指定GAV节点的所有关联节点
+     * @param groupId    组织id
+     * @param artifactId 工件id
+     * @param version    版本号
+     * @return List<JavaComponentDO> 查询结果
+     */
+    @Query("MATCH p=(n:JavaComponent{groupId: $groupId,artifactId: $artifactId,version:$version})-[r]->*(m:JavaComponent) RETURN p")
+    List<JavaComponentDO> findAllDependenciesByGav(@Param("groupId") String groupId,
+                                                   @Param("artifactId")String artifactId,
+                                                   @Param("version")String version);
+
     /**
      * 删除图数据库中的所有结点和边
      */
     @Query("MATCH (n) DETACH DELETE n")
     void deleteGraph();
+
 }
