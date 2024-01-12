@@ -24,7 +24,7 @@ CALL{
 WITH line
 MATCH (f:JavaComponent {groupId: line.fg, artifactId: line.fa, version: line.fv})
 MATCH (t:JavaComponent {groupId: line.tg, artifactId: line.ta, version: line.tv})
-MERGE (f)-[:depends]->(t)
+MERGE (f)-[:depends{scope: line.scope,optional: toBoolean(line.optional)}]->(t)
 }IN TRANSACTIONS OF 10000 ROWS
 RETURN COUNT(*);
 
