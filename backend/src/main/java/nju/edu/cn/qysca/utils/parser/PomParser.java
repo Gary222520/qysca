@@ -86,7 +86,7 @@ public class PomParser {
         hasParentRelationshipList = new ArrayList<>();
 
         //解析pom文件
-        parsePomModel(PomSpider.getPomModel(pomUrl), pomUrl);
+        parsePomModel(PomSpider.getPomModel(pomUrl), pomUrl, 0);
 
         //将Java组件、依赖关系、父子关系写入csv
         CsvWriter.writeJavaComponentList(javaComponentNodeList, CSV_JAVA_COMPONENT_NODE_PATH);
@@ -142,7 +142,7 @@ public class PomParser {
      *
      * @param model pom-model
      */
-    private void parsePomModel(Model model, String pomUrl) {
+    private void parsePomModel(Model model, String pomUrl, int depth) {
         if (model == null) {
             System.err.println("pom-model is null");
             return;
@@ -167,7 +167,7 @@ public class PomParser {
         pomRecords.add(groupId + ":" + artifactId + ":" + version);
         newPomRecords.add(groupId + ":" + artifactId + ":" + version);
 
-        System.out.println("New Pom Url found: " + pomUrl);
+        System.out.println("New Pom Url found: " + pomUrl + " (depth=" + depth +")");
         new_pom_count++;
 
         // 下载pom
@@ -187,6 +187,10 @@ public class PomParser {
         JavaComponentNode javaComponentNode = new JavaComponentNode(id, groupId, artifactId, version, openSource, licenseNames, licenseUrls, name, developers, description, url, pomUrl);
         javaComponentNodeList.add(javaComponentNode);
 
+        //设置不要递归的太深，但这样会造成较深的组件的依赖关系不完全
+        if (depth>7)
+            return;
+
         // 首先需要查找<parent>项目中的所有依赖，并不断递归查找<parent>
         if (model.getParent() != null) {
             String parentPomUrl = getParentPomUrl(model);
@@ -202,9 +206,9 @@ public class PomParser {
                 hasParentRelationshipList.add(hasParentRelationship);
 
                 // 解析parent的pom
-                parsePomModel(parentModel, parentPomUrl);
+                parsePomModel(parentModel, parentPomUrl, depth);
             } else {
-                System.err.println("can't find parent in pom file: " + pomUrl);
+                System.err.println("can't find parent in pom file: " + pomUrl + " (depth=" + depth +")");
             }
         }
 
@@ -233,13 +237,13 @@ public class PomParser {
             String dependencyUrl = buildUrl(dependencyGroupId, dependencyArtifactId, dependencyVersion);
             String dependencyPomUrl = PomSpider.findPomFileUrlInDirectory(dependencyUrl);
             if (dependencyPomUrl == null){
-                System.err.println("can't build dependency model of " + dependencyGroupId + ":" + dependencyArtifactId + ":" + dependencyVersion + " in pom file: " + pomUrl);
+                System.err.println("can't build dependency model of " + dependencyGroupId + ":" + dependencyArtifactId + ":" + dependencyVersion + " in pom file: " + pomUrl + " (depth=" + depth +")");
                 continue;
             }
 
             Model dependencyModel = PomSpider.getPomModel(dependencyPomUrl);
             if (dependencyModel == null){
-                System.err.println("can't build dependency model of " + dependencyGroupId + ":" + dependencyArtifactId + ":" + dependencyVersion + " in pom file: " + pomUrl);
+                System.err.println("can't build dependency model of " + dependencyGroupId + ":" + dependencyArtifactId + ":" + dependencyVersion + " in pom file: " + pomUrl + " (depth=" + depth +")");
                 continue;
             }
 
@@ -249,7 +253,7 @@ public class PomParser {
             dependsRelationshipList.add(dependsRelationship);
 
             // 继续解析依赖的pom
-            parsePomModel(dependencyModel, dependencyPomUrl);
+            parsePomModel(dependencyModel, dependencyPomUrl, depth+1);
         }
 
     }
@@ -281,7 +285,7 @@ public class PomParser {
             if (dependencyGroupId.equals("project.groupId") || dependencyGroupId.equals("pom.groupId") || dependencyGroupId.equals("groupId"))
                 // 如果写的是${project.groupId} 或 ${pom.groupId} 或 ${groupId}，则直接返回pom中的groupId
                 dependencyGroupId = model.getGroupId();
-            if (dependencyGroupId.equals("project.parent.groupId"))
+            if (dependencyGroupId.equals("project.parent.groupId") || dependencyGroupId.equals("parent.groupId"))
                 dependencyGroupId = model.getParent().getGroupId();
         }
         return dependencyGroupId;
@@ -322,7 +326,7 @@ public class PomParser {
                 // 如果写的是${project.version}或者${pom.version}或者${version}，则直接返回pom中的version
                 version = model.getVersion();
             }
-            if (version.equals("project.parent.version"))
+            if (version.equals("project.parent.version") || version.equals("parent.version"))
                 version = model.getParent().getVersion();
         } else {
             // 直接写明了版本号
@@ -341,7 +345,7 @@ public class PomParser {
     private static String getValueFromProperties(Model model, String propertyName){
         if (propertyName.equals("project.version") || propertyName.equals("pom.version") || propertyName.equals("project.groupId")
                 || propertyName.equals("pom.groupId") || propertyName.equals("project.parent.groupId") || propertyName.equals("project.parent.version")
-                || propertyName.equals("groupId") || propertyName.equals("version"))
+                || propertyName.equals("groupId") || propertyName.equals("version") || propertyName.equals("parent.groupId") || propertyName.equals("parent.version"))
             return propertyName;
 
         String value = model.getProperties().getProperty(propertyName);
