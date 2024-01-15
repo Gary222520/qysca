@@ -1,6 +1,7 @@
 package spider;
 
 import dataAccess.DataAccessInterface;
+import dataAccess.OpensourceComponentDODataAccess;
 import domain.OpensourceComponentDO;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -13,7 +14,7 @@ import java.util.Set;
 
 public class PomSpider implements Spider<OpensourceComponentDO>{
 
-    private final DataAccessInterface<OpensourceComponentDO> dataAccess;
+    private DataAccessInterface<OpensourceComponentDO> dataAccess;
 
     /**
      * 用以记录以及爬取过的url，防止重复爬取
@@ -23,12 +24,9 @@ public class PomSpider implements Spider<OpensourceComponentDO>{
 
     private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
 
-
-    public PomSpider(DataAccessInterface<OpensourceComponentDO> dataAccess){
+    @Override
+    public void crawlMany(String directoryUrl, DataAccessInterface<OpensourceComponentDO> dataAccess){
         this.dataAccess = dataAccess;
-    }
-
-    public void crawlMany(String directoryUrl){
         // 程序中断时自动调用，保存数据
         Runtime.getRuntime().addShutdownHook(new Thread(this::saveAndFlush));
 
