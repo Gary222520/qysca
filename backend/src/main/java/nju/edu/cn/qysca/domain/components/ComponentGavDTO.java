@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel(description = "组件GAV信息DTO")
-public class ComponentGavDTO{
+public class ComponentGavDTO {
 
     @ApiModelProperty(value = "组织id", example = "org.hamcrest")
     private String groupId;
