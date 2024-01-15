@@ -20,6 +20,6 @@ public class OpensourceComponentDO {
     private String sourceUrl;
     private List<Developer> developers;
     private List<License> licenses;
-    private JSONObject pom;
+    private String pom;
 
 }

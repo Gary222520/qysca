@@ -46,12 +46,9 @@ public class DataHandler {
         opensourceComponentDO.setDownloadUrl(getDownloadUrl(pomUrl));
         opensourceComponentDO.setSourceUrl(model.getScm()==null?null:model.getScm().getUrl());
 
-        //opensourceComponentDO.setDevelopers(getDevelopers(model));
-        opensourceComponentDO.setDevelopers(null);
-        //opensourceComponentDO.setLicenses(getLicense(model));
-        opensourceComponentDO.setLicenses(null);
-        //opensourceComponentDO.setPom(convertToJson(document));
-        opensourceComponentDO.setPom(null);
+        opensourceComponentDO.setDevelopers(getDevelopers(model));
+        opensourceComponentDO.setLicenses(getLicense(model));
+        opensourceComponentDO.setPom(convertToJson(document).toString());
 
         return opensourceComponentDO;
 
