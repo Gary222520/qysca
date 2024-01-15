@@ -11,5 +11,5 @@ public interface FileService {
 
     void uploadChunk(FileChunkDO fileChunkDO);
 
-    boolean mergeChunks(String identifier, String filename, Integer totalChunks);
+    String mergeChunks(String identifier, String filename, Integer totalChunks);
 }

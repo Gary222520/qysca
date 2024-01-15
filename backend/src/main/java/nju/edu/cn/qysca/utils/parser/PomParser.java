@@ -68,14 +68,15 @@ public class PomParser {
     private List<HasParentRelationship> hasParentRelationshipList;
 
     /**
-     *  解析pom文件，递归解析所有依赖，被解析过的pom会写入list文件，避免重复解析
-     *  还会将pom节点与依赖关系写入csv
-     *  还会下载该份pom
+     * 解析pom文件，递归解析所有依赖，被解析过的pom会写入list文件，避免重复解析
+     * 还会将pom节点与依赖关系写入csv
+     * 还会下载该份pom
+     *
      * @param pomUrl
      */
-    public void parsePom(String pomUrl){
+    public void parsePom(String pomUrl) {
 
-        System.out.println("开始解析pom: "+ pomUrl);
+        System.out.println("开始解析pom: " + pomUrl);
         new_pom_count = 0;
         // 在每次解析前，获取所有解析过的pom
         pomRecords = readPomRecords();
@@ -96,12 +97,13 @@ public class PomParser {
 
         // 解析完成后，将新发现的pom记录入文件
         writePomRecords(newPomRecords);
-        System.out.println("解析结束，新发现的pom数量为: "+ new_pom_count);
+        System.out.println("解析结束，新发现的pom数量为: " + new_pom_count);
         System.out.println();
     }
 
     /**
      * 从pom记录文件中读取所有被解析过的pom文件
+     *
      * @return pomRecords
      */
     private Set<String> readPomRecords() {
@@ -120,6 +122,7 @@ public class PomParser {
 
     /**
      * 向pom记录文件中写入新的pom记录
+     *
      * @param newPomRecords 新的pom记录
      */
     private void writePomRecords(Set<String> newPomRecords) {
@@ -161,7 +164,7 @@ public class PomParser {
         String version = model.getVersion();
 
         // 检查pom是否被记录过，如果被记录过就跳过，否则记录
-        if (pomRecords.contains(groupId + ":" + artifactId + ":" + version)){
+        if (pomRecords.contains(groupId + ":" + artifactId + ":" + version)) {
             return;
         }
         pomRecords.add(groupId + ":" + artifactId + ":" + version);
@@ -230,7 +233,7 @@ public class PomParser {
             String dependencyPomUrl = PomSpider.findPomFileUrlInDirectory(dependencyUrl);
 
             Model dependencyModel = PomSpider.getPomModel(dependencyPomUrl);
-            if (dependencyModel == null){
+            if (dependencyModel == null) {
                 System.err.println("can't build dependency model of " + dependencyGroupId + ":" + dependencyArtifactId + ":" + dependencyVersion + " in pom file: " + pomUrl);
                 continue;
             }
@@ -266,7 +269,7 @@ public class PomParser {
      */
     private static String getDependencyGroupId(Model model, Dependency dependency) {
         String dependencyGroupId = dependency.getGroupId();
-        if (dependencyGroupId.startsWith("${") && dependencyGroupId.endsWith("}")){
+        if (dependencyGroupId.startsWith("${") && dependencyGroupId.endsWith("}")) {
             // 为${xxx}形式
             String propertyName = dependencyGroupId.substring(2, dependencyGroupId.length() - 1);
             dependencyGroupId = getValueFromProperties(model, propertyName);
@@ -309,8 +312,8 @@ public class PomParser {
         } else if (dependency.getVersion().startsWith("${") && dependency.getVersion().endsWith("}")) {
             // ${xxx}形式
             String propertyName = dependency.getVersion().substring(2, dependency.getVersion().length() - 1);
-            version = getValueFromProperties(model,propertyName);
-            if (version.equals("project.version") || version.equals("pom.version")){
+            version = getValueFromProperties(model, propertyName);
+            if (version.equals("project.version") || version.equals("pom.version")) {
                 // 如果写的是${project.version}或者${pom.version}，则直接返回pom中的version
                 version = model.getVersion();
             }
@@ -326,20 +329,20 @@ public class PomParser {
     /**
      * 从<properties>中寻找值，在model中找不到则会从parent去找
      *
-     * @param model pom model
+     * @param model        pom model
      * @param propertyName 要查找的propertyName
      * @return value
      */
-    private static String getValueFromProperties(Model model, String propertyName){
+    private static String getValueFromProperties(Model model, String propertyName) {
         if (propertyName.equals("project.version") || propertyName.equals("pom.version") || propertyName.equals("project.groupId") || propertyName.equals("pom.groupId") || propertyName.equals("project.parent.groupId") || propertyName.equals("project.parent.version"))
             return propertyName;
 
         String value = model.getProperties().getProperty(propertyName);
-        if (value == null){
+        if (value == null) {
             // 在自己的properties中找不到，则尝试去parent中找
             String parentPomUrl = getParentPomUrl(model);
             Model parentModel = PomSpider.getPomModel(parentPomUrl);
-            if (parentModel == null){
+            if (parentModel == null) {
                 // 如果不管怎样在properties中找不到，则直接返回propertyName
                 return propertyName;
             }
@@ -347,7 +350,7 @@ public class PomParser {
         }
 
         // 有可能在<properties>中还是${xxx}，那就递归地要在查一次
-        if (value.startsWith("${") && value.endsWith("}")){
+        if (value.startsWith("${") && value.endsWith("}")) {
             return getValueFromProperties(model, value.substring(2, value.length() - 1));
         }
         return value;
@@ -381,7 +384,7 @@ public class PomParser {
         if (model.getParent() != null) {
             String parentPomUrl = getParentPomUrl(model);
             Model parentModel = PomSpider.getPomModel(parentPomUrl);
-            if (parentModel == null){
+            if (parentModel == null) {
                 return null;
             }
             return getDependencyVersionFromDependencyManagement(parentModel, dependency);

@@ -12,7 +12,8 @@ public class DependsRelationship {
     private final String tg;
     private final String ta;
     private final String tv;
-    public DependsRelationship(String fg, String fa, String fv, String tg, String ta, String tv){
+
+    public DependsRelationship(String fg, String fa, String fv, String tg, String ta, String tv) {
         this.fg = fg;
         this.fa = fa;
         this.fv = fv;
@@ -21,7 +22,7 @@ public class DependsRelationship {
         this.tv = tv;
     }
 
-    public String toCsvString(){
-        return fg+ "," + fa + "," + fv + "," + tg + "," + ta + "," + tv;
+    public String toCsvString() {
+        return fg + "," + fa + "," + fv + "," + tg + "," + ta + "," + tv;
     }
 }

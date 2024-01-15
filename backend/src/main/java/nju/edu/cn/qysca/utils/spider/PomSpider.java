@@ -87,11 +87,12 @@ public class PomSpider {
     /**
      * 在指定目录url下，获取所有版本的pomUrl
      * 例如 directoryUrl为 https://repo1.maven.org/maven2/junit/junit/， 那么其获得其下面每个版本的一份pom文件的url
+     *
      * @param directoryUrl 目录url
      * @return 返回所有版本的pomUrl
      */
     public static List<String> findAllPomUrlInDirectory(String directoryUrl) {
-        List<String>  pomUrls = new ArrayList<>();
+        List<String> pomUrls = new ArrayList<>();
 
         Document document = UrlConnector.getDocumentByUrl(directoryUrl);
         // 确认url存在
