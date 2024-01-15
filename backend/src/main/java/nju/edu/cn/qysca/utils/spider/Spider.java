@@ -21,17 +21,16 @@ public class Spider {
         for (String directoryUrl : directoryUrlList) {
             if (directoryUrl.startsWith("//"))
                 continue;
-            System.out.println("开始爬取并解析： "+ directoryUrl);
-            List<String> pomUrlList =  PomSpider.findAllPomUrlInDirectory(directoryUrl);
+            System.out.println("开始爬取并解析： " + directoryUrl);
+            List<String> pomUrlList = PomSpider.findAllPomUrlInDirectory(directoryUrl);
             Collections.reverse(pomUrlList); // 从高版本往低版本爬取
             PomParser pomParser = new PomParser();
-            for (String pomUrl : pomUrlList){
+            for (String pomUrl : pomUrlList) {
                 pomParser.parsePom(pomUrl);
             }
             System.out.println();
         }
     }
-
 
 
     private static List<String> readLinesFromFile(String filePath) {

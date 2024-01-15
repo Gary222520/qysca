@@ -56,54 +56,54 @@ public class FileServiceImpl implements FileService {
         }
         //写入分片
         try (
-            InputStream inputStream = fileChunkDO.getFile().getInputStream();
-            FileOutputStream outputStream = new FileOutputStream(new File(chunkFileFolderPath + fileChunkDO.getChunkNumber())))
-        {
+                InputStream inputStream = fileChunkDO.getFile().getInputStream();
+                FileOutputStream outputStream = new FileOutputStream(new File(chunkFileFolderPath + fileChunkDO.getChunkNumber()))) {
             IOUtils.copy(inputStream, outputStream);
             saveToRedis(fileChunkDO);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     /**
      * 合并分片
+     *
      * @param identifier
      * @param filename
      * @param totalChunks
      * @return
      */
     @Override
-    public boolean mergeChunks(String identifier, String filename, Integer totalChunks) {
+    public String mergeChunks(String identifier, String filename, Integer totalChunks) {
         String chunkFileFolderPath = getChunkFileFolderPath(identifier);
         String filePath = getFilePath(identifier, filename);
-        if(checkChunks(chunkFileFolderPath, totalChunks)) {
+        if (checkChunks(chunkFileFolderPath, totalChunks)) {
             File chunkFileFolder = new File(chunkFileFolderPath);
             File mergeFile = new File(filePath);
-            File[] chunks =  chunkFileFolder.listFiles();
+            File[] chunks = chunkFileFolder.listFiles();
             List fileList = Arrays.asList(chunks);
             Collections.sort(fileList, (Comparator<File>) (o1, o2) -> {
                 return Integer.parseInt(o1.getName()) - (Integer.parseInt(o2.getName()));
             });
-            try{
+            try {
                 RandomAccessFile randomAccessFileWriter = new RandomAccessFile(mergeFile, "rw");
                 byte[] bytes = new byte[1024];
-                for(File chunk : chunks) {
+                for (File chunk : chunks) {
                     RandomAccessFile randomAccessFileReader = new RandomAccessFile(chunk, "r");
                     int len;
-                    while((len = randomAccessFileReader.read(bytes)) != -1){
+                    while ((len = randomAccessFileReader.read(bytes)) != -1) {
                         randomAccessFileWriter.write(bytes, 0, len);
                     }
                     randomAccessFileReader.close();
                 }
                 randomAccessFileWriter.close();
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
-                return false;
+                return null;
             }
-            return true;
+            return filePath;
         }
-        return false;
+        return null;
     }
 
     /**
@@ -140,6 +140,7 @@ public class FileServiceImpl implements FileService {
     /**
      * 分片写入Redis
      * 判断切片是否已经存在，如果未存在，则创建基础信息，并保存
+     *
      * @param fileChunkDO
      * @return
      */
@@ -152,7 +153,7 @@ public class FileServiceImpl implements FileService {
             objectObjectHashMap.put("totalChunks", fileChunkDO.getTotalChunks());
             objectObjectHashMap.put("totalSize", fileChunkDO.getTotalSize());
             redisTemplate.opsForHash().putAll(fileChunkDO.getIdentifier(), objectObjectHashMap);
-        }else{
+        } else {
             uploaded.add(fileChunkDO.getChunkNumber());
             redisTemplate.opsForHash().put(fileChunkDO.getIdentifier(), "uploaded", uploaded);
         }
@@ -160,21 +161,22 @@ public class FileServiceImpl implements FileService {
 
     /**
      * 检查分片是否都存在
+     *
      * @param chunkFileFolderPath
      * @param totalChunks
      * @return
      */
-    private boolean checkChunks(String chunkFileFolderPath, Integer totalChunks){
-        try{
-            for(int i = 1; i<= totalChunks + 1; i++){
+    private boolean checkChunks(String chunkFileFolderPath, Integer totalChunks) {
+        try {
+            for (int i = 1; i <= totalChunks + 1; i++) {
                 File file = new File(chunkFileFolderPath + File.separator + i);
-                if(file.exists()){
+                if (file.exists()) {
                     continue;
-                }else{
+                } else {
                     return false;
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }

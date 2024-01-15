@@ -18,31 +18,31 @@ public class FileController {
     private FileService fileService;
 
     @GetMapping("/chunk")
-    public ResponseMsg<FileChunkResultDO> checkChunkExist(FileChunkDO fileChunkDO){
+    public ResponseMsg<FileChunkResultDO> checkChunkExist(FileChunkDO fileChunkDO) {
         FileChunkResultDO fileChunkResultDO;
         try {
             fileChunkResultDO = fileService.checkChunkExist(fileChunkDO);
-            return  new ResponseMsg<>(fileChunkResultDO);
+            return new ResponseMsg<>(fileChunkResultDO);
         } catch (Exception e) {
             return null;
         }
     }
 
     @PostMapping("/chunk")
-    public ResponseMsg<String> uploadChunk(FileChunkDO fileChunkDO){
-        try{
+    public ResponseMsg<String> uploadChunk(FileChunkDO fileChunkDO) {
+        try {
             fileService.uploadChunk(fileChunkDO);
             return new ResponseMsg<>(fileChunkDO.getIdentifier());
-        }catch (Exception e){
+        } catch (Exception e) {
             return null;
         }
     }
 
     @PostMapping("/merge")
-    public ResponseMsg<Boolean> mergeChunks(@RequestBody FileChunkDO fileChunkDO){
+    public ResponseMsg<String> mergeChunks(@RequestBody FileChunkDO fileChunkDO) {
         try {
-            boolean success = fileService.mergeChunks(fileChunkDO.getIdentifier(), fileChunkDO.getFilename(), fileChunkDO.getTotalChunks());
-            return new ResponseMsg<>(success);
+            String filePath = fileService.mergeChunks(fileChunkDO.getIdentifier(), fileChunkDO.getFilename(), fileChunkDO.getTotalChunks());
+            return new ResponseMsg<>(filePath);
         } catch (Exception e) {
             return null;
         }
