@@ -4,7 +4,7 @@ package nju.edu.cn.qysca.utils.parser;
  * 表示pom间的父子关系
  */
 public class HasParentRelationship {
-    public static final String[] HEADERS = {"fg", "fa", "fv", "tg", "ta", "tv"};
+    public static final String HEADERS = "fg,fa,fv,tg,ta,tv";
     private final String fg;
     private final String fa;
     private final String fv;

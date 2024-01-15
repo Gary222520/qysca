@@ -6,7 +6,7 @@ import java.util.List;
  *  用以记录pom
  */
 public class JavaComponentNode {
-    public static final String[] HEADERS = {"id","groupId","artifactId","version","openSource","licenseNames","licenseUrls","name","developers","description","url"};
+    public static final String HEADERS = "id,groupId,artifactId,version,openSource,licenseNames,licenseUrls,name,developers,description,url,pomUrl,,,,,,,,";
     private final String id;
     private final String groupId;
     private final String artifactId;
@@ -49,6 +49,6 @@ public class JavaComponentNode {
                 + "\"" + developers + "\"" + ","
                 + "\"" + description + "\"" + ","
                 + "\"" + url + "\"" + ","
-                + "\"" + pomUrl + "\"";
+                + "\"" + pomUrl + "\"" + ",,,,,,,,";
     }
 }

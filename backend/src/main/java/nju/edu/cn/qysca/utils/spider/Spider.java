@@ -15,11 +15,15 @@ public class Spider {
     private static final String DEFAULT_TYPE = "pom";
     private static final String DEFAULT_URL_LIST_PATH = "backend/src/main/resources/url_list.txt";
 
-    public static void main(String[] args) {
 
-        List<String> directoryUrlList = readLinesFromFile(DEFAULT_URL_LIST_PATH);
+
+    /**
+     * 从url_list中爬取并（递归）解析
+     */
+    private static void spiderAndParseFromUrlList(String url_list_path){
+        List<String> directoryUrlList = readLinesFromFile(url_list_path);
         for (String directoryUrl : directoryUrlList) {
-            if (directoryUrl.startsWith("//"))
+            if (directoryUrl == null || directoryUrl.startsWith("//"))
                 continue;
             System.out.println("开始爬取并解析： "+ directoryUrl);
             List<String> pomUrlList =  PomSpider.findAllPomUrlInDirectory(directoryUrl);
@@ -32,8 +36,11 @@ public class Spider {
         }
     }
 
-
-
+    /**
+     * 从文件中读取行
+     * @param filePath
+     * @return
+     */
     private static List<String> readLinesFromFile(String filePath) {
         List<String> lines = new ArrayList<>();
 
