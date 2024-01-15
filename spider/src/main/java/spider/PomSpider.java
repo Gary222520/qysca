@@ -21,6 +21,8 @@ public class PomSpider implements Spider<OpensourceComponentDO>{
     private Set<String> visitedUrls;
     private final String visitedUrlsFile = "spider/src/main/resources/visited_urls.txt";
 
+    private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
+
 
     public PomSpider(DataAccessInterface<OpensourceComponentDO> dataAccess){
         this.dataAccess = dataAccess;
@@ -33,6 +35,16 @@ public class PomSpider implements Spider<OpensourceComponentDO>{
         loadVisitedLinks();
         crawlDirectory(directoryUrl);
         saveVisitedLinks();
+    }
+
+    public OpensourceComponentDO crawlByGAV(String groupId, String artifactId, String version){
+        String downloadUrl = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
+        String pomUrl = findPomFileUrlInDirectory(downloadUrl);
+        if (pomUrl == null){
+            return null;
+        }
+        return crawl(pomUrl);
+
     }
 
     /**
@@ -68,7 +80,7 @@ public class PomSpider implements Spider<OpensourceComponentDO>{
      *  根据pom文件的url爬取单个pom文件，并转换为DO
      * @param pomUrl pom url
      */
-    public OpensourceComponentDO crawl(String pomUrl) {
+    private OpensourceComponentDO crawl(String pomUrl) {
         if (!pomUrl.endsWith(".pom")){
             return null;
         }
@@ -105,6 +117,35 @@ public class PomSpider implements Spider<OpensourceComponentDO>{
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 在指定目录url下查找.pom文件
+     *
+     * @param directoryUrl 目录url
+     * @return 如果存在.pom文件则返回其url，否则返回null
+     */
+    private static String findPomFileUrlInDirectory(String directoryUrl) {
+
+        Document document = UrlConnector.getDocumentByUrl(directoryUrl);
+
+        if (document == null) {
+            return null;
+        }
+
+        // 获取目录下所有文件
+        Elements fileElements = document.select("a[href]");
+
+        //遍历目录下文件，找到其中以.pom结尾的文件
+        for (Element fileElement : fileElements) {
+            String fileAbsUrl = fileElement.absUrl("href");
+            // 一般含-javadoc的不是需要的pom文件，这样的处理可能比较简单了
+            if (fileAbsUrl.endsWith(".pom") && !fileAbsUrl.contains("-javadoc")) {
+                return fileAbsUrl;
+            }
+        }
+        System.err.println("No .pom file found in \"" + directoryUrl + "\"");
+        return null;
     }
 
     /**

@@ -2,5 +2,5 @@ package spider;
 
 public interface Spider<T>{
     void crawlMany(String directoryUrl);
-    T crawl(String url);
+    T crawlByGAV(String groupId, String artifactId, String version);
 }
