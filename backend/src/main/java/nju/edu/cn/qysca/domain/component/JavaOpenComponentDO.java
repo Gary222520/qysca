@@ -1,6 +1,5 @@
-package nju.edu.cn.qysca.domain.components;
+package nju.edu.cn.qysca.domain.component;
 
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,12 +10,11 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import java.util.List;
 
-@Document("java_component_close_detail")
+@Document("java_component_open_detail")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel("java闭源组件详情")
-public class JavaCloseComponentDO {
+public class JavaOpenComponentDO {
 
     @MongoId
     @ApiModelProperty(value = "uuid", example = "0BAC7D48D1A8124D99F14805CE32DFF4")
@@ -31,6 +29,9 @@ public class JavaCloseComponentDO {
 
     @ApiModelProperty(value = "组件版本", example = "")
     private String version;
+
+    @ApiModelProperty(value = "语言",example = "java")
+    private String language;
 
     @ApiModelProperty(value = "组件名称", example = "")
     private String name;
@@ -55,8 +56,4 @@ public class JavaCloseComponentDO {
 
     @ApiModelProperty(value = "pom文件")
     private String pom;
-
-    @ApiModelProperty(value = "扫描状态",example="SUCCESS,FAILED,RUNNING")
-    private String state;
-
 }
