@@ -10,9 +10,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Document("java_component_close_dependency_tree")
 @ApiModel("Java闭源组件依赖树")
 @Data

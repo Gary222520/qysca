@@ -1,13 +1,13 @@
 package nju.edu.cn.qysca.controller.project;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import nju.edu.cn.qysca.controller.ResponseMsg;
 import nju.edu.cn.qysca.domain.project.ProjectInfoDO;
 import nju.edu.cn.qysca.domain.project.ProjectVersionDO;
 import nju.edu.cn.qysca.domain.project.SaveProjectDTO;
+import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.service.project.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,10 +23,15 @@ public class ProjectController {
     @Autowired
     private ProjectService projectService;
 
+    @Autowired
+    private MavenService mavenService;
+
     @ApiOperation("创建新项目")
-    @PostMapping("/save")
+    @PostMapping("/saveProject")
     public ResponseMsg<Boolean> saveProject(@RequestBody SaveProjectDTO saveProjectDTO) {
-        return new ResponseMsg<>(projectService.saveProject(saveProjectDTO));
+        projectService.saveProject(saveProjectDTO);
+        mavenService.projectDependencyAnalysis(saveProjectDTO);
+        return new ResponseMsg<>(Boolean.TRUE);
     }
 
     @ApiOperation("分页获取项目信息")

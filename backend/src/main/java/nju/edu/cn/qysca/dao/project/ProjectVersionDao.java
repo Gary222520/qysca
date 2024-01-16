@@ -1,6 +1,5 @@
 package nju.edu.cn.qysca.dao.project;
 
-import nju.edu.cn.qysca.domain.project.ProjectInfoDO;
 import nju.edu.cn.qysca.domain.project.ProjectVersionDO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,4 +17,5 @@ public interface ProjectVersionDao extends MongoRepository<ProjectVersionDO,Stri
      */
     Page<ProjectVersionDO> findAllByName(String name,Pageable pageable);
 
+    ProjectVersionDO findByNameAndVersion(String name, String version);
 }

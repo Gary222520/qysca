@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface JavaOpenComponentDao extends MongoRepository<JavaOpenComponentDO, String> {
+    JavaOpenComponentDO findByGroupIdAndArtifactIdAndVersion(String groupId, String artifactId, String version);
 }

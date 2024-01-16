@@ -3,6 +3,7 @@ package nju.edu.cn.qysca.service.component;
 import nju.edu.cn.qysca.domain.component.JavaCloseComponentDO;
 import nju.edu.cn.qysca.domain.component.ComponentSearchDTO;
 import nju.edu.cn.qysca.domain.component.JavaOpenComponentDO;
+import nju.edu.cn.qysca.domain.component.SaveCloseComponentDTO;
 import org.springframework.data.domain.Page;
 
 public interface ComponentService {
@@ -21,4 +22,6 @@ public interface ComponentService {
      * @return Page<JavaCloseComponentDO> 查询结果
      */
     Page<JavaCloseComponentDO> findCloseComponentsPage(ComponentSearchDTO searchComponentDTO);
+
+    Boolean saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO);
 }

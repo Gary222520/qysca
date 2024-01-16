@@ -11,8 +11,6 @@ public interface ProjectService {
 
     Boolean saveProject(SaveProjectDTO saveProjectDTO);
 
-    List<String> findAllDistinctProjectName();
-
     /**
      * 分页获取项目信息
      *
