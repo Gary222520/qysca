@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * collection name:
+ *      java_component_open_dependency_tree
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

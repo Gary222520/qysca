@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * collection name:
+ *      java_component_open_detail
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

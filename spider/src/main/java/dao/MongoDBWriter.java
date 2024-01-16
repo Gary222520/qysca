@@ -13,13 +13,13 @@ import org.bson.codecs.pojo.PojoCodecProvider;
 import java.util.List;
 
 public class MongoDBWriter<T> {
-    private static final String DATABASE_NAME = "qysca";
+    private static final String DATABASE_URL = "mongodb://localhost:27017";
+    private static final String DATABASE_NAME = "sca";
     private MongoCollection<T> collection;
 
     public MongoDBWriter(String COLLECTION_NAME, Class<T> clazz){
         try{
-            String mongoDBUrl = "mongodb://localhost:27017";
-            MongoClient mongoClient = MongoClients.create(mongoDBUrl);
+            MongoClient mongoClient = MongoClients.create(DATABASE_URL);
             MongoDatabase database = mongoClient.getDatabase(DATABASE_NAME);
             // java对象到mongo对象的自动映射
             CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
@@ -30,7 +30,7 @@ public class MongoDBWriter<T> {
                     )
             );
             collection = database.getCollection(COLLECTION_NAME, clazz).withCodecRegistry(codecRegistry);
-            System.out.println("Connected to MongoDB: " + mongoDBUrl);
+            System.out.println("Connected to MongoDB: " + DATABASE_URL);
         } catch (Exception e) {
             System.out.println("Failed to connect to MongoDB. Error: " + e.getMessage());
 

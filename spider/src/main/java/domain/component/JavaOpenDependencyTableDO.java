@@ -4,6 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * collection name:
+ *      java_component_open_dependency_table
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
