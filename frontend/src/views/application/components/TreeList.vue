@@ -57,7 +57,7 @@ const show = (projectName, version) => {
       data.treeData = treeData
     })
     .catch((e) => {
-      message.error(e)
+      // message.error(e)
     })
 }
 const createTree = (arr, preKey) => {

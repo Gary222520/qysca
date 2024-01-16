@@ -7,17 +7,19 @@
       </div>
       <div class="card_title">
         项目名称：
-        <div style="font-weight: bold; margin-right: 30px">{{ data.project.name }}</div>
+        <div style="font-weight: bold; margin-right: 30px">{{ data.versionInfo.name }}</div>
         版本编号：
         <div style="margin-right: 30px">
           <a-select
             v-model:value="data.selectedVersion"
+            show-search
             :options="data.versionOptions"
+            :filter-option="filterOption"
             style="width: 100px"
             @change="changeVersion"></a-select>
         </div>
         最近一次扫描时间：
-        <div>{{ data.version.time }}</div>
+        <div>{{ data.versionInfo.time }}</div>
       </div>
     </a-card>
     <a-card class="content_card">
@@ -26,13 +28,13 @@
           <a-radio-group v-model:value="data.mode">
             <a-tooltip>
               <template #title>树形展示</template>
-              <a-radio-button value="tree" @click="changeMode('tree')">
+              <a-radio-button value="tree" @click="changeMode('tree')" style="width: 60px">
                 <ApartmentOutlined :style="{ fontSize: '16px' }" />
               </a-radio-button>
             </a-tooltip>
             <a-tooltip>
               <template #title>平铺展示</template>
-              <a-radio-button value="tiled" @click="changeMode('tiled')">
+              <a-radio-button value="tiled" @click="changeMode('tiled')" style="width: 60px">
                 <UnorderedListOutlined :style="{ fontSize: '16px' }" />
               </a-radio-button>
             </a-tooltip>
@@ -58,18 +60,23 @@
 import { reactive, ref, onMounted, defineExpose } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { LeftOutlined, ApartmentOutlined, UnorderedListOutlined, ExportOutlined } from '@ant-design/icons-vue'
-import { useStore } from 'vuex'
+import { GetProjectInfo } from '@/api/frontend'
 import TreeList from './components/TreeList.vue'
 import TiledList from './components/TiledList.vue'
+import { message } from 'ant-design-vue'
+
+onMounted(async () => {
+  const name = route.query.name
+  const version = route.query.version
+  await getVersionInfo(name, version)
+})
 
 const router = useRouter()
 const route = useRoute()
-const store = useStore()
 const treeList = ref()
 const tiledList = ref()
 const data = reactive({
-  project: {},
-  version: {},
+  versionInfo: {},
   selectedVersion: '',
   versionOptions: [],
   mode: 'tree',
@@ -80,43 +87,49 @@ const data = reactive({
 const back = () => {
   router.push('/home/application')
 }
+const getVersionInfo = async (name, version) => {
+  data.selectedVersion = version
+  await GetProjectInfo({
+    name,
+    number: 1,
+    size: 100
+  })
+    .then((res) => {
+      const options = []
+      res.data.content.forEach((item) => {
+        if (item.version === version) data.versionInfo = item
+        options.push({ label: item.version, value: item.version, key: item.version })
+      })
+      data.versionOptions = options
+      changeMode('tree')
+    })
+    .catch((err) => {
+      message.error(err)
+    })
+}
 const changeVersion = (value) => {
-  data.version = data.project.data.find((item) => item.version === value)
-  data.selectedVersion = value
   router.push({
     path: '/home/appDetail',
     query: {
-      name: data.project.name,
-      version: data.selectedVersion
+      name: data.versionInfo.name,
+      version: value
     }
   })
+  getVersionInfo(data.versionInfo.name, value)
 }
 const changeMode = (mode) => {
   if (mode === 'tree') {
-    treeList.value.show(data.project.name, data.version.version)
+    treeList.value.show(data.versionInfo.name, data.selectedVersion)
     tiledList.value.hide()
   }
   if (mode === 'tiled') {
     treeList.value.hide()
-    tiledList.value.show(data.project.name, data.version.version)
+    tiledList.value.show(data.versionInfo.name, data.selectedVersion)
   }
 }
-onMounted(() => {
-  const name = route.query.name
-  const version = route.query.version
-  data.project = store.getters.getProjectByName(name)
-  data.version = data.project.data.find((item) => item.version === version)
-  data.selectedVersion = version
-  data.versionOptions = data.project.data.map((item) => {
-    const option = {
-      label: item.version,
-      value: item.version,
-      key: item.version
-    }
-    return option
-  })
-  changeMode('tree')
-})
+const filterOption = (input, option) => {
+  return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
+}
 </script>
 
 <style lang="less" scoped>
@@ -151,31 +164,9 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
 }
-/* 选择框样式 */
-:deep(.ant-select-selector:hover) {
-  border-color: #6f005f !important;
-}
-:deep(.ant-select-focused .ant-select-selector) {
-  border-color: #6f005f !important;
-  box-shadow: 0 0 0 2px rgba(111, 0, 95, 0.1) !important;
-}
-/* 选项按钮样式 */
-:deep(.ant-radio-button-wrapper) {
-  text-align: center;
-  width: 60px;
-}
-:deep(.ant-radio-button-wrapper:hover) {
-  color: #6f005f;
-}
-:deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)) {
-  color: #fff;
-  border-color: #6f005f;
-  background-color: #6f005f;
-}
-:deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before) {
-  background-color: #6f005f;
-}
 </style>
 <style scoped src="@/atdv/primary-btn.css"></style>
 <style scoped src="@/atdv/input.css"></style>
 <style scoped src="@/atdv/input-search.css"></style>
+<style scoped src="@/atdv/radio-btn.css"></style>
+<style scoped src="@/atdv/select.css"></style>
