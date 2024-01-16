@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProjectInfoDao extends MongoRepository<ProjectInfoDO,String> {
 
+    void deleteByName(String name);
+
 }

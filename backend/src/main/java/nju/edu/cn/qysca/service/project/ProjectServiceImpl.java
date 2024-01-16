@@ -1,12 +1,16 @@
 package nju.edu.cn.qysca.service.project;
 
-import nju.edu.cn.qysca.dao.component.JavaOpenComponentDao;
+import nju.edu.cn.qysca.dao.project.ProjectDependencyTableDao;
+import nju.edu.cn.qysca.dao.project.ProjectDependencyTreeDao;
 import nju.edu.cn.qysca.dao.project.ProjectInfoDao;
 import nju.edu.cn.qysca.dao.project.ProjectVersionDao;
 import nju.edu.cn.qysca.domain.project.*;
+import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -18,11 +22,23 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private ProjectInfoDao projectInfoDao;
 
-    private JavaOpenComponentDao javaOpenComponentDao;
+    @Autowired
+    private ProjectDependencyTreeDao projectDependencyTreeDao;
+
+    @Autowired
+    private ProjectDependencyTableDao projectDependencyTableDao;
 
     @Autowired
     private ProjectVersionDao projectVersionDao;
 
+    @Autowired
+    private MavenService mavenService;
+
+    /**
+     * 新增项目信息
+     * @param saveProjectDTO 保存项目接口信息
+     * @return Boolean 新增项目是否成功
+     */
     @Override
     public Boolean saveProject(SaveProjectDTO saveProjectDTO) {
         // 新建Mongodb项目信息
@@ -45,6 +61,157 @@ public class ProjectServiceImpl implements ProjectService {
         projectVersionDO.setState("RUNNING");
         projectVersionDao.save(projectVersionDO);
         return true;
+    }
+
+    /**
+     *  保存项目依赖关系
+     * @param saveProjectDTO 保存项目接口信息
+     */
+    @Async("taskExecutor")
+    @Override
+    public void saveProjectDependency(SaveProjectDTO saveProjectDTO){
+        try {
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDTO.getFilePath());
+            ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
+            projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
+            projectDependencyTreeDO.setName(saveProjectDTO.getName());
+            projectDependencyTreeDO.setVersion(saveProjectDTO.getVersion());
+            projectDependencyTreeDO.setTree(componentDependencyTreeDO);
+            projectDependencyTreeDao.save(projectDependencyTreeDO);
+            // 批量更新依赖平铺表
+            projectDependencyTable(projectDependencyTreeDO);
+            // 更改状态为SUCCESS
+            ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
+            projectVersionDO.setState("SUCCESS");
+            projectVersionDao.save(projectVersionDO);
+        }catch (Exception e){
+            ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
+            projectVersionDO.setState("FAILED");
+            projectVersionDao.save(projectVersionDO);
+        }
+    }
+
+    /**
+     * 更新项目信息
+     * @param updateProjectDTO 更新项目接口信息
+     * @return 更新项目信息是否成功
+     */
+    public Boolean updateProject(UpdateProjectDTO updateProjectDTO) {
+        ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
+        projectVersionDO.setBuilder(updateProjectDTO.getBuilder());
+        projectVersionDO.setLanguage(updateProjectDTO.getLanguage());
+        projectVersionDO.setScanner(updateProjectDTO.getScanner());
+        projectVersionDO.setNote(updateProjectDTO.getNote());
+        Date now = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String timeStamp = dateFormat.format(now);
+        projectVersionDO.setTime(timeStamp);
+        projectVersionDO.setState("RUNNING");
+        projectVersionDao.save(projectVersionDO);
+        return true;
+    }
+
+    /**
+     *  更新项目依赖关系
+     * @param updateProjectDTO 更新项目接口信息
+     */
+    @Async("taskExecutor")
+    @Override
+    public void updateProjectDependency(UpdateProjectDTO updateProjectDTO) {
+        try{
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath());
+            ProjectDependencyTreeDO projectDependencyTreeDO = projectDependencyTreeDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
+            projectDependencyTreeDO.setTree(componentDependencyTreeDO);
+            projectDependencyTreeDao.save(projectDependencyTreeDO);
+            // 批量更新依赖平铺表
+            projectDependencyTable(projectDependencyTreeDO);
+            ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
+            projectVersionDO.setState("SUCCESS");
+            projectVersionDao.save(projectVersionDO);
+        }catch (Exception e){
+            ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
+            projectVersionDO.setState("FAILED");
+            projectVersionDao.save(projectVersionDO);
+        }
+    }
+
+    /**
+     * 升级项目
+     * @param upgradeProjectDTO 升级项目接口信息
+     * @return 升级项目是否成功
+     */
+    @Override
+    public Boolean upgradeProject(UpgradeProjectDTO upgradeProjectDTO) {
+        ProjectVersionDO projectVersionDO = new ProjectVersionDO();
+        projectVersionDO.setName(upgradeProjectDTO.getName());
+        projectVersionDO.setVersion(upgradeProjectDTO.getVersion());
+        projectVersionDO.setLanguage(upgradeProjectDTO.getLanguage());
+        projectVersionDO.setBuilder(upgradeProjectDTO.getBuilder());
+        projectVersionDO.setScanner(upgradeProjectDTO.getScanner());
+        projectVersionDO.setNote(upgradeProjectDTO.getNote());
+        Date now = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String timeStamp = dateFormat.format(now);
+        projectVersionDO.setTime(timeStamp);
+        projectVersionDO.setState("RUNNING");
+        projectVersionDao.save(projectVersionDO);
+        return true;
+    }
+
+    /**
+     * 升级项目依赖
+     * @param upgradeProjectDTO 升级项目接口信息
+     */
+    @Async("taskExecutor")
+    @Override
+    public void upgradeProjectDependency(UpgradeProjectDTO upgradeProjectDTO) {
+        try {
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(upgradeProjectDTO.getFilePath());
+            ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
+            projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
+            projectDependencyTreeDO.setName(upgradeProjectDTO.getName());
+            projectDependencyTreeDO.setVersion(upgradeProjectDTO.getVersion());
+            projectDependencyTreeDO.setTree(componentDependencyTreeDO);
+            projectDependencyTreeDao.save(projectDependencyTreeDO);
+            // 批量更新依赖平铺表
+            projectDependencyTable(projectDependencyTreeDO);
+            // 更改状态为SUCCESS
+            ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
+            projectVersionDO.setState("SUCCESS");
+            projectVersionDao.save(projectVersionDO);
+        }catch (Exception e){
+            ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
+            projectVersionDO.setState("FAILED");
+            projectVersionDao.save(projectVersionDO);
+        }
+    }
+
+    /**
+     * 删除项目
+     * @param name 项目名称
+     * @return 删除项目是否成功
+     */
+    @Override
+    public Boolean deleteProject(String name) {
+        projectInfoDao.deleteByName(name);
+        projectVersionDao.deleteAllByName(name);
+        projectDependencyTreeDao.deleteAllByName(name);
+        projectDependencyTableDao.deleteAllByName(name);
+        return Boolean.TRUE;
+    }
+
+    /**
+     * 删除某个项目某个版本
+     * @param name 项目名称
+     * @param version 版本名称
+     * @return 删除某个项目某个版本是否成功
+     */
+    @Override
+    public Boolean deleteProjectVersion(String name, String version) {
+        projectVersionDao.deleteByNameAndVersion(name,version);
+        projectDependencyTreeDao.deleteByNameAndVersion(name, version);
+        projectDependencyTableDao.deleteAllByNameAndVersion(name, version);
+        return Boolean.TRUE;
     }
 
     /**
@@ -83,4 +250,26 @@ public class ProjectServiceImpl implements ProjectService {
         return projectVersionDao.findAllByName(name,PageRequest.of(number-1,size,Sort.by(Sort.Order.desc("version").nullsLast())));
     }
 
+    /**
+     * 保存项目依赖平铺表
+     *
+     * @param projectDependencyTreeDO 项目依赖信息树状
+     */
+    private void projectDependencyTable(ProjectDependencyTreeDO projectDependencyTreeDO) {
+        // 先删除已有记录
+        projectDependencyTableDao.deleteAllByNameAndVersion(projectDependencyTreeDO.getName(), projectDependencyTreeDO.getVersion());
+        List<ProjectDependencyTableDO> result = new ArrayList<>();
+        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(projectDependencyTreeDO.getTree().getDependencies());
+        while (!queue.isEmpty()) {
+            ProjectDependencyTableDO projectDependencyTableDO = new ProjectDependencyTableDO();
+            projectDependencyTableDO.setId(UUIDGenerator.getUUID());
+            projectDependencyTableDO.setProjectName(projectDependencyTreeDO.getName());
+            projectDependencyTableDO.setProjectVersion(projectDependencyTreeDO.getVersion());
+            ComponentDependencyTreeDO componentDependencyTreeDO = Objects.requireNonNull(queue.poll());
+            BeanUtils.copyProperties(componentDependencyTreeDO, projectDependencyTableDO);
+            result.add(projectDependencyTableDO);
+            queue.addAll(componentDependencyTreeDO.getDependencies());
+        }
+        projectDependencyTableDao.saveAll(result);
+    }
 }
