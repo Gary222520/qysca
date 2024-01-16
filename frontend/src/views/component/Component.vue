@@ -3,77 +3,190 @@
     <div class="title">组件管理</div>
     <a-card class="content_card">
       <div class="operations">
-        <a-button type="primary" @click="addComponent"><PlusOutlined />添加组件</a-button>
+        <a-radio-group v-model:value="data.openSource" @change="(e) => getComponents()">
+          <a-radio-button :value="true" style="width: 70px">开源</a-radio-button>
+          <a-radio-button :value="false" style="width: 70px">闭源</a-radio-button>
+        </a-radio-group>
         <div>
           <a-input
-            v-model:value="data.search.group"
+            v-if="data.accurate"
+            v-model:value="data.search.groupId"
             addon-before="groupId"
             placeholder="输入groupId..."
-            style="width: 200px; margin-right: 10px"></a-input>
+            style="width: 200px; margin-right: 10px"
+            @change="(e) => getComponents()"></a-input>
           <a-input
-            v-model:value="data.search.artifact"
-            addon-before="artifactId"
-            placeholder="输入artifactId..."
-            style="width: 200px; margin-right: 10px"></a-input>
-          <a-input
+            v-if="data.accurate"
             v-model:value="data.search.version"
             addon-before="version"
             placeholder="输入版本号..."
-            style="width: 200px; margin-right: 10px"></a-input>
-          <a-input v-model:value="data.search.name" placeholder="请输入组件名称" style="width: 200px"></a-input>
-          <a-button type="primary" style="margin-left: 10px"><ExportOutlined />导出Excel</a-button>
+            style="width: 200px; margin-right: 10px"
+            @change="(e) => getComponents()"></a-input>
+          <a-input
+            v-if="data.accurate"
+            v-model:value="data.search.artifactId"
+            addon-before="artifactId"
+            placeholder="输入artifactId..."
+            style="width: 200px; margin-right: 10px"
+            @change="(e) => getComponents()"></a-input>
+          <span v-if="!data.accurate">
+            语言：<a-select
+              v-model:value="data.search.language"
+              placeholder="请选择语言"
+              style="width: 200px; margin-right: 10px"
+              @change="(value, option) => getComponents()">
+              <a-select-option value="">All</a-select-option>
+              <a-select-option value="java">Java</a-select-option>
+            </a-select>
+          </span>
+          <a-input-search
+            v-if="!data.accurate"
+            v-model:value="data.search.name"
+            placeholder="请输入组件名称"
+            style="width: 250px; margin-right: 10px"
+            @change="(e) => getComponents()"
+            @search="(value, e) => getComponents()"></a-input-search>
+          <a-button type="primary" v-if="!data.accurate" @click="changeMode(true)">精确查找</a-button>
+          <a-button type="primary" v-if="data.accurate" @click="changeMode(false)"><RollbackOutlined />返回</a-button>
         </div>
       </div>
-      <a-table :data-source="data.datasource" :columns="data.columns" bordered>
+      <a-button v-if="!data.openSource" type="primary" @click="addComponent" style="margin-bottom: 20px">
+        <PlusOutlined />添加组件
+      </a-button>
+      <a-table :data-source="data.datasource" :columns="data.columns" bordered :pagination="pagination">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">
             <div class="column_name" @click="showInfo(record)">{{ record.name }}</div>
           </template>
+          <template v-if="column.key === 'action'">
+            <div style="display: flex">
+              <div class="action_icon">
+                <a-tooltip>
+                  <template #title>详情</template>
+                  <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showInfo(record)" />
+                </a-tooltip>
+              </div>
+              <div class="action_icon" v-if="!data.openSource">
+                <a-tooltip>
+                  <template #title>更新</template>
+                  <SyncOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="updateComponent(record)" />
+                </a-tooltip>
+              </div>
+              <div class="action_icon" v-if="!data.openSource">
+                <a-tooltip>
+                  <template #title>删除</template>
+                  <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个组件吗？">
+                    <template #cancelButton>
+                      <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
+                    </template>
+                    <template #okButton>
+                      <a-button danger type="primary" size="small" @click="deleteComponent(record)">删除</a-button>
+                    </template>
+                    <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+                  </a-popconfirm>
+                </a-tooltip>
+              </div>
+            </div>
+          </template>
         </template>
       </a-table>
       <Drawer ref="drawer"></Drawer>
+      <AddModal ref="addModal"></AddModal>
     </a-card>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
-import { PlusOutlined, ExportOutlined } from '@ant-design/icons-vue'
-import Drawer from '../application/components/Drawer.vue'
+import { reactive, ref, onMounted } from 'vue'
+import { PlusOutlined, FileTextOutlined, SyncOutlined, DeleteOutlined, RollbackOutlined } from '@ant-design/icons-vue'
+import { GetOpenComponents, GetCloseComponents } from '@/api/frontend'
+import Drawer from '@/views/application/components/Drawer.vue'
+import AddModal from './components/AddModal.vue'
+import { message } from 'ant-design-vue'
 
 const drawer = ref()
+const addModal = ref()
 const data = reactive({
-  options: {
-    target: '/api/file/upload'
-  },
+  accurate: false,
+  openSource: true,
   search: {
     name: '',
-    group: '',
-    artifact: '',
-    version: ''
+    groupId: '',
+    artifactId: '',
+    version: '',
+    language: ''
   },
-  datasource: [
-    { name: '组件1', version: '2.4.3', language: 'java', depend: '直接依赖' },
-    { name: '组件2', version: '2.4.3', language: 'java', depend: '间接依赖' },
-    { name: '组件3', version: '5.4.3', language: 'java', depend: '间接依赖' },
-    { name: '组件4', version: '0.2.6', language: 'java', depend: '直接依赖' },
-    { name: '组件5', version: '1.2.5', language: 'java', depend: '间接依赖' },
-    { name: '组件6', version: '1.18.20', language: 'java', depend: '间接依赖' },
-    { name: '组件7', version: '2.1.3', language: 'java', depend: '直接依赖' }
-  ],
+  datasource: [],
   columns: [
     { title: '组件名称', dataIndex: 'name', key: 'name' },
     { title: '版本', dataIndex: 'version', key: 'version' },
     { title: 'groupId', dataIndex: 'groupId', key: 'groupId' },
     { title: 'artifactId', dataIndex: 'artifactId', key: 'artifactId' },
     { title: '语言', dataIndex: 'language', key: 'language' },
-    { title: '是否开源', dataIndex: 'openSource', key: 'openSource' }
+    { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
   ]
 })
-const addComponent = () => {}
+const pagination = reactive({
+  current: 1,
+  total: 0,
+  pageSize: 10,
+  onChange: (page, size) => {
+    getComponents(page, size)
+  }
+})
+const getComponents = (number = 1, size = 10) => {
+  data.datasource = []
+  if (data.accurate && data.search.groupId === '') return
+  if (!data.accurate && data.search.language === '') return
+  if (data.openSource) {
+    const params = {
+      ...data.search,
+      number,
+      size
+    }
+    GetOpenComponents(params)
+      .then((res) => {
+        console.log('GetOpenComponents', res)
+        data.datasource = res.data.content
+        pagination.total = res.data.totalElements
+      })
+      .catch((err) => {
+        message.error(err)
+      })
+  } else {
+    const params = {
+      ...data.search,
+      number,
+      size
+    }
+    GetCloseComponents(params)
+      .then((res) => {
+        console.log('GetCloseComponents', res)
+        data.datasource = res.data.content
+        pagination.total = res.data.totalElements
+      })
+      .catch((err) => {
+        message.error(err)
+      })
+  }
+}
+const changeMode = (value) => {
+  data.accurate = value
+  if (!value) {
+    data.search.groupId = ''
+    data.search.version = ''
+    data.search.artifactId = ''
+  }
+  getComponents()
+}
+const addComponent = () => {
+  addModal.value.open()
+}
 const showInfo = (record) => {
   drawer.value.open({ name: record.name })
 }
+const updateComponent = (record) => {}
+const deleteComponent = (record) => {}
 </script>
 
 <style scoped>
@@ -103,9 +216,19 @@ const showInfo = (record) => {
 .column_name:hover {
   color: #6f005f;
 }
+.action_icon {
+  margin-right: 10px;
+}
+.cancel_btn:hover {
+  border-color: #6f005f;
+  color: #6f005f;
+}
 </style>
 <style scoped src="@/atdv/primary-btn.css"></style>
+<style scoped src="@/atdv/delete-btn.css"></style>
 <style scoped src="@/atdv/input.css"></style>
 <style scoped src="@/atdv/input-search.css"></style>
 <style scoped src="@/atdv/delete-btn.css"></style>
 <style scoped src="@/atdv/pagination.css"></style>
+<style scoped src="@/atdv/radio-btn.css"></style>
+<style scoped src="@/atdv/select.css"></style>
