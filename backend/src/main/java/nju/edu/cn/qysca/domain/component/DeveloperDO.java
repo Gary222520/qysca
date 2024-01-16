@@ -12,12 +12,12 @@ import lombok.NoArgsConstructor;
 @ApiModel("开发者信息")
 public class DeveloperDO {
 
-    @ApiModelProperty(value = "开发者id",example = "piv")
+    @ApiModelProperty(value = "开发者id", example = "piv")
     private String developerId;
 
-    @ApiModelProperty(value = "开发者名称",example = "Pivotal")
+    @ApiModelProperty(value = "开发者名称", example = "Pivotal")
     private String developerName;
 
-    @ApiModelProperty(value = "开发者邮箱",example = "info@pivotal.io")
+    @ApiModelProperty(value = "开发者邮箱", example = "info@pivotal.io")
     private String developerEmail;
 }

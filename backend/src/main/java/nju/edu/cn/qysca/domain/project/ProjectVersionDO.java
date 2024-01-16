@@ -22,27 +22,27 @@ public class ProjectVersionDO {
     @Field("_id")
     private String id;
 
-    @ApiModelProperty(value = "项目名称",example = "qysca")
+    @ApiModelProperty(value = "项目名称", example = "qysca")
     private String name;
 
-    @ApiModelProperty(value = "项目版本号",example = "1.0.0")
+    @ApiModelProperty(value = "项目版本号", example = "1.0.0")
     private String version;
 
-    @ApiModelProperty(value = "项目语言",example = "java")
+    @ApiModelProperty(value = "项目语言", example = "java")
     private String language;
 
-    @ApiModelProperty(value = "构建工具",example = "maven")
+    @ApiModelProperty(value = "构建工具", example = "maven")
     private String builder;
 
-    @ApiModelProperty(value = "扫描对象",example = "zip")
+    @ApiModelProperty(value = "扫描对象", example = "zip")
     private String scanner;
 
-    @ApiModelProperty(value = "最近一次更新时间",example = "2024-01-17")
+    @ApiModelProperty(value = "最近一次更新时间", example = "2024-01-17")
     private String time;
 
-    @ApiModelProperty(value = "备注",example = "a software component analysis project")
+    @ApiModelProperty(value = "备注", example = "a software component analysis project")
     private String note;
 
-    @ApiModelProperty(value = "扫描状态",example="SUCCESS,FAILED,RUNNING")
+    @ApiModelProperty(value = "扫描状态", example = "SUCCESS,FAILED,RUNNING")
     private String state;
 }

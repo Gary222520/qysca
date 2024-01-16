@@ -38,26 +38,26 @@ public class ComponentServiceImpl implements ComponentService {
     public Page<JavaOpenComponentDO> findOpenComponentsPage(ComponentSearchDTO searchComponentDTO) {
         // 设置查询条件
         JavaOpenComponentDO searcher = new JavaOpenComponentDO();
-        searcher.setGroupId(searchComponentDTO.getGroupId().equals("")?null:searchComponentDTO.getGroupId());
-        searcher.setArtifactId(searchComponentDTO.getArtifactId().equals("")?null: searchComponentDTO.getArtifactId());
-        searcher.setVersion(searchComponentDTO.getArtifactId().equals("")?null: searchComponentDTO.getVersion());
-        searcher.setName(searchComponentDTO.getName().equals("")?null: searchComponentDTO.getName());
-        searcher.setLanguage(searchComponentDTO.getLanguage().equals("")?null: searchComponentDTO.getLanguage());
+        searcher.setGroupId(searchComponentDTO.getGroupId().equals("") ? null : searchComponentDTO.getGroupId());
+        searcher.setArtifactId(searchComponentDTO.getArtifactId().equals("") ? null : searchComponentDTO.getArtifactId());
+        searcher.setVersion(searchComponentDTO.getArtifactId().equals("") ? null : searchComponentDTO.getVersion());
+        searcher.setName(searchComponentDTO.getName().equals("") ? null : searchComponentDTO.getName());
+        searcher.setLanguage(searchComponentDTO.getLanguage().equals("") ? null : searchComponentDTO.getLanguage());
         // 设置模糊查询器
-        ExampleMatcher matcher=ExampleMatcher.matching()
-                .withIgnorePaths("id","description","url","downloadUrl","sourceUrl","developers","licenses","pom")
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withIgnorePaths("id", "description", "url", "downloadUrl", "sourceUrl", "developers", "licenses", "pom")
                 .withIgnoreNullValues();
-        Example<JavaOpenComponentDO> example=Example.of(searcher,matcher);
+        Example<JavaOpenComponentDO> example = Example.of(searcher, matcher);
         // 设置排序规则
-        List<Sort.Order> orders=new ArrayList<>();
-        orders.add(new Sort.Order(Sort.Direction.ASC,"language"));
-        orders.add(new Sort.Order(Sort.Direction.ASC,"name").nullsLast());
-        orders.add(new Sort.Order(Sort.Direction.ASC,"groupId").nullsLast());
-        orders.add(new Sort.Order(Sort.Direction.ASC,"artifactId").nullsLast());
-        orders.add(new Sort.Order(Sort.Direction.DESC,"version").nullsLast());
+        List<Sort.Order> orders = new ArrayList<>();
+        orders.add(new Sort.Order(Sort.Direction.ASC, "language"));
+        orders.add(new Sort.Order(Sort.Direction.ASC, "name").nullsLast());
+        orders.add(new Sort.Order(Sort.Direction.ASC, "groupId").nullsLast());
+        orders.add(new Sort.Order(Sort.Direction.ASC, "artifactId").nullsLast());
+        orders.add(new Sort.Order(Sort.Direction.DESC, "version").nullsLast());
         // 数据库页号从0开始，需减1
-        Pageable pageable= PageRequest.of(searchComponentDTO.getNumber()-1,searchComponentDTO.getSize(),Sort.by(orders));
-        return javaOpenComponentDao.findAll(example,pageable);
+        Pageable pageable = PageRequest.of(searchComponentDTO.getNumber() - 1, searchComponentDTO.getSize(), Sort.by(orders));
+        return javaOpenComponentDao.findAll(example, pageable);
     }
 
     /**

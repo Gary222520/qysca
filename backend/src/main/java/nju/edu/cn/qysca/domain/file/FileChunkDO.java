@@ -13,30 +13,30 @@ import org.springframework.web.multipart.MultipartFile;
 @ApiModel("文件分块传输对象DO")
 public class FileChunkDO {
 
-    @ApiModelProperty(value = "文件MD5",example = "23we392px9420028407272043")
+    @ApiModelProperty(value = "文件MD5", example = "23we392px9420028407272043")
     private String identifier;
 
     @ApiModelProperty(value = "分块文件")
     private MultipartFile file;
 
-    @ApiModelProperty(value = "当前分块序号",example = "1")
+    @ApiModelProperty(value = "当前分块序号", example = "1")
     private int chunkNumber;
 
-    @ApiModelProperty(value = "分块大小",example = "1024")
+    @ApiModelProperty(value = "分块大小", example = "1024")
     private long chunkSize;
 
-    @ApiModelProperty(value = "当前分块大小",example = "1024")
+    @ApiModelProperty(value = "当前分块大小", example = "1024")
     private long currentChunkSize;
 
-    @ApiModelProperty(value = "文件总大小",example = "6000")
+    @ApiModelProperty(value = "文件总大小", example = "6000")
     private long totalSize;
 
-    @ApiModelProperty(value = "文件总分片数",example = "8")
+    @ApiModelProperty(value = "文件总分片数", example = "8")
     private int totalChunks;
 
-    @ApiModelProperty(value = "文件名",example = "pom.xml")
+    @ApiModelProperty(value = "文件名", example = "pom.xml")
     private String filename;
 
-    @ApiModelProperty(value = "相对路径",example = "poms/project1/1.8.7")
+    @ApiModelProperty(value = "相对路径", example = "poms/project1/1.8.7")
     private String relativePath;
 }

@@ -12,9 +12,9 @@ public interface ProjectService {
     /**
      * 分页获取项目信息
      *
-     * @param name 项目名称
+     * @param name   项目名称
      * @param number 页码
-     * @param size 页大小
+     * @param size   页大小
      * @return Page<ProjectVersionDO> 项目信息分页结果
      */
     Page<ProjectInfoDO> findProjectInfoPage(String name, int number, int size);

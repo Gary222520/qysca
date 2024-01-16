@@ -14,7 +14,7 @@ import java.util.Set;
 @ApiModel("文件分片传输结果DO")
 public class FileChunkResultDO {
 
-    @ApiModelProperty(value = "是否跳过上传",example = "true")
+    @ApiModelProperty(value = "是否跳过上传", example = "true")
     private Boolean skipUpload;
 
     @ApiModelProperty(value = "已上传分片的集合")

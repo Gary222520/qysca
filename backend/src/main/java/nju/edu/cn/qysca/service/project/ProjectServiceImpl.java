@@ -61,23 +61,23 @@ public class ProjectServiceImpl implements ProjectService {
     /**
      * 分页获取项目信息
      *
-     * @param name 项目名称
+     * @param name   项目名称
      * @param number 页码
-     * @param size 页大小
+     * @param size   页大小
      * @return Page<ProjectVersionDO> 项目信息分页结果
      */
     @Override
     public Page<ProjectInfoDO> findProjectInfoPage(String name, int number, int size) {
         // 模糊查询，允许参数name为空值
-        ExampleMatcher matcher=ExampleMatcher.matching().withIgnorePaths("id").withIgnoreNullValues();
-        ProjectInfoDO projectInfoDO=new ProjectInfoDO();
-        if(name!=null && !name.equals("")){
+        ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("id").withIgnoreNullValues();
+        ProjectInfoDO projectInfoDO = new ProjectInfoDO();
+        if (name != null && !name.equals("")) {
             projectInfoDO.setName(name);
         }
-        Example<ProjectInfoDO> example=Example.of(projectInfoDO,matcher);
+        Example<ProjectInfoDO> example = Example.of(projectInfoDO, matcher);
         // 数据库页号从0开始，需减1
-        Pageable pageable=PageRequest.of(number-1,size);
-        return projectInfoDao.findAll(example,pageable);
+        Pageable pageable = PageRequest.of(number - 1, size);
+        return projectInfoDao.findAll(example, pageable);
     }
 
     /**

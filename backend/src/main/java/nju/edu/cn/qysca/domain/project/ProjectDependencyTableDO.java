@@ -22,10 +22,10 @@ public class ProjectDependencyTableDO {
     @Field("_id")
     private String id;
 
-    @ApiModelProperty(value = "项目名称",example = "qysca")
+    @ApiModelProperty(value = "项目名称", example = "qysca")
     private String projectName;
 
-    @ApiModelProperty(value = "项目版本号",example = "1.0.0")
+    @ApiModelProperty(value = "项目版本号", example = "1.0.0")
     private String projectVersion;
 
     @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
@@ -37,7 +37,7 @@ public class ProjectDependencyTableDO {
     @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String version;
 
-    @ApiModelProperty(value = "组件名称",example = "spring-boot-starter")
+    @ApiModelProperty(value = "组件名称", example = "spring-boot-starter")
     private String name;
 
     @ApiModelProperty(value = "依赖范围", example = "compile")
@@ -49,10 +49,10 @@ public class ProjectDependencyTableDO {
     @ApiModelProperty(value = "是否开源", example = "true")
     private Boolean opensource;
 
-    @ApiModelProperty(value = "语言",example = "java")
+    @ApiModelProperty(value = "语言", example = "java")
     private String language;
 
-    @ApiModelProperty(value = "许可证",example = "Apache License, Version 2.0")
+    @ApiModelProperty(value = "许可证", example = "Apache License, Version 2.0")
     private String licenses;
 
     @ApiModelProperty(value = "是否直接依赖", example = "true")

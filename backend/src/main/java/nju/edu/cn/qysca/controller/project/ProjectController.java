@@ -34,10 +34,10 @@ public class ProjectController {
 
     @ApiOperation("分页获取项目信息")
     @GetMapping("/findProjectInfoPage")
-    public ResponseMsg<Page<ProjectInfoDO>> findProjectInfoPage(@ApiParam(value="项目名称",allowEmptyValue = true) @RequestParam String name,
-                                                                @ApiParam(value = "页码",required = true) @RequestParam int number,
-                                                                @ApiParam(value = "页大小",required = true) @RequestParam int size){
-        return new ResponseMsg<>(projectService.findProjectInfoPage(name,number,size));
+    public ResponseMsg<Page<ProjectInfoDO>> findProjectInfoPage(@ApiParam(value = "项目名称", allowEmptyValue = true) @RequestParam String name,
+                                                                @ApiParam(value = "页码", required = true) @RequestParam int number,
+                                                                @ApiParam(value = "页大小", required = true) @RequestParam int size) {
+        return new ResponseMsg<>(projectService.findProjectInfoPage(name, number, size));
     }
 
     @ApiOperation("分页获取指定项目的版本信息")
