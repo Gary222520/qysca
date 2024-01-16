@@ -9,11 +9,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
-@Document("java_component_open_dependency_table")
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel("Java开源依赖表格DO")
+@Document("java_component_open_dependency_table")
+@ApiModel("Java开源组件依赖平铺信息DO")
 public class JavaOpenDependencyTableDO {
 
     @MongoId
@@ -21,25 +22,25 @@ public class JavaOpenDependencyTableDO {
     @Field("_id")
     private String id;
 
-    @ApiModelProperty(value = "父级组织id", example = "org.sonatype.oss")
+    @ApiModelProperty(value = "父级组织id", example = "org.springframework.boot")
     private String parentGroupId;
 
-    @ApiModelProperty(value = "父级工件id", example = "oss-parent")
+    @ApiModelProperty(value = "父级工件id", example = "spring-boot-starter-parent")
     private String parentArtifactId;
 
-    @ApiModelProperty(value = "父级版本号", example = "7")
+    @ApiModelProperty(value = "父级版本号", example = "2.5.15")
     private String parentVersion;
 
-    @ApiModelProperty(value = "组织id", example = "org.hamcrest")
+    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
     private String groupId;
 
-    @ApiModelProperty(value = "工件id", example = "hamcrest-core")
+    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
     private String artifactId;
 
-    @ApiModelProperty(value = "版本号", example = "1.3")
+    @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String version;
 
-    @ApiModelProperty(value = "名称", example = "Hamcrest")
+    @ApiModelProperty(value = "组件名称", example = "spring-boot-starter")
     private String name;
 
     @ApiModelProperty(value = "依赖范围", example = "compile")
@@ -51,10 +52,10 @@ public class JavaOpenDependencyTableDO {
     @ApiModelProperty(value = "是否开源", example = "true")
     private Boolean opensource;
 
-    @ApiModelProperty(value = "语言")
+    @ApiModelProperty(value = "语言", example = "java")
     private String language;
 
-    @ApiModelProperty(value = "许可证", example = "")
+    @ApiModelProperty(value = "许可证", example = "Apache License, Version 2.0")
     private String licenses;
 
     @ApiModelProperty(value = "是否直接依赖", example = "true")

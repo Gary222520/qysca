@@ -113,7 +113,7 @@ public class FileServiceImpl implements FileService {
      * @return
      */
     private String getFileFolderPath(String identifier) {
-        return uploadFolder + identifier.substring(0, 1) + File.separator + identifier.substring(1, 2) + File.separator + identifier + File.separator;
+        return uploadFolder + identifier.charAt(0) + File.separator + identifier.charAt(1) + File.separator + identifier + File.separator;
     }
 
     /**
@@ -147,7 +147,7 @@ public class FileServiceImpl implements FileService {
     private synchronized void saveToRedis(FileChunkDO fileChunkDO) {
         Set<Integer> uploaded = (Set<Integer>) redisTemplate.opsForHash().get(fileChunkDO.getIdentifier(), "uploaded");
         if (uploaded == null) {
-            uploaded = new HashSet<>(Arrays.asList(fileChunkDO.getChunkNumber()));
+            uploaded = new HashSet<>(List.of(fileChunkDO.getChunkNumber()));
             HashMap<String, Object> objectObjectHashMap = new HashMap<>();
             objectObjectHashMap.put("uploaded", uploaded);
             objectObjectHashMap.put("totalChunks", fileChunkDO.getTotalChunks());

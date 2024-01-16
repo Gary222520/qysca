@@ -9,11 +9,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
-@Document("project_version_info")
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel("项目版本信息")
+@Document("project_version_info")
+@ApiModel("项目版本信息DO")
 public class ProjectVersionDO {
 
     @MongoId
@@ -21,27 +22,27 @@ public class ProjectVersionDO {
     @Field("_id")
     private String id;
 
-    @ApiModelProperty("项目名称")
+    @ApiModelProperty(value = "项目名称", example = "qysca")
     private String name;
 
-    @ApiModelProperty("版本号")
+    @ApiModelProperty(value = "项目版本号", example = "1.0.0")
     private String version;
 
-    @ApiModelProperty("项目语言")
+    @ApiModelProperty(value = "项目语言", example = "java")
     private String language;
 
-    @ApiModelProperty("构建工具")
+    @ApiModelProperty(value = "构建工具", example = "maven")
     private String builder;
 
-    @ApiModelProperty("扫描工具")
+    @ApiModelProperty(value = "扫描对象", example = "zip")
     private String scanner;
 
-    @ApiModelProperty("最近一次更新时间")
+    @ApiModelProperty(value = "最近一次更新时间", example = "2024-01-17")
     private String time;
 
-    @ApiModelProperty("备注")
+    @ApiModelProperty(value = "备注", example = "a software component analysis project")
     private String note;
 
-    @ApiModelProperty(value = "扫描状态",example="SUCCESS,FAILED,RUNNING")
+    @ApiModelProperty(value = "扫描状态", example = "SUCCESS,FAILED,RUNNING")
     private String state;
 }
