@@ -18,12 +18,13 @@ import java.util.stream.Collectors;
 
 public class ConvertUtil {
 
-    public static JavaOpenComponentDO convertToJavaOpenComponentDO(Document document, String pomUrl){
+    public static JavaOpenComponentDO convertToJavaOpenComponentDO(Document document, String pomUrl, String MAVEN_REPO_BASE_URL){
         // 从pom url中提取groupId, artifactId, and version
+        // https://repo1.maven.org/maven2/org/springframework/boot/aot/org.springframework.boot.aot.gradle.plugin/3.0.9/org.springframework.boot.aot.gradle.plugin-3.0.9.pom
         String[] parts = pomUrl.split("/");
         String version = parts[parts.length - 2];
         String artifactId = parts[parts.length - 3];
-        String groupId = String.join(".", Arrays.copyOfRange(parts, 0, parts.length - 3));
+        String groupId = String.join(".", Arrays.copyOfRange(parts, MAVEN_REPO_BASE_URL.split("/").length, parts.length - 3));
 
         Model model = convertToModel(document);
         if (model == null){

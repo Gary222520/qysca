@@ -22,12 +22,20 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
      */
     private Set<String> visitedUrls;
     private final String visitedUrlsFile = "spider/src/main/resources/visited_urls.txt";
-
     private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
+    private final static String POM_FILE_TEMP_PATH = "spider/src/main/resources/temp_pom.xml";
+    private final static String COLLECTION_NAME = "java_component_open_detail";
 
+    public JavaOpenPomSpider(){
+        dataAccess = new DataAccess<JavaOpenComponentDO>(COLLECTION_NAME, JavaOpenComponentDO.class);
+    }
+
+    /**
+     * 爬取指定目录下的所有pom文件，并将爬取到的数据存储到数据库中
+     * @param directoryUrl
+     */
     @Override
-    public void crawlMany(String directoryUrl, DataAccess<JavaOpenComponentDO> dataAccess){
-        this.dataAccess = dataAccess;
+    public void crawlMany(String directoryUrl){
         // 程序中断时自动调用，保存数据
         Runtime.getRuntime().addShutdownHook(new Thread(this::saveAndFlush));
 
@@ -36,14 +44,23 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
         saveVisitedLinks();
     }
 
-    public static JavaOpenComponentDO crawlByGAV(String groupId, String artifactId, String version){
+    /**
+     * 根据给定gav信息爬取pom文件，并将爬到的数据存储到数据库中
+     * @param groupId
+     * @param artifactId
+     * @param version
+     * @return JavaOpenComponentDO
+     */
+    public JavaOpenComponentDO crawlByGAV(String groupId, String artifactId, String version){
         String downloadUrl = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
         String pomUrl = findPomFileUrlInDirectory(downloadUrl);
         if (pomUrl == null){
             return null;
         }
-        return crawl(pomUrl);
-
+        JavaOpenComponentDO  javaOpenComponentDO = crawl(pomUrl);
+        //刷新保存数据
+        dataAccess.flush();
+        return javaOpenComponentDO;
     }
 
     /**
@@ -79,7 +96,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
      *  根据pom文件的url爬取单个pom文件，并转换为DO
      * @param pomUrl pom url
      */
-    private static JavaOpenComponentDO crawl(String pomUrl) {
+    private JavaOpenComponentDO crawl(String pomUrl) {
         if (!pomUrl.endsWith(".pom")){
             return null;
         }
@@ -90,16 +107,22 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
         if (document == null)
             return null;
 
-        JavaOpenComponentDO javaOpenComponentDO = ConvertUtil.convertToJavaOpenComponentDO(document, pomUrl);
+        JavaOpenComponentDO javaOpenComponentDO = ConvertUtil.convertToJavaOpenComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
 
         //todo 调用MavenUtil获得node，通过node构建dependencyTableDO和dependencyTreeDO，然后返回
+        //createPomFile(document.outerHtml());
         JavaOpenDependencyTableDO javaOpenDependencyTableDO = null;
         JavaOpenDependencyTreeDO javaOpenDependencyTreeDO = null;
+
+
 
         return javaOpenComponentDO;
     }
 
 
+    /**
+     * 加载已访问过的url
+     */
     private void loadVisitedLinks() {
         visitedUrls = new HashSet<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(visitedUrlsFile))) {
@@ -112,6 +135,9 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
         }
     }
 
+    /**
+     * 保存已访问过的url
+     */
     private void saveVisitedLinks() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(visitedUrlsFile))) {
             for (String link : visitedUrls) {
@@ -150,6 +176,24 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
         }
         System.err.println("No .pom file found in \"" + directoryUrl + "\"");
         return null;
+    }
+
+    /**
+     * 创建临时的pom文件（用以调用mvn命令）
+     * @param pomString
+     */
+    private static void createPomFile(String pomString){
+        try {
+            // 创建FileWriter对象
+            FileWriter writer = new FileWriter(POM_FILE_TEMP_PATH, false);
+            // 写入内容
+            writer.write(pomString);
+            // 关闭文件写入流
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("创建临时pom文件时发生错误：" + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
