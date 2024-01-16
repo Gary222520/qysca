@@ -18,4 +18,8 @@ public interface ProjectVersionDao extends MongoRepository<ProjectVersionDO,Stri
     Page<ProjectVersionDO> findAllByName(String name,Pageable pageable);
 
     ProjectVersionDO findByNameAndVersion(String name, String version);
+
+    void deleteAllByName(String name);
+
+    void deleteByNameAndVersion(String name, String version);
 }

@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel("保存项目接口信息")
-public class SaveProjectDTO {
+@ApiModel("更新项目接口信息")
+public class UpdateProjectDTO {
 
     @ApiModelProperty("项目语言")
     private String language;
@@ -21,16 +21,15 @@ public class SaveProjectDTO {
     @ApiModelProperty("项目扫描工具")
     private String scanner;
 
-    @ApiModelProperty("项目名称")
+    @ApiModelProperty(value = "项目名称")
     private String name;
 
-    @ApiModelProperty("项目版本")
+    @ApiModelProperty(value = "项目版本")
     private String version;
 
-    @ApiModelProperty("项目备注信息")
+    @ApiModelProperty(value = "项目备注")
     private String note;
 
-    @ApiModelProperty("pom文件路径")
+    @ApiModelProperty(value = "pom文件路径")
     private String filePath;
-
 }
