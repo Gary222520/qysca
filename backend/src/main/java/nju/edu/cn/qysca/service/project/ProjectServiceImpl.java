@@ -56,6 +56,16 @@ public class ProjectServiceImpl implements ProjectService {
         return null;
     }
 
+    /**
+     * 获取所有项目信息
+     *
+     * @return List<Project> 项目信息列表
+     */
+    @Override
+    public List<ProjectInfoDO> getProjectList() {
+        return null;
+    }
+
     private ComponentDependencyTreeDO convertNode(Node node, int depth) {
         ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
         componentDependencyTreeDO.setGroupId(node.getGroupId());
