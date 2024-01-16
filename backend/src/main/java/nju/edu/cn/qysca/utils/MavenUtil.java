@@ -7,7 +7,6 @@ import org.apache.maven.shared.invoker.*;
 
 import java.io.*;
 import java.util.Collections;
-import java.util.List;
 
 public class MavenUtil {
 
@@ -18,13 +17,13 @@ public class MavenUtil {
      * @param filePath
      */
     public static Node mavenDependencyTreeAnalyzer(String filePath) {
-        InvocationRequest request = new DefaultInvocationRequest();
-        File pom = new File(filePath);
-        request.setPomFile(pom);
-        request.setGoals(Collections.singletonList("dependency:tree -DoutputFile=result -DoutputType=text"));
-        Invoker invoker = new DefaultInvoker();
-        invoker.setMavenHome(new File("D:\\apache-maven-3.8.6"));
         try {
+            InvocationRequest request = new DefaultInvocationRequest();
+            File pom = new File(filePath);
+            request.setPomFile(pom);
+            request.setGoals(Collections.singletonList("dependency:tree -DoutputFile=result -DoutputType=text"));
+            Invoker invoker = new DefaultInvoker();
+            invoker.setMavenHome(new File("D:\\apache-maven-3.8.6"));
             invoker.execute(request);
             // 获得result结果的路径
             FileInputStream fis = new FileInputStream(new File(pom.getParent() + File.separator + "result"));

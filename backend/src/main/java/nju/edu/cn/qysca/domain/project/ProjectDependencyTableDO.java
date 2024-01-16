@@ -49,14 +49,14 @@ public class ProjectDependencyTableDO {
     private Integer depth;
 
     @ApiModelProperty(value = "是否开源", example = "true")
-    private boolean opensource;
+    private Boolean opensource;
 
     @ApiModelProperty(value = "语言")
     private String language;
 
     @ApiModelProperty(value = "许可证", example = "")
-    private List<LicenseDO> licenses;
+    private String licenses;
 
     @ApiModelProperty(value = "是否直接依赖", example = "true")
-    private boolean isDirect;
+    private boolean direct;
 }
