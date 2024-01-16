@@ -1,9 +1,8 @@
 package util;
 
-import domain.Developer;
-import domain.License;
-import domain.OpensourceComponentDO;
-
+import domain.component.DeveloperDO;
+import domain.component.JavaOpenComponentDO;
+import domain.component.LicenseDO;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
@@ -17,9 +16,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class DataHandler {
+public class ConvertUtil {
 
-    public static OpensourceComponentDO convertToDO(Document document, String pomUrl, String language, String opensource){
+    public static JavaOpenComponentDO convertToJavaOpenComponentDO(Document document, String pomUrl){
         // 从pom url中提取groupId, artifactId, and version
         String[] parts = pomUrl.split("/");
         String version = parts[parts.length - 2];
@@ -31,26 +30,24 @@ public class DataHandler {
             return null;
         }
 
-        OpensourceComponentDO opensourceComponentDO = new OpensourceComponentDO();
-        opensourceComponentDO.setGroupId(groupId);
-        opensourceComponentDO.setArtifactId(artifactId);
-        opensourceComponentDO.setVersion(version);
+        JavaOpenComponentDO javaOpenComponentDO = new JavaOpenComponentDO();
+        javaOpenComponentDO.setGroupId(groupId);
+        javaOpenComponentDO.setArtifactId(artifactId);
+        javaOpenComponentDO.setVersion(version);
 
 
-        opensourceComponentDO.setName(model.getName());
-        opensourceComponentDO.setOpensource(opensource);
-        opensourceComponentDO.setLanguage(language);
-        opensourceComponentDO.setDescription(model.getDescription());
+        javaOpenComponentDO.setName(model.getName());
+        javaOpenComponentDO.setDescription(model.getDescription());
 
-        opensourceComponentDO.setUrl(model.getUrl());
-        opensourceComponentDO.setDownloadUrl(getDownloadUrl(pomUrl));
-        opensourceComponentDO.setSourceUrl(model.getScm()==null?null:model.getScm().getUrl());
+        javaOpenComponentDO.setUrl(model.getUrl());
+        javaOpenComponentDO.setDownloadUrl(getDownloadUrl(pomUrl));
+        javaOpenComponentDO.setSourceUrl(model.getScm()==null?null:model.getScm().getUrl());
 
-        opensourceComponentDO.setDevelopers(getDevelopers(model));
-        opensourceComponentDO.setLicenses(getLicense(model));
-        opensourceComponentDO.setPom(convertToJson(document).toString());
+        javaOpenComponentDO.setDevelopers(getDevelopers(model));
+        javaOpenComponentDO.setLicenses(getLicense(model));
+        javaOpenComponentDO.setPom(convertToJson(document).toString());
 
-        return opensourceComponentDO;
+        return javaOpenComponentDO;
 
     }
 
@@ -58,26 +55,26 @@ public class DataHandler {
         return pomUrl.substring(0, pomUrl.lastIndexOf('/') + 1);
     }
 
-    private static List<Developer> getDevelopers(Model model) {
+    private static List<DeveloperDO> getDevelopers(Model model) {
         List<org.apache.maven.model.Developer> mavenDevelopers = model.getDevelopers();
         return mavenDevelopers.stream()
                 .map(mavenDeveloper -> {
-                    Developer developer = new Developer();
-                    developer.setId(mavenDeveloper.getId());
-                    developer.setName(mavenDeveloper.getName());
-                    developer.setEmail(mavenDeveloper.getEmail());
+                    DeveloperDO developer = new DeveloperDO();
+                    developer.setDeveloperId(mavenDeveloper.getId());
+                    developer.setDeveloperName(mavenDeveloper.getName());
+                    developer.setDeveloperEmail(mavenDeveloper.getEmail());
                     return developer;
                 })
                 .collect(Collectors.toList());
     }
 
-    private static List<License> getLicense(Model model){
+    private static List<LicenseDO> getLicense(Model model){
         List<org.apache.maven.model.License> mavenLicenses = model.getLicenses();
         return mavenLicenses.stream()
                 .map(mavenLicense ->{
-                    License license = new License();
-                    license.setName(license.getName());
-                    license.setUrl(license.getUrl());
+                    LicenseDO license = new LicenseDO();
+                    license.setLicenseName(mavenLicense.getName());
+                    license.setLicenseUrl(mavenLicense.getUrl());
                     return license;
                 })
                 .collect(Collectors.toList());

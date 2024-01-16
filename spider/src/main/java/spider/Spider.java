@@ -1,10 +1,8 @@
 package spider;
 
-import dataAccess.DataAccessInterface;
+import dataAccess.DataAccess;
 
 public interface Spider<T>{
 
-    void crawlMany(String directoryUrl, DataAccessInterface<T> dataAccess);
-
-    T crawlByGAV(String groupId, String artifactId, String version);
+    void crawlMany(String directoryUrl, DataAccess<T> dataAccess);
 }

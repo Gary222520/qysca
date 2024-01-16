@@ -1,20 +1,21 @@
 package spider;
 
-import dataAccess.DataAccessInterface;
-import dataAccess.OpensourceComponentDODataAccess;
-import domain.OpensourceComponentDO;
+import dataAccess.DataAccess;
+import domain.component.JavaOpenComponentDO;
+import domain.component.JavaOpenDependencyTableDO;
+import domain.component.JavaOpenDependencyTreeDO;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import util.DataHandler;
+import util.ConvertUtil;
 
 import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
 
-public class PomSpider implements Spider<OpensourceComponentDO>{
+public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
 
-    private DataAccessInterface<OpensourceComponentDO> dataAccess;
+    private DataAccess<JavaOpenComponentDO> dataAccess;
 
     /**
      * 用以记录以及爬取过的url，防止重复爬取
@@ -25,7 +26,7 @@ public class PomSpider implements Spider<OpensourceComponentDO>{
     private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
 
     @Override
-    public void crawlMany(String directoryUrl, DataAccessInterface<OpensourceComponentDO> dataAccess){
+    public void crawlMany(String directoryUrl, DataAccess<JavaOpenComponentDO> dataAccess){
         this.dataAccess = dataAccess;
         // 程序中断时自动调用，保存数据
         Runtime.getRuntime().addShutdownHook(new Thread(this::saveAndFlush));
@@ -35,7 +36,7 @@ public class PomSpider implements Spider<OpensourceComponentDO>{
         saveVisitedLinks();
     }
 
-    public OpensourceComponentDO crawlByGAV(String groupId, String artifactId, String version){
+    public static JavaOpenComponentDO crawlByGAV(String groupId, String artifactId, String version){
         String downloadUrl = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
         String pomUrl = findPomFileUrlInDirectory(downloadUrl);
         if (pomUrl == null){
@@ -78,7 +79,7 @@ public class PomSpider implements Spider<OpensourceComponentDO>{
      *  根据pom文件的url爬取单个pom文件，并转换为DO
      * @param pomUrl pom url
      */
-    private OpensourceComponentDO crawl(String pomUrl) {
+    private static JavaOpenComponentDO crawl(String pomUrl) {
         if (!pomUrl.endsWith(".pom")){
             return null;
         }
@@ -89,8 +90,13 @@ public class PomSpider implements Spider<OpensourceComponentDO>{
         if (document == null)
             return null;
 
-        OpensourceComponentDO opensourceComponentDO = DataHandler.convertToDO(document, pomUrl, "JAVA","TRUE");
-        return opensourceComponentDO;
+        JavaOpenComponentDO javaOpenComponentDO = ConvertUtil.convertToJavaOpenComponentDO(document, pomUrl);
+
+        //todo 调用MavenUtil获得node，通过node构建dependencyTableDO和dependencyTreeDO，然后返回
+        JavaOpenDependencyTableDO javaOpenDependencyTableDO = null;
+        JavaOpenDependencyTreeDO javaOpenDependencyTreeDO = null;
+
+        return javaOpenComponentDO;
     }
 
 
