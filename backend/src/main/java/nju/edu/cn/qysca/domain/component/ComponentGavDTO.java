@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.components;
+package nju.edu.cn.qysca.domain.component;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -20,5 +20,4 @@ public class ComponentGavDTO {
 
     @ApiModelProperty(value = "版本号", example = "1.3")
     private String version;
-    // Getters and setters{
 }
