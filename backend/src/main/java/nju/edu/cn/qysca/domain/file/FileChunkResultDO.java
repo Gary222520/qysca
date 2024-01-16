@@ -11,12 +11,12 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel("文件分片传输结果")
+@ApiModel("文件分片传输结果DO")
 public class FileChunkResultDO {
 
-    @ApiModelProperty("是否跳过上传")
+    @ApiModelProperty(value = "是否跳过上传",example = "true")
     private Boolean skipUpload;
 
-    @ApiModelProperty("已上传分片的集合")
+    @ApiModelProperty(value = "已上传分片的集合")
     private Set<Integer> uploaded;
 }

@@ -10,11 +10,12 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
 
-@Document("project_info")
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel(description = "项目信息")
+@Document("project_info")
+@ApiModel(description = "项目信息DO")
 public class ProjectInfoDO {
 
     @MongoId
@@ -22,7 +23,7 @@ public class ProjectInfoDO {
     @Field("_id")
     private String id;
 
-    @ApiModelProperty(value = "项目名称", example = "项目1")
+    @ApiModelProperty(value = "项目名称", example = "qysca")
     @Field("name")
     private String name;
 

@@ -1,24 +1,33 @@
 package nju.edu.cn.qysca.service.component;
 
-import nju.edu.cn.qysca.dao.component.JavaCloseComponentDao;
-import nju.edu.cn.qysca.dao.component.JavaOpenComponentDao;
-import nju.edu.cn.qysca.domain.component.ComponentSearchDTO;
-import nju.edu.cn.qysca.domain.component.JavaCloseComponentDO;
-import nju.edu.cn.qysca.domain.component.JavaOpenComponentDO;
-import nju.edu.cn.qysca.domain.component.SaveCloseComponentDTO;
+import nju.edu.cn.qysca.dao.component.*;
+import nju.edu.cn.qysca.domain.component.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class ComponentServiceImpl implements ComponentService{
+public class ComponentServiceImpl implements ComponentService {
     @Autowired
     private JavaOpenComponentDao javaOpenComponentDao;
 
     @Autowired
     private JavaCloseComponentDao javaCloseComponentDao;
+
+    @Autowired
+    private JavaOpenDependencyTreeDao javaOpenDependencyTreeDao;
+
+    @Autowired
+    private JavaCloseDependencyTreeDao javaCloseDependencyTreeDao;
+
+    @Autowired
+    private JavaOpenDependencyTableDao javaOpenDependencyTableDao;
+
+    @Autowired
+    private JavaCloseDependencyTableDao javaCloseDependencyTableDao;
 
     /**
      * 分页查询开源组件
@@ -26,9 +35,9 @@ public class ComponentServiceImpl implements ComponentService{
      * @param searchComponentDTO 查询条件
      * @return Page<JavaOpenComponentDO> 查询结果
      */
-    public Page<JavaOpenComponentDO> findOpenComponentsPage(ComponentSearchDTO searchComponentDTO){
+    public Page<JavaOpenComponentDO> findOpenComponentsPage(ComponentSearchDTO searchComponentDTO) {
         // 设置查询条件
-        JavaOpenComponentDO searcher=new JavaOpenComponentDO();
+        JavaOpenComponentDO searcher = new JavaOpenComponentDO();
         searcher.setGroupId(searchComponentDTO.getGroupId().equals("")?null:searchComponentDTO.getGroupId());
         searcher.setArtifactId(searchComponentDTO.getArtifactId().equals("")?null: searchComponentDTO.getArtifactId());
         searcher.setVersion(searchComponentDTO.getArtifactId().equals("")?null: searchComponentDTO.getVersion());
@@ -87,6 +96,108 @@ public class ComponentServiceImpl implements ComponentService{
     public Boolean saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO) {
         // 接口获得详细信息
         return true;
+    }
+
+    /**
+     * 查询开源组件依赖树信息
+     *
+     * @param componentGavDTO 组件gav
+     * @return JavaOpenDependencyTreeDO 依赖树信息
+     */
+    @Override
+    public JavaOpenDependencyTreeDO findOpenComponentDependencyTree(ComponentGavDTO componentGavDTO) {
+        return javaOpenDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
+                componentGavDTO.getGroupId(),
+                componentGavDTO.getArtifactId(),
+                componentGavDTO.getVersion());
+    }
+
+    /**
+     * 查询闭源组件依赖树信息
+     *
+     * @param componentGavDTO 组件gav
+     * @return JavaCloseDependencyTreeDO 依赖树信息
+     */
+    @Override
+    public JavaCloseDependencyTreeDO findCloseComponentDependencyTree(ComponentGavDTO componentGavDTO) {
+        return javaCloseDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
+                componentGavDTO.getGroupId(),
+                componentGavDTO.getArtifactId(),
+                componentGavDTO.getVersion());
+    }
+
+    /**
+     * 分页查询开源组件依赖平铺信息
+     *
+     * @param componentGavPageDTO 带分页组件gav信息
+     * @return Page<JavaOpenDependencyTableDO> 分页查询结果
+     */
+    @Override
+    public Page<JavaOpenDependencyTableDO> findOpenComponentDependencyTable(ComponentGavPageDTO componentGavPageDTO) {
+        // 设置排序规则
+        List<Sort.Order> orders = new ArrayList<>();
+        orders.add(new Sort.Order(Sort.Direction.ASC, "depth").nullsLast());
+        orders.add(new Sort.Order(Sort.Direction.ASC, "name").nullsLast());
+        orders.add(new Sort.Order(Sort.Direction.ASC, "groupId").nullsLast());
+        orders.add(new Sort.Order(Sort.Direction.ASC, "artifactId").nullsLast());
+        orders.add(new Sort.Order(Sort.Direction.DESC, "version").nullsLast());
+        // 数据库页号从0开始，需减1
+        Pageable pageable = PageRequest.of(componentGavPageDTO.getNumber() - 1, componentGavPageDTO.getSize(), Sort.by(orders));
+        return javaOpenDependencyTableDao.findByParentGroupIdAndParentArtifactIdAndParentVersion(
+                componentGavPageDTO.getGroupId(),
+                componentGavPageDTO.getArtifactId(),
+                componentGavPageDTO.getVersion(), pageable);
+    }
+
+    /**
+     * 分页查询闭源组件依赖平铺信息
+     *
+     * @param componentGavPageDTO 带分页组件gav信息
+     * @return Page<JavaCloseDependencyTableDO> 分页查询结果
+     */
+    @Override
+    public Page<JavaCloseDependencyTableDO> findCloseComponentDependencyTable(ComponentGavPageDTO componentGavPageDTO) {
+        // 设置排序规则
+        List<Sort.Order> orders = new ArrayList<>();
+        orders.add(new Sort.Order(Sort.Direction.ASC, "depth").nullsLast());
+        orders.add(new Sort.Order(Sort.Direction.ASC, "name").nullsLast());
+        orders.add(new Sort.Order(Sort.Direction.ASC, "groupId").nullsLast());
+        orders.add(new Sort.Order(Sort.Direction.ASC, "artifactId").nullsLast());
+        orders.add(new Sort.Order(Sort.Direction.DESC, "version").nullsLast());
+        // 数据库页号从0开始，需减1
+        Pageable pageable = PageRequest.of(componentGavPageDTO.getNumber() - 1, componentGavPageDTO.getSize(), Sort.by(orders));
+        return javaCloseDependencyTableDao.findByParentGroupIdAndParentArtifactIdAndParentVersion(
+                componentGavPageDTO.getGroupId(),
+                componentGavPageDTO.getArtifactId(),
+                componentGavPageDTO.getVersion(), pageable);
+    }
+
+    /**
+     * 查询指定开源组件的详细信息
+     *
+     * @param componentGavDTO 组件gav
+     * @return JavaOpenComponentDO 开源组件详细信息
+     */
+    @Override
+    public JavaOpenComponentDO findOpenComponentDetail(ComponentGavDTO componentGavDTO) {
+        return javaOpenComponentDao.findByGroupIdAndArtifactIdAndVersion(
+                componentGavDTO.getGroupId(),
+                componentGavDTO.getArtifactId(),
+                componentGavDTO.getVersion());
+    }
+
+    /**
+     * 查询指定闭源组件的详细信息
+     *
+     * @param componentGavDTO 组件gav
+     * @return JavaCloseComponentDO 闭源组件详细信息
+     */
+    @Override
+    public JavaCloseComponentDO findCloseComponentDetail(ComponentGavDTO componentGavDTO) {
+        return javaCloseComponentDao.findByGroupIdAndArtifactIdAndVersion(
+                componentGavDTO.getGroupId(),
+                componentGavDTO.getArtifactId(),
+                componentGavDTO.getVersion());
     }
 
 }

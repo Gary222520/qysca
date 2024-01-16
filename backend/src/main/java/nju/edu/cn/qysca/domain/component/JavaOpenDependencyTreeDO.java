@@ -13,24 +13,25 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 import java.util.ArrayList;
 import java.util.List;
 
-@Document("java_component_open_dependency_tree")
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel("Java开源项目依赖树")
+@Document("java_component_open_dependency_tree")
+@ApiModel("Java开源组件依赖树信息DO")
 public class JavaOpenDependencyTreeDO {
     @MongoId
     @ApiModelProperty(value = "uuid", example = "0BAC7D48D1A8124D99F14805CE32DFF4")
     @Field("_id")
     private String id;
 
-    @ApiModelProperty(value = "组织id", example = "org.hamcrest")
+    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
     private String groupId;
 
-    @ApiModelProperty(value = "工件id", example = "hamcrest-core")
+    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
     private String artifactId;
 
-    @ApiModelProperty(value = "版本号", example = "1.3")
+    @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String version;
 
     @ApiModelProperty("依赖树")

@@ -9,11 +9,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
-@Document("project_dependency_tree")
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel("项目依赖树")
+@Document("project_dependency_tree")
+@ApiModel("项目依赖树信息DO")
 public class ProjectDependencyTreeDO {
 
     @MongoId
@@ -21,13 +22,13 @@ public class ProjectDependencyTreeDO {
     @Field("_id")
     private String id;
 
-    @ApiModelProperty("项目名称")
+    @ApiModelProperty(value = "项目名称",example = "qysca")
     private String name;
 
-    @ApiModelProperty("项目版本")
+    @ApiModelProperty(value = "项目版本号",example = "1.0.0")
     private String version;
 
-    @ApiModelProperty("项目依赖树")
+    @ApiModelProperty(value = "项目依赖树")
     private ComponentDependencyTreeDO tree;
 
 }

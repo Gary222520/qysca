@@ -15,16 +15,16 @@ import java.util.List;
 @NoArgsConstructor
 @ApiModel(description = "组件依赖树DO")
 public class ComponentDependencyTreeDO {
-    @ApiModelProperty(value = "组织id", example = "org.hamcrest")
+    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
     private String groupId;
 
-    @ApiModelProperty(value = "工件id", example = "hamcrest-core")
+    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
     private String artifactId;
 
-    @ApiModelProperty(value = "版本号", example = "1.3")
+    @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String version;
 
-    @ApiModelProperty(value = "名称", example = "Hamcrest")
+    @ApiModelProperty(value = "组件名称",example = "spring-boot-starter")
     private String name;
 
     @ApiModelProperty(value = "依赖范围", example = "compile")
@@ -36,16 +36,16 @@ public class ComponentDependencyTreeDO {
     @ApiModelProperty(value = "是否开源", example = "true")
     private Boolean opensource;
 
-    @ApiModelProperty(value = "语言")
+    @ApiModelProperty(value = "语言",example = "java")
     private String language;
 
-    @ApiModelProperty(value = "许可证", example = "")
+    @ApiModelProperty(value = "许可证",example = "Apache License, Version 2.0")
     private String licenses;
 
     @ApiModelProperty(value = "是否直接依赖", example = "true")
     private Boolean direct;
 
-    @ApiModelProperty(value = "依赖子树", example = "")
+    @ApiModelProperty(value = "依赖子树")
     private List<ComponentDependencyTreeDO> dependencies = new ArrayList<>();
 
 }
