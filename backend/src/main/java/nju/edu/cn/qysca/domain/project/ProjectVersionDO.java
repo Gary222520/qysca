@@ -42,6 +42,6 @@ public class ProjectVersionDO {
     @ApiModelProperty("备注")
     private String note;
 
-    @ApiModelProperty("是否扫描完成")
-    private Boolean analyzed;
+    @ApiModelProperty(value = "扫描状态",example="SUCCESS,FAILED,RUNNING")
+    private String state;
 }

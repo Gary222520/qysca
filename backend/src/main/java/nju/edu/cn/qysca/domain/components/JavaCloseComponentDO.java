@@ -56,4 +56,7 @@ public class JavaCloseComponentDO {
     @ApiModelProperty(value = "pom文件")
     private String pom;
 
+    @ApiModelProperty(value = "扫描状态",example="SUCCESS,FAILED,RUNNING")
+    private String state;
+
 }
