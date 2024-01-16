@@ -21,7 +21,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
      * 用以记录以及爬取过的url，防止重复爬取
      */
     private Set<String> visitedUrls;
-    private final String visitedUrlsFile = "spider/src/main/resources/visited_urls.txt";
+    private final String VISITED_URLS_PATH = "visited_urls.txt";
     private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
     private final static String POM_FILE_TEMP_PATH = "spider/src/main/resources/temp_pom.xml";
     private final static String COLLECTION_NAME = "java_component_open_detail";
@@ -119,13 +119,13 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
         return javaOpenComponentDO;
     }
 
-
     /**
      * 加载已访问过的url
      */
     private void loadVisitedLinks() {
         visitedUrls = new HashSet<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(visitedUrlsFile))) {
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(VISITED_URLS_PATH);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 visitedUrls.add(line);
@@ -139,7 +139,8 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
      * 保存已访问过的url
      */
     private void saveVisitedLinks() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(visitedUrlsFile))) {
+        try (OutputStream outputStream = new FileOutputStream(VISITED_URLS_PATH);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
             for (String link : visitedUrls) {
                 writer.write(link);
                 writer.newLine();
