@@ -15,32 +15,24 @@ public class Spider {
     private static final String DEFAULT_TYPE = "pom";
     private static final String DEFAULT_URL_LIST_PATH = "backend/src/main/resources/url_list.txt";
 
+    public static void main(String[] args) {
 
-
-    /**
-     * 从url_list中爬取并（递归）解析
-     */
-    private static void spiderAndParseFromUrlList(String url_list_path){
-        List<String> directoryUrlList = readLinesFromFile(url_list_path);
+        List<String> directoryUrlList = readLinesFromFile(DEFAULT_URL_LIST_PATH);
         for (String directoryUrl : directoryUrlList) {
-            if (directoryUrl == null || directoryUrl.startsWith("//"))
+            if (directoryUrl.startsWith("//"))
                 continue;
-            System.out.println("开始爬取并解析： "+ directoryUrl);
-            List<String> pomUrlList =  PomSpider.findAllPomUrlInDirectory(directoryUrl);
+            System.out.println("开始爬取并解析： " + directoryUrl);
+            List<String> pomUrlList = PomSpider.findAllPomUrlInDirectory(directoryUrl);
             Collections.reverse(pomUrlList); // 从高版本往低版本爬取
             PomParser pomParser = new PomParser();
-            for (String pomUrl : pomUrlList){
+            for (String pomUrl : pomUrlList) {
                 pomParser.parsePom(pomUrl);
             }
             System.out.println();
         }
     }
 
-    /**
-     * 从文件中读取行
-     * @param filePath
-     * @return
-     */
+
     private static List<String> readLinesFromFile(String filePath) {
         List<String> lines = new ArrayList<>();
 

@@ -7,10 +7,6 @@ spring:
   data:
     mongodb:
       uri: mongodb://172.29.7.168:37018/sca
-    neo4j:
-      uri: bolt://172.29.7.168:37687
-      username: neo4j
-      password: 2020tyhj
   redis:
     host: 172.29.7.168
     port: 37379
