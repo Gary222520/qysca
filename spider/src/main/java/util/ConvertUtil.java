@@ -36,7 +36,7 @@ public class ConvertUtil {
         javaOpenComponentDO.setArtifactId(artifactId);
         javaOpenComponentDO.setVersion(version);
 
-
+        javaOpenComponentDO.setLanguage("Java");
         javaOpenComponentDO.setName(model.getName());
         javaOpenComponentDO.setDescription(model.getDescription());
 

@@ -25,6 +25,8 @@ public class JavaOpenComponentDO {
 
     private String version;
 
+    private String language;
+
     private String name;
 
     private String description;

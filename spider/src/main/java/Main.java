@@ -1,5 +1,3 @@
-import dataAccess.DataAccess;
-import domain.component.JavaOpenComponentDO;
 import spider.JavaOpenPomSpider;
 import spider.Spider;
 
