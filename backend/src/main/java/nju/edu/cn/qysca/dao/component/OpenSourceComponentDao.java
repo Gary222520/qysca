@@ -1,6 +1,6 @@
-package nju.edu.cn.qysca.dao.components;
+package nju.edu.cn.qysca.dao.component;
 
-import nju.edu.cn.qysca.domain.components.JavaOpenComponentDO;
+import nju.edu.cn.qysca.domain.component.JavaOpenComponentDO;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface OpenSourceComponentDao extends MongoRepository<JavaOpenComponentDO, String> {

@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nju.edu.cn.qysca.domain.components.LicenseDO;
+import nju.edu.cn.qysca.domain.component.LicenseDO;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
@@ -49,14 +49,14 @@ public class ProjectDependencyTableDO {
     private Integer depth;
 
     @ApiModelProperty(value = "是否开源", example = "true")
-    private boolean opensource;
+    private Boolean opensource;
 
     @ApiModelProperty(value = "语言")
     private String language;
 
     @ApiModelProperty(value = "许可证", example = "")
-    private List<LicenseDO> licenses;
+    private String licenses;
 
     @ApiModelProperty(value = "是否直接依赖", example = "true")
-    private boolean isDirect;
+    private boolean direct;
 }
