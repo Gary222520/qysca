@@ -131,6 +131,12 @@
 			<artifactId>maven-dependency-tree-parser</artifactId>
 			<version>1.0.5</version>
 		</dependency>
+		<!--json-->
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20231013</version>
+		</dependency>
 	</dependencies>
 
 	<build>

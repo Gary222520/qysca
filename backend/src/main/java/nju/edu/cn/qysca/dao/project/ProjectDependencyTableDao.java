@@ -14,4 +14,9 @@ public interface ProjectDependencyTableDao extends MongoRepository<ProjectDepend
      * @return Page<ProjectDependencyTableDO> 项目依赖平铺信息分页
      */
     Page<ProjectDependencyTableDO> findByProjectNameAndProjectVersion(String projectName, String projectVersion, Pageable pageable);
+
+    void deleteAllByNameAndVersion(String name, String version);
+
+    void deleteAllByName(String name);
+
 }

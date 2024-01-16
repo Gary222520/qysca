@@ -48,4 +48,8 @@ public interface ProjectVersionDao extends MongoRepository<ProjectVersionDO, Str
      */
     @Query(value = "{name:?0}", fields = "{'_id':0,'version':1}")
     List<String> findVersionsByName(String name, Sort sort);
+
+    void deleteAllByName(String name);
+
+    void deleteByNameAndVersion(String name, String version);
 }

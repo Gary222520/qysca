@@ -12,4 +12,8 @@ public interface ProjectDependencyTreeDao extends MongoRepository<ProjectDepende
      * @return ProjectDependencyTreeDO 项目依赖树信息
      */
     ProjectDependencyTreeDO findByNameAndVersion(String name, String version);
+
+    void deleteAllByName(String name);
+
+    void deleteByNameAndVersion(String name, String version);
 }
