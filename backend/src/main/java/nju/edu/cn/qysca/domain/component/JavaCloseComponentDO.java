@@ -1,5 +1,6 @@
-package nju.edu.cn.qysca.domain.components;
+package nju.edu.cn.qysca.domain.component;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,11 +11,12 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import java.util.List;
 
-@Document("java_component_open_detail")
+@Document("java_component_close_detail")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class JavaOpenComponentDO {
+@ApiModel("java闭源组件详细信息")
+public class JavaCloseComponentDO {
 
     @MongoId
     @ApiModelProperty(value = "uuid", example = "0BAC7D48D1A8124D99F14805CE32DFF4")
@@ -32,6 +34,9 @@ public class JavaOpenComponentDO {
 
     @ApiModelProperty(value = "组件名称", example = "")
     private String name;
+
+    @ApiModelProperty(value = "语言",example = "java")
+    private String language;
 
     @ApiModelProperty(value = "组件描述", example = "")
     private String description;

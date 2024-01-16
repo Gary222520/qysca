@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.components;
+package nju.edu.cn.qysca.domain.component;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -9,12 +9,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
-@ApiModel("Java闭源依赖表DO")
+@Document("java_component_open_dependency_table")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("java_component_close_dependency_table")
-public class JavaCloseDependencyTableDO {
+@ApiModel("Java开源依赖表格DO")
+public class JavaOpenDependencyTableDO {
 
     @MongoId
     @ApiModelProperty(value = "uuid", example = "0BAC7D48D1A8124D99F14805CE32DFF4")
