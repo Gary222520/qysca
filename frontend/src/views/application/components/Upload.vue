@@ -19,12 +19,6 @@
           </div>
         </uploader-btn>
       </uploader-drop>
-      <!-- <uploader-list>
-        <li v-for="file in upload.uploadFileList" :key="file.id">
-          <uploader-file :class="'file_' + file.id" ref="files" :file="file" :list="true"></uploader-file>
-        </li>
-      </uploader-list> -->
-      <!-- <uploader-file :file="uploadFile" :list="false"></uploader-file> -->
       <div v-if="upload.uploadFile" class="progress">
         <div v-if="upload.progress.status === 'active'">{{ upload.uploadFile?.name }}</div>
         <div v-if="upload.progress.status === 'exception'" class="upload-failed">
@@ -40,12 +34,15 @@
 </template>
 
 <script setup>
-import { reactive, defineExpose } from 'vue'
+import { reactive, defineExpose, defineEmits } from 'vue'
 import { CloudUploadOutlined } from '@ant-design/icons-vue'
 import { baseURL } from '@/api/request'
 import { API } from '@/api/backend'
+import { FileMerge } from '@/api/frontend'
 import SparkMD5 from 'spark-md5'
+import { message } from 'ant-design-vue'
 
+const emit = defineEmits(['success'])
 const options = {
   // 上传地址
   target: baseURL + API.FILE_UPLOAD,
@@ -55,8 +52,8 @@ const options = {
   testChunks: true,
   // 真正上传的时候使用的 HTTP 方法,默认 POST
   uploadMethod: 'post',
-  // 分片大小，20MB
-  chunkSize: 20 * 1024 * 1024,
+  // 分片大小，5MB
+  chunkSize: 5 * 1024 * 1024,
   // 并发上传数，默认为 3
   simultaneousUploads: 3,
   /**
@@ -65,14 +62,17 @@ const options = {
    */
   checkChunkUploadedByResponse: (chunk, message) => {
     // message是后台返回
-    let messageObj = JSON.parse(message)
-    let dataObj = messageObj.data
-    if (dataObj.uploaded !== undefined) {
-      return dataObj.uploaded
+    const res = JSON.parse(message)
+    const resData = res.data
+    // if (!resData.skipUpload) return false
+    if (resData.skipUpload) {
+      upload.skip = true
+      upload.progress.status = 'success'
+      return true
     }
     // 判断文件或分片是否已上传，已上传返回 true
-    // 这里的 uploadedChunks 是后台返回]
-    return (dataObj.uploadedChunks || []).indexOf(chunk.offset + 1) >= 0
+    // 这里的 uploaded 是后台返回
+    return (resData.uploaded || []).indexOf(chunk.offset + 1) >= 0
   },
   parseTimeRemaining: function (timeRemaining, parsedTimeRemaining) {
     // 格式化时间
@@ -92,12 +92,17 @@ const upload = reactive({
     paused: '停止上传',
     waiting: '等待中'
   },
-  uploadFileList: [],
   uploadFile: null,
+  uploadInfo: {
+    filePath: '',
+    scanner: ''
+  },
   progress: {
     percent: 0,
     status: 'normal'
-  }
+  },
+  skip: false,
+  maxSize: 100 * 1024 * 1024
 })
 const fileStatusText = (status, response) => {
   if (status === 'md5') {
@@ -107,17 +112,15 @@ const fileStatusText = (status, response) => {
   }
 }
 const onFileAdded = (file, event) => {
-  upload.uploadFileList.push(file)
+  // console.log('onFileAdded', file)
+  // 1. 判断文件大小是否允许上传
+  if (file.size > upload.maxSize) {
+    message.info('文件大小不能超过100MB')
+    return
+  }
   upload.uploadFile = file
   upload.progress.status = 'active'
-  console.log('file :>> ', file)
-  // 有时 fileType为空，需截取字符
-  console.log('文件类型：' + file.fileType)
-  // 文件大小
-  console.log('文件大小：' + file.size + 'B')
-  // 1. todo 判断文件类型是否允许上传
   // 2. 计算文件 MD5 并请求后台判断是否已上传，是则取消上传
-  console.log('校验MD5')
   getFileMD5(file, (md5) => {
     if (md5 !== '') {
       // 修改文件唯一标识
@@ -129,30 +132,30 @@ const onFileAdded = (file, event) => {
   })
 }
 const getFileMD5 = (file, callback) => {
-  let spark = new SparkMD5.ArrayBuffer()
-  let fileReader = new FileReader()
+  const spark = new SparkMD5.ArrayBuffer()
+  const fileReader = new FileReader()
   // 获取文件分片对象（注意它的兼容性，在不同浏览器的写法不同）
-  let blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice
+  const blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice
   // 当前分片下标
   let currentChunk = 0
-  // 分片总数(向下取整)
-  let chunks = Math.ceil(file.size / options.chunkSize)
+  // 分片总数(向上取整)
+  const chunks = Math.ceil(file.size / options.chunkSize)
   // MD5加密开始时间
-  let startTime = new Date().getTime()
+  const startTime = new Date().getTime()
   // 暂停上传
   file.pause()
   loadNext()
   // fileReader.readAsArrayBuffer操作会触发onload事件
   fileReader.onload = function (e) {
-    // console.log("currentChunk :>> ", currentChunk);
     spark.append(e.target.result)
+    // 实时同步进度条
+    upload.progress.percent = Math.ceil((currentChunk / chunks) * 100)
     if (currentChunk < chunks) {
       currentChunk++
       loadNext()
     } else {
       // 该文件的md5值
-      let md5 = spark.end()
-      console.log(`MD5计算完毕：${md5}，耗时：${new Date().getTime() - startTime} ms.`)
+      const md5 = spark.end()
       // 回调传值md5
       callback(md5)
     }
@@ -170,16 +173,32 @@ const getFileMD5 = (file, callback) => {
   }
 }
 const onFileSuccess = (rootFile, file, response, chunk) => {
-  upload.progress.status = 'success'
-  console.log('上传成功')
+  const result = JSON.parse(response)
+  if (result.success && !upload.skip) {
+    FileMerge({
+      identifier: file.uniqueIdentifier,
+      filename: file.name,
+      totalChunks: chunk.offset
+    })
+      .then((res) => {
+        // console.log('FileMerge', res)
+        upload.progress.status = 'success'
+        upload.uploadInfo.filePath = res.data.filePath
+        upload.uploadInfo.scanner = file.name
+        emit('success', upload.uploadInfo)
+      })
+      .catch((e) => {
+        message.error(e)
+      })
+  }
 }
-const onFileError = (rootFile, file, message, chunk) => {
+const onFileError = (rootFile, file, msg, chunk) => {
   upload.progress.status = 'exception'
-  console.log('上传出错：' + message)
+  message.error('文件上传出错：', msg)
 }
 const onFileProgress = (rootFile, file, chunk) => {
-  upload.progress.percent = Math.ceil(file._prevProgress * 100)
-  console.log(`当前进度：${Math.ceil(file._prevProgress * 100)}%`)
+  // upload.progress.percent = Math.ceil(file._prevProgress * 100)
+  // console.log(`当前进度：${Math.ceil(file._prevProgress * 100)}%`)
 }
 const clear = () => {
   upload.uploadFile = null
