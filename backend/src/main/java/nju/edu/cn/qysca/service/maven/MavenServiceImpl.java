@@ -9,7 +9,9 @@ import nju.edu.cn.qysca.dao.project.ProjectDependencyTableDao;
 import nju.edu.cn.qysca.domain.component.JavaCloseComponentDO;
 import nju.edu.cn.qysca.domain.component.JavaOpenComponentDO;
 import nju.edu.cn.qysca.domain.component.LicenseDO;
-import nju.edu.cn.qysca.domain.project.*;
+import nju.edu.cn.qysca.domain.project.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.project.ProjectDependencyTableDO;
+import nju.edu.cn.qysca.domain.project.ProjectDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.spider.SpiderService;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
@@ -42,6 +44,7 @@ public class MavenServiceImpl implements MavenService {
 
     /**
      * 解析pom文件
+     *
      * @param filePath
      */
     @Override

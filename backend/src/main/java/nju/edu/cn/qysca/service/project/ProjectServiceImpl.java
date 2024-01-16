@@ -5,14 +5,15 @@ import nju.edu.cn.qysca.dao.project.ProjectDependencyTreeDao;
 import nju.edu.cn.qysca.dao.project.ProjectInfoDao;
 import nju.edu.cn.qysca.dao.project.ProjectVersionDao;
 import nju.edu.cn.qysca.domain.project.*;
-import nju.edu.cn.qysca.utils.JsonUtil;
 import nju.edu.cn.qysca.service.maven.MavenService;
+import nju.edu.cn.qysca.utils.JsonUtil;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -36,6 +37,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 新增项目信息
+     *
      * @param saveProjectDTO 保存项目接口信息
      * @return Boolean 新增项目是否成功
      */
@@ -64,12 +66,13 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     /**
-     *  保存项目依赖关系
+     * 保存项目依赖关系
+     *
      * @param saveProjectDTO 保存项目接口信息
      */
     @Async("taskExecutor")
     @Override
-    public void saveProjectDependency(SaveProjectDTO saveProjectDTO){
+    public void saveProjectDependency(SaveProjectDTO saveProjectDTO) {
         try {
             ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDTO.getFilePath());
             ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
@@ -84,7 +87,7 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
-        }catch (Exception e){
+        } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
@@ -93,6 +96,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 更新项目信息
+     *
      * @param updateProjectDTO 更新项目接口信息
      * @return 更新项目信息是否成功
      */
@@ -112,13 +116,14 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     /**
-     *  更新项目依赖关系
+     * 更新项目依赖关系
+     *
      * @param updateProjectDTO 更新项目接口信息
      */
     @Async("taskExecutor")
     @Override
     public void updateProjectDependency(UpdateProjectDTO updateProjectDTO) {
-        try{
+        try {
             ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath());
             ProjectDependencyTreeDO projectDependencyTreeDO = projectDependencyTreeDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectDependencyTreeDO.setTree(componentDependencyTreeDO);
@@ -128,7 +133,7 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
-        }catch (Exception e){
+        } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
@@ -137,6 +142,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 升级项目
+     *
      * @param upgradeProjectDTO 升级项目接口信息
      * @return 升级项目是否成功
      */
@@ -160,6 +166,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 升级项目依赖
+     *
      * @param upgradeProjectDTO 升级项目接口信息
      */
     @Async("taskExecutor")
@@ -179,7 +186,7 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
-        }catch (Exception e){
+        } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
@@ -188,6 +195,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 删除项目
+     *
      * @param name 项目名称
      * @return 删除项目是否成功
      */
@@ -202,13 +210,14 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 删除某个项目某个版本
-     * @param name 项目名称
+     *
+     * @param name    项目名称
      * @param version 版本名称
      * @return 删除某个项目某个版本是否成功
      */
     @Override
     public Boolean deleteProjectVersion(String name, String version) {
-        projectVersionDao.deleteByNameAndVersion(name,version);
+        projectVersionDao.deleteByNameAndVersion(name, version);
         projectDependencyTreeDao.deleteByNameAndVersion(name, version);
         projectDependencyTableDao.deleteAllByNameAndVersion(name, version);
         return Boolean.TRUE;
