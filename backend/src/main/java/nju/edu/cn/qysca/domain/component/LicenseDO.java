@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel("许可证")
+@ApiModel("许可证DO")
 public class LicenseDO {
 
     @ApiModelProperty("许可证名称")

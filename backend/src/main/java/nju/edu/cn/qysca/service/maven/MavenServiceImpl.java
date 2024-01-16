@@ -45,6 +45,7 @@ public class MavenServiceImpl implements MavenService {
 
     /**
      * 项目依赖解析
+     *
      * @param saveProjectDTO
      */
     @Async("taskExecutor")
@@ -75,6 +76,7 @@ public class MavenServiceImpl implements MavenService {
 
     /**
      * 调用maven dependency:tree解析依赖树
+     *
      * @param filePath
      * @return Node
      * @throws Exception
@@ -97,7 +99,8 @@ public class MavenServiceImpl implements MavenService {
     }
 
     /**
-     *  递归解析依赖树 返回根节点
+     * 递归解析依赖树 返回根节点
+     *
      * @param node
      * @param depth
      * @return
@@ -134,7 +137,7 @@ public class MavenServiceImpl implements MavenService {
                     license.append(licenseDO.getLicenseName()).append(";");
                 }
                 componentDependencyTreeDO.setLicenses(license.toString());
-            }else{
+            } else {
                 componentDependencyTreeDO.setName(javaCloseComponentDO.getName());
                 componentDependencyTreeDO.setOpensource(false);
                 List<LicenseDO> licenses = javaCloseComponentDO.getLicenses();
@@ -156,12 +159,13 @@ public class MavenServiceImpl implements MavenService {
 
     /**
      * 保存项目依赖平铺表
+     *
      * @param projectDependencyTreeDO
      */
-    private void projectDependencyTable(ProjectDependencyTreeDO projectDependencyTreeDO){
+    private void projectDependencyTable(ProjectDependencyTreeDO projectDependencyTreeDO) {
         List<ProjectDependencyTableDO> result = new ArrayList<>();
         Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(projectDependencyTreeDO.getTree().getDependencies());
-        while(!queue.isEmpty()){
+        while (!queue.isEmpty()) {
             ProjectDependencyTableDO projectDependencyTableDO = new ProjectDependencyTableDO();
             projectDependencyTableDO.setId(UUIDGenerator.getUUID());
             projectDependencyTableDO.setProjectName(projectDependencyTreeDO.getName());
@@ -173,6 +177,7 @@ public class MavenServiceImpl implements MavenService {
         }
         projectDependencyTableDao.saveAll(result);
     }
+
     //爬取方法
     JavaOpenComponentDO crawl(String groupId, String artifactId, String version) throws PlatformException {
         return null;

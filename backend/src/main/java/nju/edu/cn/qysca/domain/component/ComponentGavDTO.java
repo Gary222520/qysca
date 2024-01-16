@@ -12,12 +12,12 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "组件GAV信息DTO")
 public class ComponentGavDTO {
 
-    @ApiModelProperty(value = "组织id", example = "org.hamcrest")
+    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
     private String groupId;
 
-    @ApiModelProperty(value = "工件id", example = "hamcrest-core")
+    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
     private String artifactId;
 
-    @ApiModelProperty(value = "版本号", example = "1.3")
+    @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String version;
 }
