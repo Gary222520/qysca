@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.project;
+package nju.edu.cn.qysca.domain.project.dos;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -13,9 +13,9 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("project_info")
-@ApiModel(description = "项目信息DO")
-public class ProjectInfoDO {
+@Document("project_dependency_tree")
+@ApiModel("项目依赖树信息DO")
+public class ProjectDependencyTreeDO {
 
     @MongoId
     @ApiModelProperty(value = "uuid", example = "0BAC7D48D1A8124D99F14805CE32DFF4")
@@ -23,7 +23,12 @@ public class ProjectInfoDO {
     private String id;
 
     @ApiModelProperty(value = "项目名称", example = "qysca")
-    @Field("name")
     private String name;
+
+    @ApiModelProperty(value = "项目版本号", example = "1.0.0")
+    private String version;
+
+    @ApiModelProperty(value = "项目依赖树")
+    private ComponentDependencyTreeDO tree;
 
 }

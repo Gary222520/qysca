@@ -2,8 +2,8 @@ package nju.edu.cn.qysca.controller.file;
 
 import io.swagger.annotations.Api;
 import nju.edu.cn.qysca.controller.ResponseMsg;
-import nju.edu.cn.qysca.domain.file.FileChunkDO;
-import nju.edu.cn.qysca.domain.file.FileChunkResultDO;
+import nju.edu.cn.qysca.domain.file.dos.FileChunkDO;
+import nju.edu.cn.qysca.domain.file.dos.FileChunkResultDO;
 import nju.edu.cn.qysca.service.file.FileService;
 import org.springframework.web.bind.annotation.*;
 
