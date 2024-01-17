@@ -1,18 +1,17 @@
-package dao;
+package dataAccess;
 
 import com.mongodb.MongoClientSettings;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.*;
+import com.mongodb.client.model.Filters;
 import config.DatabaseConfig;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
+import org.bson.conversions.Bson;
 
 import java.util.List;
 
-public class MongoDBWriter<T> {
+public class MongoDBAccess<T> {
     private MongoCollection<T> collection;
 
     /**
@@ -21,7 +20,7 @@ public class MongoDBWriter<T> {
      * @param COLLECTION_NAME collection name
      * @param clazz           T.class
      */
-    public MongoDBWriter(String COLLECTION_NAME, Class<T> clazz) {
+    public MongoDBAccess(String COLLECTION_NAME, Class<T> clazz) {
         try {
             MongoClient mongoClient = MongoClients.create(DatabaseConfig.getDatabaseUrl());
             MongoDatabase database = mongoClient.getDatabase(DatabaseConfig.getDatabaseName());
@@ -34,7 +33,6 @@ public class MongoDBWriter<T> {
                     )
             );
             collection = database.getCollection(COLLECTION_NAME, clazz).withCodecRegistry(codecRegistry);
-            System.out.println("Connected to MongoDB: " + DatabaseConfig.getDatabaseName());
         } catch (Exception e) {
             System.out.println("Failed to connect to MongoDB. Error: " + e.getMessage());
 
@@ -56,5 +54,24 @@ public class MongoDBWriter<T> {
         }
     }
 
+    public T readByGAV(String groupId, String artifactId, String version) {
+        try {
+            // 构建查询条件
+            Bson filter = Filters.and(
+                    Filters.eq("groupId", groupId),
+                    Filters.eq("artifactId", artifactId),
+                    Filters.eq("version", version)
+            );
+
+            // 执行查询
+            FindIterable<T> result = collection.find(filter);
+
+            // 获取第一个匹配的文档
+            return result.first();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null; // 或者根据需要抛出异常
+        }
+    }
 }
 

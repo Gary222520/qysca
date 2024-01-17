@@ -24,5 +24,5 @@ public class JavaOpenDependencyTreeDO {
 
     private String version;
 
-    private List<JavaOpenDependencyTreeDO> dependencies = new ArrayList<>();
+    private ComponentDependencyTreeDO tree;
 }

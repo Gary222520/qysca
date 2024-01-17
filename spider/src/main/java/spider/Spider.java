@@ -2,5 +2,5 @@ package spider;
 
 public interface Spider<T> {
 
-    void crawlMany(String directoryUrl);
+    void crawlManyWithDependency(String directoryUrl);
 }

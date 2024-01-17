@@ -30,7 +30,7 @@ public class Main {
         // 开始爬取
         for (String targetUrl : targetUrls) {
             System.out.println("开始按目录爬取：" + targetUrl);
-            spider.crawlMany(targetUrl);
+            spider.crawlManyWithDependency(targetUrl);
         }
     }
 }

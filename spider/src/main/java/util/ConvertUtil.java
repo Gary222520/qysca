@@ -9,6 +9,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.json.JSONObject;
 import org.json.XML;
 import org.jsoup.nodes.Document;
+import util.idGenerator.UUIDGenerator;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -43,6 +44,7 @@ public class ConvertUtil {
 
         // 创建JavaOpenComponentDO对象，填充值
         JavaOpenComponentDO javaOpenComponentDO = new JavaOpenComponentDO();
+        javaOpenComponentDO.setId(UUIDGenerator.getUUID());
         javaOpenComponentDO.setGroupId(groupId);
         javaOpenComponentDO.setArtifactId(artifactId);
         javaOpenComponentDO.setVersion(version);

@@ -1,6 +1,6 @@
-package dataAccess;
+package data;
 
-import dao.MongoDBWriter;
+import dataAccess.MongoDBAccess;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,14 +11,14 @@ import java.util.List;
  *
  * @param <T>
  */
-public class DataAccess<T> {
+public class BatchDataWriter<T> {
 
-    private final MongoDBWriter mongoDBWriter;
+    private final MongoDBAccess mongoDBAccess;
     private static final int BATCH_SIZE = 5000;
     private List<T> queue;
 
-    public DataAccess(String COLLECTION_NAME, Class<T> clazz) {
-        mongoDBWriter = new MongoDBWriter<T>(COLLECTION_NAME, clazz);
+    public BatchDataWriter(String COLLECTION_NAME, Class<T> clazz) {
+        mongoDBAccess = new MongoDBAccess<T>(COLLECTION_NAME, clazz);
         queue = new ArrayList<>();
     }
 
@@ -39,7 +39,7 @@ public class DataAccess<T> {
      * 写入后将queue清空
      */
     private void batchWriteToDatabase() {
-        mongoDBWriter.writeMany(queue);
+        mongoDBAccess.writeMany(queue);
         queue = new ArrayList<>();
     }
 
