@@ -55,6 +55,6 @@ export default function exportExcel(data, columns, filename) {
     const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' })
     fs.saveAs(blob, filename + '.xlsx')
   } catch (err) {
-    message.error(err)
+    console.error(err)
   }
 }

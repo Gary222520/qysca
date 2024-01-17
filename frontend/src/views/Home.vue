@@ -6,14 +6,14 @@
         <div class="title_text" v-if="!data.collapsed">QYSCA</div>
       </div>
       <a-menu v-model:selectedKeys="data.selectedKeys" theme="light" mode="inline" @click="handleMenu">
-        <a-menu-item key="summary">
+        <!-- <a-menu-item key="summary">
           <PieChartOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('summary') }}</span>
         </a-menu-item>
         <a-menu-item key="scan">
           <SearchOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('scan') }}</span>
-        </a-menu-item>
+        </a-menu-item> -->
         <a-menu-item key="application">
           <ScheduleOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('application') }}</span>

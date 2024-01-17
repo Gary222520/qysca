@@ -15,10 +15,12 @@
 </template>
 
 <script setup>
-import { reactive, defineExpose } from 'vue'
-import {} from '@/api/frontend'
+import { reactive, defineExpose, defineEmits } from 'vue'
+import { DeleteProject } from '@/api/frontend'
 import { WarningOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 
+const emit = defineEmits(['success'])
 const data = reactive({
   open: false,
   project: {}
@@ -31,7 +33,19 @@ const close = () => {
   data.open = false
 }
 const deleteProject = () => {
-  data.open = false
+  const params = {
+    name: data.project.name
+  }
+  DeleteProject(params)
+    .then((res) => {
+      console.log('DeleteProject', res)
+      data.open = false
+      message.success('删除项目成功')
+      emit('success')
+    })
+    .catch((err) => {
+      console.error(err)
+    })
 }
 defineExpose({ open })
 </script>

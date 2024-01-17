@@ -25,9 +25,9 @@
 
 <script setup>
 import { reactive, ref, defineExpose } from 'vue'
-import { GetProjectTree } from '@/api/frontend'
+import { GetOpenComponentTree, GetCloseComponentTree } from '@/api/frontend'
 import { DownOutlined, ExperimentOutlined } from '@ant-design/icons-vue'
-import Drawer from './Drawer.vue'
+import Drawer from '@/views/application/components/Drawer.vue'
 import { message } from 'ant-design-vue'
 
 const drawer = ref()
@@ -37,24 +37,48 @@ const data = reactive({
   expandedKeys: [],
   selectedKeys: []
 })
-const show = (name, version) => {
+const show = (component) => {
   data.visible = true
-  GetProjectTree({ name, version })
-    .then((res) => {
-      // console.log('GetProjectTree', res)
-      if (res.code !== 200) {
-        message.error(res.message)
-        return
-      }
-      const resData = res.data
-      data.treeData = []
-      if (resData) {
-        data.treeData = createTree([resData.tree], '0')
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-    })
+  const params = {
+    groupId: component.groupId,
+    artifactId: component.artifactId,
+    version: component.version
+  }
+  if (component.opensource) {
+    GetOpenComponentTree(params)
+      .then((res) => {
+        // console.log('GetOpenComponentTree', res)
+        if (res.code !== 200) {
+          message.error(res.message)
+          return
+        }
+        const resData = res.data
+        data.treeData = []
+        if (resData) {
+          data.treeData = createTree([resData.tree], '0')
+        }
+      })
+      .catch((err) => {
+        console.error(err)
+      })
+  } else {
+    GetCloseComponentTree(params)
+      .then((res) => {
+        // console.log('GetCloseComponentTree', res)
+        if (res.code !== 200) {
+          message.error(res.message)
+          return
+        }
+        const resData = res.data
+        data.treeData = []
+        if (resData) {
+          data.treeData = createTree([resData.tree], '0')
+        }
+      })
+      .catch((err) => {
+        console.error(err)
+      })
+  }
 }
 const createTree = (arr, preKey) => {
   if (!arr) return []
