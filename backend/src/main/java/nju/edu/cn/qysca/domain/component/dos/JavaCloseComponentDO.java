@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.component;
+package nju.edu.cn.qysca.domain.component.dos;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -15,9 +15,9 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("java_component_open_detail")
-@ApiModel("java开源组件详细信息")
-public class JavaOpenComponentDO {
+@Document("java_component_close_detail")
+@ApiModel("java闭源组件详细信息")
+public class JavaCloseComponentDO {
 
     @MongoId
     @ApiModelProperty(value = "uuid", example = "0BAC7D48D1A8124D99F14805CE32DFF4")

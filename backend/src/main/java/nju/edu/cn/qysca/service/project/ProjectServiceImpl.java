@@ -1,18 +1,29 @@
 package nju.edu.cn.qysca.service.project;
 
+import nju.edu.cn.qysca.dao.component.JavaCloseComponentDao;
+import nju.edu.cn.qysca.dao.component.JavaOpenComponentDao;
 import nju.edu.cn.qysca.dao.project.ProjectDependencyTableDao;
 import nju.edu.cn.qysca.dao.project.ProjectDependencyTreeDao;
 import nju.edu.cn.qysca.dao.project.ProjectInfoDao;
 import nju.edu.cn.qysca.dao.project.ProjectVersionDao;
-import nju.edu.cn.qysca.domain.project.*;
-import nju.edu.cn.qysca.utils.JsonUtil;
+import nju.edu.cn.qysca.domain.component.dtos.ComponentDetailDTO;
+import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
+import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
+import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
+import nju.edu.cn.qysca.domain.project.dos.*;
+import nju.edu.cn.qysca.domain.project.dtos.*;
+import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
+import nju.edu.cn.qysca.utils.JsonUtil;
+import nju.edu.cn.qysca.utils.excel.ExcelUtils;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -34,8 +45,15 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private MavenService mavenService;
 
+    @Autowired
+    private JavaOpenComponentDao javaOpenComponentDao;
+
+    @Autowired
+    private JavaCloseComponentDao javaCloseComponentDao;
+
     /**
      * 新增项目信息
+     *
      * @param saveProjectDTO 保存项目接口信息
      * @return Boolean 新增项目是否成功
      */
@@ -64,12 +82,13 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     /**
-     *  保存项目依赖关系
+     * 保存项目依赖关系
+     *
      * @param saveProjectDTO 保存项目接口信息
      */
     @Async("taskExecutor")
     @Override
-    public void saveProjectDependency(SaveProjectDTO saveProjectDTO){
+    public void saveProjectDependency(SaveProjectDTO saveProjectDTO) {
         try {
             ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDTO.getFilePath());
             ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
@@ -84,7 +103,7 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
-        }catch (Exception e){
+        } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
@@ -93,6 +112,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 更新项目信息
+     *
      * @param updateProjectDTO 更新项目接口信息
      * @return 更新项目信息是否成功
      */
@@ -112,13 +132,14 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     /**
-     *  更新项目依赖关系
+     * 更新项目依赖关系
+     *
      * @param updateProjectDTO 更新项目接口信息
      */
     @Async("taskExecutor")
     @Override
     public void updateProjectDependency(UpdateProjectDTO updateProjectDTO) {
-        try{
+        try {
             ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath());
             ProjectDependencyTreeDO projectDependencyTreeDO = projectDependencyTreeDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectDependencyTreeDO.setTree(componentDependencyTreeDO);
@@ -128,7 +149,7 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
-        }catch (Exception e){
+        } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
@@ -137,6 +158,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 升级项目
+     *
      * @param upgradeProjectDTO 升级项目接口信息
      * @return 升级项目是否成功
      */
@@ -160,6 +182,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 升级项目依赖
+     *
      * @param upgradeProjectDTO 升级项目接口信息
      */
     @Async("taskExecutor")
@@ -179,7 +202,7 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
-        }catch (Exception e){
+        } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
@@ -188,6 +211,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 删除项目
+     *
      * @param name 项目名称
      * @return 删除项目是否成功
      */
@@ -202,13 +226,14 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 删除某个项目某个版本
-     * @param name 项目名称
+     *
+     * @param name    项目名称
      * @param version 版本名称
      * @return 删除某个项目某个版本是否成功
      */
     @Override
     public Boolean deleteProjectVersion(String name, String version) {
-        projectVersionDao.deleteByNameAndVersion(name,version);
+        projectVersionDao.deleteByNameAndVersion(name, version);
         projectDependencyTreeDao.deleteByNameAndVersion(name, version);
         projectDependencyTableDao.deleteAllByNameAndVersion(name, version);
         return Boolean.TRUE;
@@ -307,10 +332,10 @@ public class ProjectServiceImpl implements ProjectService {
      * 分页查询项目依赖平铺信息
      *
      * @param projectSearchPageDTO 带分页项目版本搜索信息
-     * @return Page<ProjectDependencyTableDO> 项目依赖平铺信息分页
+     * @return Page<ComponentTableDTO> 依赖平铺信息分页
      */
     @Override
-    public Page<ProjectDependencyTableDO> findProjectDependencyTable(ProjectSearchPageDTO projectSearchPageDTO) {
+    public Page<ComponentTableDTO> findProjectDependencyTable(ProjectSearchPageDTO projectSearchPageDTO) {
         // 设置排序规则
         List<Sort.Order> orders = new ArrayList<>();
         orders.add(new Sort.Order(Sort.Direction.ASC, "depth").nullsLast());
@@ -320,9 +345,85 @@ public class ProjectServiceImpl implements ProjectService {
         orders.add(new Sort.Order(Sort.Direction.DESC, "version").nullsLast());
         // 数据库页号从0开始，需减1
         Pageable pageable = PageRequest.of(projectSearchPageDTO.getNumber() - 1, projectSearchPageDTO.getSize(), Sort.by(orders));
-        return projectDependencyTableDao.findByProjectNameAndProjectVersion(
+        return projectDependencyTableDao.findByNV(
                 projectSearchPageDTO.getName(),
                 projectSearchPageDTO.getVersion(), pageable);
+    }
+
+    /**
+     * 导出项目依赖平铺信息（简明）Excel
+     *
+     * @param projectSearchDTO 项目版本搜索信息
+     * @param response         Http服务响应
+     */
+    @Override
+    public void exportTableExcelBrief(ProjectSearchDTO projectSearchDTO, HttpServletResponse response) {
+        List<TableExcelBriefDTO> resList = projectDependencyTableDao.findTableListByProject(
+                projectSearchDTO.getName(), projectSearchDTO.getVersion());
+        String fileName = projectSearchDTO.getName() + "-" + projectSearchDTO.getVersion() + "-dependencyTable-brief";
+        try {
+            ExcelUtils.export(response, fileName, resList, TableExcelBriefDTO.class);
+        } catch (Exception e) {
+            throw new PlatformException(500, "导出Excel失败");
+        }
+    }
+
+    /**
+     * 导出项目依赖平铺信息（详细）Excel
+     *
+     * @param projectSearchDTO 项目版本搜索信息
+     * @param response         Http服务响应
+     */
+    @Override
+    public void exportTableExcelDetail(ProjectSearchDTO projectSearchDTO, HttpServletResponse response) {
+        List<TableExcelDetailDTO> resList = new ArrayList<>();
+        String fileName = projectSearchDTO.getName() + "-" + projectSearchDTO.getVersion() + "-dependencyTable-detail";
+        // 先获取依赖平铺的简明信息
+        List<TableExcelBriefDTO> briefList = projectDependencyTableDao.findTableListByProject(
+                projectSearchDTO.getName(), projectSearchDTO.getVersion());
+        for (TableExcelBriefDTO brief : briefList) {
+            TableExcelDetailDTO detail = new TableExcelDetailDTO();
+            BeanUtils.copyProperties(brief, detail);
+            ComponentDetailDTO componentDetailDTO;
+            // 获取对应依赖组件的详细信息
+            if (detail.getOpensource()) {
+                componentDetailDTO = javaOpenComponentDao.findDetailByGav(
+                        detail.getGroupId(), detail.getArtifactId(), detail.getVersion());
+            } else {
+                componentDetailDTO = javaCloseComponentDao.findDetailByGav(
+                        detail.getGroupId(), detail.getArtifactId(), detail.getVersion());
+            }
+            detail.setDescription(componentDetailDTO.getDescription());
+            detail.setUrl(componentDetailDTO.getUrl());
+            detail.setDownloadUrl(componentDetailDTO.getDownloadUrl());
+            detail.setSourceUrl(componentDetailDTO.getSourceUrl());
+            // 拼接许可证信息和开发者信息的字符串
+            StringBuilder liName = new StringBuilder();
+            StringBuilder liUrl = new StringBuilder();
+            StringBuilder devId = new StringBuilder();
+            StringBuilder devName = new StringBuilder();
+            StringBuilder devEmail = new StringBuilder();
+            for (LicenseDO licenseDO : componentDetailDTO.getLicenses()) {
+                liName.append(licenseDO.getLicenseName()).append(";");
+                liUrl.append(licenseDO.getLicenseUrl()).append(";");
+            }
+            for (DeveloperDO developerDO : componentDetailDTO.getDevelopers()) {
+                devId.append(developerDO.getDeveloperId()).append(";");
+                devName.append(developerDO.getDeveloperName()).append(";");
+                devEmail.append(developerDO.getDeveloperEmail()).append(";");
+            }
+            detail.setLicensesName(liName.toString());
+            detail.setLicensesUrl(liUrl.toString());
+            detail.setDevelopersId(devId.toString());
+            detail.setDevelopersName(devName.toString());
+            detail.setDevelopersEmail(devEmail.toString());
+            resList.add(detail);
+        }
+        try {
+            ExcelUtils.export(response, fileName, resList, TableExcelDetailDTO.class);
+        } catch (Exception e) {
+            throw new PlatformException(500, "导出Excel失败");
+        }
     }
 
     /**

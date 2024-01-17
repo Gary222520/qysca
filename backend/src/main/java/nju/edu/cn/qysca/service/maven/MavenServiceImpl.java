@@ -6,10 +6,12 @@ import fr.dutra.tools.maven.deptree.core.Parser;
 import nju.edu.cn.qysca.dao.component.JavaCloseComponentDao;
 import nju.edu.cn.qysca.dao.component.JavaOpenComponentDao;
 import nju.edu.cn.qysca.dao.project.ProjectDependencyTableDao;
-import nju.edu.cn.qysca.domain.component.JavaCloseComponentDO;
-import nju.edu.cn.qysca.domain.component.JavaOpenComponentDO;
-import nju.edu.cn.qysca.domain.component.LicenseDO;
-import nju.edu.cn.qysca.domain.project.*;
+import nju.edu.cn.qysca.domain.component.dos.JavaCloseComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaOpenComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
+import nju.edu.cn.qysca.domain.project.dos.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectDependencyTableDO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.spider.SpiderService;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
@@ -42,6 +44,7 @@ public class MavenServiceImpl implements MavenService {
 
     /**
      * 解析pom文件
+     *
      * @param filePath
      */
     @Override

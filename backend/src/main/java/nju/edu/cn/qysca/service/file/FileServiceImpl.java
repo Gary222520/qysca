@@ -1,7 +1,7 @@
 package nju.edu.cn.qysca.service.file;
 
-import nju.edu.cn.qysca.domain.file.FileChunkDO;
-import nju.edu.cn.qysca.domain.file.FileChunkResultDO;
+import nju.edu.cn.qysca.domain.file.dos.FileChunkDO;
+import nju.edu.cn.qysca.domain.file.dos.FileChunkResultDO;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

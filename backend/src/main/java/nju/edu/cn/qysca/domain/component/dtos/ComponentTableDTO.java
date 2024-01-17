@@ -1,36 +1,16 @@
-package nju.edu.cn.qysca.domain.component;
+package nju.edu.cn.qysca.domain.component.dtos;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
-
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("java_component_close_dependency_table")
-@ApiModel("Java闭源组件依赖平铺信息DO")
-public class JavaCloseDependencyTableDO {
-
-    @MongoId
-    @ApiModelProperty(value = "uuid", example = "0BAC7D48D1A8124D99F14805CE32DFF4")
-    @Field("_id")
-    private String id;
-
-    @ApiModelProperty(value = "父级组织id", example = "org.springframework.boot")
-    private String parentGroupId;
-
-    @ApiModelProperty(value = "父级工件id", example = "spring-boot-starter-parent")
-    private String parentArtifactId;
-
-    @ApiModelProperty(value = "父级版本号", example = "2.5.15")
-    private String parentVersion;
-
+@ApiModel("组件平铺信息DTO")
+public class ComponentTableDTO {
     @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
     private String groupId;
 
