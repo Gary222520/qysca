@@ -2,6 +2,7 @@ package nju.edu.cn.qysca.controller.file;
 
 import io.swagger.annotations.Api;
 import nju.edu.cn.qysca.controller.ResponseMsg;
+import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.domain.file.dos.FileChunkDO;
 import nju.edu.cn.qysca.domain.file.dos.FileChunkResultDO;
 import nju.edu.cn.qysca.service.file.FileService;
@@ -24,7 +25,7 @@ public class FileController {
             fileChunkResultDO = fileService.checkChunkExist(fileChunkDO);
             return new ResponseMsg<>(fileChunkResultDO);
         } catch (Exception e) {
-            return null;
+            throw new PlatformException("文件分片检查失败", e);
         }
     }
 
@@ -34,7 +35,7 @@ public class FileController {
             fileService.uploadChunk(fileChunkDO);
             return new ResponseMsg<>(fileChunkDO.getIdentifier());
         } catch (Exception e) {
-            return null;
+            throw new PlatformException("文件分片上传失败", e);
         }
     }
 
@@ -44,7 +45,7 @@ public class FileController {
             String filePath = fileService.mergeChunks(fileChunkDO.getIdentifier(), fileChunkDO.getFilename(), fileChunkDO.getTotalChunks());
             return new ResponseMsg<>(filePath);
         } catch (Exception e) {
-            return null;
+            throw new PlatformException("文件分片合并失败", e);
         }
     }
 }

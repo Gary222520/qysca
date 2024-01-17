@@ -19,6 +19,8 @@ public class FileServiceImpl implements FileService {
     @Value("${uploadFolder}")
     private String uploadFolder;
 
+    private final String FILE_SEPARATOR = "/";
+
     @Override
     public FileChunkResultDO checkChunkExist(FileChunkDO fileChunkDO) {
         String fileFolderPath = getFileFolderPath(fileChunkDO.getIdentifier());
@@ -113,7 +115,7 @@ public class FileServiceImpl implements FileService {
      * @return
      */
     private String getFileFolderPath(String identifier) {
-        return uploadFolder + identifier.charAt(0) + File.separator + identifier.charAt(1) + File.separator + identifier + File.separator;
+        return uploadFolder + identifier.charAt(0) + FILE_SEPARATOR + identifier.charAt(1) + FILE_SEPARATOR + identifier + FILE_SEPARATOR;
     }
 
     /**
@@ -134,7 +136,7 @@ public class FileServiceImpl implements FileService {
      * @return
      */
     private String getChunkFileFolderPath(String identifier) {
-        return getFileFolderPath(identifier) + "chunks" + File.separator;
+        return getFileFolderPath(identifier) + "chunks" + FILE_SEPARATOR;
     }
 
     /**
@@ -169,7 +171,7 @@ public class FileServiceImpl implements FileService {
     private boolean checkChunks(String chunkFileFolderPath, Integer totalChunks) {
         try {
             for (int i = 1; i <= totalChunks + 1; i++) {
-                File file = new File(chunkFileFolderPath + File.separator + i);
+                File file = new File(chunkFileFolderPath + FILE_SEPARATOR + i);
                 if (file.exists()) {
                     continue;
                 } else {

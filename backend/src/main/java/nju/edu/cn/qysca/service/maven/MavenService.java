@@ -1,8 +1,8 @@
 package nju.edu.cn.qysca.service.maven;
 
-import nju.edu.cn.qysca.domain.project.dos.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
 
 public interface MavenService {
 
-    ComponentDependencyTreeDO projectDependencyAnalysis(String filePath) throws Exception;
+    ComponentDependencyTreeDO projectDependencyAnalysis(String filePath, String builder) throws Exception;
 }

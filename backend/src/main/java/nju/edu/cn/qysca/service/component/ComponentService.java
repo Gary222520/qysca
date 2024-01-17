@@ -21,7 +21,14 @@ public interface ComponentService {
      */
     Page<JavaCloseComponentDO> findCloseComponentsPage(ComponentSearchDTO searchComponentDTO);
 
+    /**
+     * 保存闭源组件信息
+     *
+     * @param saveCloseComponentDTO 保存闭源组件接口信息
+     * @return 返回保存闭源组件是否成功
+     */
     Boolean saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO);
+
 
     /**
      * 查询开源组件依赖树信息

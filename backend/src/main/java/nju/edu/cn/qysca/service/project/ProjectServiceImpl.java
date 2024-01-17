@@ -6,6 +6,8 @@ import nju.edu.cn.qysca.dao.project.ProjectDependencyTableDao;
 import nju.edu.cn.qysca.dao.project.ProjectDependencyTreeDao;
 import nju.edu.cn.qysca.dao.project.ProjectInfoDao;
 import nju.edu.cn.qysca.dao.project.ProjectVersionDao;
+import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dtos.ComponentCompareTreeDTO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentDetailDTO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
@@ -22,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
+import java.io.File;
 import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -90,7 +92,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void saveProjectDependency(SaveProjectDTO saveProjectDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDTO.getFilePath());
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDTO.getFilePath(), saveProjectDTO.getBuilder());
             ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
             projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
             projectDependencyTreeDO.setName(saveProjectDTO.getName());
@@ -103,10 +105,12 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
+            deleteFolder(saveProjectDTO.getFilePath().substring(0, saveProjectDTO.getFilePath().lastIndexOf("/")));
         } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
+            deleteFolder(saveProjectDTO.getFilePath().substring(0, saveProjectDTO.getFilePath().lastIndexOf("/")));
         }
     }
 
@@ -140,7 +144,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void updateProjectDependency(UpdateProjectDTO updateProjectDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath());
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath(), updateProjectDTO.getBuilder());
             ProjectDependencyTreeDO projectDependencyTreeDO = projectDependencyTreeDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectDependencyTreeDO.setTree(componentDependencyTreeDO);
             projectDependencyTreeDao.save(projectDependencyTreeDO);
@@ -149,10 +153,12 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
+            deleteFolder(updateProjectDTO.getFilePath().substring(0, updateProjectDTO.getFilePath().lastIndexOf("/")));
         } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
+            deleteFolder(updateProjectDTO.getFilePath().substring(0, updateProjectDTO.getFilePath().lastIndexOf("/")));
         }
     }
 
@@ -189,7 +195,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void upgradeProjectDependency(UpgradeProjectDTO upgradeProjectDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(upgradeProjectDTO.getFilePath());
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(upgradeProjectDTO.getFilePath(), upgradeProjectDTO.getBuilder());
             ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
             projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
             projectDependencyTreeDO.setName(upgradeProjectDTO.getName());
@@ -202,10 +208,12 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
+            deleteFolder(upgradeProjectDTO.getFilePath().substring(0, upgradeProjectDTO.getFilePath().lastIndexOf("/")));
         } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
+            deleteFolder(upgradeProjectDTO.getFilePath().substring(0, upgradeProjectDTO.getFilePath().lastIndexOf("/")));
         }
     }
 
@@ -431,6 +439,110 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     /**
+     * 生成项目版本对比树
+     *
+     * @param versionCompareReqDTO 需对比的项目版本
+     * @return VersionCompareTreeDTO 对比树
+     */
+    @Override
+    public VersionCompareTreeDTO getProjectVersionCompareTree(VersionCompareReqDTO versionCompareReqDTO) {
+        // 获取需对比的两个项目版本依赖树信息
+        ProjectDependencyTreeDO fromDependencyTree=projectDependencyTreeDao.findByNameAndVersion(
+                versionCompareReqDTO.getName(), versionCompareReqDTO.getFromVersion());
+        if(fromDependencyTree==null){
+            throw new PlatformException(500, "被对比的项目版本依赖树信息不存在");
+        }
+        ProjectDependencyTreeDO toDependencyTree=projectDependencyTreeDao.findByNameAndVersion(
+                versionCompareReqDTO.getName(), versionCompareReqDTO.getToVersion());
+        if(toDependencyTree==null){
+            throw new PlatformException(500, "待对比的项目版本依赖树信息不存在");
+        }
+        // 打上对比标记，生成对比树
+        VersionCompareTreeDTO versionCompareTreeDTO=new VersionCompareTreeDTO();
+        BeanUtils.copyProperties(versionCompareReqDTO,versionCompareTreeDTO);
+        // 递归处理
+        versionCompareTreeDTO.setTree(recursionDealWithChange(
+                fromDependencyTree.getTree(),toDependencyTree.getTree()));
+        return versionCompareTreeDTO;
+    }
+
+    /**
+     * 递归处理变更的组件
+     * @param from 被对比者
+     * @param to 待对比者
+     * @return ComponentCompareTreeDTO 对比树
+     */
+    private ComponentCompareTreeDTO recursionDealWithChange(ComponentDependencyTreeDO from,ComponentDependencyTreeDO to){
+        if(from==null || to==null){
+            return null;
+        }
+        // 变更的组件打上CHANGE标记
+        ComponentCompareTreeDTO root=new ComponentCompareTreeDTO();
+        BeanUtils.copyProperties(to,root);
+        root.setMark("CHANGE");
+        // 分析各子树应属于何种标记
+        Map<String,ComponentDependencyTreeDO> fromMap=new HashMap<>();
+        Map<String,ComponentDependencyTreeDO> toMap=new HashMap<>();
+        Set<String> intersection=new HashSet<>();
+        for(ComponentDependencyTreeDO fromChild:from.getDependencies()){
+            fromMap.put(fromChild.getGroupId()+fromChild.getArtifactId()+fromChild.getOpensource(),fromChild);
+        }
+        for(ComponentDependencyTreeDO toChild:to.getDependencies()){
+            toMap.put(toChild.getGroupId()+toChild.getArtifactId()+toChild.getOpensource(),toChild);
+        }
+        for(String key:toMap.keySet()){
+            // 求交集
+            if(fromMap.containsKey(key)){
+                intersection.add(key);
+            }
+        }
+        // 依次进行分析
+        for(ComponentDependencyTreeDO toChild:to.getDependencies()){
+            String key=toChild.getGroupId()+toChild.getArtifactId()+toChild.getOpensource();
+            if(intersection.contains(key)){
+                if(fromMap.get(key).getVersion().equals(toMap.get(key).getVersion())){
+                    root.getDependencies().add(recursionMark(toMap.get(key),"SAME"));
+                }
+                else{
+                    // CHANGE
+                    root.getDependencies().add(recursionDealWithChange(fromMap.get(key),toMap.get(key)));
+                }
+            }else{
+                root.getDependencies().add(recursionMark(toMap.get(key),"ADD"));
+            }
+        }
+        for(ComponentDependencyTreeDO fromChild:from.getDependencies()){
+            String key=fromChild.getGroupId()+fromChild.getArtifactId()+fromChild.getOpensource();
+            if(!intersection.contains(key)){
+                root.getDependencies().add(recursionMark(fromMap.get(key),"DELETE"));
+            }
+        }
+        return root;
+    }
+
+    /**
+     * 递归打上标记
+     * @param tree  树状信息
+     * @param mark 标记符号（ADD,DELETE,SAME）
+     * @return ComponentCompareTreeDTO 对比树
+     */
+    private ComponentCompareTreeDTO recursionMark(ComponentDependencyTreeDO tree,String mark){
+        if(tree==null){
+            return null;
+        }
+        ComponentCompareTreeDTO root=new ComponentCompareTreeDTO();
+        BeanUtils.copyProperties(tree,root);
+        root.setMark(mark);
+        for(ComponentDependencyTreeDO child:tree.getDependencies()){
+            ComponentCompareTreeDTO childAns=recursionMark(child,mark);
+            if(childAns!=null){
+                root.getDependencies().add(childAns);
+            }
+        }
+        return root;
+    }
+
+    /**
      * 保存项目依赖平铺表
      *
      * @param projectDependencyTreeDO 项目依赖信息树状
@@ -451,5 +563,33 @@ public class ProjectServiceImpl implements ProjectService {
             queue.addAll(componentDependencyTreeDO.getDependencies());
         }
         projectDependencyTableDao.saveAll(result);
+    }
+
+    /**
+     * 根据文件路径删除文件夹
+     *
+     * @param filePath 文件路径
+     */
+    private void deleteFolder(String filePath) {
+        File folder = new File(filePath);
+        if (folder.exists()) {
+            deleteFolderFile(folder);
+        }
+    }
+
+    /**
+     * 递归删除文件夹下的文件
+     *
+     * @param folder 文件夹
+     */
+    private void deleteFolderFile(File folder) {
+        File[] files = folder.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                deleteFolderFile(file);
+            }
+            file.delete();
+        }
+        folder.delete();
     }
 }

@@ -1,14 +1,25 @@
 package nju.edu.cn.qysca.service.component;
 
 import nju.edu.cn.qysca.dao.component.*;
+import nju.edu.cn.qysca.domain.project.dos.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.exception.PlatformException;
+import nju.edu.cn.qysca.service.maven.MavenService;
+import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.springframework.beans.BeanUtils;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
+import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.stream.Collectors;
 
 @Service
 public class ComponentServiceImpl implements ComponentService {
@@ -29,6 +40,9 @@ public class ComponentServiceImpl implements ComponentService {
 
     @Autowired
     private JavaCloseDependencyTableDao javaCloseDependencyTableDao;
+
+    @Autowired
+    private MavenService mavenService;
 
     /**
      * 分页查询开源组件
@@ -96,11 +110,33 @@ public class ComponentServiceImpl implements ComponentService {
         return javaCloseComponentDao.findAll(example, pageable);
     }
 
+    /**
+     * 存储闭源组件信息
+     *
+     * @param saveCloseComponentDTO 保存闭源组件接口信息
+     * @return 存储闭源组件信息
+     */
     @Override
     public Boolean saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO) {
         // 接口获得详细信息
+        try {
+            MavenXpp3Reader reader = new MavenXpp3Reader();
+            Model model = reader.read(new FileReader(saveCloseComponentDTO.getFilePath()));
+            JavaCloseComponentDO javaCloseComponentDO = createJavaCloseComponentDO(model, saveCloseComponentDTO.getLanguage(), saveCloseComponentDTO.getFilePath());
+            // 存储闭源组件详细信息
+            javaCloseComponentDao.save(javaCloseComponentDO);
+            //存储闭源组件树状依赖信息
+            JavaCloseDependencyTreeDO javaCloseDependencyTreeDO = createJavaCloseDependencyTreeDO(model, saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder());
+            javaCloseDependencyTreeDao.save(javaCloseDependencyTreeDO);
+            //存储闭源组件平铺依赖信息
+            List<JavaCloseDependencyTableDO> javaCloseDependencyTableDOList = createJavaCloseDependencyTableDO(javaCloseDependencyTreeDO.getTree(), model.getGroupId(), model.getArtifactId(), model.getVersion());
+            javaCloseDependencyTableDao.saveAll(javaCloseDependencyTableDOList);
+        } catch (Exception e) {
+            throw new PlatformException("存储闭源组件信息失败", e);
+        }
         return true;
     }
+
 
     /**
      * 查询开源组件依赖树信息
@@ -204,4 +240,113 @@ public class ComponentServiceImpl implements ComponentService {
                 componentGavDTO.getVersion());
     }
 
+
+    /**
+     * 获得Model中的Developer信息
+     *
+     * @param model pom文件
+     * @return List<DeveloperDO> Developer信息
+     */
+    private List<DeveloperDO> getDevelopers(Model model) {
+        List<org.apache.maven.model.Developer> mavenDevelopers = model.getDevelopers();
+        return mavenDevelopers.stream()
+                .map(mavenDeveloper -> {
+                    DeveloperDO developer = new DeveloperDO();
+                    developer.setDeveloperId(mavenDeveloper.getId());
+                    developer.setDeveloperName(mavenDeveloper.getName());
+                    developer.setDeveloperEmail(mavenDeveloper.getEmail());
+                    return developer;
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 获得Model中的License信息
+     *
+     * @param model pom文件
+     * @return List<LicenseDO> 许可证信息
+     */
+    private List<LicenseDO> getLicense(Model model) {
+        List<org.apache.maven.model.License> mavenLicenses = model.getLicenses();
+        return mavenLicenses.stream()
+                .map(mavenLicense -> {
+                    LicenseDO license = new LicenseDO();
+                    license.setLicenseName(mavenLicense.getName());
+                    license.setLicenseUrl(mavenLicense.getUrl());
+                    return license;
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 根据pom文件生成闭源组件详细信息
+     *
+     * @param model    pom文件信息
+     * @param language 组件语言
+     * @param filePath pom文件路径
+     * @return JavaCloseComponentDO 闭源组件详细信息
+     */
+    private JavaCloseComponentDO createJavaCloseComponentDO(Model model, String language, String filePath) {
+        JavaCloseComponentDO javaCloseComponentDO = new JavaCloseComponentDO();
+        javaCloseComponentDO.setId(UUIDGenerator.getUUID());
+        javaCloseComponentDO.setLanguage(language);
+        javaCloseComponentDO.setName(model.getName());
+        javaCloseComponentDO.setGroupId(model.getGroupId());
+        javaCloseComponentDO.setArtifactId(model.getArtifactId());
+        javaCloseComponentDO.setVersion(model.getVersion());
+        javaCloseComponentDO.setDescription(model.getDescription());
+        javaCloseComponentDO.setUrl(model.getUrl());
+        javaCloseComponentDO.setDownloadUrl(model.getDistributionManagement().getDownloadUrl());
+        javaCloseComponentDO.setSourceUrl(model.getScm().getUrl());
+        javaCloseComponentDO.setLicenses(getLicense(model));
+        javaCloseComponentDO.setDevelopers(getDevelopers(model));
+        javaCloseComponentDO.setPom(filePath);
+        return javaCloseComponentDO;
+    }
+
+    /**
+     * 根据pom文件生成依赖树信息
+     *
+     * @param model    pom文件
+     * @param filePath pom文件路径
+     * @param builder  构建工具
+     * @return JavaCloseDependencyTreeDO 闭源组件依赖树信息
+     * @throws Exception
+     */
+    private JavaCloseDependencyTreeDO createJavaCloseDependencyTreeDO(Model model, String filePath, String builder) throws Exception {
+        JavaCloseDependencyTreeDO javaCloseDependencyTreeDO = new JavaCloseDependencyTreeDO();
+        javaCloseDependencyTreeDO.setId(UUIDGenerator.getUUID());
+        javaCloseDependencyTreeDO.setGroupId(model.getGroupId());
+        javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId());
+        javaCloseDependencyTreeDO.setVersion(model.getVersion());
+        ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(filePath, builder);
+        javaCloseDependencyTreeDO.setTree(componentDependencyTreeDO);
+        return javaCloseDependencyTreeDO;
+    }
+
+    /**
+     * 根据组件依赖树信息获得平铺组件信息
+     *
+     * @param componentDependencyTreeDO
+     * @param groupId
+     * @param artifactId
+     * @param version
+     * @return List<JavaCloseDependencyTableDO> 组件平铺依赖列表
+     */
+    private List<JavaCloseDependencyTableDO> createJavaCloseDependencyTableDO(ComponentDependencyTreeDO componentDependencyTreeDO, String groupId, String artifactId, String version) {
+        List<JavaCloseDependencyTableDO> javaCloseDependencyTableDOList = new ArrayList<>();
+        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(componentDependencyTreeDO.getDependencies());
+        while (!queue.isEmpty()) {
+            JavaCloseDependencyTableDO javaCloseDependencyTableDO = new JavaCloseDependencyTableDO();
+            javaCloseDependencyTableDO.setId(UUIDGenerator.getUUID());
+            javaCloseDependencyTableDO.setParentGroupId(groupId);
+            javaCloseDependencyTableDO.setParentArtifactId(artifactId);
+            javaCloseDependencyTableDO.setParentVersion(version);
+            ComponentDependencyTreeDO componentDependencyTree = queue.poll();
+            BeanUtils.copyProperties(componentDependencyTree, javaCloseDependencyTableDO);
+            queue.addAll(componentDependencyTree.getDependencies());
+            javaCloseDependencyTableDOList.add(javaCloseDependencyTableDO);
+        }
+        return javaCloseDependencyTableDOList;
+    }
 }
