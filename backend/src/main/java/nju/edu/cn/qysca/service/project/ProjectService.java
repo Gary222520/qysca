@@ -1,8 +1,12 @@
 package nju.edu.cn.qysca.service.project;
 
-import nju.edu.cn.qysca.domain.project.*;
+import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectDependencyTreeDO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectInfoDO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectVersionDO;
+import nju.edu.cn.qysca.domain.project.dtos.*;
 import org.springframework.data.domain.Page;
-
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 
@@ -119,7 +123,24 @@ public interface ProjectService {
      * 分页查询项目依赖平铺信息
      *
      * @param projectSearchPageDTO 带分页项目版本搜索信息
-     * @return Page<ProjectDependencyTableDO> 项目依赖平铺信息分页
+     * @return Page<ComponentTableDTO> 依赖平铺信息分页
      */
-    Page<ProjectDependencyTableDO> findProjectDependencyTable(ProjectSearchPageDTO projectSearchPageDTO);
+    Page<ComponentTableDTO> findProjectDependencyTable(ProjectSearchPageDTO projectSearchPageDTO);
+
+    /**
+     * 导出项目依赖平铺信息（简明）Excel
+     *
+     * @param projectSearchDTO 项目版本搜索信息
+     * @param response         Http服务响应
+     */
+    void exportTableExcelBrief(ProjectSearchDTO projectSearchDTO, HttpServletResponse response);
+
+    /**
+     * 导出项目依赖平铺信息（详细）Excel
+     *
+     * @param projectSearchDTO 项目版本搜索信息
+     * @param response         Http服务响应
+     */
+    void exportTableExcelDetail(ProjectSearchDTO projectSearchDTO, HttpServletResponse response);
+
 }

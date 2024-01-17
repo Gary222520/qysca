@@ -1,17 +1,17 @@
 package nju.edu.cn.qysca.service.component;
 
 import nju.edu.cn.qysca.dao.component.*;
-import nju.edu.cn.qysca.domain.component.*;
-import nju.edu.cn.qysca.domain.project.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.project.dos.ComponentDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.springframework.beans.BeanUtils;
+import nju.edu.cn.qysca.domain.component.dos.*;
+import nju.edu.cn.qysca.domain.component.dtos.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.FileReader;
@@ -72,6 +72,9 @@ public class ComponentServiceImpl implements ComponentService {
         orders.add(new Sort.Order(Sort.Direction.DESC, "version").nullsLast());
         // 数据库页号从0开始，需减1
         Pageable pageable = PageRequest.of(searchComponentDTO.getNumber() - 1, searchComponentDTO.getSize(), Sort.by(orders));
+        Page<JavaOpenComponentDO> tmpRes = javaOpenComponentDao.findAll(example, pageable);
+        Page<JavaOpenComponentDO> ans = new PageImpl<>(tmpRes.getContent());
+
         return javaOpenComponentDao.findAll(example, pageable);
     }
 
@@ -167,10 +170,10 @@ public class ComponentServiceImpl implements ComponentService {
      * 分页查询开源组件依赖平铺信息
      *
      * @param componentGavPageDTO 带分页组件gav信息
-     * @return Page<JavaOpenDependencyTableDO> 分页查询结果
+     * @return Page<ComponentTableDTO> 分页查询结果
      */
     @Override
-    public Page<JavaOpenDependencyTableDO> findOpenComponentDependencyTable(ComponentGavPageDTO componentGavPageDTO) {
+    public Page<ComponentTableDTO> findOpenComponentDependencyTable(ComponentGavPageDTO componentGavPageDTO) {
         // 设置排序规则
         List<Sort.Order> orders = new ArrayList<>();
         orders.add(new Sort.Order(Sort.Direction.ASC, "depth").nullsLast());
@@ -180,7 +183,7 @@ public class ComponentServiceImpl implements ComponentService {
         orders.add(new Sort.Order(Sort.Direction.DESC, "version").nullsLast());
         // 数据库页号从0开始，需减1
         Pageable pageable = PageRequest.of(componentGavPageDTO.getNumber() - 1, componentGavPageDTO.getSize(), Sort.by(orders));
-        return javaOpenDependencyTableDao.findByParentGroupIdAndParentArtifactIdAndParentVersion(
+        return javaOpenDependencyTableDao.findByGAV(
                 componentGavPageDTO.getGroupId(),
                 componentGavPageDTO.getArtifactId(),
                 componentGavPageDTO.getVersion(), pageable);
@@ -190,10 +193,10 @@ public class ComponentServiceImpl implements ComponentService {
      * 分页查询闭源组件依赖平铺信息
      *
      * @param componentGavPageDTO 带分页组件gav信息
-     * @return Page<JavaCloseDependencyTableDO> 分页查询结果
+     * @return Page<ComponentTableDTO> 分页查询结果
      */
     @Override
-    public Page<JavaCloseDependencyTableDO> findCloseComponentDependencyTable(ComponentGavPageDTO componentGavPageDTO) {
+    public Page<ComponentTableDTO> findCloseComponentDependencyTable(ComponentGavPageDTO componentGavPageDTO) {
         // 设置排序规则
         List<Sort.Order> orders = new ArrayList<>();
         orders.add(new Sort.Order(Sort.Direction.ASC, "depth").nullsLast());
@@ -203,7 +206,7 @@ public class ComponentServiceImpl implements ComponentService {
         orders.add(new Sort.Order(Sort.Direction.DESC, "version").nullsLast());
         // 数据库页号从0开始，需减1
         Pageable pageable = PageRequest.of(componentGavPageDTO.getNumber() - 1, componentGavPageDTO.getSize(), Sort.by(orders));
-        return javaCloseDependencyTableDao.findByParentGroupIdAndParentArtifactIdAndParentVersion(
+        return javaCloseDependencyTableDao.findByGAV(
                 componentGavPageDTO.getGroupId(),
                 componentGavPageDTO.getArtifactId(),
                 componentGavPageDTO.getVersion(), pageable);
@@ -213,11 +216,11 @@ public class ComponentServiceImpl implements ComponentService {
      * 查询指定开源组件的详细信息
      *
      * @param componentGavDTO 组件gav
-     * @return JavaOpenComponentDO 开源组件详细信息
+     * @return ComponentDetailDTO 组件详细信息
      */
     @Override
-    public JavaOpenComponentDO findOpenComponentDetail(ComponentGavDTO componentGavDTO) {
-        return javaOpenComponentDao.findByGroupIdAndArtifactIdAndVersion(
+    public ComponentDetailDTO findOpenComponentDetail(ComponentGavDTO componentGavDTO) {
+        return javaOpenComponentDao.findDetailByGav(
                 componentGavDTO.getGroupId(),
                 componentGavDTO.getArtifactId(),
                 componentGavDTO.getVersion());
@@ -227,11 +230,11 @@ public class ComponentServiceImpl implements ComponentService {
      * 查询指定闭源组件的详细信息
      *
      * @param componentGavDTO 组件gav
-     * @return JavaCloseComponentDO 闭源组件详细信息
+     * @return ComponentDetailDTO 组件详细信息
      */
     @Override
-    public JavaCloseComponentDO findCloseComponentDetail(ComponentGavDTO componentGavDTO) {
-        return javaCloseComponentDao.findByGroupIdAndArtifactIdAndVersion(
+    public ComponentDetailDTO findCloseComponentDetail(ComponentGavDTO componentGavDTO) {
+        return javaCloseComponentDao.findDetailByGav(
                 componentGavDTO.getGroupId(),
                 componentGavDTO.getArtifactId(),
                 componentGavDTO.getVersion());

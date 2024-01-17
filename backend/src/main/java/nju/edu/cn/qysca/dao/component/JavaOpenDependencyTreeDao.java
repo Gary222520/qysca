@@ -1,6 +1,6 @@
 package nju.edu.cn.qysca.dao.component;
 
-import nju.edu.cn.qysca.domain.component.JavaOpenDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaOpenDependencyTreeDO;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

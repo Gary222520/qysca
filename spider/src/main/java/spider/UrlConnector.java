@@ -3,14 +3,6 @@ package spider;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
 
 public class UrlConnector {
     /**
@@ -28,6 +20,7 @@ public class UrlConnector {
         try {
             // 每次爬取url时休眠一定时间，防止被ban
             //Thread.sleep(sleepTime);
+
             // 连接到url并获取其内容
             return Jsoup.connect(url).get();
         } catch (Exception e) {

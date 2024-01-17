@@ -4,12 +4,17 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import nju.edu.cn.qysca.controller.ResponseMsg;
-import nju.edu.cn.qysca.domain.project.*;
+import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectDependencyTreeDO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectInfoDO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectVersionDO;
+import nju.edu.cn.qysca.domain.project.dtos.*;
 import nju.edu.cn.qysca.service.project.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 
@@ -99,8 +104,20 @@ public class ProjectController {
 
     @ApiOperation("分页查询项目依赖平铺信息")
     @PostMapping("/findProjectDependencyTable")
-    public ResponseMsg<Page<ProjectDependencyTableDO>> findProjectDependencyTable(@RequestBody ProjectSearchPageDTO dto) {
+    public ResponseMsg<Page<ComponentTableDTO>> findProjectDependencyTable(@RequestBody ProjectSearchPageDTO dto) {
         return new ResponseMsg<>(projectService.findProjectDependencyTable(dto));
+    }
+
+    @ApiOperation("导出项目依赖平铺信息（简明）Excel")
+    @PostMapping("/exportTableExcelBrief")
+    public void exportTableExcelBrief(@RequestBody ProjectSearchDTO dto, HttpServletResponse response) {
+        projectService.exportTableExcelBrief(dto, response);
+    }
+
+    @ApiOperation("导出项目依赖平铺信息（详细）Excel")
+    @PostMapping("/exportTableExcelDetail")
+    public void exportTableExcelDetail(@RequestBody ProjectSearchDTO dto, HttpServletResponse response) {
+        projectService.exportTableExcelDetail(dto, response);
     }
 
 }

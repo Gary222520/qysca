@@ -1,0 +1,77 @@
+package dataAccess;
+
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.*;
+import com.mongodb.client.model.Filters;
+import config.DatabaseConfig;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.pojo.PojoCodecProvider;
+import org.bson.conversions.Bson;
+
+import java.util.List;
+
+public class MongoDBAccess<T> {
+    private MongoCollection<T> collection;
+
+    /**
+     * 写入mongodb
+     *
+     * @param COLLECTION_NAME collection name
+     * @param clazz           T.class
+     */
+    public MongoDBAccess(String COLLECTION_NAME, Class<T> clazz) {
+        try {
+            MongoClient mongoClient = MongoClients.create(DatabaseConfig.getDatabaseUrl());
+            MongoDatabase database = mongoClient.getDatabase(DatabaseConfig.getDatabaseName());
+            // java对象到mongo对象的自动映射
+            CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
+                    MongoClientSettings.getDefaultCodecRegistry(),
+                    CodecRegistries.fromProviders(
+                            // 通过制定automatic为true, 来实现自动映射
+                            PojoCodecProvider.builder().automatic(true).build()
+                    )
+            );
+            collection = database.getCollection(COLLECTION_NAME, clazz).withCodecRegistry(codecRegistry);
+        } catch (Exception e) {
+            System.out.println("Failed to connect to MongoDB. Error: " + e.getMessage());
+
+        }
+    }
+
+    /**
+     * 批量写入
+     *
+     * @param dataList 数据list
+     */
+    public void writeMany(List<T> dataList) {
+        try {
+            // 插入数据
+            collection.insertMany(dataList);
+            System.out.println("Data written to MongoDB successfully! This Batch Number = " + dataList.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public T readByGAV(String groupId, String artifactId, String version) {
+        try {
+            // 构建查询条件
+            Bson filter = Filters.and(
+                    Filters.eq("groupId", groupId),
+                    Filters.eq("artifactId", artifactId),
+                    Filters.eq("version", version)
+            );
+
+            // 执行查询
+            FindIterable<T> result = collection.find(filter);
+
+            // 获取第一个匹配的文档
+            return result.first();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null; // 或者根据需要抛出异常
+        }
+    }
+}
+

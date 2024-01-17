@@ -3,7 +3,8 @@ package nju.edu.cn.qysca.controller.component;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import nju.edu.cn.qysca.controller.ResponseMsg;
-import nju.edu.cn.qysca.domain.component.*;
+import nju.edu.cn.qysca.domain.component.dos.*;
+import nju.edu.cn.qysca.domain.component.dtos.*;
 import nju.edu.cn.qysca.service.component.ComponentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -52,25 +53,25 @@ public class ComponentController {
 
     @ApiOperation("分页查询开源组件依赖平铺信息")
     @PostMapping("/findOpenComponentDependencyTable")
-    public ResponseMsg<Page<JavaOpenDependencyTableDO>> findOpenComponentDependencyTable(@RequestBody ComponentGavPageDTO dto) {
+    public ResponseMsg<Page<ComponentTableDTO>> findOpenComponentDependencyTable(@RequestBody ComponentGavPageDTO dto) {
         return new ResponseMsg<>(componentService.findOpenComponentDependencyTable(dto));
     }
 
     @ApiOperation("分页查询闭源组件依赖平铺信息")
     @PostMapping("/findCloseComponentDependencyTable")
-    public ResponseMsg<Page<JavaCloseDependencyTableDO>> findCloseComponentDependencyTable(@RequestBody ComponentGavPageDTO dto) {
+    public ResponseMsg<Page<ComponentTableDTO>> findCloseComponentDependencyTable(@RequestBody ComponentGavPageDTO dto) {
         return new ResponseMsg<>(componentService.findCloseComponentDependencyTable(dto));
     }
 
     @ApiOperation("查询指定开源组件的详细信息")
     @PostMapping("/findOpenComponentDetail")
-    public ResponseMsg<JavaOpenComponentDO> findOpenComponentDetail(@RequestBody ComponentGavDTO dto) {
+    public ResponseMsg<ComponentDetailDTO> findOpenComponentDetail(@RequestBody ComponentGavDTO dto) {
         return new ResponseMsg<>(componentService.findOpenComponentDetail(dto));
     }
 
     @ApiOperation("查询指定闭源组件的详细信息")
     @PostMapping("/findCloseComponentDetail")
-    public ResponseMsg<JavaCloseComponentDO> findCloseComponentDetail(@RequestBody ComponentGavDTO dto) {
+    public ResponseMsg<ComponentDetailDTO> findCloseComponentDetail(@RequestBody ComponentGavDTO dto) {
         return new ResponseMsg<>(componentService.findCloseComponentDetail(dto));
     }
 }

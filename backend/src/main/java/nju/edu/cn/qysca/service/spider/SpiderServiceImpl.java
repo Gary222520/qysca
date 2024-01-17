@@ -1,8 +1,8 @@
 package nju.edu.cn.qysca.service.spider;
 
-import nju.edu.cn.qysca.domain.component.DeveloperDO;
-import nju.edu.cn.qysca.domain.component.JavaOpenComponentDO;
-import nju.edu.cn.qysca.domain.component.LicenseDO;
+import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaOpenComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
