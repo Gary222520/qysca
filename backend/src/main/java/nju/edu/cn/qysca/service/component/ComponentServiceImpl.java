@@ -1,7 +1,6 @@
 package nju.edu.cn.qysca.service.component;
 
 import nju.edu.cn.qysca.dao.component.*;
-import nju.edu.cn.qysca.domain.project.dos.ComponentDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
