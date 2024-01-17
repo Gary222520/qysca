@@ -6,7 +6,7 @@ spring:
       matching-strategy: ant_path_matcher
   data:
     mongodb:
-      uri: mongodb://172.29.7.168:37018/sca
+      uri: mongodb://172.29.7.168:37018/qysca
   redis:
     host: 172.29.7.168
     port: 37379
