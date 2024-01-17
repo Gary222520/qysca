@@ -1,10 +1,12 @@
 import axios from 'axios'
+import { API } from '@/api/backend'
 
 export const baseURL = 'http://localhost:9090'
 
 const instance = axios.create({})
 instance.interceptors.response.use(
   (response) => {
+    if (response.config.url === API.EXPORT_BRIEF || response.config.url === API.EXPORT_DETAIL) return response
     return response.data
   },
   (error) => {
