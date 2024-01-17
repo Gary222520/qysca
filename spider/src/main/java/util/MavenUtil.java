@@ -1,10 +1,7 @@
 package util;
 
 import dataAccess.MongoDBAccess;
-import domain.component.ComponentDependencyTreeDO;
-import domain.component.JavaCloseComponentDO;
-import domain.component.JavaOpenComponentDO;
-import domain.component.LicenseDO;
+import domain.component.*;
 import fr.dutra.tools.maven.deptree.core.InputType;
 import fr.dutra.tools.maven.deptree.core.Node;
 import fr.dutra.tools.maven.deptree.core.Parser;
@@ -15,6 +12,7 @@ import org.apache.maven.shared.invoker.Invoker;
 import spider.JavaOpenPomSpider;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -118,4 +116,13 @@ public class MavenUtil {
         return componentDependencyTreeDO;
     }
 
+    public List<JavaOpenDependencyTableDO> buildJavaOpenDependencyTable(ComponentDependencyTreeDO componentDependencyTreeDO) {
+        List<JavaOpenDependencyTableDO> javaOpenDependencyTableDOS = new ArrayList<>();
+
+
+
+
+        return javaOpenDependencyTableDOS;
+    }
 }
+

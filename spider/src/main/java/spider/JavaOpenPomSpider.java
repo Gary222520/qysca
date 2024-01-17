@@ -19,7 +19,11 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
     /**
      * 连接数据库
      */
-    private final BatchDataWriter<JavaOpenComponentDO> batchDataWriter;
+    private final BatchDataWriter<JavaOpenComponentDO> componentWriter;
+
+    private final BatchDataWriter<JavaOpenDependencyTreeDO> dependencyTreeWriter;
+
+    private final BatchDataWriter<JavaOpenDependencyTableDO> dependencyTableWriter;
 
     /**
      * 用以记录以及爬取过的url，防止重复爬取
@@ -31,10 +35,14 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
     /**
      * collection_name对象在mongodb中的collection
      */
-    private final static String COLLECTION_NAME = "java_component_open_detail";
+    private final static String COMPONENT_COLLECTION_NAME = "java_component_open_detail";
+    private final static String DEPENDENCY_TREE_COLLECTION_NAME = "java_component_open_dependency_tree";
+    private final static String DEPENDENCY_TABLE_COLLECTION_NAME = "java_component_open_dependency_table";
 
     public JavaOpenPomSpider() {
-        batchDataWriter = new BatchDataWriter<JavaOpenComponentDO>(COLLECTION_NAME, JavaOpenComponentDO.class);
+        componentWriter = new BatchDataWriter<JavaOpenComponentDO>(COMPONENT_COLLECTION_NAME, JavaOpenComponentDO.class);
+        dependencyTreeWriter = new BatchDataWriter<JavaOpenDependencyTreeDO>(DEPENDENCY_TREE_COLLECTION_NAME, JavaOpenDependencyTreeDO.class);
+        dependencyTableWriter = new BatchDataWriter<JavaOpenDependencyTableDO>(DEPENDENCY_TABLE_COLLECTION_NAME, JavaOpenDependencyTableDO.class);
     }
 
     /**
@@ -43,14 +51,15 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
      * @param directoryUrl 目录url
      */
     @Override
-    public void crawlMany(String directoryUrl) {
+    public void crawlManyWithDependency(String directoryUrl) {
         // 程序中断时自动调用，保存数据
         Runtime.getRuntime().addShutdownHook(new Thread(this::saveAndFlush));
 
         loadVisitedLinks();
-        crawlDirectory(directoryUrl);
+        crawlDirectoryWithDependency(directoryUrl);
         saveVisitedLinks();
     }
+
 
     /**
      * 根据给定gav信息爬取pom文件，并将爬到的数据存储到数据库中
@@ -69,8 +78,6 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
         }
         // 爬取该pomUrl
         JavaOpenComponentDO javaOpenComponentDO = crawl(pomUrl);
-        //手动刷新保存数据
-        batchDataWriter.flush();
         return javaOpenComponentDO;
     }
 
@@ -81,33 +88,15 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
      * @param version
      */
     public JavaOpenComponentInformationDO crawlWithDependencyByGav(String groupId, String artifactId, String version){
-        JavaOpenComponentDO javaOpenComponentDO = crawlByGav(groupId, artifactId, version);
 
-        // 生成一个临时pom文件
-        createPomFile(javaOpenComponentDO.getPom());
-        // 调用mvn dependency:tree命令获取依赖
-        Node node = MavenUtil.mavenDependencyTreeAnalyzer(POM_FILE_TEMP_PATH);
-        // 解析依赖，获得组件树
-        MavenUtil mavenUtil = new MavenUtil();
-        ComponentDependencyTreeDO dependencyTreeDO = mavenUtil.convertNode(node, 0);
+        // 根据gav拼出pomUrl
+        String downloadUrl = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
+        String pomUrl = findPomFileUrlInDirectory(downloadUrl);
+        if (pomUrl == null) {
+            return null;
+        }
 
-        // 封装依赖树
-        JavaOpenDependencyTreeDO javaOpenDependencyTreeDO = new JavaOpenDependencyTreeDO();
-        javaOpenDependencyTreeDO.setTree(dependencyTreeDO);
-
-        javaOpenDependencyTreeDO.setId(UUIDGenerator.getUUID());
-        javaOpenDependencyTreeDO.setGroupId(groupId);
-        javaOpenDependencyTreeDO.setArtifactId(artifactId);
-        javaOpenDependencyTreeDO.setVersion(version);
-
-        // 封装依赖表
-
-
-        // 封装
-        JavaOpenComponentInformationDO javaOpenComponentInformationDO = new JavaOpenComponentInformationDO();
-        javaOpenComponentInformationDO.setJavaOpenComponentDO(javaOpenComponentDO);
-        javaOpenComponentInformationDO.setJavaOpenDependencyTreeDO(javaOpenDependencyTreeDO);
-        javaOpenComponentInformationDO.setJavaOpenDependencyTableDO(null);
+        JavaOpenComponentInformationDO javaOpenComponentInformationDO = crawlWithDependency(pomUrl);
 
         return javaOpenComponentInformationDO;
     }
@@ -135,7 +124,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
                 crawlDirectory(fileAbsUrl);
             } else if (fileAbsUrl.endsWith(".pom") && !fileAbsUrl.contains("-javadoc")) {
                 // 如果为pom文件，则直接爬取
-                this.batchDataWriter.enqueue(crawl(fileAbsUrl));
+                crawl(fileAbsUrl);
             }
         }
 
@@ -143,7 +132,37 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
     }
 
     /**
-     * 根据pom文件的url爬取单个pom文件，并转换为DO
+     * 爬取指定url目录下的所有pom文件,同时获得其依赖树和平铺依赖图，并将这些数据存储到数据库中
+     *
+     * @param directoryUrl 目录url
+     */
+    private void crawlDirectoryWithDependency(String directoryUrl){
+        if (visitedUrls.contains(directoryUrl)) {
+            return;
+        }
+
+        Document document = UrlConnector.getDocumentByUrl(directoryUrl);
+        if (document == null)
+            return;
+
+        Elements links = document.select("a[href]");
+        for (Element link : links) {
+            String fileAbsUrl = link.absUrl("href");
+
+            if (link.ownText().endsWith("/") && !link.ownText().endsWith("../")) {
+                // 如果为目录，则递归
+                crawlDirectoryWithDependency(fileAbsUrl);
+            } else if (fileAbsUrl.endsWith(".pom") && !fileAbsUrl.contains("-javadoc")) {
+                // 如果为pom文件，则直接爬取
+                crawlWithDependency(fileAbsUrl);
+            }
+        }
+
+        visitedUrls.add(directoryUrl);
+    }
+
+    /**l
+     * 根据pom文件的url爬取单个pom文件，并转换为DO，存进数据库
      *
      * @param pomUrl pom url
      */
@@ -159,8 +178,62 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
             return null;
 
         JavaOpenComponentDO javaOpenComponentDO = ConvertUtil.convertToJavaOpenComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
+        componentWriter.enqueue(javaOpenComponentDO);
 
         return javaOpenComponentDO;
+    }
+
+
+    /**
+     * 根据pom文件的url爬取单个pom文件，并转换为DO，同时获得其依赖树和平铺依赖图，存进数据库
+     *
+     * @param pomUrl
+     * @return JavaOpenComponentInformationDO
+     */
+    private JavaOpenComponentInformationDO crawlWithDependency(String pomUrl){
+        if (!pomUrl.endsWith(".pom")) {
+            return null;
+        }
+
+        System.out.println("Crawling " + pomUrl);
+
+        Document document = UrlConnector.getDocumentByUrl(pomUrl);
+        if (document == null)
+            return null;
+
+        // 获得组件信息
+        JavaOpenComponentDO javaOpenComponentDO = ConvertUtil.convertToJavaOpenComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
+        componentWriter.enqueue(javaOpenComponentDO);
+
+        // 生成一个临时pom文件
+        createPomFile(javaOpenComponentDO.getPom());
+        // 调用mvn dependency:tree命令获取依赖
+        Node node = MavenUtil.mavenDependencyTreeAnalyzer(POM_FILE_TEMP_PATH);
+        // 解析依赖，获得组件树
+        MavenUtil mavenUtil = new MavenUtil();
+        ComponentDependencyTreeDO dependencyTreeDO = mavenUtil.convertNode(node, 0);
+
+        // 封装依赖树
+        JavaOpenDependencyTreeDO javaOpenDependencyTreeDO = new JavaOpenDependencyTreeDO();
+        javaOpenDependencyTreeDO.setTree(dependencyTreeDO);
+
+        javaOpenDependencyTreeDO.setId(UUIDGenerator.getUUID());
+        javaOpenDependencyTreeDO.setGroupId(javaOpenComponentDO.getGroupId());
+        javaOpenDependencyTreeDO.setArtifactId(javaOpenComponentDO.getArtifactId());
+        javaOpenDependencyTreeDO.setVersion(javaOpenComponentDO.getVersion());
+
+        dependencyTreeWriter.enqueue(javaOpenDependencyTreeDO);
+        // 封装依赖表
+
+        dependencyTableWriter.enqueue(null);
+
+        // 封装
+        JavaOpenComponentInformationDO javaOpenComponentInformationDO = new JavaOpenComponentInformationDO();
+        javaOpenComponentInformationDO.setJavaOpenComponentDO(javaOpenComponentDO);
+        javaOpenComponentInformationDO.setJavaOpenDependencyTreeDO(javaOpenDependencyTreeDO);
+        javaOpenComponentInformationDO.setJavaOpenDependencyTableDO(null);
+
+        return javaOpenComponentInformationDO;
     }
 
     /**
@@ -246,7 +319,9 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
      * 在程序终止时，保存数据
      */
     private void saveAndFlush() {
-        batchDataWriter.flush();
+        componentWriter.flush();
+        dependencyTreeWriter.flush();
+        dependencyTableWriter.flush();
         saveVisitedLinks();
     }
 
