@@ -6,13 +6,12 @@ import fr.dutra.tools.maven.deptree.core.Parser;
 import nju.edu.cn.qysca.dao.component.JavaCloseComponentDao;
 import nju.edu.cn.qysca.dao.component.JavaOpenComponentDao;
 import nju.edu.cn.qysca.dao.project.ProjectDependencyTableDao;
-import nju.edu.cn.qysca.dao.project.ProjectDependencyTreeDao;
-import nju.edu.cn.qysca.dao.project.ProjectVersionDao;
 import nju.edu.cn.qysca.domain.component.JavaCloseComponentDO;
 import nju.edu.cn.qysca.domain.component.JavaOpenComponentDO;
 import nju.edu.cn.qysca.domain.component.LicenseDO;
 import nju.edu.cn.qysca.domain.project.*;
 import nju.edu.cn.qysca.exception.PlatformException;
+import nju.edu.cn.qysca.service.spider.SpiderService;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
@@ -20,7 +19,6 @@ import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.Invoker;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -28,8 +26,6 @@ import java.util.*;
 
 @Service
 public class MavenServiceImpl implements MavenService {
-    @Autowired
-    private ProjectVersionDao projectVersionDao;
 
     @Autowired
     private JavaOpenComponentDao javaOpenComponentDao;
@@ -38,43 +34,26 @@ public class MavenServiceImpl implements MavenService {
     private JavaCloseComponentDao javaCloseComponentDao;
 
     @Autowired
-    private ProjectDependencyTreeDao projectDependencyTreeDao;
-
-    @Autowired
     private ProjectDependencyTableDao projectDependencyTableDao;
 
+
+    @Autowired
+    private SpiderService spiderService;
+
     /**
-     * 项目依赖解析
-     * @param saveProjectDTO
+     * 解析pom文件
+     * @param filePath
      */
-    @Async("taskExecutor")
     @Override
-    public void projectDependencyAnalysis(SaveProjectDTO saveProjectDTO) {
-        try {
-            Node node = mavenDependencyTreeAnalyzer(saveProjectDTO.getFilePath());
-            ComponentDependencyTreeDO componentDependencyTreeDO = convertNode(node, 0);
-            ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
-            projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
-            projectDependencyTreeDO.setName(saveProjectDTO.getName());
-            projectDependencyTreeDO.setVersion(saveProjectDTO.getVersion());
-            projectDependencyTreeDO.setTree(componentDependencyTreeDO);
-            projectDependencyTreeDao.save(projectDependencyTreeDO);
-            // 批量更新依赖平铺表
-            projectDependencyTable(projectDependencyTreeDO);
-            // 更改状态为SUCCESS
-            ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
-            projectVersionDO.setState("SUCCESS");
-            projectVersionDao.save(projectVersionDO);
-        } catch (Exception e) {
-            // 如果解析失败 更改状态为FAILED
-            ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
-            projectVersionDO.setState("FAILED");
-            projectVersionDao.save(projectVersionDO);
-        }
+    public ComponentDependencyTreeDO projectDependencyAnalysis(String filePath) throws Exception {
+        Node node = mavenDependencyTreeAnalyzer(filePath);
+        ComponentDependencyTreeDO componentDependencyTreeDO = convertNode(node, 0);
+        return componentDependencyTreeDO;
     }
 
     /**
      * 调用maven dependency:tree解析依赖树
+     *
      * @param filePath
      * @return Node
      * @throws Exception
@@ -97,7 +76,8 @@ public class MavenServiceImpl implements MavenService {
     }
 
     /**
-     *  递归解析依赖树 返回根节点
+     * 递归解析依赖树 返回根节点
+     *
      * @param node
      * @param depth
      * @return
@@ -120,7 +100,7 @@ public class MavenServiceImpl implements MavenService {
                 javaCloseComponentDO = javaCloseComponentDao.findByGroupIdAndArtifactIdAndVersion(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 // 如果闭源知识库中没有则爬取 爬取过程已经包含插入数据库的步骤
                 if (javaCloseComponentDO == null) {
-                    javaOpenComponentDO = crawl(node.getGroupId(), node.getArtifactId(), node.getVersion());
+                    javaOpenComponentDO = spiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 }
                 //如果爬虫没有爬到则扫描错误 通过抛出异常处理
             }
@@ -134,7 +114,7 @@ public class MavenServiceImpl implements MavenService {
                     license.append(licenseDO.getLicenseName()).append(";");
                 }
                 componentDependencyTreeDO.setLicenses(license.toString());
-            }else{
+            } else {
                 componentDependencyTreeDO.setName(javaCloseComponentDO.getName());
                 componentDependencyTreeDO.setOpensource(false);
                 List<LicenseDO> licenses = javaCloseComponentDO.getLicenses();
@@ -156,12 +136,13 @@ public class MavenServiceImpl implements MavenService {
 
     /**
      * 保存项目依赖平铺表
+     *
      * @param projectDependencyTreeDO
      */
-    private void projectDependencyTable(ProjectDependencyTreeDO projectDependencyTreeDO){
+    private void projectDependencyTable(ProjectDependencyTreeDO projectDependencyTreeDO) {
         List<ProjectDependencyTableDO> result = new ArrayList<>();
         Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(projectDependencyTreeDO.getTree().getDependencies());
-        while(!queue.isEmpty()){
+        while (!queue.isEmpty()) {
             ProjectDependencyTableDO projectDependencyTableDO = new ProjectDependencyTableDO();
             projectDependencyTableDO.setId(UUIDGenerator.getUUID());
             projectDependencyTableDO.setProjectName(projectDependencyTreeDO.getName());
@@ -173,6 +154,7 @@ public class MavenServiceImpl implements MavenService {
         }
         projectDependencyTableDao.saveAll(result);
     }
+
     //爬取方法
     JavaOpenComponentDO crawl(String groupId, String artifactId, String version) throws PlatformException {
         return null;

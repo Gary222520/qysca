@@ -7,10 +7,16 @@
         <a-input-search
           v-model:value="data.search.name"
           placeholder="请输入项目名称"
-          style="width: 250px"></a-input-search>
+          style="width: 250px"
+          @change="(e) => getProjectList()"></a-input-search>
       </div>
-      <a-collapse class="collapse" v-model:activeKey="data.activeKey" :bordered="false" accordion>
-        <a-collapse-panel v-for="(project, index) in data.projects" class="collapse_panel" :key="index">
+      <a-collapse
+        class="collapse"
+        v-model:activeKey="data.activeKey"
+        :bordered="false"
+        accordion
+        @change="showProjectInfo">
+        <a-collapse-panel v-for="project in data.projects" class="collapse_panel" :key="project.id">
           <template #header>
             <div class="collapse_header">
               <div style="display: flex; align-items: center">
@@ -23,30 +29,26 @@
                 </a-button>
               </div>
               <div style="display: flex; align-items: center">
-                <a-button type="primary" danger @click.stop="deleteProject(project)">
+                <a-button type="primary" danger @click.stop="deleteProject(project)" :disabled="project.analysing">
                   <WarningOutlined />删除
                 </a-button>
               </div>
             </div>
           </template>
-          <a-table :data-source="project.data" :columns="data.columns" bordered>
+          <a-table :data-source="project.content" :columns="data.columns" bordered :pagination="project.pagination">
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'action'">
-                <div style="display: flex">
+                <div style="display: flex" v-if="record.state === 'SUCCESS'">
                   <div class="action_icon">
                     <a-tooltip>
                       <template #title>详情</template>
-                      <FileTextOutlined
-                        :style="{ fontSize: '18px', color: '#6f005f' }"
-                        @click="showDetail(project, record)" />
+                      <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showDetail(record)" />
                     </a-tooltip>
                   </div>
                   <div class="action_icon">
                     <a-tooltip>
                       <template #title>更新</template>
-                      <SyncOutlined
-                        :style="{ fontSize: '18px', color: '#6f005f' }"
-                        @click="changeVersion(project, record)" />
+                      <SyncOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="changeVersion(record)" />
                     </a-tooltip>
                   </div>
                   <div class="action_icon">
@@ -57,14 +59,16 @@
                           <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
                         </template>
                         <template #okButton>
-                          <a-button danger type="primary" size="small" @click="deleteVersion(project, record)">
-                            删除
-                          </a-button>
+                          <a-button danger type="primary" size="small" @click="deleteVersion(record)">删除</a-button>
                         </template>
                         <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
                       </a-popconfirm>
                     </a-tooltip>
                   </div>
+                </div>
+                <div style="display: flex; align-items: center" v-if="record.state === 'RUNNING'">
+                  <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
+                  <div style="margin-left: 10px">扫描分析中...</div>
                 </div>
               </template>
             </template>
@@ -77,10 +81,11 @@
           :total="pagination.total"
           v-model:pageSize="pagination.pageSize"
           show-less-items
-          :showSizeChanger="false" />
+          :showSizeChanger="false"
+          @change="getProjectList" />
       </div>
     </a-card>
-    <AddModal ref="addModal"></AddModal>
+    <AddModal ref="addModal" @success="getProjectList"></AddModal>
     <ChangeModal ref="changeModal"></ChangeModal>
     <UpgradeModal ref="upgradeModal"></UpgradeModal>
     <DeleteModal ref="deleteModal"></DeleteModal>
@@ -95,7 +100,8 @@ import {
   DeleteOutlined,
   UpSquareOutlined,
   RocketOutlined,
-  WarningOutlined
+  WarningOutlined,
+  LoadingOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { reactive, ref, onMounted } from 'vue'
@@ -107,24 +113,8 @@ import DeleteModal from './components/DeleteModal.vue'
 import { useRouter } from 'vue-router'
 
 onMounted(async () => {
-  let projectNames = []
-  await GetProjectList()
-    .then((res) => {
-      console.log('GetProjectList', res)
-      projectNames = res.data
-    })
-    .catch((e) => {
-      // message.error(e)
-    })
-  projectNames.forEach((projectName) => {
-    GetProjectInfo({ projectName })
-      .then((res) => {
-        console.log('GetProjectInfo', res)
-      })
-      .catch((e) => {
-        // message.error(e)
-      })
-  })
+  await getProjectList()
+  // console.log(data.projects)
 })
 
 const addModal = ref()
@@ -136,70 +126,14 @@ const data = reactive({
   columns: [
     { title: '版本', dataIndex: 'version', key: 'version', width: 120 },
     { title: '语言', dataIndex: 'language', key: 'language', width: 120 },
-    { title: '构建工具', dataIndex: 'tool', key: 'tool', width: 120 },
-    { title: '扫描对象', dataIndex: 'target', key: 'target', width: 120 },
+    { title: '构建工具', dataIndex: 'builder', key: 'builder', width: 120 },
+    { title: '扫描对象', dataIndex: 'scanner', key: 'scanner', width: 120 },
     { title: '最近一次扫描时间', dataIndex: 'time', key: 'time', width: 210 },
-    { title: '备注', dataIndex: 'comment', key: 'comment' },
+    { title: '备注', dataIndex: 'note', key: 'note' },
     { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
   ],
-  projects: [
-    {
-      name: '项目1',
-      data: [
-        {
-          version: '2.0.1',
-          language: 'java',
-          target: 'pom.xml',
-          tool: 'maven',
-          time: 'xxx',
-          comment: 'xxxxx',
-          popconfirm: false
-        },
-        {
-          version: '2.0.0',
-          language: 'java',
-          target: 'pom.xml',
-          tool: 'maven',
-          time: 'xxx',
-          comment: 'xxxxx',
-          popconfirm: false
-        },
-        {
-          version: '1.0.0',
-          language: 'java',
-          target: 'pom.xml',
-          tool: 'maven',
-          time: 'xxx',
-          comment: 'xxxxx',
-          popconfirm: false
-        }
-      ]
-    },
-    {
-      name: '项目2',
-      data: [
-        {
-          version: '2.0.0',
-          language: 'python',
-          target: 'zip',
-          tool: 'pip',
-          time: 'xxx',
-          comment: 'xxxxx',
-          popconfirm: false
-        },
-        {
-          version: '1.0.0',
-          language: 'python',
-          target: 'zip',
-          tool: 'pip',
-          time: 'xxx',
-          comment: 'xxxxx',
-          popconfirm: false
-        }
-      ]
-    }
-  ],
-  activeKey: '0',
+  projects: [],
+  activeKey: '',
   detail: false,
   search: {
     name: ''
@@ -207,37 +141,99 @@ const data = reactive({
 })
 const pagination = reactive({
   current: 1,
-  total: 50,
+  total: 0,
   pageSize: 5
 })
+const getProjectList = async (page = 1, size = 5) => {
+  let projectList = []
+  const params = {
+    name: data.search.name,
+    number: page,
+    size
+  }
+  await GetProjectList(params)
+    .then((res) => {
+      // console.log('GetProjectList', res)
+      projectList = res.data.content
+      pagination.total = res.data.totalElements
+    })
+    .catch((err) => {
+      message.error(err)
+    })
+  data.projects = []
+  projectList?.forEach(({ id, name }) => {
+    const project = {
+      id,
+      name
+    }
+    data.projects.push(project)
+  })
+  if (projectList.length > 0) {
+    data.activeKey = projectList[0].id
+    showProjectInfo(data.activeKey)
+  }
+}
+const showProjectInfo = async (key) => {
+  const project = data.projects.find((item) => item.id === key)
+  if (project) await getProjectInfo(project)
+}
+const getProjectInfo = async (project, number = 1, size = 5) => {
+  const params = {
+    name: project.name,
+    number,
+    size
+  }
+  await GetProjectInfo(params)
+    .then((res) => {
+      // console.log('GetProjectInfo', res)
+      project.content = res.data.content
+      // 判断是否所有版本都不正在扫描分析
+      project.analysing = false
+      project.content?.forEach((version) => {
+        if (version.state === 'RUNNING') project.analysing = true
+      })
+      project.pagination = {
+        current: number,
+        total: res.data.totalElements,
+        pageSize: size,
+        onChange: (page, size) => {
+          getProjectInfo(project, page, size)
+        }
+      }
+    })
+    .catch((err) => {
+      message.error(err)
+    })
+}
 const addProject = () => {
   addModal.value.open()
 }
-const upgrade = (project) => {
+const upgrade = async (project) => {
+  await showProjectInfo(project.id)
   upgradeModal.value.open(project)
 }
 const deleteProject = (project) => {
   deleteModal.value.open(project)
 }
-const showDetail = (project, record) => {
+const showDetail = (record) => {
   router.push({
     path: '/home/appDetail',
     query: {
-      name: project.name,
+      name: record.name,
       version: record.version
     }
   })
 }
-const changeVersion = (project, record) => {
-  changeModal.value.open(project, record)
+const changeVersion = (record) => {
+  changeModal.value.open(record)
 }
-const deleteVersion = (project, record) => {
-  DeleteVersion({ projectName: project.name, version: record.version })
+const deleteVersion = (record) => {
+  DeleteVersion({ projectName: record.name, version: record.version })
     .then((res) => {
       console.log('DeleteVersion', res)
     })
     .catch((e) => {
-      // message.error(e)
+      message.error(e)
     })
   record.popconfirm = false
 }

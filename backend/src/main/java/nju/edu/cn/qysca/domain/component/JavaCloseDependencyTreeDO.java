@@ -10,11 +10,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
-@Document("java_component_close_dependency_tree")
-@ApiModel("Java闭源组件依赖树")
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Document("java_component_close_dependency_tree")
+@ApiModel("Java闭源组件依赖树信息DO")
 public class JavaCloseDependencyTreeDO {
 
     @MongoId
@@ -22,13 +23,13 @@ public class JavaCloseDependencyTreeDO {
     @Field("_id")
     private String id;
 
-    @ApiModelProperty(value = "组织id", example = "org.hamcrest")
+    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
     private String groupId;
 
-    @ApiModelProperty(value = "工件id", example = "hamcrest-core")
+    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
     private String artifactId;
 
-    @ApiModelProperty(value = "版本号", example = "1.3")
+    @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String version;
 
     @ApiModelProperty("依赖树")
