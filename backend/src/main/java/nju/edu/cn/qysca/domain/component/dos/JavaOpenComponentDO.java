@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -52,10 +53,10 @@ public class JavaOpenComponentDO {
     private String sourceUrl;
 
     @ApiModelProperty(value = "开发者列表")
-    private List<DeveloperDO> developers;
+    private List<DeveloperDO> developers=new ArrayList<>();
 
     @ApiModelProperty(value = "许可证列表")
-    private List<LicenseDO> licenses;
+    private List<LicenseDO> licenses=new ArrayList<>();
 
     @ApiModelProperty(value = "pom文件", example = "{plugin:{},dependencies:[]}")
     private String pom;

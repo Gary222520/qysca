@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
 import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -43,8 +44,8 @@ public class ComponentDetailDTO {
     private String sourceUrl;
 
     @ApiModelProperty(value = "开发者列表")
-    private List<DeveloperDO> developers;
+    private List<DeveloperDO> developers=new ArrayList<>();
 
     @ApiModelProperty(value = "许可证列表")
-    private List<LicenseDO> licenses;
+    private List<LicenseDO> licenses=new ArrayList<>();
 }

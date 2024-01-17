@@ -120,4 +120,10 @@ public class ProjectController {
         projectService.exportTableExcelDetail(dto, response);
     }
 
+    @ApiOperation("生成项目版本对比树")
+    @PostMapping("/getProjectVersionCompareTree")
+    public ResponseMsg<VersionCompareTreeDTO> getProjectVersionCompareTree(@RequestBody VersionCompareReqDTO dto) {
+        return new ResponseMsg<>(projectService.getProjectVersionCompareTree(dto));
+    }
+
 }
