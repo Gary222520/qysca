@@ -6,6 +6,8 @@ import nju.edu.cn.qysca.dao.project.ProjectDependencyTableDao;
 import nju.edu.cn.qysca.dao.project.ProjectDependencyTreeDao;
 import nju.edu.cn.qysca.dao.project.ProjectInfoDao;
 import nju.edu.cn.qysca.dao.project.ProjectVersionDao;
+import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dtos.ComponentCompareTreeDTO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentDetailDTO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
@@ -434,6 +436,110 @@ public class ProjectServiceImpl implements ProjectService {
         } catch (Exception e) {
             throw new PlatformException(500, "导出Excel失败");
         }
+    }
+
+    /**
+     * 生成项目版本对比树
+     *
+     * @param versionCompareReqDTO 需对比的项目版本
+     * @return VersionCompareTreeDTO 对比树
+     */
+    @Override
+    public VersionCompareTreeDTO getProjectVersionCompareTree(VersionCompareReqDTO versionCompareReqDTO) {
+        // 获取需对比的两个项目版本依赖树信息
+        ProjectDependencyTreeDO fromDependencyTree=projectDependencyTreeDao.findByNameAndVersion(
+                versionCompareReqDTO.getName(), versionCompareReqDTO.getFromVersion());
+        if(fromDependencyTree==null){
+            throw new PlatformException(500, "被对比的项目版本依赖树信息不存在");
+        }
+        ProjectDependencyTreeDO toDependencyTree=projectDependencyTreeDao.findByNameAndVersion(
+                versionCompareReqDTO.getName(), versionCompareReqDTO.getToVersion());
+        if(toDependencyTree==null){
+            throw new PlatformException(500, "待对比的项目版本依赖树信息不存在");
+        }
+        // 打上对比标记，生成对比树
+        VersionCompareTreeDTO versionCompareTreeDTO=new VersionCompareTreeDTO();
+        BeanUtils.copyProperties(versionCompareReqDTO,versionCompareTreeDTO);
+        // 递归处理
+        versionCompareTreeDTO.setTree(recursionDealWithChange(
+                fromDependencyTree.getTree(),toDependencyTree.getTree()));
+        return versionCompareTreeDTO;
+    }
+
+    /**
+     * 递归处理变更的组件
+     * @param from 被对比者
+     * @param to 待对比者
+     * @return ComponentCompareTreeDTO 对比树
+     */
+    private ComponentCompareTreeDTO recursionDealWithChange(ComponentDependencyTreeDO from,ComponentDependencyTreeDO to){
+        if(from==null || to==null){
+            return null;
+        }
+        // 变更的组件打上CHANGE标记
+        ComponentCompareTreeDTO root=new ComponentCompareTreeDTO();
+        BeanUtils.copyProperties(to,root);
+        root.setMark("CHANGE");
+        // 分析各子树应属于何种标记
+        Map<String,ComponentDependencyTreeDO> fromMap=new HashMap<>();
+        Map<String,ComponentDependencyTreeDO> toMap=new HashMap<>();
+        Set<String> intersection=new HashSet<>();
+        for(ComponentDependencyTreeDO fromChild:from.getDependencies()){
+            fromMap.put(fromChild.getGroupId()+fromChild.getArtifactId()+fromChild.getOpensource(),fromChild);
+        }
+        for(ComponentDependencyTreeDO toChild:to.getDependencies()){
+            toMap.put(toChild.getGroupId()+toChild.getArtifactId()+toChild.getOpensource(),toChild);
+        }
+        for(String key:toMap.keySet()){
+            // 求交集
+            if(fromMap.containsKey(key)){
+                intersection.add(key);
+            }
+        }
+        // 依次进行分析
+        for(ComponentDependencyTreeDO toChild:to.getDependencies()){
+            String key=toChild.getGroupId()+toChild.getArtifactId()+toChild.getOpensource();
+            if(intersection.contains(key)){
+                if(fromMap.get(key).getVersion().equals(toMap.get(key).getVersion())){
+                    root.getDependencies().add(recursionMark(toMap.get(key),"SAME"));
+                }
+                else{
+                    // CHANGE
+                    root.getDependencies().add(recursionDealWithChange(fromMap.get(key),toMap.get(key)));
+                }
+            }else{
+                root.getDependencies().add(recursionMark(toMap.get(key),"ADD"));
+            }
+        }
+        for(ComponentDependencyTreeDO fromChild:from.getDependencies()){
+            String key=fromChild.getGroupId()+fromChild.getArtifactId()+fromChild.getOpensource();
+            if(!intersection.contains(key)){
+                root.getDependencies().add(recursionMark(fromMap.get(key),"DELETE"));
+            }
+        }
+        return root;
+    }
+
+    /**
+     * 递归打上标记
+     * @param tree  树状信息
+     * @param mark 标记符号（ADD,DELETE,SAME）
+     * @return ComponentCompareTreeDTO 对比树
+     */
+    private ComponentCompareTreeDTO recursionMark(ComponentDependencyTreeDO tree,String mark){
+        if(tree==null){
+            return null;
+        }
+        ComponentCompareTreeDTO root=new ComponentCompareTreeDTO();
+        BeanUtils.copyProperties(tree,root);
+        root.setMark(mark);
+        for(ComponentDependencyTreeDO child:tree.getDependencies()){
+            ComponentCompareTreeDTO childAns=recursionMark(child,mark);
+            if(childAns!=null){
+                root.getDependencies().add(childAns);
+            }
+        }
+        return root;
     }
 
     /**
