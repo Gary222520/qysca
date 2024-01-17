@@ -12,6 +12,7 @@ import util.idGenerator.UUIDGenerator;
 
 import java.io.*;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
@@ -29,9 +30,9 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
      * 用以记录以及爬取过的url，防止重复爬取
      */
     private Set<String> visitedUrls;
-    private final String VISITED_URLS_PATH = "visited_urls.txt";
+    private final String VISITED_URLS_PATH = "spider/src/main/resources/visited_urls.txt";
+    private final static String POM_FILE_TEMP_PATH = "spider/src/main/resources/pomFile/temp_pom.xml";
     private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
-    private final static String POM_FILE_TEMP_PATH = "spider/src/main/resources/temp_pom.xml";
     /**
      * collection_name对象在mongodb中的collection
      */
@@ -206,7 +207,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
         componentWriter.enqueue(javaOpenComponentDO);
 
         // 生成一个临时pom文件
-        createPomFile(javaOpenComponentDO.getPom());
+        createPomFile(document.outerHtml());
         // 调用mvn dependency:tree命令获取依赖
         Node node = MavenUtil.mavenDependencyTreeAnalyzer(POM_FILE_TEMP_PATH);
         // 解析依赖，获得组件树
@@ -223,15 +224,17 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
         javaOpenDependencyTreeDO.setVersion(javaOpenComponentDO.getVersion());
 
         dependencyTreeWriter.enqueue(javaOpenDependencyTreeDO);
-        // 封装依赖表
 
-        dependencyTableWriter.enqueue(null);
+        // 封装依赖表
+        List<JavaOpenDependencyTableDO> javaOpenDependencyTableDOList = MavenUtil.buildJavaOpenDependencyTable(javaOpenDependencyTreeDO);
+        for (JavaOpenDependencyTableDO javaOpenDependencyTableDO : javaOpenDependencyTableDOList)
+            dependencyTableWriter.enqueue(javaOpenDependencyTableDO);
 
         // 封装
         JavaOpenComponentInformationDO javaOpenComponentInformationDO = new JavaOpenComponentInformationDO();
         javaOpenComponentInformationDO.setJavaOpenComponentDO(javaOpenComponentDO);
         javaOpenComponentInformationDO.setJavaOpenDependencyTreeDO(javaOpenDependencyTreeDO);
-        javaOpenComponentInformationDO.setJavaOpenDependencyTableDO(null);
+        javaOpenComponentInformationDO.setJavaOpenDependencyTableDO(javaOpenDependencyTableDOList);
 
         return javaOpenComponentInformationDO;
     }
@@ -241,7 +244,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
      */
     private void loadVisitedLinks() {
         visitedUrls = new HashSet<>();
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(VISITED_URLS_PATH);
+        try (InputStream inputStream = new FileInputStream(VISITED_URLS_PATH);
              BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -302,15 +305,10 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
      * @param pomString
      */
     private static void createPomFile(String pomString) {
-        try {
-            // 创建FileWriter对象
-            FileWriter writer = new FileWriter(POM_FILE_TEMP_PATH, false);
-            // 写入内容
+        try (OutputStream outputStream = new FileOutputStream(POM_FILE_TEMP_PATH);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
             writer.write(pomString);
-            // 关闭文件写入流
-            writer.close();
         } catch (IOException e) {
-            System.out.println("创建临时pom文件时发生错误：" + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -325,4 +323,12 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
         saveVisitedLinks();
     }
 
+    /**
+     * 手动刷新
+     */
+    public void flush(){
+        componentWriter.flush();
+        dependencyTreeWriter.flush();
+        dependencyTableWriter.flush();
+    }
 }

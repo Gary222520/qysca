@@ -33,7 +33,6 @@ public class MongoDBAccess<T> {
                     )
             );
             collection = database.getCollection(COLLECTION_NAME, clazz).withCodecRegistry(codecRegistry);
-            System.out.println("Connected to MongoDB: " + DatabaseConfig.getDatabaseName());
         } catch (Exception e) {
             System.out.println("Failed to connect to MongoDB. Error: " + e.getMessage());
 

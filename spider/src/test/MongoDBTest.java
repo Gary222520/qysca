@@ -10,7 +10,7 @@ import java.util.List;
 public class MongoDBTest {
 
     @Test
-    public void testMongoDB() {
+    public void testRead() {
 
         MongoDBAccess<JavaOpenComponentDO> dbAccess = new MongoDBAccess<JavaOpenComponentDO>("test", JavaOpenComponentDO.class);
 

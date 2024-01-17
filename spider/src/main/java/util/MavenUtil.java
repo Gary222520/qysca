@@ -9,12 +9,12 @@ import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.Invoker;
+import org.springframework.beans.BeanUtils;
 import spider.JavaOpenPomSpider;
+import util.idGenerator.UUIDGenerator;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class MavenUtil {
 
@@ -31,7 +31,14 @@ public class MavenUtil {
         request.setPomFile(pom);
         request.setGoals(Collections.singletonList("dependency:tree -DoutputFile=result -DoutputType=text"));
         Invoker invoker = new DefaultInvoker();
-        invoker.setMavenHome(new File("D:\\apache-maven-3.8.6"));
+        String mavenHome = System.getenv("MAVEN_HOME");
+        if (mavenHome != null && !mavenHome.isEmpty()) {
+            // 使用环境变量中的MAVEN_HOME路径
+            invoker.setMavenHome(new File(mavenHome));
+        } else {
+            System.err.println("MAVEN_HOME is not set in the environment variables.");
+        }
+
         try {
             invoker.execute(request);
             // 获得result结果的路径
@@ -116,13 +123,23 @@ public class MavenUtil {
         return componentDependencyTreeDO;
     }
 
-    public List<JavaOpenDependencyTableDO> buildJavaOpenDependencyTable(ComponentDependencyTreeDO componentDependencyTreeDO) {
-        List<JavaOpenDependencyTableDO> javaOpenDependencyTableDOS = new ArrayList<>();
+    public static List<JavaOpenDependencyTableDO> buildJavaOpenDependencyTable(JavaOpenDependencyTreeDO javaOpenDependencyTreeDO) {
+        List<JavaOpenDependencyTableDO> result = new ArrayList<>();
+        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(javaOpenDependencyTreeDO.getTree().getDependencies());
+        while (!queue.isEmpty()) {
+            JavaOpenDependencyTableDO javaOpenDependencyTableDO = new JavaOpenDependencyTableDO();
+            javaOpenDependencyTableDO.setId(UUIDGenerator.getUUID());
+            javaOpenDependencyTableDO.setParentGroupId(javaOpenDependencyTreeDO.getGroupId());
+            javaOpenDependencyTableDO.setParentArtifactId(javaOpenDependencyTreeDO.getArtifactId());
+            javaOpenDependencyTableDO.setParentVersion(javaOpenDependencyTreeDO.getVersion());
 
+            ComponentDependencyTreeDO componentDependencyTreeDO = Objects.requireNonNull(queue.poll());
+            BeanUtils.copyProperties(componentDependencyTreeDO, javaOpenDependencyTableDO);
+            result.add(javaOpenDependencyTableDO);
+            queue.addAll(componentDependencyTreeDO.getDependencies());
+        }
 
-
-
-        return javaOpenDependencyTableDOS;
+        return result;
     }
 }
 

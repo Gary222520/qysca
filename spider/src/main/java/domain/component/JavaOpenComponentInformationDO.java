@@ -2,6 +2,8 @@ package domain.component;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class JavaOpenComponentInformationDO {
 
@@ -9,5 +11,5 @@ public class JavaOpenComponentInformationDO {
 
     private JavaOpenDependencyTreeDO javaOpenDependencyTreeDO;
 
-    private JavaOpenDependencyTableDO javaOpenDependencyTableDO;
+    private List<JavaOpenDependencyTableDO> javaOpenDependencyTableDO;
 }
