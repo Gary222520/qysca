@@ -73,6 +73,20 @@
               </ul>
             </div>
           </a-card>
+          <a-card class="card" hoverable @click="selectTool('zip')">
+            <div class="card_title">
+              <img class="img" src="@/assets/zip.png" />
+              <div class="name">Zip</div>
+            </div>
+            <div class="card_text">
+              <ul style="margin-bottom: 0">
+                <li class="list_item">项目根目录的Zip压缩文件</li>
+                <li class="list_item">扫描zip中的依赖文件</li>
+              </ul>
+            </div>
+          </a-card>
+        </div>
+        <div class="content" style="margin-top: 10px">
           <a-card class="card" hoverable @click="selectTool('gradle')">
             <div class="card_title">
               <img class="img" src="@/assets/gradle.png" />
@@ -85,8 +99,6 @@
               </ul>
             </div>
           </a-card>
-        </div>
-        <div class="content" style="margin-top: 10px">
           <a-card class="card" hoverable @click="selectTool('jar')">
             <div class="card_title">
               <img class="img" src="@/assets/jar.png" />
@@ -96,18 +108,6 @@
               <ul style="margin-bottom: 0">
                 <li class="list_item">项目构建完成的jar包</li>
                 <li class="list_item">扫描jar包中的依赖文件</li>
-              </ul>
-            </div>
-          </a-card>
-          <a-card class="card" hoverable @click="selectTool('zip')">
-            <div class="card_title">
-              <img class="img" src="@/assets/zip.png" />
-              <div class="name">Zip</div>
-            </div>
-            <div class="card_text">
-              <ul style="margin-bottom: 0">
-                <li class="list_item">项目根目录的Zip压缩文件</li>
-                <li class="list_item">扫描zip中的依赖文件</li>
               </ul>
             </div>
           </a-card>
@@ -132,7 +132,10 @@
       <div v-if="data.currentStep === 3">
         <div class="upload">
           <div v-if="projectInfo.builder === 'maven'">
-            <Upload ref="uploadRef" @success="handleUpload"></Upload>
+            <Upload ref="uploadRef" :accept="'.xml'" :upload-text="'pom.xml'" @success="handleUpload"></Upload>
+          </div>
+          <div v-if="projectInfo.builder === 'zip'">
+            <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
           </div>
         </div>
       </div>
@@ -166,8 +169,8 @@ const formState = reactive({
   note: ''
 })
 const projectInfo = reactive({
-  language: 'java',
-  builder: 'maven',
+  language: '',
+  builder: '',
   scanner: '',
   filePath: ''
 })
@@ -185,10 +188,18 @@ const clear = () => {
   uploadRef.value.clear()
 }
 const selectLanguage = (language) => {
+  if (language === 'python' || language === 'go' || language === 'javascript') {
+    message.info('暂未支持该语言')
+    return
+  }
   projectInfo.language = language
   next()
 }
 const selectTool = (builder) => {
+  if (builder === 'gradle' || builder === 'jar') {
+    message.info('暂未支持该方式')
+    return
+  }
   projectInfo.builder = builder
   next()
 }

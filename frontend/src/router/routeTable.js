@@ -3,7 +3,9 @@ const Summary = () => import('@/views/summary/Summary.vue')
 const Scan = () => import('@/views/scan/Scan.vue')
 const Application = () => import('@/views/application/Application.vue')
 const AppDetail = () => import('@/views/application/AppDetail.vue')
+const Compare = () => import('@/views/application/Compare.vue')
 const Component = () => import('@/views/component/Component.vue')
+const Dependency = () => import('@/views/component/Dependency.vue')
 
 const routes = [
   { path: '/', name: '/', component: Home },
@@ -38,10 +40,22 @@ const routes = [
         component: AppDetail
       },
       {
+        path: 'compare',
+        name: 'compare',
+        meta: { menu: 'compare', title: '快照对比' },
+        component: Compare
+      },
+      {
         path: 'component',
         name: 'component',
         meta: { menu: 'component', title: '组件管理' },
         component: Component
+      },
+      {
+        path: 'dependency',
+        name: 'dependency',
+        meta: { menu: 'component', title: '组件依赖' },
+        component: Dependency
       }
     ]
   }

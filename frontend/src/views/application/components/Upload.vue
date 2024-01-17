@@ -12,10 +12,10 @@
       class="uploader">
       <uploader-unsupport></uploader-unsupport>
       <uploader-drop class="uploader-drop">
-        <uploader-btn class="uploader-btn" :attrs="{ accept: '.xml' }">
+        <uploader-btn class="uploader-btn" :attrs="{ accept: props.accept }">
           <div style="text-align: center">
             <CloudUploadOutlined :style="{ fontSize: '30px' }" />
-            <div class="upload_text">pom.xml</div>
+            <div class="upload_text">{{ props.uploadText }}</div>
           </div>
         </uploader-btn>
       </uploader-drop>
@@ -34,7 +34,7 @@
 </template>
 
 <script setup>
-import { reactive, defineExpose, defineEmits } from 'vue'
+import { reactive, defineExpose, defineEmits, defineProps } from 'vue'
 import { CloudUploadOutlined } from '@ant-design/icons-vue'
 import { baseURL } from '@/api/request'
 import { API } from '@/api/backend'
@@ -43,6 +43,16 @@ import SparkMD5 from 'spark-md5'
 import { message } from 'ant-design-vue'
 
 const emit = defineEmits(['success'])
+const props = defineProps({
+  accept: {
+    type: String,
+    required: true
+  },
+  uploadText: {
+    type: String,
+    required: true
+  }
+})
 const options = {
   // 上传地址
   target: baseURL + API.FILE_UPLOAD,
@@ -64,7 +74,7 @@ const options = {
     // message是后台返回
     const res = JSON.parse(message)
     const resData = res.data
-    // if (!resData.skipUpload) return false
+    if (!resData.skipUpload) return false
     if (resData.skipUpload) {
       upload.skip = true
       upload.progress.status = 'success'
@@ -113,7 +123,11 @@ const fileStatusText = (status, response) => {
 }
 const onFileAdded = (file, event) => {
   // console.log('onFileAdded', file)
-  // 1. 判断文件大小是否允许上传
+  // 1. 判断文件名称与大小是否允许上传
+  if (props.uploadText === 'pom.xml' && file.name !== 'pom.xml') {
+    message.info('必须上传pom.xml')
+    return
+  }
   if (file.size > upload.maxSize) {
     message.info('文件大小不能超过100MB')
     return
@@ -181,14 +195,18 @@ const onFileSuccess = (rootFile, file, response, chunk) => {
       totalChunks: chunk.offset
     })
       .then((res) => {
-        // console.log('FileMerge', res)
+        console.log('FileMerge', res)
+        if (res.code !== 200) {
+          message.error(res.message)
+          return
+        }
         upload.progress.status = 'success'
-        upload.uploadInfo.filePath = res.data.filePath
+        upload.uploadInfo.filePath = res.data
         upload.uploadInfo.scanner = file.name
         emit('success', upload.uploadInfo)
       })
-      .catch((e) => {
-        message.error(e)
+      .catch((err) => {
+        message.error(err)
       })
   }
 }

@@ -21,21 +21,45 @@
             <div class="collapse_header">
               <div style="display: flex; align-items: center">
                 <div style="margin-right: 10px; font-size: 18px">{{ project.name }}</div>
+                <a-tooltip>
+                  <template #title>刷新</template>
+                  <RedoOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click.stop="getProjectInfo(project)" />
+                </a-tooltip>
+              </div>
+              <div style="display: flex; align-items: center">
                 <a-button
                   type="primary"
-                  style="margin-left: 10px; display: flex; align-items: center"
+                  style="margin-right: 10px; display: flex; align-items: center"
                   @click.stop="upgrade(project)">
                   <RocketOutlined :style="{ fontSize: '18px', color: '#fff' }" />版本升级
                 </a-button>
-              </div>
-              <div style="display: flex; align-items: center">
+                <a-button
+                  v-if="!project.compare"
+                  type="primary"
+                  style="margin-right: 10px"
+                  @click.stop="compare(project, true)">
+                  <SwapOutlined :style="{ fontSize: '18px', color: '#fff' }" />版本对比
+                </a-button>
+                <a-button
+                  v-if="project.compare"
+                  type="primary"
+                  danger
+                  style="margin-right: 10px"
+                  @click.stop="compare(project, false)">
+                  <CloseOutlined :style="{ fontSize: '16px', color: '#fff' }" />取消
+                </a-button>
                 <a-button type="primary" danger @click.stop="deleteProject(project)" :disabled="project.analysing">
                   <WarningOutlined />删除
                 </a-button>
               </div>
             </div>
           </template>
-          <a-table :data-source="project.content" :columns="data.columns" bordered :pagination="project.pagination">
+          <a-table
+            :data-source="project.content"
+            :columns="data.columns"
+            bordered
+            :pagination="project.pagination"
+            :row-selection="data.rowSelection">
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'action'">
                 <div style="display: flex" v-if="record.state === 'SUCCESS'">
@@ -59,7 +83,9 @@
                           <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
                         </template>
                         <template #okButton>
-                          <a-button danger type="primary" size="small" @click="deleteVersion(record)">删除</a-button>
+                          <a-button danger type="primary" size="small" @click="deleteVersion(project, record)">
+                            删除
+                          </a-button>
                         </template>
                         <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
                       </a-popconfirm>
@@ -72,6 +98,7 @@
                 </div>
               </template>
             </template>
+            <template #emptyText>暂无数据</template>
           </a-table>
         </a-collapse-panel>
       </a-collapse>
@@ -88,7 +115,7 @@
     <AddModal ref="addModal" @success="getProjectList"></AddModal>
     <ChangeModal ref="changeModal"></ChangeModal>
     <UpgradeModal ref="upgradeModal"></UpgradeModal>
-    <DeleteModal ref="deleteModal"></DeleteModal>
+    <DeleteModal ref="deleteModal" @success="getProjectList"></DeleteModal>
   </div>
 </template>
 
@@ -101,11 +128,14 @@ import {
   UpSquareOutlined,
   RocketOutlined,
   WarningOutlined,
-  LoadingOutlined
+  LoadingOutlined,
+  SwapOutlined,
+  CloseOutlined,
+  RedoOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { reactive, ref, onMounted } from 'vue'
-import { GetProjectList, GetProjectInfo, DeleteVersion } from '@/api/frontend'
+import { GetProjectList, GetProjectInfo, DeleteVersion, CheckRunning } from '@/api/frontend'
 import AddModal from './components/AddModal.vue'
 import ChangeModal from './components/ChangeModal.vue'
 import UpgradeModal from './components/UpgradeModal.vue'
@@ -137,7 +167,8 @@ const data = reactive({
   detail: false,
   search: {
     name: ''
-  }
+  },
+  rowSelection: null
 })
 const pagination = reactive({
   current: 1,
@@ -154,11 +185,15 @@ const getProjectList = async (page = 1, size = 5) => {
   await GetProjectList(params)
     .then((res) => {
       // console.log('GetProjectList', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
       projectList = res.data.content
       pagination.total = res.data.totalElements
     })
     .catch((err) => {
-      message.error(err)
+      console.error(err)
     })
   data.projects = []
   projectList?.forEach(({ id, name }) => {
@@ -183,12 +218,29 @@ const getProjectInfo = async (project, number = 1, size = 5) => {
     number,
     size
   }
+  await CheckRunning({ name: project.name })
+    .then((res) => {
+      // console.log('CheckRunning', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      project.analysing = res.data !== 0
+    })
+    .catch((err) => {
+      console.log(err)
+    })
   await GetProjectInfo(params)
     .then((res) => {
       // console.log('GetProjectInfo', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
       project.content = res.data.content
-      // 判断是否所有版本都不正在扫描分析
-      project.analysing = false
+      project.content.forEach((item, index) => {
+        item.key = index
+      })
       project.content?.forEach((version) => {
         if (version.state === 'RUNNING') project.analysing = true
       })
@@ -202,7 +254,7 @@ const getProjectInfo = async (project, number = 1, size = 5) => {
       }
     })
     .catch((err) => {
-      message.error(err)
+      console.error(err)
     })
 }
 const addProject = () => {
@@ -224,13 +276,43 @@ const showDetail = (record) => {
     }
   })
 }
+const compare = (project, value) => {
+  project.compare = value
+  if (value) {
+    data.rowSelection = {
+      columnTitle: ' ',
+      selectedRowKeys: [],
+      onChange: (selectedRowKeys, selectedRows) => {
+        data.rowSelection.selectedRowKeys = selectedRowKeys
+        if (selectedRows.length === 2) {
+          router.push({
+            path: '/home/compare',
+            query: {
+              name: project.name,
+              currentVersion: selectedRows[0].version,
+              compareVersion: selectedRows[1].version
+            }
+          })
+        }
+      },
+      getCheckboxProps: (record) => {
+        return { disabled: record.state === 'RUNNING' }
+      }
+    }
+  } else {
+    data.rowSelection.selectedRowKeys = []
+    data.rowSelection = null
+  }
+}
 const changeVersion = (record) => {
   changeModal.value.open(record)
 }
-const deleteVersion = (record) => {
-  DeleteVersion({ projectName: record.name, version: record.version })
+const deleteVersion = (project, record) => {
+  DeleteVersion({ name: record.name, version: record.version })
     .then((res) => {
       console.log('DeleteVersion', res)
+      message.success('删除版本成功')
+      getProjectInfo(project)
     })
     .catch((e) => {
       message.error(e)
@@ -299,3 +381,4 @@ const deleteVersion = (record) => {
 <style scoped src="@/atdv/input-search.css"></style>
 <style scoped src="@/atdv/primary-btn.css"></style>
 <style scoped src="@/atdv/delete-btn.css"></style>
+<style scoped src="@/atdv/row-selection.css"></style>

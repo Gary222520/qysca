@@ -20,6 +20,7 @@
         </div>
         最近一次扫描时间：
         <div>{{ data.versionInfo.time }}</div>
+        <a-button type="primary" style="margin-left: 30px" @click="compare">版本对比</a-button>
       </div>
     </a-card>
     <a-card class="content_card">
@@ -40,11 +41,14 @@
             </a-tooltip>
           </a-radio-group>
           <div v-if="data.mode === 'tiled'">
-            <a-input-search
+            <!-- <a-input-search
               v-model:value="data.search.name"
               placeholder="请输入组件名称"
-              style="width: 250px"></a-input-search>
-            <a-button type="primary" style="margin-left: 10px"><ExportOutlined />导出Excel</a-button>
+              style="width: 250px"></a-input-search> -->
+            <a-checkbox v-model:checked="data.detail">详细导出</a-checkbox>
+            <a-button type="primary" style="margin-left: 10px" @click="exportExcel">
+              <ExportOutlined />导出Excel
+            </a-button>
           </div>
         </div>
         <div style="margin-top: 20px">
@@ -60,7 +64,7 @@
 import { reactive, ref, onMounted, defineExpose } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { LeftOutlined, ApartmentOutlined, UnorderedListOutlined, ExportOutlined } from '@ant-design/icons-vue'
-import { GetProjectInfo } from '@/api/frontend'
+import { GetVersionList, GetVersionInfo, ExportBrief, ExportDetail } from '@/api/frontend'
 import TreeList from './components/TreeList.vue'
 import TiledList from './components/TiledList.vue'
 import { message } from 'ant-design-vue'
@@ -82,29 +86,40 @@ const data = reactive({
   mode: 'tree',
   search: {
     name: ''
-  }
+  },
+  detail: false
 })
 const back = () => {
   router.push('/home/application')
 }
 const getVersionInfo = async (name, version) => {
   data.selectedVersion = version
-  await GetProjectInfo({
-    name,
-    number: 1,
-    size: 100
-  })
+  await GetVersionList({ name })
     .then((res) => {
-      const options = []
-      res.data.content.forEach((item) => {
-        if (item.version === version) data.versionInfo = item
-        options.push({ label: item.version, value: item.version, key: item.version })
+      // console.log('GetVersionList', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      data.versionOptions = res.data.map((option) => {
+        return { label: option, value: option, key: option }
       })
-      data.versionOptions = options
-      changeMode('tree')
+      GetVersionInfo({ name, version })
+        .then((res) => {
+          // console.log('GetVersionInfo', res)
+          if (res.code !== 200) {
+            message.error(res.message)
+            return
+          }
+          data.versionInfo = res.data
+          changeMode('tree')
+        })
+        .catch((err) => {
+          console.error(err)
+        })
     })
     .catch((err) => {
-      message.error(err)
+      console.error(err)
     })
 }
 const changeVersion = (value) => {
@@ -117,7 +132,17 @@ const changeVersion = (value) => {
   })
   getVersionInfo(data.versionInfo.name, value)
 }
+const compare = () => {
+  router.push({
+    path: '/home/compare',
+    query: {
+      name: data.versionInfo.name,
+      currentVersion: data.selectedVersion
+    }
+  })
+}
 const changeMode = (mode) => {
+  data.mode = mode
   if (mode === 'tree') {
     treeList.value.show(data.versionInfo.name, data.selectedVersion)
     tiledList.value.hide()
@@ -129,6 +154,52 @@ const changeMode = (mode) => {
 }
 const filterOption = (input, option) => {
   return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
+}
+const exportExcel = () => {
+  const params = {
+    name: data.versionInfo.name,
+    version: data.versionInfo.version
+  }
+  if (!data.detail) {
+    ExportBrief(params)
+      .then((res) => {
+        // console.log('ExportBrief', res)
+        downloadExcel(res.data, `${data.versionInfo.name}-${data.versionInfo.version}-dependencyTable-brief`)
+        message.success('导出成功')
+      })
+      .catch((err) => {
+        console.log(err)
+      })
+  } else {
+    ExportDetail(params)
+      .then((res) => {
+        // console.log('ExportDetail', res)
+        const reader = new FileReader()
+        reader.readAsText(res.data, 'utf-8')
+        reader.onload = () => {
+          const result = JSON.parse(reader.result)
+          if (result.code !== 200) {
+            message.error(result.message)
+          } else {
+            downloadExcel(res.data, `${data.versionInfo.name}-${data.versionInfo.version}-dependencyTable-detail`)
+            message.success('导出成功')
+          }
+        }
+      })
+      .catch((err) => {
+        console.log(err)
+      })
+  }
+}
+const downloadExcel = (data, fileName) => {
+  const xlsx = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  const blob = new Blob([data], { type: xlsx })
+  const a = document.createElement('a')
+  a.style.display = 'none'
+  a.href = URL.createObjectURL(blob)
+  a.download = `${fileName}.xlsx`
+  a.click()
+  a.remove()
 }
 </script>
 
@@ -170,3 +241,4 @@ const filterOption = (input, option) => {
 <style scoped src="@/atdv/input-search.css"></style>
 <style scoped src="@/atdv/radio-btn.css"></style>
 <style scoped src="@/atdv/select.css"></style>
+<style scoped src="@/atdv/checkbox.css"></style>
