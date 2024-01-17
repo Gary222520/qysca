@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -36,6 +38,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 新增项目信息
+     *
      * @param saveProjectDTO 保存项目接口信息
      * @return Boolean 新增项目是否成功
      */
@@ -64,14 +67,15 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     /**
-     *  保存项目依赖关系
+     * 保存项目依赖关系
+     *
      * @param saveProjectDTO 保存项目接口信息
      */
     @Async("taskExecutor")
     @Override
-    public void saveProjectDependency(SaveProjectDTO saveProjectDTO){
+    public void saveProjectDependency(SaveProjectDTO saveProjectDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDTO.getFilePath());
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDTO.getFilePath(), saveProjectDTO.getBuilder());
             ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
             projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
             projectDependencyTreeDO.setName(saveProjectDTO.getName());
@@ -84,15 +88,18 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
-        }catch (Exception e){
+            deleteFolder(saveProjectDTO.getFilePath().substring(0, saveProjectDTO.getFilePath().lastIndexOf("/")));
+        } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
+            deleteFolder(saveProjectDTO.getFilePath().substring(0, saveProjectDTO.getFilePath().lastIndexOf("/")));
         }
     }
 
     /**
      * 更新项目信息
+     *
      * @param updateProjectDTO 更新项目接口信息
      * @return 更新项目信息是否成功
      */
@@ -112,14 +119,15 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     /**
-     *  更新项目依赖关系
+     * 更新项目依赖关系
+     *
      * @param updateProjectDTO 更新项目接口信息
      */
     @Async("taskExecutor")
     @Override
     public void updateProjectDependency(UpdateProjectDTO updateProjectDTO) {
-        try{
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath());
+        try {
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath(), updateProjectDTO.getBuilder());
             ProjectDependencyTreeDO projectDependencyTreeDO = projectDependencyTreeDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectDependencyTreeDO.setTree(componentDependencyTreeDO);
             projectDependencyTreeDao.save(projectDependencyTreeDO);
@@ -128,15 +136,18 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
-        }catch (Exception e){
+            deleteFolder(updateProjectDTO.getFilePath().substring(0, updateProjectDTO.getFilePath().lastIndexOf("/")));
+        } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
+            deleteFolder(updateProjectDTO.getFilePath().substring(0, updateProjectDTO.getFilePath().lastIndexOf("/")));
         }
     }
 
     /**
      * 升级项目
+     *
      * @param upgradeProjectDTO 升级项目接口信息
      * @return 升级项目是否成功
      */
@@ -160,13 +171,14 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 升级项目依赖
+     *
      * @param upgradeProjectDTO 升级项目接口信息
      */
     @Async("taskExecutor")
     @Override
     public void upgradeProjectDependency(UpgradeProjectDTO upgradeProjectDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(upgradeProjectDTO.getFilePath());
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(upgradeProjectDTO.getFilePath(), upgradeProjectDTO.getBuilder());
             ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
             projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
             projectDependencyTreeDO.setName(upgradeProjectDTO.getName());
@@ -179,15 +191,18 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
-        }catch (Exception e){
+            deleteFolder(upgradeProjectDTO.getFilePath().substring(0, upgradeProjectDTO.getFilePath().lastIndexOf("/")));
+        } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
+            deleteFolder(upgradeProjectDTO.getFilePath().substring(0, upgradeProjectDTO.getFilePath().lastIndexOf("/")));
         }
     }
 
     /**
      * 删除项目
+     *
      * @param name 项目名称
      * @return 删除项目是否成功
      */
@@ -202,13 +217,14 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 删除某个项目某个版本
-     * @param name 项目名称
+     *
+     * @param name    项目名称
      * @param version 版本名称
      * @return 删除某个项目某个版本是否成功
      */
     @Override
     public Boolean deleteProjectVersion(String name, String version) {
-        projectVersionDao.deleteByNameAndVersion(name,version);
+        projectVersionDao.deleteByNameAndVersion(name, version);
         projectDependencyTreeDao.deleteByNameAndVersion(name, version);
         projectDependencyTableDao.deleteAllByNameAndVersion(name, version);
         return Boolean.TRUE;
@@ -346,5 +362,33 @@ public class ProjectServiceImpl implements ProjectService {
             queue.addAll(componentDependencyTreeDO.getDependencies());
         }
         projectDependencyTableDao.saveAll(result);
+    }
+
+    /**
+     * 根据文件路径删除文件夹
+     *
+     * @param filePath 文件路径
+     */
+    private void deleteFolder(String filePath) {
+        File folder = new File(filePath);
+        if (folder.exists()) {
+            deleteFolderFile(folder);
+        }
+    }
+
+    /**
+     * 递归删除文件夹下的文件
+     *
+     * @param folder 文件夹
+     */
+    private void deleteFolderFile(File folder) {
+        File[] files = folder.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                deleteFolderFile(file);
+            }
+            file.delete();
+        }
+        folder.delete();
     }
 }

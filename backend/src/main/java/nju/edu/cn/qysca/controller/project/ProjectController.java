@@ -31,7 +31,7 @@ public class ProjectController {
 
     @ApiOperation("更新项目")
     @PostMapping("/updateProject")
-    public ResponseMsg<Boolean> uploadProject(@RequestBody UpdateProjectDTO updateProjectDTO){
+    public ResponseMsg<Boolean> uploadProject(@RequestBody UpdateProjectDTO updateProjectDTO) {
         Boolean result = projectService.updateProject(updateProjectDTO);
         projectService.updateProjectDependency(updateProjectDTO);
         return new ResponseMsg<>(result);
@@ -39,7 +39,7 @@ public class ProjectController {
 
     @ApiOperation("升级项目")
     @PostMapping("/upgradeProject")
-    public ResponseMsg<Boolean> upgradeProject(@RequestBody UpgradeProjectDTO upgradeProjectDTO){
+    public ResponseMsg<Boolean> upgradeProject(@RequestBody UpgradeProjectDTO upgradeProjectDTO) {
         Boolean result = projectService.upgradeProject(upgradeProjectDTO);
         projectService.upgradeProjectDependency(upgradeProjectDTO);
         return new ResponseMsg<>(result);
@@ -47,15 +47,16 @@ public class ProjectController {
 
     @ApiOperation("删除项目")
     @PostMapping("/deleteProject")
-    public ResponseMsg<Boolean> deleteProject(@RequestParam String name){
+    public ResponseMsg<Boolean> deleteProject(@RequestParam String name) {
         return new ResponseMsg<>(projectService.deleteProject(name));
     }
 
     @ApiOperation("删除项目某个版本")
     @PostMapping("/deleteProjectVersion")
-    public ResponseMsg<Boolean> deleteProjectVersion(@RequestParam String name, @RequestParam String version){
+    public ResponseMsg<Boolean> deleteProjectVersion(@RequestParam String name, @RequestParam String version) {
         return new ResponseMsg<>(projectService.deleteProjectVersion(name, version));
     }
+
     @ApiOperation("分页获取项目信息")
     @GetMapping("/findProjectInfoPage")
     public ResponseMsg<Page<ProjectInfoDO>> findProjectInfoPage(@ApiParam(value = "项目名称", allowEmptyValue = true) @RequestParam String name,

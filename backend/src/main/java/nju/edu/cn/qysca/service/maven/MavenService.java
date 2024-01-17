@@ -5,5 +5,5 @@ import nju.edu.cn.qysca.domain.project.SaveProjectDTO;
 
 public interface MavenService {
 
-    ComponentDependencyTreeDO projectDependencyAnalysis(String filePath) throws Exception;
+    ComponentDependencyTreeDO projectDependencyAnalysis(String filePath, String builder) throws Exception;
 }

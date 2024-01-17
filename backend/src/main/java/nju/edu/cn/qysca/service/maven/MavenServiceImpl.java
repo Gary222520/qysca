@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 @Service
 public class MavenServiceImpl implements MavenService {
@@ -33,41 +35,57 @@ public class MavenServiceImpl implements MavenService {
     @Autowired
     private JavaCloseComponentDao javaCloseComponentDao;
 
-    @Autowired
-    private ProjectDependencyTableDao projectDependencyTableDao;
-
 
     @Autowired
     private SpiderService spiderService;
 
+    private String FILE_SEPARATOR = "/";
+
     /**
      * 解析pom文件
+     *
      * @param filePath
      */
     @Override
-    public ComponentDependencyTreeDO projectDependencyAnalysis(String filePath) throws Exception {
-        Node node = mavenDependencyTreeAnalyzer(filePath);
+    public ComponentDependencyTreeDO projectDependencyAnalysis(String filePath, String builder) throws Exception {
+        Node node = mavenDependencyTreeAnalyzer(filePath, builder);
         ComponentDependencyTreeDO componentDependencyTreeDO = convertNode(node, 0);
         return componentDependencyTreeDO;
     }
 
     /**
-     * 调用maven dependency:tree解析依赖树
-     *
-     * @param filePath
-     * @return Node
+     * @param filePath 文件路径
+     * @param builder  构造工具
+     * @return Node 封装好的依赖信息树
      * @throws Exception
      */
-    private Node mavenDependencyTreeAnalyzer(String filePath) throws Exception {
-        InvocationRequest request = new DefaultInvocationRequest();
-        File pom = new File(filePath);
-        request.setPomFile(pom);
-        request.setGoals(Collections.singletonList("dependency:tree -DoutputFile=result -DoutputType=text"));
+    public Node mavenDependencyTreeAnalyzer(String filePath, String builder) throws Exception {
         Invoker invoker = new DefaultInvoker();
-        invoker.setMavenHome(new File("D:\\apache-maven-3.8.6"));
+        invoker.setMavenHome(new File(System.getenv("MAVEN_HOME")));
+        String resultPath = null;
+        InvocationRequest request = new DefaultInvocationRequest();
+        // result文件在文件夹下
+        if (builder.equals("maven")) {
+            File pom = new File(filePath);
+            request.setPomFile(pom);
+            resultPath = pom.getParent() + FILE_SEPARATOR + "result";
+        } else if (builder.equals("jar")) {
+            //jar包不能这样实现
+            File file = new File(filePath);
+            request.setBaseDirectory(file.getParentFile());
+            request.setGoals(Collections.singletonList("clean install:install " + filePath));
+            invoker.execute(request);
+            resultPath = file.getParent() + FILE_SEPARATOR + "result";
+        } else if (builder.equals("zip")) {
+            unzip(filePath);
+            File file = new File(filePath.substring(0, filePath.lastIndexOf('.')));
+            request.setBaseDirectory(file);
+            resultPath = file.getPath() + FILE_SEPARATOR + "result";
+        }
+        request.setGoals(Collections.singletonList("dependency:tree -DoutputFile=result -DoutputType=text"));
         invoker.execute(request);
         // 获得result结果的路径
-        FileInputStream fis = new FileInputStream(new File(pom.getParent() + File.separator + "result"));
+        FileInputStream fis = new FileInputStream(new File(resultPath));
         Reader reader = new BufferedReader(new InputStreamReader(fis));
         InputType type = InputType.TEXT;
         Parser parser = type.newParser();
@@ -103,6 +121,9 @@ public class MavenServiceImpl implements MavenService {
                     javaOpenComponentDO = spiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 }
                 //如果爬虫没有爬到则扫描错误 通过抛出异常处理
+                if (javaOpenComponentDO == null && javaCloseComponentDO == null) {
+                    throw new PlatformException(1, "扫描失败");
+                }
             }
             //设置知识库中的信息
             if (javaOpenComponentDO != null) {
@@ -134,29 +155,35 @@ public class MavenServiceImpl implements MavenService {
         return componentDependencyTreeDO;
     }
 
-    /**
-     * 保存项目依赖平铺表
-     *
-     * @param projectDependencyTreeDO
-     */
-    private void projectDependencyTable(ProjectDependencyTreeDO projectDependencyTreeDO) {
-        List<ProjectDependencyTableDO> result = new ArrayList<>();
-        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(projectDependencyTreeDO.getTree().getDependencies());
-        while (!queue.isEmpty()) {
-            ProjectDependencyTableDO projectDependencyTableDO = new ProjectDependencyTableDO();
-            projectDependencyTableDO.setId(UUIDGenerator.getUUID());
-            projectDependencyTableDO.setProjectName(projectDependencyTreeDO.getName());
-            projectDependencyTableDO.setProjectVersion(projectDependencyTreeDO.getVersion());
-            ComponentDependencyTreeDO componentDependencyTreeDO = Objects.requireNonNull(queue.poll());
-            BeanUtils.copyProperties(componentDependencyTreeDO, projectDependencyTableDO);
-            result.add(projectDependencyTableDO);
-            queue.addAll(componentDependencyTreeDO.getDependencies());
+    private void unzip(String filePath) throws Exception {
+        File file = new File(filePath);
+        File dir = new File(file.getParent());
+        if (!dir.exists()) {
+            dir.mkdirs();
         }
-        projectDependencyTableDao.saveAll(result);
-    }
-
-    //爬取方法
-    JavaOpenComponentDO crawl(String groupId, String artifactId, String version) throws PlatformException {
-        return null;
+        ZipFile zipFile = new ZipFile(filePath);
+        Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
+        while (zipEntries.hasMoreElements()) {
+            ZipEntry zipEntry = zipEntries.nextElement();
+            String entryName = zipEntry.getName();
+            String fileDestPath = dir + FILE_SEPARATOR + entryName;
+            if (!zipEntry.isDirectory()) {
+                File destFile = new File(fileDestPath);
+                destFile.getParentFile().mkdirs();
+                InputStream inputStream = zipFile.getInputStream(zipEntry);
+                FileOutputStream outputStream = new FileOutputStream(destFile);
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+                outputStream.close();
+                inputStream.close();
+            } else {
+                File dirToCreate = new File(fileDestPath);
+                dirToCreate.mkdirs();
+            }
+        }
+        zipFile.close();
     }
 }

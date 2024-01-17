@@ -58,7 +58,7 @@ public class UrlConnector {
             if (!saveDir.exists()) {
                 saveDir.mkdir();
             }
-            File file = new File(saveDir + File.separator + fileName);
+            File file = new File(saveDir + "/" + fileName);
             FileOutputStream fileOutputStream = new FileOutputStream(file);
             fileOutputStream.write(getData);
             if (fileOutputStream != null) {
