@@ -5,10 +5,7 @@ import domain.component.*;
 import fr.dutra.tools.maven.deptree.core.InputType;
 import fr.dutra.tools.maven.deptree.core.Node;
 import fr.dutra.tools.maven.deptree.core.Parser;
-import org.apache.maven.shared.invoker.DefaultInvocationRequest;
-import org.apache.maven.shared.invoker.DefaultInvoker;
-import org.apache.maven.shared.invoker.InvocationRequest;
-import org.apache.maven.shared.invoker.Invoker;
+import org.apache.maven.shared.invoker.*;
 import org.springframework.beans.BeanUtils;
 import spider.JavaOpenPomSpider;
 import util.idGenerator.UUIDGenerator;
@@ -40,8 +37,16 @@ public class MavenUtil {
         }
 
         try {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            PrintStream printStream = new PrintStream(outputStream);
+
+            // 设置InvocationOutputHandler为捕获输出，使得调用mvn dependency:tree后的输出重定向（不输出到终端）
+            InvocationOutputHandler outputHandler = new PrintStreamHandler(printStream, true);
+            invoker.setOutputHandler(outputHandler);
+
             invoker.execute(request);
-            // 获得result结果的路径
+
+            // 获得 result 结果的路径
             FileInputStream fis = new FileInputStream(new File(pom.getParent() + File.separator + "result"));
             Reader reader = new BufferedReader(new InputStreamReader(fis));
             InputType type = InputType.TEXT;
@@ -75,16 +80,15 @@ public class MavenUtil {
             JavaOpenComponentDO javaOpenComponentDO = null;
             JavaCloseComponentDO javaCloseComponentDO = null;
 
-            MongoDBAccess<JavaOpenComponentDO> javaOpenComponentDOMongoDBAccess = new MongoDBAccess<JavaOpenComponentDO>("java_component_open_detail", JavaOpenComponentDO.class);
+            MongoDBAccess<JavaOpenComponentDO> javaOpenComponentDOMongoDBAccess = MongoDBAccess.getInstance("java_component_open_detail", JavaOpenComponentDO.class);
             javaOpenComponentDO = javaOpenComponentDOMongoDBAccess.readByGAV(node.getGroupId(), node.getArtifactId(), node.getVersion());
             // 如果开源知识库中没有则查看闭源知识库
             if (javaOpenComponentDO == null) {
-                MongoDBAccess<JavaCloseComponentDO> javaCloseComponentDOMongoDBAccess = new MongoDBAccess<JavaCloseComponentDO>("java_component_close_detail", JavaCloseComponentDO.class);
+                MongoDBAccess<JavaCloseComponentDO> javaCloseComponentDOMongoDBAccess = MongoDBAccess.getInstance("java_component_close_detail", JavaCloseComponentDO.class);
                 javaCloseComponentDO = javaCloseComponentDOMongoDBAccess.readByGAV(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 // 如果闭源知识库中没有则爬取 爬取过程已经包含插入数据库的步骤
                 if (javaCloseComponentDO == null) {
-                    JavaOpenPomSpider javaOpenPomSpider = new JavaOpenPomSpider();
-                    javaOpenComponentDO = javaOpenPomSpider.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
+                    javaOpenComponentDO = JavaOpenPomSpider.getInstance().crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 }
                 //如果爬虫没有爬到则扫描错误 通过抛出异常处理
             }

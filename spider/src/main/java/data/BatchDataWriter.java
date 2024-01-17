@@ -17,8 +17,10 @@ public class BatchDataWriter<T> {
     private static final int BATCH_SIZE = 5000;
     private List<T> queue;
 
+
+
     public BatchDataWriter(String COLLECTION_NAME, Class<T> clazz) {
-        mongoDBAccess = new MongoDBAccess<T>(COLLECTION_NAME, clazz);
+        mongoDBAccess = MongoDBAccess.getInstance(COLLECTION_NAME, clazz);
         queue = new ArrayList<>();
     }
 

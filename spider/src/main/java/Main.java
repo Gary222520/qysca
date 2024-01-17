@@ -11,7 +11,7 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        Spider<JavaOpenComponentDO> spider = new JavaOpenPomSpider();
+        Spider<JavaOpenComponentDO> spider = JavaOpenPomSpider.getInstance();
 
         List<String> targetUrls = new ArrayList<>();
         String TARGET_URLS_FILE = "target_urls.txt";

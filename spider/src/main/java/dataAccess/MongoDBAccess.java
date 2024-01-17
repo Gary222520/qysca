@@ -9,10 +9,23 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MongoDBAccess<T> {
+    private static final Map<String, MongoDBAccess<?>> instances = new HashMap<>();
+
     private MongoCollection<T> collection;
+
+    public static synchronized <T> MongoDBAccess<T> getInstance(String COLLECTION_NAME, Class<T> clazz) {
+        String key = COLLECTION_NAME + ":" + clazz.getName();
+        if (!instances.containsKey(key)) {
+            MongoDBAccess<T> instance = new MongoDBAccess<>(COLLECTION_NAME, clazz);
+            instances.put(key, instance);
+        }
+        return (MongoDBAccess<T>) instances.get(key);
+    }
 
     /**
      * 写入mongodb
@@ -20,7 +33,7 @@ public class MongoDBAccess<T> {
      * @param COLLECTION_NAME collection name
      * @param clazz           T.class
      */
-    public MongoDBAccess(String COLLECTION_NAME, Class<T> clazz) {
+    private MongoDBAccess(String COLLECTION_NAME, Class<T> clazz) {
         try {
             MongoClient mongoClient = MongoClients.create(DatabaseConfig.getDatabaseUrl());
             MongoDatabase database = mongoClient.getDatabase(DatabaseConfig.getDatabaseName());
