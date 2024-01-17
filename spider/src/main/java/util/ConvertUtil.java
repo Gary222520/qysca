@@ -12,6 +12,8 @@ import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -96,5 +98,15 @@ public class ConvertUtil {
 
     private static JSONObject convertToJson(Document document) {
         return XML.toJSONObject(document.outerHtml());
+    }
+
+    private static JSONObject convertToJson(String pomFilePath) {
+        try {
+            String pomString = new String(Files.readAllBytes(Paths.get(pomFilePath)));
+            return XML.toJSONObject(pomString);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
