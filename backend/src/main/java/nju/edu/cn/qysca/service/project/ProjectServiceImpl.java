@@ -393,6 +393,10 @@ public class ProjectServiceImpl implements ProjectService {
                 componentDetailDTO = javaCloseComponentDao.findDetailByGav(
                         detail.getGroupId(), detail.getArtifactId(), detail.getVersion());
             }
+            if(componentDetailDTO==null){
+                resList.add(detail);
+                continue;
+            }
             detail.setDescription(componentDetailDTO.getDescription());
             detail.setUrl(componentDetailDTO.getUrl());
             detail.setDownloadUrl(componentDetailDTO.getDownloadUrl());
