@@ -1,6 +1,7 @@
 package nju.edu.cn.qysca.service.component;
 
-import nju.edu.cn.qysca.domain.component.*;
+import nju.edu.cn.qysca.domain.component.dos.*;
+import nju.edu.cn.qysca.domain.component.dtos.*;
 import org.springframework.data.domain.Page;
 
 public interface ComponentService {
@@ -43,31 +44,31 @@ public interface ComponentService {
      * 分页查询开源组件依赖平铺信息
      *
      * @param componentGavPageDTO 带分页组件gav信息
-     * @return Page<JavaOpenDependencyTableDO> 分页查询结果
+     * @return Page<ComponentTableDTO> 分页查询结果
      */
-    Page<JavaOpenDependencyTableDO> findOpenComponentDependencyTable(ComponentGavPageDTO componentGavPageDTO);
+    Page<ComponentTableDTO> findOpenComponentDependencyTable(ComponentGavPageDTO componentGavPageDTO);
 
     /**
      * 分页查询闭源组件依赖平铺信息
      *
      * @param componentGavPageDTO 带分页组件gav信息
-     * @return Page<JavaCloseDependencyTableDO> 分页查询结果
+     * @return Page<ComponentTableDTO> 分页查询结果
      */
-    Page<JavaCloseDependencyTableDO> findCloseComponentDependencyTable(ComponentGavPageDTO componentGavPageDTO);
+    Page<ComponentTableDTO> findCloseComponentDependencyTable(ComponentGavPageDTO componentGavPageDTO);
 
     /**
      * 查询指定开源组件的详细信息
      *
      * @param componentGavDTO 组件gav
-     * @return JavaOpenComponentDO 开源组件详细信息
+     * @return ComponentDetailDTO 组件详细信息
      */
-    JavaOpenComponentDO findOpenComponentDetail(ComponentGavDTO componentGavDTO);
+    ComponentDetailDTO findOpenComponentDetail(ComponentGavDTO componentGavDTO);
 
     /**
      * 查询指定闭源组件的详细信息
      *
      * @param componentGavDTO 组件gav
-     * @return JavaCloseComponentDO 闭源组件详细信息
+     * @return ComponentDetailDTO 组件详细信息
      */
-    JavaCloseComponentDO findCloseComponentDetail(ComponentGavDTO componentGavDTO);
+    ComponentDetailDTO findCloseComponentDetail(ComponentGavDTO componentGavDTO);
 }

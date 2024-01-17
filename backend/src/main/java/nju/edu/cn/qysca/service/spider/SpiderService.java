@@ -1,6 +1,6 @@
 package nju.edu.cn.qysca.service.spider;
 
-import nju.edu.cn.qysca.domain.component.JavaOpenComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaOpenComponentDO;
 
 public interface SpiderService {
 

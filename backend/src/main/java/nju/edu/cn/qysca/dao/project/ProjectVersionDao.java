@@ -1,6 +1,6 @@
 package nju.edu.cn.qysca.dao.project;
 
-import nju.edu.cn.qysca.domain.project.ProjectVersionDO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectVersionDO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
