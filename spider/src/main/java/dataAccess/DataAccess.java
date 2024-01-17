@@ -5,24 +5,31 @@ import dao.MongoDBWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 连接数据库的接口
+ * 设置了batch，采用入队和批量写入的方式
+ *
+ * @param <T>
+ */
 public class DataAccess<T> {
 
     private final MongoDBWriter mongoDBWriter;
     private static final int BATCH_SIZE = 5000;
     private List<T> queue;
 
-    public DataAccess(String COLLECTION_NAME, Class<T> clazz){
+    public DataAccess(String COLLECTION_NAME, Class<T> clazz) {
         mongoDBWriter = new MongoDBWriter<T>(COLLECTION_NAME, clazz);
         queue = new ArrayList<>();
     }
 
     /**
      * 将数据加入queue，当queue达到BATCH_SIZE时，自动批量写入数据库
+     *
      * @param data 数据
      */
-    public synchronized void enqueue(T data){
+    public synchronized void enqueue(T data) {
         queue.add(data);
-        if (queue.size() >= BATCH_SIZE){
+        if (queue.size() >= BATCH_SIZE) {
             batchWriteToDatabase();
         }
     }
