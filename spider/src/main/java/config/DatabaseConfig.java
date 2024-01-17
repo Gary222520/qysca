@@ -2,13 +2,11 @@ package config;
 
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Map;
 
 /**
- *  读取数据库yaml配置文件
+ * 读取数据库yaml配置文件
  */
 public class DatabaseConfig {
     private static String DATABASE_CONFIG_PATH = "database.yml";

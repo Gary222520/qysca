@@ -9,12 +9,13 @@ import java.util.List;
 
 /**
  * collection name:
- *      java_component_open_dependency_tree
+ * java_component_open_dependency_tree
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class JavaOpenDependencyTreeDO {
+
     private String id;
 
     private String groupId;

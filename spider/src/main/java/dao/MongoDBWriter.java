@@ -5,7 +5,6 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-
 import config.DatabaseConfig;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -18,11 +17,12 @@ public class MongoDBWriter<T> {
 
     /**
      * 写入mongodb
+     *
      * @param COLLECTION_NAME collection name
-     * @param clazz T.class
+     * @param clazz           T.class
      */
-    public MongoDBWriter(String COLLECTION_NAME, Class<T> clazz){
-        try{
+    public MongoDBWriter(String COLLECTION_NAME, Class<T> clazz) {
+        try {
             MongoClient mongoClient = MongoClients.create(DatabaseConfig.getDatabaseUrl());
             MongoDatabase database = mongoClient.getDatabase(DatabaseConfig.getDatabaseName());
             // java对象到mongo对象的自动映射
@@ -43,13 +43,14 @@ public class MongoDBWriter<T> {
 
     /**
      * 批量写入
+     *
      * @param dataList 数据list
      */
     public void writeMany(List<T> dataList) {
         try {
             // 插入数据
             collection.insertMany(dataList);
-            System.out.println("Data written to MongoDB successfully! This Batch Number = "+ dataList.size());
+            System.out.println("Data written to MongoDB successfully! This Batch Number = " + dataList.size());
         } catch (Exception e) {
             e.printStackTrace();
         }

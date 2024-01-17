@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * collection name:
- *      java_component_open_dependency_table
+ * java_component_open_dependency_table
  */
 @Data
 @AllArgsConstructor

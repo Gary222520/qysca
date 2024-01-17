@@ -13,9 +13,12 @@ import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
 
-public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
+public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
 
-    private DataAccess<JavaOpenComponentDO> dataAccess;
+    /**
+     * 连接数据库
+     */
+    private final DataAccess<JavaOpenComponentDO> dataAccess;
 
     /**
      * 用以记录以及爬取过的url，防止重复爬取
@@ -24,18 +27,22 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
     private final String VISITED_URLS_PATH = "visited_urls.txt";
     private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
     private final static String POM_FILE_TEMP_PATH = "spider/src/main/resources/temp_pom.xml";
+    /**
+     * collection_name对象在mongodb中的collection
+     */
     private final static String COLLECTION_NAME = "java_component_open_detail";
 
-    public JavaOpenPomSpider(){
+    public JavaOpenPomSpider() {
         dataAccess = new DataAccess<JavaOpenComponentDO>(COLLECTION_NAME, JavaOpenComponentDO.class);
     }
 
     /**
      * 爬取指定目录下的所有pom文件，并将爬取到的数据存储到数据库中
-     * @param directoryUrl
+     *
+     * @param directoryUrl 目录url
      */
     @Override
-    public void crawlMany(String directoryUrl){
+    public void crawlMany(String directoryUrl) {
         // 程序中断时自动调用，保存数据
         Runtime.getRuntime().addShutdownHook(new Thread(this::saveAndFlush));
 
@@ -46,29 +53,33 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
 
     /**
      * 根据给定gav信息爬取pom文件，并将爬到的数据存储到数据库中
+     *
      * @param groupId
      * @param artifactId
      * @param version
      * @return JavaOpenComponentDO
      */
-    public JavaOpenComponentDO crawlByGAV(String groupId, String artifactId, String version){
+    public JavaOpenComponentDO crawlByGAV(String groupId, String artifactId, String version) {
+        // 根据gav拼出pomUrl
         String downloadUrl = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
         String pomUrl = findPomFileUrlInDirectory(downloadUrl);
-        if (pomUrl == null){
+        if (pomUrl == null) {
             return null;
         }
-        JavaOpenComponentDO  javaOpenComponentDO = crawl(pomUrl);
-        //刷新保存数据
+        // 爬取该pomUrl
+        JavaOpenComponentDO javaOpenComponentDO = crawl(pomUrl);
+        //手动刷新保存数据
         dataAccess.flush();
         return javaOpenComponentDO;
     }
 
     /**
      * 爬取指定url目录下的所有pom文件
+     *
      * @param directoryUrl 目录url
      */
-    private void crawlDirectory(String directoryUrl){
-        if (visitedUrls.contains(directoryUrl)){
+    private void crawlDirectory(String directoryUrl) {
+        if (visitedUrls.contains(directoryUrl)) {
             return;
         }
 
@@ -83,7 +94,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
             if (link.ownText().endsWith("/") && !link.ownText().endsWith("../")) {
                 // 如果为目录，则递归
                 crawlDirectory(fileAbsUrl);
-            } else if (fileAbsUrl.endsWith(".pom") && !fileAbsUrl.contains("-javadoc")){
+            } else if (fileAbsUrl.endsWith(".pom") && !fileAbsUrl.contains("-javadoc")) {
                 // 如果为pom文件，则直接爬取
                 this.dataAccess.enqueue(crawl(fileAbsUrl));
             }
@@ -93,11 +104,12 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
     }
 
     /**
-     *  根据pom文件的url爬取单个pom文件，并转换为DO
+     * 根据pom文件的url爬取单个pom文件，并转换为DO
+     *
      * @param pomUrl pom url
      */
     private JavaOpenComponentDO crawl(String pomUrl) {
-        if (!pomUrl.endsWith(".pom")){
+        if (!pomUrl.endsWith(".pom")) {
             return null;
         }
 
@@ -113,7 +125,6 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
         //createPomFile(document.outerHtml());
         JavaOpenDependencyTableDO javaOpenDependencyTableDO = null;
         JavaOpenDependencyTreeDO javaOpenDependencyTreeDO = null;
-
 
 
         return javaOpenComponentDO;
@@ -181,9 +192,10 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
 
     /**
      * 创建临时的pom文件（用以调用mvn命令）
+     *
      * @param pomString
      */
-    private static void createPomFile(String pomString){
+    private static void createPomFile(String pomString) {
         try {
             // 创建FileWriter对象
             FileWriter writer = new FileWriter(POM_FILE_TEMP_PATH, false);
@@ -200,7 +212,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO>{
     /**
      * 在程序终止时，保存数据
      */
-    private void saveAndFlush(){
+    private void saveAndFlush() {
         dataAccess.flush();
         saveVisitedLinks();
     }
