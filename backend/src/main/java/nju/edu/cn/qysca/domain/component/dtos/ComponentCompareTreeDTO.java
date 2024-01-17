@@ -1,5 +1,4 @@
-package nju.edu.cn.qysca.domain.project.dos;
-
+package nju.edu.cn.qysca.domain.component.dtos;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -13,8 +12,11 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel(description = "组件依赖树DO")
-public class ComponentDependencyTreeDO {
+@ApiModel(description = "组件对比树DTO")
+public class ComponentCompareTreeDTO {
+    @ApiModelProperty(value="对比标记",example = "SAME,CHANGE,ADD,DELETE")
+    private String mark;
+
     @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
     private String groupId;
 
@@ -45,7 +47,6 @@ public class ComponentDependencyTreeDO {
     @ApiModelProperty(value = "是否直接依赖", example = "true")
     private Boolean direct;
 
-    @ApiModelProperty(value = "依赖子树")
-    private List<ComponentDependencyTreeDO> dependencies = new ArrayList<>();
-
+    @ApiModelProperty(value = "子树")
+    private List<ComponentCompareTreeDTO> dependencies = new ArrayList<>();
 }

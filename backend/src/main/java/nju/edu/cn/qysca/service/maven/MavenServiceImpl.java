@@ -9,7 +9,7 @@ import nju.edu.cn.qysca.dao.project.ProjectDependencyTableDao;
 import nju.edu.cn.qysca.domain.component.dos.JavaCloseComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.JavaOpenComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
-import nju.edu.cn.qysca.domain.project.dos.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.project.dos.ProjectDependencyTableDO;
 import nju.edu.cn.qysca.domain.project.dos.ProjectDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;

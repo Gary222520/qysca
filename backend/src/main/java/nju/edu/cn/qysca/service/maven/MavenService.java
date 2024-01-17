@@ -1,6 +1,6 @@
 package nju.edu.cn.qysca.service.maven;
 
-import nju.edu.cn.qysca.domain.project.dos.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
 
 public interface MavenService {
 
