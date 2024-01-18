@@ -261,9 +261,9 @@ public class ComponentServiceImpl implements ComponentService {
         return mavenDevelopers.stream()
                 .map(mavenDeveloper -> {
                     DeveloperDO developer = new DeveloperDO();
-                    developer.setDeveloperId(mavenDeveloper.getId());
-                    developer.setDeveloperName(mavenDeveloper.getName());
-                    developer.setDeveloperEmail(mavenDeveloper.getEmail());
+                    developer.setDeveloperId(mavenDeveloper.getId() == null ? "-":  mavenDeveloper.getId());
+                    developer.setDeveloperName(mavenDeveloper.getName() == null ?"-":  mavenDeveloper.getName());
+                    developer.setDeveloperEmail(mavenDeveloper.getEmail() == null ? "-": mavenDeveloper.getEmail());
                     return developer;
                 })
                 .collect(Collectors.toList());
@@ -280,8 +280,8 @@ public class ComponentServiceImpl implements ComponentService {
         return mavenLicenses.stream()
                 .map(mavenLicense -> {
                     LicenseDO license = new LicenseDO();
-                    license.setLicenseName(mavenLicense.getName());
-                    license.setLicenseUrl(mavenLicense.getUrl());
+                    license.setLicenseName(mavenLicense.getName()== null ? "-":mavenLicense.getName());
+                    license.setLicenseUrl(mavenLicense.getUrl() == null ? "-": mavenLicense.getUrl());
                     return license;
                 })
                 .collect(Collectors.toList());
@@ -299,14 +299,14 @@ public class ComponentServiceImpl implements ComponentService {
         JavaCloseComponentDO javaCloseComponentDO = new JavaCloseComponentDO();
         javaCloseComponentDO.setId(UUIDGenerator.getUUID());
         javaCloseComponentDO.setLanguage(language);
-        javaCloseComponentDO.setName(model.getName());
-        javaCloseComponentDO.setGroupId(model.getGroupId());
-        javaCloseComponentDO.setArtifactId(model.getArtifactId());
-        javaCloseComponentDO.setVersion(model.getVersion());
-        javaCloseComponentDO.setDescription(model.getDescription());
-        javaCloseComponentDO.setUrl(model.getUrl());
-        javaCloseComponentDO.setDownloadUrl(model.getDistributionManagement().getDownloadUrl());
-        javaCloseComponentDO.setSourceUrl(model.getScm().getUrl());
+        javaCloseComponentDO.setName(model.getName() == null ? "-": model.getName());
+        javaCloseComponentDO.setGroupId(model.getGroupId() == null ? "-": model.getGroupId());
+        javaCloseComponentDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
+        javaCloseComponentDO.setVersion(model.getVersion() == null ? "-": model.getVersion());
+        javaCloseComponentDO.setDescription(model.getDescription() == null ? "-": model.getDescription());
+        javaCloseComponentDO.setUrl(model.getUrl() == null ? "-": model.getUrl());
+        javaCloseComponentDO.setDownloadUrl(model.getDistributionManagement() == null ? "-":model.getDistributionManagement().getDownloadUrl());
+        javaCloseComponentDO.setSourceUrl(model.getScm() == null ? "-" :model.getScm().getUrl());
         javaCloseComponentDO.setLicenses(getLicense(model));
         javaCloseComponentDO.setDevelopers(getDevelopers(model));
         javaCloseComponentDO.setPom(filePath);
@@ -325,9 +325,9 @@ public class ComponentServiceImpl implements ComponentService {
     private JavaCloseDependencyTreeDO createJavaCloseDependencyTreeDO(Model model, String filePath, String builder) throws Exception {
         JavaCloseDependencyTreeDO javaCloseDependencyTreeDO = new JavaCloseDependencyTreeDO();
         javaCloseDependencyTreeDO.setId(UUIDGenerator.getUUID());
-        javaCloseDependencyTreeDO.setGroupId(model.getGroupId());
-        javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId());
-        javaCloseDependencyTreeDO.setVersion(model.getVersion());
+        javaCloseDependencyTreeDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
+        javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
+        javaCloseDependencyTreeDO.setVersion(model.getVersion() == null ? "-": model.getVersion());
         ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(filePath, builder);
         javaCloseDependencyTreeDO.setTree(componentDependencyTreeDO);
         return javaCloseDependencyTreeDO;
