@@ -177,7 +177,7 @@ public class ComponentServiceImpl implements ComponentService {
                 fileWriter.write(xml);
                 fileWriter.flush();
                 fileWriter.close();
-                ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(tempPath, "maven");
+                ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(tempPath, "maven", 0);
                 javaOpenDependencyTreeDO = new JavaOpenDependencyTreeDO();
                 javaOpenDependencyTreeDO.setId(UUIDGenerator.getUUID());
                 javaOpenDependencyTreeDO.setGroupId(componentGavDTO.getGroupId());
@@ -362,7 +362,7 @@ public class ComponentServiceImpl implements ComponentService {
         javaCloseDependencyTreeDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
         javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
         javaCloseDependencyTreeDO.setVersion(model.getVersion() == null ? "-" : model.getVersion());
-        ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(filePath, builder);
+        ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(filePath, builder, 1);
         javaCloseDependencyTreeDO.setTree(componentDependencyTreeDO);
         return javaCloseDependencyTreeDO;
     }

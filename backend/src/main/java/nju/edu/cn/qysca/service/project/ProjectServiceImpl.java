@@ -98,7 +98,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void saveProjectDependency(SaveProjectDTO saveProjectDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDTO.getFilePath(), saveProjectDTO.getBuilder());
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDTO.getFilePath(), saveProjectDTO.getBuilder(),0);
             ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
             projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
             projectDependencyTreeDO.setName(saveProjectDTO.getName());
@@ -154,7 +154,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void updateProjectDependency(UpdateProjectDTO updateProjectDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath(), updateProjectDTO.getBuilder());
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath(), updateProjectDTO.getBuilder(),0);
             ProjectDependencyTreeDO projectDependencyTreeDO = projectDependencyTreeDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectDependencyTreeDO.setTree(componentDependencyTreeDO);
             projectDependencyTreeDao.save(projectDependencyTreeDO);
@@ -210,7 +210,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void upgradeProjectDependency(UpgradeProjectDTO upgradeProjectDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(upgradeProjectDTO.getFilePath(), upgradeProjectDTO.getBuilder());
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(upgradeProjectDTO.getFilePath(), upgradeProjectDTO.getBuilder(),0);
             ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
             projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
             projectDependencyTreeDO.setName(upgradeProjectDTO.getName());
