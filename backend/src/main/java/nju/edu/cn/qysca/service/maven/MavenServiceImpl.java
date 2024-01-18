@@ -87,7 +87,7 @@ public class MavenServiceImpl implements MavenService {
         }
         request.setGoals(Collections.singletonList("dependency:tree -DoutputFile=result -DoutputType=text"));
         invoker.execute(request);
-        if(flag == 1){
+        if (flag == 1) {
             request.setGoals(Collections.singletonList("install"));
             invoker.execute(request);
         }
