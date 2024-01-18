@@ -12,7 +12,7 @@ public class MongoDBTest {
     @Test
     public void testRead() {
 
-        MongoDBAccess<JavaOpenComponentDO> dbAccess = new MongoDBAccess<JavaOpenComponentDO>("test", JavaOpenComponentDO.class);
+        MongoDBAccess<JavaOpenComponentDO> dbAccess = MongoDBAccess.getInstance("test", JavaOpenComponentDO.class);
 
         List<JavaOpenComponentDO> list = new ArrayList<>();
 

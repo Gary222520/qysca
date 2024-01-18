@@ -40,7 +40,17 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
     private final static String DEPENDENCY_TREE_COLLECTION_NAME = "java_component_open_dependency_tree";
     private final static String DEPENDENCY_TABLE_COLLECTION_NAME = "java_component_open_dependency_table";
 
-    public JavaOpenPomSpider() {
+    private static JavaOpenPomSpider instance;
+
+    // 提供全局访问点，加上 synchronized 关键字确保线程安全
+    public static synchronized JavaOpenPomSpider getInstance() {
+        if (instance == null) {
+            instance = new JavaOpenPomSpider();
+        }
+        return instance;
+    }
+
+    private JavaOpenPomSpider() {
         componentWriter = new BatchDataWriter<JavaOpenComponentDO>(COMPONENT_COLLECTION_NAME, JavaOpenComponentDO.class);
         dependencyTreeWriter = new BatchDataWriter<JavaOpenDependencyTreeDO>(DEPENDENCY_TREE_COLLECTION_NAME, JavaOpenDependencyTreeDO.class);
         dependencyTableWriter = new BatchDataWriter<JavaOpenDependencyTableDO>(DEPENDENCY_TABLE_COLLECTION_NAME, JavaOpenDependencyTableDO.class);
@@ -204,7 +214,6 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
 
         // 获得组件信息
         JavaOpenComponentDO javaOpenComponentDO = ConvertUtil.convertToJavaOpenComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
-        componentWriter.enqueue(javaOpenComponentDO);
 
         // 生成一个临时pom文件
         createPomFile(document.outerHtml());
@@ -223,10 +232,11 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
         javaOpenDependencyTreeDO.setArtifactId(javaOpenComponentDO.getArtifactId());
         javaOpenDependencyTreeDO.setVersion(javaOpenComponentDO.getVersion());
 
-        dependencyTreeWriter.enqueue(javaOpenDependencyTreeDO);
-
         // 封装依赖表
         List<JavaOpenDependencyTableDO> javaOpenDependencyTableDOList = MavenUtil.buildJavaOpenDependencyTable(javaOpenDependencyTreeDO);
+
+        componentWriter.enqueue(javaOpenComponentDO);
+        dependencyTreeWriter.enqueue(javaOpenDependencyTreeDO);
         for (JavaOpenDependencyTableDO javaOpenDependencyTableDO : javaOpenDependencyTableDOList)
             dependencyTableWriter.enqueue(javaOpenDependencyTableDO);
 
