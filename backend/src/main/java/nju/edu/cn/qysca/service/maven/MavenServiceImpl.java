@@ -80,7 +80,7 @@ public class MavenServiceImpl implements MavenService {
             resultPath = file.getParent() + FILE_SEPARATOR + "result";
         } else if (builder.equals("zip")) {
             unzip(filePath);
-            File file = new File(filePath.substring(0, filePath.lastIndexOf('.')));
+            File file = new File(filePath.substring(0, filePath.lastIndexOf('/')));
             request.setBaseDirectory(file);
             resultPath = file.getPath() + FILE_SEPARATOR + "result";
         }
@@ -121,10 +121,15 @@ public class MavenServiceImpl implements MavenService {
                 // 如果闭源知识库中没有则爬取 爬取过程已经包含插入数据库的步骤
                 if (javaCloseComponentDO == null) {
                     javaOpenComponentDO = spiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
+                    //如果不为null 插入数据库
+                    if(javaOpenComponentDO != null) {
+                        javaOpenComponentDO.setId(UUIDGenerator.getUUID());
+                        javaOpenComponentDao.insert(javaOpenComponentDO);
+                    }
                 }
                 //如果爬虫没有爬到则扫描错误 通过抛出异常处理
                 if (javaOpenComponentDO == null && javaCloseComponentDO == null) {
-                    throw new PlatformException(1, "扫描失败");
+                    throw new PlatformException(500, "扫描失败");
                 }
             }
             //设置知识库中的信息

@@ -22,6 +22,7 @@ import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import java.io.File;
@@ -53,6 +54,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private JavaCloseComponentDao javaCloseComponentDao;
 
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
     /**
      * 新增项目信息
      *
@@ -68,6 +72,7 @@ public class ProjectServiceImpl implements ProjectService {
         projectInfoDao.save(projectInfoDO);
         // 新建Mongodb项目版本信息
         ProjectVersionDO projectVersionDO = new ProjectVersionDO();
+        projectVersionDO.setId(UUIDGenerator.getUUID());
         projectVersionDO.setName(saveProjectDTO.getName());
         projectVersionDO.setVersion(saveProjectDTO.getVersion());
         projectVersionDO.setLanguage(saveProjectDTO.getLanguage());
@@ -105,11 +110,15 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
+            File file = new File(saveProjectDTO.getFilePath());
+            redisTemplate.delete(file.getParentFile().getName());
             deleteFolder(saveProjectDTO.getFilePath().substring(0, saveProjectDTO.getFilePath().lastIndexOf("/")));
         } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
+            File file = new File(saveProjectDTO.getFilePath());
+            redisTemplate.delete(file.getParentFile().getName());
             deleteFolder(saveProjectDTO.getFilePath().substring(0, saveProjectDTO.getFilePath().lastIndexOf("/")));
         }
     }
@@ -153,11 +162,15 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
+            File file = new File(updateProjectDTO.getFilePath());
+            redisTemplate.delete(file.getParentFile().getName());
             deleteFolder(updateProjectDTO.getFilePath().substring(0, updateProjectDTO.getFilePath().lastIndexOf("/")));
         } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
+            File file = new File(updateProjectDTO.getFilePath());
+            redisTemplate.delete(file.getParentFile().getName());
             deleteFolder(updateProjectDTO.getFilePath().substring(0, updateProjectDTO.getFilePath().lastIndexOf("/")));
         }
     }
@@ -171,6 +184,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public Boolean upgradeProject(UpgradeProjectDTO upgradeProjectDTO) {
         ProjectVersionDO projectVersionDO = new ProjectVersionDO();
+        projectVersionDO.setId(UUIDGenerator.getUUID());
         projectVersionDO.setName(upgradeProjectDTO.getName());
         projectVersionDO.setVersion(upgradeProjectDTO.getVersion());
         projectVersionDO.setLanguage(upgradeProjectDTO.getLanguage());
@@ -208,11 +222,15 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
+            File file = new File(upgradeProjectDTO.getFilePath());
+            redisTemplate.delete(file.getParentFile().getName());
             deleteFolder(upgradeProjectDTO.getFilePath().substring(0, upgradeProjectDTO.getFilePath().lastIndexOf("/")));
         } catch (Exception e) {
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
             projectVersionDO.setState("FAILED");
             projectVersionDao.save(projectVersionDO);
+            File file = new File(upgradeProjectDTO.getFilePath());
+            redisTemplate.delete(file.getParentFile().getName());
             deleteFolder(upgradeProjectDTO.getFilePath().substring(0, upgradeProjectDTO.getFilePath().lastIndexOf("/")));
         }
     }
