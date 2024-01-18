@@ -73,32 +73,6 @@
               </ul>
             </div>
           </a-card>
-          <a-card class="card" hoverable @click="selectTool('gradle')">
-            <div class="card_title">
-              <img class="img" src="@/assets/gradle.png" />
-              <div class="name">Gradle</div>
-            </div>
-            <div class="card_text">
-              <ul>
-                <li class="list_item">gradle构建并管理的项目</li>
-                <li class="list_item">settings.gradle记录依赖信息</li>
-              </ul>
-            </div>
-          </a-card>
-        </div>
-        <div class="content" style="margin-top: 10px">
-          <a-card class="card" hoverable @click="selectTool('jar')">
-            <div class="card_title">
-              <img class="img" src="@/assets/jar.png" />
-              <div class="name">Jar</div>
-            </div>
-            <div class="card_text">
-              <ul style="margin-bottom: 0">
-                <li class="list_item">项目构建完成的jar包</li>
-                <li class="list_item">扫描jar包中的依赖文件</li>
-              </ul>
-            </div>
-          </a-card>
           <a-card class="card" hoverable @click="selectTool('zip')">
             <div class="card_title">
               <img class="img" src="@/assets/zip.png" />
@@ -112,11 +86,40 @@
             </div>
           </a-card>
         </div>
+        <div class="content" style="margin-top: 10px">
+          <a-card class="card" hoverable @click="selectTool('gradle')">
+            <div class="card_title">
+              <img class="img" src="@/assets/gradle.png" />
+              <div class="name">Gradle</div>
+            </div>
+            <div class="card_text">
+              <ul>
+                <li class="list_item">gradle构建并管理的项目</li>
+                <li class="list_item">settings.gradle记录依赖信息</li>
+              </ul>
+            </div>
+          </a-card>
+          <a-card class="card" hoverable @click="selectTool('jar')">
+            <div class="card_title">
+              <img class="img" src="@/assets/jar.png" />
+              <div class="name">Jar</div>
+            </div>
+            <div class="card_text">
+              <ul style="margin-bottom: 0">
+                <li class="list_item">项目构建完成的jar包</li>
+                <li class="list_item">扫描jar包中的依赖文件</li>
+              </ul>
+            </div>
+          </a-card>
+        </div>
       </div>
       <div v-if="data.currentStep === 2">
         <div class="upload">
           <div v-if="projectInfo.builder === 'maven'">
-            <Upload ref="uploadRef" @success="handleUpload"></Upload>
+            <Upload ref="uploadRef" :accept="'.xml'" :upload-text="'pom.xml'" @success="handleUpload"></Upload>
+          </div>
+          <div v-if="projectInfo.builder === 'zip'">
+            <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
           </div>
         </div>
       </div>
@@ -145,7 +148,6 @@ const data = reactive({
 const projectInfo = reactive({
   language: 'java',
   builder: 'maven',
-  scanner: '',
   filePath: ''
 })
 const open = () => {
@@ -159,6 +161,10 @@ const clear = () => {
   uploadRef.value.clear()
 }
 const selectLanguage = (language) => {
+  if (language === 'python' || language === 'go' || language === 'javascript') {
+    message.info('暂未支持该语言')
+    return
+  }
   projectInfo.language = language
   next()
 }
@@ -177,11 +183,15 @@ const next = () => {
 }
 const submit = () => {
   const params = {
-    filePath: projectInfo.filePath
+    ...projectInfo
   }
   AddComponent(params)
     .then((res) => {
       console.log('AddComponent', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
       message.success('添加组件成功')
       data.open = false
       emit('success')

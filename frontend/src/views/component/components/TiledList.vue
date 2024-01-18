@@ -20,14 +20,14 @@
 
 <script setup>
 import { reactive, ref, defineExpose } from 'vue'
-import { GetProjectTiled } from '@/api/frontend'
-import Drawer from './Drawer.vue'
+import { GetOpenComponentTiled, GetCloseComponentTiled } from '@/api/frontend'
+import Drawer from '@/views/application/components/Drawer.vue'
 import { message } from 'ant-design-vue'
 
 const drawer = ref()
 const data = reactive({
   visible: false,
-  projectInfo: {},
+  component: {},
   datasource: [],
   columns: [
     { title: '组件名称', dataIndex: 'name', key: 'name' },
@@ -47,31 +47,52 @@ const pagination = reactive({
   total: 0,
   pageSize: 10,
   showSizeChanger: false,
-  onChange: (page, size) => {
-    pagination.current = page
-    getProjectTiled(data.projectInfo.name, data.projectInfo.version, page, size)
+  onchange: (page, size) => {
+    getComponentTiled(data.component, page, size)
   }
 })
-const show = (name, version) => {
+const show = (component) => {
   data.visible = true
-  data.projectInfo.name = name
-  data.projectInfo.version = version
-  getProjectTiled(name, version)
+  data.component = component
+  getComponentTiled(component)
 }
-const getProjectTiled = (name, version, number = 1, size = 10) => {
-  GetProjectTiled({ name, version, number, size })
-    .then((res) => {
-      // console.log('GetProjectTiled', res)
-      if (res.code !== 200) {
-        message.error(res.message)
-        return
-      }
-      data.datasource = res.data.content
-      pagination.total = res.data.totalElements
-    })
-    .catch((err) => {
-      console.error(err)
-    })
+const getComponentTiled = (component, number = 1, size = 10) => {
+  const params = {
+    groupId: component.groupId,
+    artifactId: component.artifactId,
+    version: component.version,
+    number,
+    size
+  }
+  if (component.opensource) {
+    GetOpenComponentTiled(params)
+      .then((res) => {
+        // console.log('GetOpenComponentTiled', res)
+        if (res.code !== 200) {
+          message.error(res.message)
+          return
+        }
+        data.datasource = res.data.content
+        pagination.total = res.data.totalElements
+      })
+      .catch((err) => {
+        console.error(err)
+      })
+  } else {
+    GetCloseComponentTiled(params)
+      .then((res) => {
+        // console.log('GetCloseComponentTiled', res)
+        if (res.code !== 200) {
+          message.error(res.message)
+          return
+        }
+        data.datasource = res.data.content
+        pagination.total = res.data.totalElements
+      })
+      .catch((err) => {
+        console.error(err)
+      })
+  }
 }
 const hide = () => {
   data.visible = false

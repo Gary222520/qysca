@@ -1,8 +1,9 @@
 // use qysca
 // db.dropDatabase()
 // use qysca
-// 切换数据库后执行
+// 先切换数据库
 use qysca
+// 再执行下面的语句
 db.createCollection('meta')
 
 db.project_info.drop()

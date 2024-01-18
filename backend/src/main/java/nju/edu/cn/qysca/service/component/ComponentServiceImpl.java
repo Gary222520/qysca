@@ -1,9 +1,9 @@
 package nju.edu.cn.qysca.service.component;
 
 import nju.edu.cn.qysca.dao.component.*;
-import nju.edu.cn.qysca.domain.project.dos.ComponentDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
+import nju.edu.cn.qysca.utils.ZipUtil;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -14,12 +14,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.io.InputStream;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 @Service
 public class ComponentServiceImpl implements ComponentService {
@@ -120,8 +122,15 @@ public class ComponentServiceImpl implements ComponentService {
     public Boolean saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO) {
         // 接口获得详细信息
         try {
+            Model model = null;
             MavenXpp3Reader reader = new MavenXpp3Reader();
-            Model model = reader.read(new FileReader(saveCloseComponentDTO.getFilePath()));
+            if(saveCloseComponentDTO.getBuilder().equals("zip")){
+                unzip(saveCloseComponentDTO.getFilePath());
+                File file = new File(saveCloseComponentDTO.getFilePath());
+                model = reader.read(new FileReader(file.getParent() + "/pom.xml"));
+            } else if (saveCloseComponentDTO.getBuilder().equals("maven")) {
+                model = reader.read(new FileReader(saveCloseComponentDTO.getFilePath()));
+            }
             JavaCloseComponentDO javaCloseComponentDO = createJavaCloseComponentDO(model, saveCloseComponentDTO.getLanguage(), saveCloseComponentDTO.getFilePath());
             // 存储闭源组件详细信息
             javaCloseComponentDao.save(javaCloseComponentDO);
@@ -252,9 +261,9 @@ public class ComponentServiceImpl implements ComponentService {
         return mavenDevelopers.stream()
                 .map(mavenDeveloper -> {
                     DeveloperDO developer = new DeveloperDO();
-                    developer.setDeveloperId(mavenDeveloper.getId());
-                    developer.setDeveloperName(mavenDeveloper.getName());
-                    developer.setDeveloperEmail(mavenDeveloper.getEmail());
+                    developer.setDeveloperId(mavenDeveloper.getId() == null ? "-":  mavenDeveloper.getId());
+                    developer.setDeveloperName(mavenDeveloper.getName() == null ?"-":  mavenDeveloper.getName());
+                    developer.setDeveloperEmail(mavenDeveloper.getEmail() == null ? "-": mavenDeveloper.getEmail());
                     return developer;
                 })
                 .collect(Collectors.toList());
@@ -271,8 +280,8 @@ public class ComponentServiceImpl implements ComponentService {
         return mavenLicenses.stream()
                 .map(mavenLicense -> {
                     LicenseDO license = new LicenseDO();
-                    license.setLicenseName(mavenLicense.getName());
-                    license.setLicenseUrl(mavenLicense.getUrl());
+                    license.setLicenseName(mavenLicense.getName()== null ? "-":mavenLicense.getName());
+                    license.setLicenseUrl(mavenLicense.getUrl() == null ? "-": mavenLicense.getUrl());
                     return license;
                 })
                 .collect(Collectors.toList());
@@ -290,14 +299,14 @@ public class ComponentServiceImpl implements ComponentService {
         JavaCloseComponentDO javaCloseComponentDO = new JavaCloseComponentDO();
         javaCloseComponentDO.setId(UUIDGenerator.getUUID());
         javaCloseComponentDO.setLanguage(language);
-        javaCloseComponentDO.setName(model.getName());
-        javaCloseComponentDO.setGroupId(model.getGroupId());
-        javaCloseComponentDO.setArtifactId(model.getArtifactId());
-        javaCloseComponentDO.setVersion(model.getVersion());
-        javaCloseComponentDO.setDescription(model.getDescription());
-        javaCloseComponentDO.setUrl(model.getUrl());
-        javaCloseComponentDO.setDownloadUrl(model.getDistributionManagement().getDownloadUrl());
-        javaCloseComponentDO.setSourceUrl(model.getScm().getUrl());
+        javaCloseComponentDO.setName(model.getName() == null ? "-": model.getName());
+        javaCloseComponentDO.setGroupId(model.getGroupId() == null ? "-": model.getGroupId());
+        javaCloseComponentDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
+        javaCloseComponentDO.setVersion(model.getVersion() == null ? "-": model.getVersion());
+        javaCloseComponentDO.setDescription(model.getDescription() == null ? "-": model.getDescription());
+        javaCloseComponentDO.setUrl(model.getUrl() == null ? "-": model.getUrl());
+        javaCloseComponentDO.setDownloadUrl(model.getDistributionManagement() == null ? "-":model.getDistributionManagement().getDownloadUrl());
+        javaCloseComponentDO.setSourceUrl(model.getScm() == null ? "-" :model.getScm().getUrl());
         javaCloseComponentDO.setLicenses(getLicense(model));
         javaCloseComponentDO.setDevelopers(getDevelopers(model));
         javaCloseComponentDO.setPom(filePath);
@@ -316,9 +325,9 @@ public class ComponentServiceImpl implements ComponentService {
     private JavaCloseDependencyTreeDO createJavaCloseDependencyTreeDO(Model model, String filePath, String builder) throws Exception {
         JavaCloseDependencyTreeDO javaCloseDependencyTreeDO = new JavaCloseDependencyTreeDO();
         javaCloseDependencyTreeDO.setId(UUIDGenerator.getUUID());
-        javaCloseDependencyTreeDO.setGroupId(model.getGroupId());
-        javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId());
-        javaCloseDependencyTreeDO.setVersion(model.getVersion());
+        javaCloseDependencyTreeDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
+        javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
+        javaCloseDependencyTreeDO.setVersion(model.getVersion() == null ? "-": model.getVersion());
         ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(filePath, builder);
         javaCloseDependencyTreeDO.setTree(componentDependencyTreeDO);
         return javaCloseDependencyTreeDO;
@@ -348,5 +357,37 @@ public class ComponentServiceImpl implements ComponentService {
             javaCloseDependencyTableDOList.add(javaCloseDependencyTableDO);
         }
         return javaCloseDependencyTableDOList;
+    }
+
+    private void unzip(String filePath) throws Exception {
+        File file = new File(filePath);
+        File dir = new File(file.getParent());
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        ZipFile zipFile = new ZipFile(filePath);
+        Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
+        while (zipEntries.hasMoreElements()) {
+            ZipEntry zipEntry = zipEntries.nextElement();
+            String entryName = zipEntry.getName();
+            String fileDestPath = dir + "/" + entryName;
+            if (!zipEntry.isDirectory()) {
+                File destFile = new File(fileDestPath);
+                destFile.getParentFile().mkdirs();
+                InputStream inputStream = zipFile.getInputStream(zipEntry);
+                FileOutputStream outputStream = new FileOutputStream(destFile);
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+                outputStream.close();
+                inputStream.close();
+            } else {
+                File dirToCreate = new File(fileDestPath);
+                dirToCreate.mkdirs();
+            }
+        }
+        zipFile.close();
     }
 }
