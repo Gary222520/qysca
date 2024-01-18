@@ -70,40 +70,44 @@ public class MavenUtil {
      * @param filePath
      * @return fr.dutra.tools.maven.deptree.core.Nod
      */
-    public static Node mavenDependencyTreeAnalyzer_restart_when_timeout(String filePath) {
-        String mavenCommand = "mvn dependency:tree -DoutputFile=result -DoutputType=text";
-        File pom = new File(filePath);
-
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/c", mavenCommand);
-            processBuilder.directory(pom.getParentFile());
-
-            Process process = processBuilder.start();
-            System.out.println("执行命令中："+ mavenCommand);
-
-            // 等待进程执行完成或超时
-            if (!waitForProcess(process, timeoutMillis)) {
-                // 如果超时，强制终止进程并重新执行
-                process.destroyForcibly();
-                process = processBuilder.start();
-                // 继续等待新进程执行完成或超时
-                if (!waitForProcess(process, timeoutMillis)) {
-                    // 如果仍然超时，返回 null 或者采取其他处理
-                    return null;
-                }
-            }
-            // 获得 result 结果的路径
-            FileInputStream fis = new FileInputStream(new File(pom.getParent() + File.separator + "result"));
-            Reader reader = new BufferedReader(new InputStreamReader(fis));
-            InputType type = InputType.TEXT;
-            Parser parser = type.newParser();
-            Node node = parser.parse(reader);
-            return node;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+//    public static Node mavenDependencyTreeAnalyzer_restart_when_timeout(String filePath) {
+//        String mavenCommand = "mvn dependency:tree -DoutputFile=result -DoutputType=text";
+//        File pom = new File(filePath);
+//
+//        try {
+//            ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/c", mavenCommand);
+//            processBuilder.directory(pom.getParentFile());
+//
+//            Process process = processBuilder.start();
+//            System.out.println("执行命令中："+ mavenCommand);
+//
+//            // 等待进程执行完成或超时
+//            if (!waitForProcess(process, timeoutMillis)) {
+//                // 如果超时，强制终止进程并重新执行
+//                process.destroyForcibly();
+//                process = processBuilder.start();
+//                // 继续等待新进程执行完成或超时
+//                if (!waitForProcess(process, timeoutMillis)) {
+//                    // 如果仍然超时，返回 null 或者采取其他处理
+//                    process.destroyForcibly();
+//                    return null;
+//                }
+//            }
+//            // 等待进程执行完成
+//            process.waitFor();
+//
+//            // 获得 result 结果的路径
+//            FileInputStream fis = new FileInputStream(new File(pom.getParent() + File.separator + "result"));
+//            Reader reader = new BufferedReader(new InputStreamReader(fis));
+//            InputType type = InputType.TEXT;
+//            Parser parser = type.newParser();
+//            Node node = parser.parse(reader);
+//            return node;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
 
 
 
