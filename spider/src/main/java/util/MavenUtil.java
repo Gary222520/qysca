@@ -20,6 +20,7 @@ public class MavenUtil {
      * 调用 maven dependency:tree命令
      *
      * @param filePath
+     * @return fr.dutra.tools.maven.deptree.core.Nod
      */
     public static Node mavenDependencyTreeAnalyzer(String filePath) {
         InvocationRequest request = new DefaultInvocationRequest();
@@ -65,8 +66,9 @@ public class MavenUtil {
 
     /**
      * 与 mavenDependencyTreeAnalyzer方法功能类似，区别在于当调用mvn dependency:tree超时时，程序会重新调用该方法
+     * 最多会调用3次
      * @param filePath
-     * @return
+     * @return fr.dutra.tools.maven.deptree.core.Nod
      */
     public static Node mavenDependencyTreeAnalyzer_restart_when_timeout(String filePath) {
         String mavenCommand = "mvn dependency:tree -DoutputFile=result -DoutputType=text";
@@ -174,12 +176,18 @@ public class MavenUtil {
         return componentDependencyTreeDO;
     }
 
+    /**
+     *  通过JavaOpenDependencyTreeDO构建JavaOpenDependencyTableDO对象
+     * @param javaOpenDependencyTreeDO 依赖树DO
+     * @return JavaOpenDependencyTableDO 平铺依赖表DO
+     */
     public static List<JavaOpenDependencyTableDO> buildJavaOpenDependencyTable(JavaOpenDependencyTreeDO javaOpenDependencyTreeDO) {
         List<JavaOpenDependencyTableDO> result = new ArrayList<>();
         Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(javaOpenDependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {
             JavaOpenDependencyTableDO javaOpenDependencyTableDO = new JavaOpenDependencyTableDO();
             javaOpenDependencyTableDO.setId(UUIDGenerator.getUUID());
+            // 设置依赖表DO的属性，表示这张表是属于Parent这个组件的平铺依赖表
             javaOpenDependencyTableDO.setParentGroupId(javaOpenDependencyTreeDO.getGroupId());
             javaOpenDependencyTableDO.setParentArtifactId(javaOpenDependencyTreeDO.getArtifactId());
             javaOpenDependencyTableDO.setParentVersion(javaOpenDependencyTreeDO.getVersion());
@@ -195,9 +203,9 @@ public class MavenUtil {
 
     /**
      * 检查进程是否超时
-     * @param process
-     * @param timeoutMillis
-     * @return
+     * @param process 进程
+     * @param timeoutMillis 限时
+     * @return 是否没有超时
      */
     private static boolean waitForProcess(Process process, long timeoutMillis) {
         long startTime = System.currentTimeMillis();

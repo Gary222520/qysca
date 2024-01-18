@@ -31,6 +31,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
      */
     private Set<String> visitedUrls;
     private final String VISITED_URLS_PATH = "spider/src/main/resources/visited_urls.txt";
+    private final String FAILED_URLS_PATH = "spider/src/main/resources/failed_urls.txt";
     private final static String POM_FILE_TEMP_PATH = "spider/src/main/resources/pomFile/temp_pom.xml";
     private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
     /**
@@ -165,7 +166,10 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
                 crawlDirectoryWithDependency(fileAbsUrl);
             } else if (fileAbsUrl.endsWith(".pom") && !fileAbsUrl.contains("-javadoc")) {
                 // 如果为pom文件，则直接爬取
-                crawlWithDependency(fileAbsUrl);
+                Object o = crawlWithDependency(fileAbsUrl);
+                if (o == null){
+                    writeFailedUrl(fileAbsUrl);
+                }
             }
         }
 
@@ -221,6 +225,8 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
         Node node = MavenUtil.mavenDependencyTreeAnalyzer_restart_when_timeout(POM_FILE_TEMP_PATH);
         // 解析依赖，获得组件树
         MavenUtil mavenUtil = new MavenUtil();
+        if (node == null)
+            return null;
         ComponentDependencyTreeDO dependencyTreeDO = mavenUtil.convertNode(node, 0);
 
         // 封装依赖树
@@ -275,6 +281,22 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
                 writer.write(link);
                 writer.newLine();
             }
+            System.out.println("visited links saved.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 记录爬取或解析依赖树失败的url
+     * @param failedUrl 失败的url
+     */
+    private void writeFailedUrl(String failedUrl){
+        System.err.println("爬取或生成依赖树失败：" + failedUrl);
+        try (OutputStream outputStream = new FileOutputStream(FAILED_URLS_PATH);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+                writer.write(failedUrl);
+                writer.newLine();
         } catch (IOException e) {
             e.printStackTrace();
         }
