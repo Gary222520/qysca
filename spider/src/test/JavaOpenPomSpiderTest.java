@@ -13,13 +13,13 @@ public class JavaOpenPomSpiderTest {
         String groupId = "junit";
         String artifactId = "junit";
         String version = "4.12";
-        JavaOpenPomSpider spider = new JavaOpenPomSpider();
+        JavaOpenPomSpider spider = JavaOpenPomSpider.getInstance();
         JavaOpenComponentInformationDO javaOpenComponentInformationDO = spider.crawlWithDependencyByGav(groupId, artifactId, version);
         spider.flush();
 
-        MongoDBAccess<JavaOpenComponentDO> mongoDBAccess1 = new MongoDBAccess<>("java_component_open_detail", JavaOpenComponentDO.class);
-        MongoDBAccess<JavaOpenDependencyTreeDO> mongoDBAccess2 = new MongoDBAccess<>("java_component_open_dependency_tree", JavaOpenDependencyTreeDO.class);
-        MongoDBAccess<JavaOpenDependencyTableDO> mongoDBAccess3 = new MongoDBAccess<>("java_component_open_dependency_table", JavaOpenDependencyTableDO.class);
+        MongoDBAccess<JavaOpenComponentDO> mongoDBAccess1 = MongoDBAccess.getInstance("java_component_open_detail", JavaOpenComponentDO.class);
+        MongoDBAccess<JavaOpenDependencyTreeDO> mongoDBAccess2 = MongoDBAccess.getInstance("java_component_open_dependency_tree", JavaOpenDependencyTreeDO.class);
+        MongoDBAccess<JavaOpenDependencyTableDO> mongoDBAccess3 = MongoDBAccess.getInstance("java_component_open_dependency_table", JavaOpenDependencyTableDO.class);
 
         JavaOpenComponentDO javaOpenComponentDO = mongoDBAccess1.readByGAV(groupId, artifactId, version);
         JavaOpenDependencyTreeDO javaOpenDependencyTreeDO = mongoDBAccess2.readByGAV(groupId, artifactId, version);

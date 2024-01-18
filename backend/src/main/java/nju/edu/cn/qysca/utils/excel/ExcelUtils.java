@@ -873,7 +873,7 @@ public final class ExcelUtils {
         if (o instanceof String) {
             String s = o.toString();
             // 当数字类型长度超过8位时，改为字符串类型显示（Excel数字超过一定长度会显示为科学计数法）
-            if (isNumeric(s) && s.length() < 8) {
+            if (s.length()>0 && isNumeric(s) && s.length() < 8) {
                 cell.setCellType(CellType.NUMERIC);
                 cell.setCellValue(Double.parseDouble(s));
                 return CELL_OTHER;
