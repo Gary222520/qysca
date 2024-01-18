@@ -182,7 +182,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
             return null;
         }
 
-        System.out.println("Crawling " + pomUrl);
+        System.out.println("  Crawling " + pomUrl);
 
         Document document = UrlConnector.getDocumentByUrl(pomUrl);
         if (document == null)

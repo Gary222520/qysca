@@ -13,8 +13,8 @@ import java.util.List;
  */
 public class BatchDataWriter<T> {
 
-    private final MongoDBAccess mongoDBAccess;
-    private static final int BATCH_SIZE = 5000;
+    private final MongoDBAccess<T> mongoDBAccess;
+    private static final int BATCH_SIZE = 500;
     private List<T> queue;
 
 

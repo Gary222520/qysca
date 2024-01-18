@@ -67,8 +67,8 @@ public class MongoDBAccess<T> {
         try {
             // 插入数据
             collection.insertMany(dataList, insertManyOptions);
-            System.out.println("Data written to MongoDB successfully! Collection name = " + collection.getNamespace().toString() + "This Batch Number = " + dataList.size());
-        } catch (MongoBulkWriteException e){
+            System.out.println("Data written to MongoDB successfully! Collection name = " + collection.getNamespace().toString() + ". This Batch Number = " + dataList.size());
+        } catch (MongoBulkWriteException | IllegalArgumentException e){
             // do nothing
         } catch (Exception e) {
             e.printStackTrace();
