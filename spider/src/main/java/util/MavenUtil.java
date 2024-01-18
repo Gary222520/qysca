@@ -91,6 +91,7 @@ public class MavenUtil {
                     javaOpenComponentDO = JavaOpenPomSpider.getInstance().crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 }
                 //如果爬虫没有爬到则扫描错误 通过抛出异常处理
+
             }
 
             //设置依赖树中的信息
@@ -103,7 +104,7 @@ public class MavenUtil {
                     license.append(licenseDO.getLicenseName()).append(";");
                 }
                 componentDependencyTreeDO.setLicenses(license.toString());
-            } else {
+            } else if (javaCloseComponentDO != null) {
                 componentDependencyTreeDO.setName(javaCloseComponentDO.getName());
                 componentDependencyTreeDO.setOpensource(false);
                 List<LicenseDO> licenses = javaCloseComponentDO.getLicenses();

@@ -31,6 +31,7 @@ public class Main {
         for (String targetUrl : targetUrls) {
             System.out.println("开始按目录爬取：" + targetUrl);
             spider.crawlManyWithDependency(targetUrl);
+            System.out.println("该目录爬取完毕: " + targetUrl);
         }
     }
 }

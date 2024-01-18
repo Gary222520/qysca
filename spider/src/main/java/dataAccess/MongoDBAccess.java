@@ -1,8 +1,10 @@
 package dataAccess;
 
+import com.mongodb.MongoBulkWriteException;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.InsertManyOptions;
 import config.DatabaseConfig;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -17,6 +19,7 @@ public class MongoDBAccess<T> {
     private static final Map<String, MongoDBAccess<?>> instances = new HashMap<>();
 
     private MongoCollection<T> collection;
+    private InsertManyOptions insertManyOptions;
 
     public static synchronized <T> MongoDBAccess<T> getInstance(String COLLECTION_NAME, Class<T> clazz) {
         String key = COLLECTION_NAME + ":" + clazz.getName();
@@ -46,6 +49,8 @@ public class MongoDBAccess<T> {
                     )
             );
             collection = database.getCollection(COLLECTION_NAME, clazz).withCodecRegistry(codecRegistry);
+            // 设置为无序插入，避免因批次中一个插入失败而全部停止
+            insertManyOptions = new InsertManyOptions().ordered(false);
         } catch (Exception e) {
             System.out.println("Failed to connect to MongoDB. Error: " + e.getMessage());
 
@@ -60,8 +65,10 @@ public class MongoDBAccess<T> {
     public void writeMany(List<T> dataList) {
         try {
             // 插入数据
-            collection.insertMany(dataList);
-            System.out.println("Data written to MongoDB successfully! This Batch Number = " + dataList.size());
+            collection.insertMany(dataList, insertManyOptions);
+            System.out.println("Data written to MongoDB successfully! Collection name = " + collection.getNamespace().toString() + "This Batch Number = " + dataList.size());
+        } catch (MongoBulkWriteException e){
+            // do nothing
         } catch (Exception e) {
             e.printStackTrace();
         }
