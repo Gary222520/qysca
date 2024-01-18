@@ -1,22 +1,25 @@
 package nju.edu.cn.qysca.service.component;
 
 import nju.edu.cn.qysca.dao.component.*;
+import nju.edu.cn.qysca.domain.project.dos.ProjectDependencyTableDO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
+import nju.edu.cn.qysca.service.spider.SpiderService;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.json.JSONObject;
+import org.json.XML;
 import org.springframework.beans.BeanUtils;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -44,6 +47,12 @@ public class ComponentServiceImpl implements ComponentService {
 
     @Autowired
     private MavenService mavenService;
+
+    @Autowired
+    private SpiderService spiderService;
+
+    @Value("${tempPomFolder}")
+    private String tempFolder;
 
     /**
      * 分页查询开源组件
@@ -123,7 +132,7 @@ public class ComponentServiceImpl implements ComponentService {
         try {
             Model model = null;
             MavenXpp3Reader reader = new MavenXpp3Reader();
-            if(saveCloseComponentDTO.getBuilder().equals("zip")){
+            if (saveCloseComponentDTO.getBuilder().equals("zip")) {
                 unzip(saveCloseComponentDTO.getFilePath());
                 File file = new File(saveCloseComponentDTO.getFilePath());
                 model = reader.read(new FileReader(file.getParent() + "/pom.xml"));
@@ -154,10 +163,36 @@ public class ComponentServiceImpl implements ComponentService {
      */
     @Override
     public JavaOpenDependencyTreeDO findOpenComponentDependencyTree(ComponentGavDTO componentGavDTO) {
-        return javaOpenDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
+        JavaOpenDependencyTreeDO javaOpenDependencyTreeDO = javaOpenDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
                 componentGavDTO.getGroupId(),
                 componentGavDTO.getArtifactId(),
                 componentGavDTO.getVersion());
+        if (javaOpenDependencyTreeDO == null) {
+            try {
+                JavaOpenComponentDO javaOpenComponentDO = javaOpenComponentDao.findByGroupIdAndArtifactIdAndVersion(componentGavDTO.getGroupId(), componentGavDTO.getArtifactId(), componentGavDTO.getVersion());
+                String json = javaOpenComponentDO.getPom();
+                String xml = convertJsonToXml(json);
+                String tempPath = tempFolder + componentGavDTO.getGroupId() + ":" + componentGavDTO.getArtifactId() + ":" + componentGavDTO.getVersion() + "/" + "pom.xml";
+                FileWriter fileWriter = new FileWriter(tempPath);
+                fileWriter.write(xml);
+                fileWriter.flush();
+                fileWriter.close();
+                ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(tempPath, "maven", 0);
+                javaOpenDependencyTreeDO = new JavaOpenDependencyTreeDO();
+                javaOpenDependencyTreeDO.setId(UUIDGenerator.getUUID());
+                javaOpenDependencyTreeDO.setGroupId(componentGavDTO.getGroupId());
+                javaOpenDependencyTreeDO.setArtifactId(componentGavDTO.getArtifactId());
+                javaOpenDependencyTreeDO.setVersion(componentDependencyTreeDO.getVersion());
+                javaOpenDependencyTreeDO.setTree(componentDependencyTreeDO);
+                javaOpenDependencyTreeDao.save(javaOpenDependencyTreeDO);
+                javaOpenDependencyTableDao.saveAll(creatOpenDependencyTable(javaOpenDependencyTreeDO));
+                deleteFolder(tempPath.substring(0, tempPath.lastIndexOf("/")));
+            } catch (Exception e) {
+                throw new PlatformException(500, "查询开源组件依赖树失败");
+            }
+
+        }
+        return javaOpenDependencyTreeDO;
     }
 
     /**
@@ -260,9 +295,9 @@ public class ComponentServiceImpl implements ComponentService {
         return mavenDevelopers.stream()
                 .map(mavenDeveloper -> {
                     DeveloperDO developer = new DeveloperDO();
-                    developer.setDeveloperId(mavenDeveloper.getId() == null ? "-":  mavenDeveloper.getId());
-                    developer.setDeveloperName(mavenDeveloper.getName() == null ?"-":  mavenDeveloper.getName());
-                    developer.setDeveloperEmail(mavenDeveloper.getEmail() == null ? "-": mavenDeveloper.getEmail());
+                    developer.setDeveloperId(mavenDeveloper.getId() == null ? "-" : mavenDeveloper.getId());
+                    developer.setDeveloperName(mavenDeveloper.getName() == null ? "-" : mavenDeveloper.getName());
+                    developer.setDeveloperEmail(mavenDeveloper.getEmail() == null ? "-" : mavenDeveloper.getEmail());
                     return developer;
                 })
                 .collect(Collectors.toList());
@@ -279,8 +314,8 @@ public class ComponentServiceImpl implements ComponentService {
         return mavenLicenses.stream()
                 .map(mavenLicense -> {
                     LicenseDO license = new LicenseDO();
-                    license.setLicenseName(mavenLicense.getName()== null ? "-":mavenLicense.getName());
-                    license.setLicenseUrl(mavenLicense.getUrl() == null ? "-": mavenLicense.getUrl());
+                    license.setLicenseName(mavenLicense.getName() == null ? "-" : mavenLicense.getName());
+                    license.setLicenseUrl(mavenLicense.getUrl() == null ? "-" : mavenLicense.getUrl());
                     return license;
                 })
                 .collect(Collectors.toList());
@@ -298,14 +333,14 @@ public class ComponentServiceImpl implements ComponentService {
         JavaCloseComponentDO javaCloseComponentDO = new JavaCloseComponentDO();
         javaCloseComponentDO.setId(UUIDGenerator.getUUID());
         javaCloseComponentDO.setLanguage(language);
-        javaCloseComponentDO.setName(model.getName() == null ? "-": model.getName());
-        javaCloseComponentDO.setGroupId(model.getGroupId() == null ? "-": model.getGroupId());
+        javaCloseComponentDO.setName(model.getName() == null ? "-" : model.getName());
+        javaCloseComponentDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
         javaCloseComponentDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
-        javaCloseComponentDO.setVersion(model.getVersion() == null ? "-": model.getVersion());
-        javaCloseComponentDO.setDescription(model.getDescription() == null ? "-": model.getDescription());
-        javaCloseComponentDO.setUrl(model.getUrl() == null ? "-": model.getUrl());
-        javaCloseComponentDO.setDownloadUrl(model.getDistributionManagement() == null ? "-":model.getDistributionManagement().getDownloadUrl());
-        javaCloseComponentDO.setSourceUrl(model.getScm() == null ? "-" :model.getScm().getUrl());
+        javaCloseComponentDO.setVersion(model.getVersion() == null ? "-" : model.getVersion());
+        javaCloseComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
+        javaCloseComponentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
+        javaCloseComponentDO.setDownloadUrl(model.getDistributionManagement() == null ? "-" : model.getDistributionManagement().getDownloadUrl());
+        javaCloseComponentDO.setSourceUrl(model.getScm() == null ? "-" : model.getScm().getUrl());
         javaCloseComponentDO.setLicenses(getLicense(model));
         javaCloseComponentDO.setDevelopers(getDevelopers(model));
         javaCloseComponentDO.setPom(filePath);
@@ -326,8 +361,8 @@ public class ComponentServiceImpl implements ComponentService {
         javaCloseDependencyTreeDO.setId(UUIDGenerator.getUUID());
         javaCloseDependencyTreeDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
         javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
-        javaCloseDependencyTreeDO.setVersion(model.getVersion() == null ? "-": model.getVersion());
-        ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(filePath, builder);
+        javaCloseDependencyTreeDO.setVersion(model.getVersion() == null ? "-" : model.getVersion());
+        ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(filePath, builder, 1);
         javaCloseDependencyTreeDO.setTree(componentDependencyTreeDO);
         return javaCloseDependencyTreeDO;
     }
@@ -335,10 +370,10 @@ public class ComponentServiceImpl implements ComponentService {
     /**
      * 根据组件依赖树信息获得平铺组件信息
      *
-     * @param componentDependencyTreeDO
-     * @param groupId
-     * @param artifactId
-     * @param version
+     * @param componentDependencyTreeDO 组件依赖树信息
+     * @param groupId                   父级组件groupId
+     * @param artifactId                父级组件artifactId
+     * @param version                   父级组件version
      * @return List<JavaCloseDependencyTableDO> 组件平铺依赖列表
      */
     private List<JavaCloseDependencyTableDO> createJavaCloseDependencyTableDO(ComponentDependencyTreeDO componentDependencyTreeDO, String groupId, String artifactId, String version) {
@@ -358,6 +393,12 @@ public class ComponentServiceImpl implements ComponentService {
         return javaCloseDependencyTableDOList;
     }
 
+    /**
+     * 文件解压
+     *
+     * @param filePath zip文件路径
+     * @throws Exception
+     */
     private void unzip(String filePath) throws Exception {
         File file = new File(filePath);
         File dir = new File(file.getParent());
@@ -388,5 +429,58 @@ public class ComponentServiceImpl implements ComponentService {
             }
         }
         zipFile.close();
+    }
+
+    /**
+     * 将JSON格式的数据转换为XML格式的数据
+     *
+     * @param json 数据库中存储的pom信息
+     * @return xml格式数据
+     */
+    private String convertJsonToXml(String json) {
+        JSONObject jsonObject = new JSONObject(json);
+        String xml = XML.toString(jsonObject);
+        return xml;
+    }
+
+    /**
+     * 根据开源组件依赖树信息生成平铺信息
+     *
+     * @param javaOpenDependencyTreeDO 开源组件依赖树信息
+     * @return List<JavaOpenDependencyTableDO> 开源组件平铺信息
+     */
+    private List<JavaOpenDependencyTableDO> creatOpenDependencyTable(JavaOpenDependencyTreeDO javaOpenDependencyTreeDO) {
+        // 先删除已有记录
+        javaOpenDependencyTableDao.deleteAllByParentGroupIdAndParentArtifactIdAndParentVersion(javaOpenDependencyTreeDO.getGroupId(), javaOpenDependencyTreeDO.getArtifactId(), javaOpenDependencyTreeDO.getVersion());
+        List<JavaOpenDependencyTableDO> result = new ArrayList<>();
+        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(javaOpenDependencyTreeDO.getTree().getDependencies());
+        while (!queue.isEmpty()) {
+            JavaOpenDependencyTableDO javaOpenDependencyTableDO = new JavaOpenDependencyTableDO();
+            javaOpenDependencyTableDO.setId(UUIDGenerator.getUUID());
+            javaOpenDependencyTableDO.setParentGroupId(javaOpenDependencyTreeDO.getGroupId());
+            javaOpenDependencyTableDO.setParentArtifactId(javaOpenDependencyTreeDO.getArtifactId());
+            javaOpenDependencyTableDO.setParentVersion(javaOpenDependencyTreeDO.getVersion());
+            ComponentDependencyTreeDO componentDependencyTreeDO = Objects.requireNonNull(queue.poll());
+            BeanUtils.copyProperties(componentDependencyTreeDO, javaOpenDependencyTableDO);
+            result.add(javaOpenDependencyTableDO);
+            queue.addAll(componentDependencyTreeDO.getDependencies());
+        }
+        return result;
+    }
+
+    /**
+     * 根据文件路径删除文件夹
+     *
+     * @param filePath 文件路径
+     */
+    private void deleteFolder(String filePath) {
+        File folder = new File(filePath);
+        if (folder.exists()) {
+            File[] files = folder.listFiles();
+            for (File file : files) {
+                file.delete();
+            }
+        }
+        folder.delete();
     }
 }
