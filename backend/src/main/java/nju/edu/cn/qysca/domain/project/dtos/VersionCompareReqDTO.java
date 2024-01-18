@@ -17,6 +17,6 @@ public class VersionCompareReqDTO {
     @ApiModelProperty(value = "被对比的版本号", example = "1.0.0")
     private String fromVersion;
 
-    @ApiModelProperty(value = "当前版本号",example = "1.0.1")
+    @ApiModelProperty(value = "当前版本号", example = "1.0.1")
     private String toVersion;
 }

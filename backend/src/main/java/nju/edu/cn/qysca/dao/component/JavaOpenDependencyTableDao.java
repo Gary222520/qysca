@@ -34,4 +34,6 @@ public interface JavaOpenDependencyTableDao extends MongoRepository<JavaOpenDepe
             fields = "{_id:0,parentGroupId:0,parentArtifactId:0,parentVersion:0}")
     Page<ComponentTableDTO> findByGAV(String groupId, String artifactId, String version, Pageable pageable);
 
+
+    void deleteAllByParentGroupIdAndParentArtifactIdAndParentVersion(String parentGroupId, String parentArtifactId, String parentVersion);
 }

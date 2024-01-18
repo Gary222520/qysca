@@ -49,8 +49,8 @@ public class MavenServiceImpl implements MavenService {
      * @param filePath
      */
     @Override
-    public ComponentDependencyTreeDO projectDependencyAnalysis(String filePath, String builder) throws Exception {
-        Node node = mavenDependencyTreeAnalyzer(filePath, builder);
+    public ComponentDependencyTreeDO projectDependencyAnalysis(String filePath, String builder, int flag) throws Exception {
+        Node node = mavenDependencyTreeAnalyzer(filePath, builder, flag);
         ComponentDependencyTreeDO componentDependencyTreeDO = convertNode(node, 0);
         return componentDependencyTreeDO;
     }
@@ -58,10 +58,11 @@ public class MavenServiceImpl implements MavenService {
     /**
      * @param filePath 文件路径
      * @param builder  构造工具
+     * @param flag     0 项目 1 闭源组件
      * @return Node 封装好的依赖信息树
      * @throws Exception
      */
-    public Node mavenDependencyTreeAnalyzer(String filePath, String builder) throws Exception {
+    public Node mavenDependencyTreeAnalyzer(String filePath, String builder, int flag) throws Exception {
         Invoker invoker = new DefaultInvoker();
         invoker.setMavenHome(new File(System.getenv("MAVEN_HOME")));
         String resultPath = null;
@@ -86,6 +87,10 @@ public class MavenServiceImpl implements MavenService {
         }
         request.setGoals(Collections.singletonList("dependency:tree -DoutputFile=result -DoutputType=text"));
         invoker.execute(request);
+        if(flag == 1){
+            request.setGoals(Collections.singletonList("install"));
+            invoker.execute(request);
+        }
         // 获得result结果的路径
         FileInputStream fis = new FileInputStream(new File(resultPath));
         Reader reader = new BufferedReader(new InputStreamReader(fis));
@@ -105,10 +110,10 @@ public class MavenServiceImpl implements MavenService {
      */
     private ComponentDependencyTreeDO convertNode(Node node, int depth) throws PlatformException {
         ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        componentDependencyTreeDO.setGroupId(node.getGroupId() == null ? "-":node.getGroupId());
-        componentDependencyTreeDO.setArtifactId(node.getArtifactId() == null ? "-":node.getArtifactId());
-        componentDependencyTreeDO.setVersion(node.getVersion() == null ? "-":node.getVersion());
-        componentDependencyTreeDO.setScope(node.getScope() == null ?"-":node.getScope());
+        componentDependencyTreeDO.setGroupId(node.getGroupId() == null ? "-" : node.getGroupId());
+        componentDependencyTreeDO.setArtifactId(node.getArtifactId() == null ? "-" : node.getArtifactId());
+        componentDependencyTreeDO.setVersion(node.getVersion() == null ? "-" : node.getVersion());
+        componentDependencyTreeDO.setScope(node.getScope() == null ? "-" : node.getScope());
         componentDependencyTreeDO.setLanguage("java");
         if (depth != 0) {
             // 从开源知识库中查找
@@ -122,7 +127,7 @@ public class MavenServiceImpl implements MavenService {
                 if (javaCloseComponentDO == null) {
                     javaOpenComponentDO = spiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                     //如果不为null 插入数据库
-                    if(javaOpenComponentDO != null) {
+                    if (javaOpenComponentDO != null) {
                         javaOpenComponentDO.setId(UUIDGenerator.getUUID());
                         javaOpenComponentDO.setLanguage("java");
                         javaOpenComponentDao.insert(javaOpenComponentDO);
