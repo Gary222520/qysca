@@ -25,6 +25,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import javax.servlet.http.HttpServletResponse;
@@ -65,6 +66,7 @@ public class ProjectServiceImpl implements ProjectService {
      * @return Boolean 新增项目是否成功
      */
     @Override
+    @Transactional
     public Boolean saveProject(SaveProjectDTO saveProjectDTO) {
         // 新建Mongodb项目信息
         ProjectInfoDO projectInfoDO = new ProjectInfoDO();
@@ -96,9 +98,10 @@ public class ProjectServiceImpl implements ProjectService {
      */
     @Async("taskExecutor")
     @Override
+    @Transactional
     public void saveProjectDependency(SaveProjectDTO saveProjectDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDTO.getFilePath(), saveProjectDTO.getBuilder(),0);
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDTO.getFilePath(), saveProjectDTO.getBuilder(), 0);
             ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
             projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
             projectDependencyTreeDO.setName(saveProjectDTO.getName());
@@ -106,7 +109,8 @@ public class ProjectServiceImpl implements ProjectService {
             projectDependencyTreeDO.setTree(componentDependencyTreeDO);
             projectDependencyTreeDao.save(projectDependencyTreeDO);
             // 批量更新依赖平铺表
-            createProjectDependencyTable(projectDependencyTreeDO);
+            List<ProjectDependencyTableDO> projectDependencyTableDOS = createProjectDependencyTable(projectDependencyTreeDO);
+            projectDependencyTableDao.saveAll(projectDependencyTableDOS);
             // 更改状态为SUCCESS
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
@@ -130,6 +134,8 @@ public class ProjectServiceImpl implements ProjectService {
      * @param updateProjectDTO 更新项目接口信息
      * @return 更新项目信息是否成功
      */
+    @Override
+    @Transactional
     public Boolean updateProject(UpdateProjectDTO updateProjectDTO) {
         ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
         projectVersionDO.setBuilder(updateProjectDTO.getBuilder());
@@ -152,14 +158,16 @@ public class ProjectServiceImpl implements ProjectService {
      */
     @Async("taskExecutor")
     @Override
+    @Transactional
     public void updateProjectDependency(UpdateProjectDTO updateProjectDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath(), updateProjectDTO.getBuilder(),0);
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath(), updateProjectDTO.getBuilder(), 0);
             ProjectDependencyTreeDO projectDependencyTreeDO = projectDependencyTreeDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectDependencyTreeDO.setTree(componentDependencyTreeDO);
             projectDependencyTreeDao.save(projectDependencyTreeDO);
             // 批量更新依赖平铺表
-            createProjectDependencyTable(projectDependencyTreeDO);
+            List<ProjectDependencyTableDO> projectDependencyTableDOS = createProjectDependencyTable(projectDependencyTreeDO);
+            projectDependencyTableDao.saveAll(projectDependencyTableDOS);
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
@@ -183,6 +191,7 @@ public class ProjectServiceImpl implements ProjectService {
      * @return 升级项目是否成功
      */
     @Override
+    @Transactional
     public Boolean upgradeProject(UpgradeProjectDTO upgradeProjectDTO) {
         ProjectVersionDO projectVersionDO = new ProjectVersionDO();
         projectVersionDO.setId(UUIDGenerator.getUUID());
@@ -208,9 +217,10 @@ public class ProjectServiceImpl implements ProjectService {
      */
     @Async("taskExecutor")
     @Override
+    @Transactional
     public void upgradeProjectDependency(UpgradeProjectDTO upgradeProjectDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(upgradeProjectDTO.getFilePath(), upgradeProjectDTO.getBuilder(),0);
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(upgradeProjectDTO.getFilePath(), upgradeProjectDTO.getBuilder(), 0);
             ProjectDependencyTreeDO projectDependencyTreeDO = new ProjectDependencyTreeDO();
             projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
             projectDependencyTreeDO.setName(upgradeProjectDTO.getName());
@@ -218,7 +228,8 @@ public class ProjectServiceImpl implements ProjectService {
             projectDependencyTreeDO.setTree(componentDependencyTreeDO);
             projectDependencyTreeDao.save(projectDependencyTreeDO);
             // 批量更新依赖平铺表
-            createProjectDependencyTable(projectDependencyTreeDO);
+            List<ProjectDependencyTableDO> projectDependencyTableDOS = createProjectDependencyTable(projectDependencyTreeDO);
+            projectDependencyTableDao.saveAll(projectDependencyTableDOS);
             // 更改状态为SUCCESS
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
@@ -243,6 +254,7 @@ public class ProjectServiceImpl implements ProjectService {
      * @return 删除项目是否成功
      */
     @Override
+    @Transactional
     public Boolean deleteProject(String name) {
         projectInfoDao.deleteByName(name);
         projectVersionDao.deleteAllByName(name);
@@ -259,6 +271,7 @@ public class ProjectServiceImpl implements ProjectService {
      * @return 删除某个项目某个版本是否成功
      */
     @Override
+    @Transactional
     public Boolean deleteProjectVersion(String name, String version) {
         projectVersionDao.deleteByNameAndVersion(name, version);
         projectDependencyTreeDao.deleteByNameAndVersion(name, version);
@@ -567,7 +580,7 @@ public class ProjectServiceImpl implements ProjectService {
      *
      * @param projectDependencyTreeDO 项目依赖信息树状
      */
-    private void createProjectDependencyTable(ProjectDependencyTreeDO projectDependencyTreeDO) {
+    private List<ProjectDependencyTableDO> createProjectDependencyTable(ProjectDependencyTreeDO projectDependencyTreeDO) {
         // 先删除已有记录
         projectDependencyTableDao.deleteAllByProjectNameAndProjectVersion(projectDependencyTreeDO.getName(), projectDependencyTreeDO.getVersion());
         List<ProjectDependencyTableDO> result = new ArrayList<>();
@@ -582,7 +595,7 @@ public class ProjectServiceImpl implements ProjectService {
             result.add(projectDependencyTableDO);
             queue.addAll(componentDependencyTreeDO.getDependencies());
         }
-        projectDependencyTableDao.saveAll(result);
+        return result;
     }
 
     /**
