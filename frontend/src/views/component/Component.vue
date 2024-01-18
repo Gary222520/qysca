@@ -133,6 +133,7 @@ const pagination = reactive({
   pageSize: 10,
   showSizeChanger: false,
   onChange: (page, size) => {
+    pagination.current = page
     getComponents(page, size)
   }
 })
@@ -193,7 +194,7 @@ const addComponent = () => {
   addModal.value.open()
 }
 const showInfo = (record) => {
-  drawer.value.open({ ...record, opensource: data.opensource })
+  drawer.value.open({ ...record, opensource: data.opensource }, true)
 }
 const updateComponent = (record) => {}
 const deleteComponent = (record) => {}

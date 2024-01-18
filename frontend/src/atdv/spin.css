@@ -1,0 +1,6 @@
+:deep(.ant-spin .ant-spin-dot-item) {
+  background-color: #6f005f;
+}
+:deep(.ant-spin) {
+  color: #6f005f;
+}

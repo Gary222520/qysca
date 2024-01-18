@@ -38,7 +38,11 @@ const deleteProject = () => {
   }
   DeleteProject(params)
     .then((res) => {
-      console.log('DeleteProject', res)
+      // console.log('DeleteProject', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
       data.open = false
       message.success('删除项目成功')
       emit('success')

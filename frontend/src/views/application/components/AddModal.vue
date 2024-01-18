@@ -238,7 +238,11 @@ const submit = () => {
   }
   AddProject(params)
     .then((res) => {
-      console.log('AddProject', res)
+      // console.log('AddProject', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
       message.success('添加项目成功')
       data.open = false
       emit('success')

@@ -8,7 +8,7 @@ export const GetProjectInfo = (params) => request('get', API.PROJECT_INFO, { par
 // 新建项目
 export const AddProject = (data) => request('post', API.ADD_PROJECT, { data })
 // 删除项目
-export const DeleteProject = (params) => request('post', API.ADD_PROJECT, { params })
+export const DeleteProject = (params) => request('post', API.DELETE_PROJECT, { params })
 // 项目中有版本正在扫描中的个数
 export const CheckRunning = (params) => request('get', API.CHECK_RUNNING, { params })
 
@@ -16,6 +16,8 @@ export const CheckRunning = (params) => request('get', API.CHECK_RUNNING, { para
 export const GetProjectTree = (data) => request('post', API.PROJECT_TREE, { data })
 // 查询具体项目具体版本的组件信息-平铺展示
 export const GetProjectTiled = (data) => request('post', API.PROJECT_TILED, { data })
+// 获取项目版本对比树
+export const GetCompareTree = (data) => request('post', API.COMPARE_TREE, { data })
 
 // 获取项目的所有版本
 export const GetVersionList = (params) => request('get', API.VERSION_LIST, { params })
