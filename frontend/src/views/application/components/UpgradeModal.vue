@@ -96,11 +96,12 @@
 </template>
 
 <script setup>
-import { reactive, ref, defineExpose } from 'vue'
+import { reactive, ref, defineExpose, defineEmits } from 'vue'
 import { UpgradeVersion } from '@/api/frontend'
 import Upload from './Upload.vue'
 import { message } from 'ant-design-vue'
 
+const emit = defineEmits(['success'])
 const uploadRef = ref()
 const data = reactive({
   open: false,
@@ -181,8 +182,13 @@ const submit = () => {
   }
   UpgradeVersion(params)
     .then((res) => {
-      console.log('UpgradeVersion', res)
+      // console.log('UpgradeVersion', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
       message.success('版本升级成功')
+      emit('success', data.project)
       close()
       clear()
     })

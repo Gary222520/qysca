@@ -93,14 +93,16 @@
 </template>
 
 <script setup>
-import { reactive, ref, defineExpose } from 'vue'
+import { reactive, ref, defineExpose, defineEmits } from 'vue'
 import Upload from './Upload.vue'
 import { UpdateVersion } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 
+const emit = defineEmits(['success'])
 const uploadRef = ref()
 const data = reactive({
   open: false,
+  project: {},
   record: {},
   currentStep: 0,
   steps: [{ title: '选择工具' }, { title: '项目信息' }, { title: '上传文件' }]
@@ -112,13 +114,15 @@ const formState = reactive({
   note: ''
 })
 const projectInfo = reactive({
-  language: data.record.language,
+  language: '',
   builder: '',
   filePath: '',
   scanner: ''
 })
-const open = (record) => {
+const open = (project, record) => {
+  data.project = project
   data.record = record
+  projectInfo.language = record.language
   formState.name = record.name
   formState.version = record.version
   formState.note = record.note
@@ -149,28 +153,24 @@ const next = () => {
   data.currentStep += 1
 }
 const submit = () => {
-  formRef.value
-    .validate()
-    .then(() => {
-      const params = {
-        ...formState,
-        ...projectInfo,
-        language: data.record.language,
-        builder: data.record.builder
+  const params = {
+    ...formState,
+    ...projectInfo
+  }
+  UpdateVersion(params)
+    .then((res) => {
+      // console.log('UpdateVersion', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
       }
-      UpdateVersion(params)
-        .then((res) => {
-          console.log('UpdateVersion', res)
-          message.success('版本更新成功')
-          close()
-          clear()
-        })
-        .catch((e) => {
-          message.error(e)
-        })
+      message.success('版本更新成功')
+      emit('success', data.project)
+      close()
+      clear()
     })
-    .catch(() => {
-      data.tab = '版本信息'
+    .catch((e) => {
+      message.error(e)
     })
 }
 defineExpose({ open })

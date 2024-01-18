@@ -63,6 +63,7 @@ const router = useRouter()
 const route = useRoute()
 onMounted(async () => {
   data.component = route.query
+  data.component.opensource = data.component.opensource === 'true'
   changeMode('tree')
 })
 
