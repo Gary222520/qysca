@@ -37,7 +37,7 @@ public class ProjectVersionDO {
     @ApiModelProperty(value = "扫描对象", example = "zip")
     private String scanner;
 
-    @ApiModelProperty(value = "最近一次更新时间", example = "2024-01-17")
+    @ApiModelProperty(value = "最近一次更新时间", example = "yyyy-MM-dd HH:mm:ss")
     private String time;
 
     @ApiModelProperty(value = "备注", example = "a software component analysis project")
