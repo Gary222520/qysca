@@ -3,7 +3,6 @@ package nju.edu.cn.qysca.service.component;
 import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
-import nju.edu.cn.qysca.utils.ZipUtil;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
