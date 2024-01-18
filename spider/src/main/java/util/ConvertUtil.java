@@ -6,11 +6,9 @@ import domain.component.LicenseDO;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.codehaus.plexus.util.xml.pull.XmlSerializer;
 import org.json.JSONObject;
 import org.json.XML;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import util.idGenerator.UUIDGenerator;
 
 import java.io.IOException;
