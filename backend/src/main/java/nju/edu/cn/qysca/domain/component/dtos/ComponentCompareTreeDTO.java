@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @ApiModel(description = "组件对比树DTO")
 public class ComponentCompareTreeDTO {
-    @ApiModelProperty(value="对比标记",example = "SAME,CHANGE,ADD,DELETE")
+    @ApiModelProperty(value = "对比标记", example = "SAME,CHANGE,ADD,DELETE")
     private String mark;
 
     @ApiModelProperty(value = "组织id", example = "org.springframework.boot")

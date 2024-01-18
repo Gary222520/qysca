@@ -44,8 +44,8 @@ public interface ProjectDependencyTableDao extends MongoRepository<ProjectDepend
     List<TableExcelBriefDTO> findTableListByProject(String projectName, String projectVersion);
 
 
-    void deleteAllByNameAndVersion(String name, String version);
+    void deleteAllByProjectNameAndProjectVersion(String name, String version);
 
-    void deleteAllByName(String name);
+    void deleteAllByProjectName(String name);
 
 }
