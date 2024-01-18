@@ -164,11 +164,25 @@ const exportExcel = () => {
     ExportBrief(params)
       .then((res) => {
         // console.log('ExportBrief', res)
-        downloadExcel(res.data, `${data.versionInfo.name}-${data.versionInfo.version}-dependencyTable-brief`)
-        message.success('导出成功')
+        const reader = new FileReader()
+        reader.readAsText(res.data, 'utf-8')
+        reader.onload = () => {
+          try {
+            const result = JSON.parse(reader.result)
+            if (result.code !== 200) {
+              message.error(result.message)
+            } else {
+              downloadExcel(res.data, `${data.versionInfo.name}-${data.versionInfo.version}-dependencyTable-brief`)
+              message.success('导出成功')
+            }
+          } catch (e) {
+            downloadExcel(res.data, `${data.versionInfo.name}-${data.versionInfo.version}-dependencyTable-brief`)
+            message.success('导出成功')
+          }
+        }
       })
       .catch((err) => {
-        console.log(err)
+        console.error(err)
       })
   } else {
     ExportDetail(params)
@@ -177,17 +191,22 @@ const exportExcel = () => {
         const reader = new FileReader()
         reader.readAsText(res.data, 'utf-8')
         reader.onload = () => {
-          const result = JSON.parse(reader.result)
-          if (result.code !== 200) {
-            message.error(result.message)
-          } else {
+          try {
+            const result = JSON.parse(reader.result)
+            if (result.code !== 200) {
+              message.error(result.message)
+            } else {
+              downloadExcel(res.data, `${data.versionInfo.name}-${data.versionInfo.version}-dependencyTable-detail`)
+              message.success('导出成功')
+            }
+          } catch (e) {
             downloadExcel(res.data, `${data.versionInfo.name}-${data.versionInfo.version}-dependencyTable-detail`)
             message.success('导出成功')
           }
         }
       })
       .catch((err) => {
-        console.log(err)
+        console.error(err)
       })
   }
 }

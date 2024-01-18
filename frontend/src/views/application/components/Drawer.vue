@@ -5,7 +5,9 @@
       <span style="font-size: 20px; font-weight: bold">{{ data.detail?.name }}</span>
       <a-tag style="margin-left: 10px">{{ data.detail?.version }}</a-tag>
       <a-tag>{{ data.component?.opensource ? '开源' : '闭源' }}</a-tag>
-      <a-button type="primary" style="margin-left: 30px" @click="showDependency">查看依赖信息</a-button>
+      <a-button v-if="data.dependency" type="primary" style="margin-left: 30px" @click="showDependency">
+        查看依赖信息
+      </a-button>
     </div>
     <div class="relative">
       <div class="drawer_title" style="margin-bottom: 20px">基本信息</div>
@@ -16,22 +18,22 @@
       <a-descriptions-item label="语言">{{ data.detail?.language }}</a-descriptions-item>
       <a-descriptions-item label="组件描述" span="3">{{ data.detail?.description }}</a-descriptions-item>
 
-      <a-descriptions-item label="主页地址">{{ data.detail?.url }}</a-descriptions-item>
-      <a-descriptions-item label="源码地址" span="2">{{ data.detail?.sourceUrl }}</a-descriptions-item>
+      <a-descriptions-item label="主页地址" span="3">{{ data.detail?.url }}</a-descriptions-item>
+      <a-descriptions-item label="源码地址" span="3">{{ data.detail?.sourceUrl }}</a-descriptions-item>
       <a-descriptions-item label="下载地址" span="3">{{ data.detail?.downloadUrl }}</a-descriptions-item>
     </a-descriptions>
 
     <div class="relative">
       <div class="drawer_title">许可证信息</div>
     </div>
-    <a-table :data-source="data.detail?.licenses" :columns="data.licenseColumns">
+    <a-table :data-source="data.detail?.licenses" :columns="data.licenseColumns" :pagination="false">
       <template #emptyText>暂无数据</template>
     </a-table>
 
     <div class="relative">
       <div class="drawer_title">开发者信息</div>
     </div>
-    <a-table :data-source="data.detail?.developers" :columns="data.developerColumns">
+    <a-table :data-source="data.detail?.developers" :columns="data.developerColumns" :pagination="false">
       <template #emptyText>暂无数据</template>
     </a-table>
   </a-drawer>
@@ -46,6 +48,7 @@ import { message } from 'ant-design-vue'
 const router = useRouter()
 const data = reactive({
   open: false,
+  dependency: false,
   component: {},
   detail: {},
   licenseColumns: [
@@ -58,8 +61,9 @@ const data = reactive({
     { title: '开发者邮箱', dataIndex: 'developerEmail', key: 'developerEmail' }
   ]
 })
-const open = (component) => {
+const open = (component, dependency) => {
   data.open = true
+  data.dependency = dependency
   data.component = component
   getComponentInfo()
 }

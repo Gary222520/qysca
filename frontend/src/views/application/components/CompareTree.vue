@@ -1,5 +1,15 @@
 <template>
   <div v-if="data.visible">
+    <div style="display: flex; align-items: center; margin-left: 10px; margin-bottom: 10px">
+      <div style="background-color: #1677ff; width: 15px; height: 15px"></div>
+      <div style="margin-left: 5px; margin-right: 20px; color: #1677ff">新增</div>
+      <div style="background-color: #389e0d; width: 15px; height: 15px"></div>
+      <div style="margin-left: 5px; margin-right: 20px; color: #389e0d">更新</div>
+      <div style="background-color: #ff4d4f; width: 15px; height: 15px"></div>
+      <div style="margin-left: 5px; margin-right: 20px; color: #ff4d4f">删除</div>
+      <div style="background-color: #000000; width: 15px; height: 15px"></div>
+      <div style="margin-left: 5px; margin-right: 20px; color: #000000">不变</div>
+    </div>
     <a-tree
       v-model:expandedKeys="data.expandedKeys"
       v-model:selectedKeys="data.selectedKeys"
@@ -13,8 +23,11 @@
       <template #icon>
         <ExperimentOutlined :style="{ fontSize: '16px' }" />
       </template>
-      <template #title="{ title, version, opensource }">
-        <span style="font-weight: bold; margin-right: 10px">{{ title }}</span>
+      <template #title="{ title, version, opensource, mark }">
+        <span v-if="mark === 'CHANGE'" style="font-weight: bold; margin-right: 10px; color: #389e0d">{{ title }}</span>
+        <span v-if="mark === 'ADD'" style="font-weight: bold; margin-right: 10px; color: #1677ff">{{ title }}</span>
+        <span v-if="mark === 'DELETE'" style="font-weight: bold; margin-right: 10px; color: #ff4d4f">{{ title }}</span>
+        <span v-if="mark === 'SAME'" style="font-weight: bold; margin-right: 10px">{{ title }}</span>
         <a-tag>{{ version }}</a-tag>
         <a-tag>{{ opensource ? '开源' : '闭源' }}</a-tag>
       </template>
@@ -25,7 +38,7 @@
 
 <script setup>
 import { reactive, ref, defineExpose } from 'vue'
-import { GetProjectTree } from '@/api/frontend'
+import { GetCompareTree } from '@/api/frontend'
 import { DownOutlined, ExperimentOutlined } from '@ant-design/icons-vue'
 import Drawer from './Drawer.vue'
 import { message } from 'ant-design-vue'
@@ -37,11 +50,15 @@ const data = reactive({
   expandedKeys: [],
   selectedKeys: []
 })
-const show = (name, version) => {
+const show = (name, toVersion, fromVersion) => {
+  if (fromVersion === toVersion) {
+    message.info('两个版本不能相同')
+    return
+  }
   data.visible = true
-  GetProjectTree({ name, version })
+  GetCompareTree({ name, toVersion, fromVersion })
     .then((res) => {
-      // console.log('GetProjectTree', res)
+      // console.log('GetCompareTree', res)
       if (res.code !== 200) {
         message.error(res.message)
         return
@@ -77,9 +94,8 @@ const hide = () => {
   data.visible = false
 }
 const selectNode = (selectedKeys, e) => {
-  data.selectedKeys = []
-  if (e.node.key === '0-0') return
   drawer.value.open(e.node, false)
+  data.selectedKeys = []
 }
 defineExpose({ show, hide })
 </script>
