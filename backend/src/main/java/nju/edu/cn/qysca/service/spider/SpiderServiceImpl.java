@@ -117,10 +117,10 @@ public class SpiderServiceImpl implements SpiderService {
         javaOpenComponentDO.setVersion(version);
 
 
-        javaOpenComponentDO.setName(model.getName());
-        javaOpenComponentDO.setDescription(model.getDescription());
+        javaOpenComponentDO.setName(model.getName() == null ? "-" : model.getName());
+        javaOpenComponentDO.setDescription(model.getDescription() == null ? "-": model.getDescription());
 
-        javaOpenComponentDO.setUrl(model.getUrl());
+        javaOpenComponentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
         javaOpenComponentDO.setDownloadUrl(getDownloadUrl(pomUrl));
         javaOpenComponentDO.setSourceUrl(model.getScm() == null ? null : model.getScm().getUrl());
 
@@ -141,9 +141,9 @@ public class SpiderServiceImpl implements SpiderService {
         return mavenDevelopers.stream()
                 .map(mavenDeveloper -> {
                     DeveloperDO developer = new DeveloperDO();
-                    developer.setDeveloperId(mavenDeveloper.getId());
-                    developer.setDeveloperName(mavenDeveloper.getName());
-                    developer.setDeveloperEmail(mavenDeveloper.getEmail());
+                    developer.setDeveloperId(mavenDeveloper.getId() == null ? "-": mavenDeveloper.getId());
+                    developer.setDeveloperName(mavenDeveloper.getName() == null ? "-": mavenDeveloper.getName());
+                    developer.setDeveloperEmail(mavenDeveloper.getEmail() == null ? "-": mavenDeveloper.getEmail());
                     return developer;
                 })
                 .collect(Collectors.toList());
@@ -154,8 +154,8 @@ public class SpiderServiceImpl implements SpiderService {
         return mavenLicenses.stream()
                 .map(mavenLicense -> {
                     LicenseDO license = new LicenseDO();
-                    license.setLicenseName(mavenLicense.getName());
-                    license.setLicenseUrl(mavenLicense.getUrl());
+                    license.setLicenseName(mavenLicense.getName() == null ? "-": mavenLicense.getName());
+                    license.setLicenseUrl(mavenLicense.getUrl() == null ? "-": mavenLicense.getUrl());
                     return license;
                 })
                 .collect(Collectors.toList());

@@ -105,10 +105,10 @@ public class MavenServiceImpl implements MavenService {
      */
     private ComponentDependencyTreeDO convertNode(Node node, int depth) throws PlatformException {
         ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        componentDependencyTreeDO.setGroupId(node.getGroupId());
-        componentDependencyTreeDO.setArtifactId(node.getArtifactId());
-        componentDependencyTreeDO.setVersion(node.getVersion());
-        componentDependencyTreeDO.setScope(node.getScope());
+        componentDependencyTreeDO.setGroupId(node.getGroupId() == null ? "-":node.getGroupId());
+        componentDependencyTreeDO.setArtifactId(node.getArtifactId() == null ? "-":node.getArtifactId());
+        componentDependencyTreeDO.setVersion(node.getVersion() == null ? "-":node.getVersion());
+        componentDependencyTreeDO.setScope(node.getScope() == null ?"-":node.getScope());
         componentDependencyTreeDO.setLanguage("Java");
         if (depth != 0) {
             // 从开源知识库中查找
