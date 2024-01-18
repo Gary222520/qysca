@@ -1,6 +1,7 @@
 package spider;
 
 import data.BatchDataWriter;
+import dataAccess.MongoDBAccess;
 import domain.component.*;
 import fr.dutra.tools.maven.deptree.core.Node;
 import org.jsoup.nodes.Document;
@@ -218,6 +219,12 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
 
         // 获得组件信息
         JavaOpenComponentDO javaOpenComponentDO = ConvertUtil.convertToJavaOpenComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
+
+        MongoDBAccess<JavaOpenDependencyTreeDO> treeDBAccess = MongoDBAccess.getInstance(DEPENDENCY_TREE_COLLECTION_NAME, JavaOpenDependencyTreeDO.class);
+        if (treeDBAccess.readByGAV(javaOpenComponentDO.getGroupId(), javaOpenComponentDO.getArtifactId(), javaOpenComponentDO.getVersion()) != null){
+            // 表示这个组件已经被爬取过，并且依赖树也生成了
+            return new JavaOpenComponentInformationDO();
+        }
 
         // 生成一个临时pom文件
         createPomFile(document.outerHtml());
