@@ -109,7 +109,7 @@ public class MavenServiceImpl implements MavenService {
         componentDependencyTreeDO.setArtifactId(node.getArtifactId() == null ? "-":node.getArtifactId());
         componentDependencyTreeDO.setVersion(node.getVersion() == null ? "-":node.getVersion());
         componentDependencyTreeDO.setScope(node.getScope() == null ?"-":node.getScope());
-        componentDependencyTreeDO.setLanguage("Java");
+        componentDependencyTreeDO.setLanguage("java");
         if (depth != 0) {
             // 从开源知识库中查找
             JavaOpenComponentDO javaOpenComponentDO = null;
@@ -124,6 +124,7 @@ public class MavenServiceImpl implements MavenService {
                     //如果不为null 插入数据库
                     if(javaOpenComponentDO != null) {
                         javaOpenComponentDO.setId(UUIDGenerator.getUUID());
+                        javaOpenComponentDO.setLanguage("java");
                         javaOpenComponentDao.insert(javaOpenComponentDO);
                     }
                 }

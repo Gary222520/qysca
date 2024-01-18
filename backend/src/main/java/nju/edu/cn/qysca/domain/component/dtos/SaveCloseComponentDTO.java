@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.component.dos;
+package nju.edu.cn.qysca.domain.component.dtos;
 
 
 import io.swagger.annotations.ApiModel;
