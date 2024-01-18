@@ -11,7 +11,7 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        Spider<JavaOpenComponentDO> spider = new JavaOpenPomSpider();
+        Spider<JavaOpenComponentDO> spider = JavaOpenPomSpider.getInstance();
 
         List<String> targetUrls = new ArrayList<>();
         String TARGET_URLS_FILE = "target_urls.txt";
@@ -31,6 +31,7 @@ public class Main {
         for (String targetUrl : targetUrls) {
             System.out.println("开始按目录爬取：" + targetUrl);
             spider.crawlManyWithDependency(targetUrl);
+            System.out.println("该目录爬取完毕: " + targetUrl);
         }
     }
 }
