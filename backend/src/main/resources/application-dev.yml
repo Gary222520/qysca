@@ -25,3 +25,7 @@ spring:
         max-wait: -1ms
 uploadFolder: src/main/resources/static/upload/
 tempPomFolder: src/main/resources/static/temp/
+# maxFileSize 单个数据大小
+spring.servlet.multipart.maxFileSize: 5MB
+# maxRequestSize 是总数据大小
+spring.servlet.multipart.maxRequestSize: 500MB
