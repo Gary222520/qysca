@@ -1,16 +1,12 @@
 package nju.edu.cn.qysca.service.component;
 
 import nju.edu.cn.qysca.dao.component.*;
-import nju.edu.cn.qysca.domain.project.dos.ProjectDependencyTableDO;
-import nju.edu.cn.qysca.domain.project.dos.ProjectDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.service.spider.SpiderService;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.json.JSONObject;
-import org.json.XML;
 import org.springframework.beans.BeanUtils;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.*;
@@ -18,8 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -126,6 +124,7 @@ public class ComponentServiceImpl implements ComponentService {
      * @param saveCloseComponentDTO 保存闭源组件接口信息
      * @return 存储闭源组件信息
      */
+    @Transactional
     @Override
     public Boolean saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO) {
         // 接口获得详细信息
@@ -161,18 +160,24 @@ public class ComponentServiceImpl implements ComponentService {
      * @param componentGavDTO 组件gav
      * @return JavaOpenDependencyTreeDO 依赖树信息
      */
+    @Transactional
     @Override
     public JavaOpenDependencyTreeDO findOpenComponentDependencyTree(ComponentGavDTO componentGavDTO) {
         JavaOpenDependencyTreeDO javaOpenDependencyTreeDO = javaOpenDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
                 componentGavDTO.getGroupId(),
                 componentGavDTO.getArtifactId(),
                 componentGavDTO.getVersion());
+        Date now = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String timeStamp = dateFormat.format(now);
+        String tempPomFolder = tempFolder + timeStamp;
+        File file = new File(tempPomFolder);
+        file.mkdirs();
+        String tempPath = tempPomFolder + "/pom.xml";
         if (javaOpenDependencyTreeDO == null) {
             try {
                 JavaOpenComponentDO javaOpenComponentDO = javaOpenComponentDao.findByGroupIdAndArtifactIdAndVersion(componentGavDTO.getGroupId(), componentGavDTO.getArtifactId(), componentGavDTO.getVersion());
-                String json = javaOpenComponentDO.getPom();
-                String xml = convertJsonToXml(json);
-                String tempPath = tempFolder + componentGavDTO.getGroupId() + ":" + componentGavDTO.getArtifactId() + ":" + componentGavDTO.getVersion() + "/" + "pom.xml";
+                String xml = javaOpenComponentDO.getPom();
                 FileWriter fileWriter = new FileWriter(tempPath);
                 fileWriter.write(xml);
                 fileWriter.flush();
@@ -186,8 +191,9 @@ public class ComponentServiceImpl implements ComponentService {
                 javaOpenDependencyTreeDO.setTree(componentDependencyTreeDO);
                 javaOpenDependencyTreeDao.save(javaOpenDependencyTreeDO);
                 javaOpenDependencyTableDao.saveAll(creatOpenDependencyTable(javaOpenDependencyTreeDO));
-                deleteFolder(tempPath.substring(0, tempPath.lastIndexOf("/")));
+                deleteFolder(tempPomFolder);
             } catch (Exception e) {
+                deleteFolder(tempPomFolder);
                 throw new PlatformException(500, "查询开源组件依赖树失败");
             }
 
@@ -429,18 +435,6 @@ public class ComponentServiceImpl implements ComponentService {
             }
         }
         zipFile.close();
-    }
-
-    /**
-     * 将JSON格式的数据转换为XML格式的数据
-     *
-     * @param json 数据库中存储的pom信息
-     * @return xml格式数据
-     */
-    private String convertJsonToXml(String json) {
-        JSONObject jsonObject = new JSONObject(json);
-        String xml = XML.toString(jsonObject);
-        return xml;
     }
 
     /**
