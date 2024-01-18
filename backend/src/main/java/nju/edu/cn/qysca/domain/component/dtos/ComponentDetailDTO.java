@@ -44,8 +44,8 @@ public class ComponentDetailDTO {
     private String sourceUrl;
 
     @ApiModelProperty(value = "开发者列表")
-    private List<DeveloperDO> developers=new ArrayList<>();
+    private List<DeveloperDO> developers = new ArrayList<>();
 
     @ApiModelProperty(value = "许可证列表")
-    private List<LicenseDO> licenses=new ArrayList<>();
+    private List<LicenseDO> licenses = new ArrayList<>();
 }

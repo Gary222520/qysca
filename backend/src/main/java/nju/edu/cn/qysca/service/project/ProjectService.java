@@ -6,6 +6,7 @@ import nju.edu.cn.qysca.domain.project.dos.ProjectInfoDO;
 import nju.edu.cn.qysca.domain.project.dos.ProjectVersionDO;
 import nju.edu.cn.qysca.domain.project.dtos.*;
 import org.springframework.data.domain.Page;
+
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
@@ -145,6 +146,7 @@ public interface ProjectService {
 
     /**
      * 生成项目版本对比树
+     *
      * @param versionCompareReqDTO 需对比的项目版本
      * @return VersionCompareTreeDTO 对比树
      */

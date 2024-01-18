@@ -105,10 +105,10 @@ public class MavenServiceImpl implements MavenService {
      */
     private ComponentDependencyTreeDO convertNode(Node node, int depth) throws PlatformException {
         ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        componentDependencyTreeDO.setGroupId(node.getGroupId() == null ? "-":node.getGroupId());
-        componentDependencyTreeDO.setArtifactId(node.getArtifactId() == null ? "-":node.getArtifactId());
-        componentDependencyTreeDO.setVersion(node.getVersion() == null ? "-":node.getVersion());
-        componentDependencyTreeDO.setScope(node.getScope() == null ?"-":node.getScope());
+        componentDependencyTreeDO.setGroupId(node.getGroupId() == null ? "-" : node.getGroupId());
+        componentDependencyTreeDO.setArtifactId(node.getArtifactId() == null ? "-" : node.getArtifactId());
+        componentDependencyTreeDO.setVersion(node.getVersion() == null ? "-" : node.getVersion());
+        componentDependencyTreeDO.setScope(node.getScope() == null ? "-" : node.getScope());
         componentDependencyTreeDO.setLanguage("java");
         if (depth != 0) {
             // 从开源知识库中查找
@@ -122,7 +122,7 @@ public class MavenServiceImpl implements MavenService {
                 if (javaCloseComponentDO == null) {
                     javaOpenComponentDO = spiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                     //如果不为null 插入数据库
-                    if(javaOpenComponentDO != null) {
+                    if (javaOpenComponentDO != null) {
                         javaOpenComponentDO.setId(UUIDGenerator.getUUID());
                         javaOpenComponentDO.setLanguage("java");
                         javaOpenComponentDao.insert(javaOpenComponentDO);

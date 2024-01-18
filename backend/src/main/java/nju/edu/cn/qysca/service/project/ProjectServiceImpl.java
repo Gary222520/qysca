@@ -25,6 +25,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
 import java.io.File;
 import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
@@ -105,7 +106,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectDependencyTreeDO.setTree(componentDependencyTreeDO);
             projectDependencyTreeDao.save(projectDependencyTreeDO);
             // 批量更新依赖平铺表
-            projectDependencyTable(projectDependencyTreeDO);
+            createProjectDependencyTable(projectDependencyTreeDO);
             // 更改状态为SUCCESS
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(saveProjectDTO.getName(), saveProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
@@ -158,7 +159,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectDependencyTreeDO.setTree(componentDependencyTreeDO);
             projectDependencyTreeDao.save(projectDependencyTreeDO);
             // 批量更新依赖平铺表
-            projectDependencyTable(projectDependencyTreeDO);
+            createProjectDependencyTable(projectDependencyTreeDO);
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
             projectVersionDao.save(projectVersionDO);
@@ -217,7 +218,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectDependencyTreeDO.setTree(componentDependencyTreeDO);
             projectDependencyTreeDao.save(projectDependencyTreeDO);
             // 批量更新依赖平铺表
-            projectDependencyTable(projectDependencyTreeDO);
+            createProjectDependencyTable(projectDependencyTreeDO);
             // 更改状态为SUCCESS
             ProjectVersionDO projectVersionDO = projectVersionDao.findByNameAndVersion(upgradeProjectDTO.getName(), upgradeProjectDTO.getVersion());
             projectVersionDO.setState("SUCCESS");
@@ -246,7 +247,7 @@ public class ProjectServiceImpl implements ProjectService {
         projectInfoDao.deleteByName(name);
         projectVersionDao.deleteAllByName(name);
         projectDependencyTreeDao.deleteAllByName(name);
-        projectDependencyTableDao.deleteAllByName(name);
+        projectDependencyTableDao.deleteAllByProjectName(name);
         return Boolean.TRUE;
     }
 
@@ -261,7 +262,7 @@ public class ProjectServiceImpl implements ProjectService {
     public Boolean deleteProjectVersion(String name, String version) {
         projectVersionDao.deleteByNameAndVersion(name, version);
         projectDependencyTreeDao.deleteByNameAndVersion(name, version);
-        projectDependencyTableDao.deleteAllByNameAndVersion(name, version);
+        projectDependencyTableDao.deleteAllByProjectNameAndProjectVersion(name, version);
         return Boolean.TRUE;
     }
 
@@ -419,7 +420,7 @@ public class ProjectServiceImpl implements ProjectService {
                 componentDetailDTO = javaCloseComponentDao.findDetailByGav(
                         detail.getGroupId(), detail.getArtifactId(), detail.getVersion());
             }
-            if(componentDetailDTO==null){
+            if (componentDetailDTO == null) {
                 resList.add(detail);
                 continue;
             }
@@ -465,74 +466,74 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public VersionCompareTreeDTO getProjectVersionCompareTree(VersionCompareReqDTO versionCompareReqDTO) {
         // 获取需对比的两个项目版本依赖树信息
-        ProjectDependencyTreeDO fromDependencyTree=projectDependencyTreeDao.findByNameAndVersion(
+        ProjectDependencyTreeDO fromDependencyTree = projectDependencyTreeDao.findByNameAndVersion(
                 versionCompareReqDTO.getName(), versionCompareReqDTO.getFromVersion());
-        if(fromDependencyTree==null){
+        if (fromDependencyTree == null) {
             throw new PlatformException(500, "被对比的项目版本依赖树信息不存在");
         }
-        ProjectDependencyTreeDO toDependencyTree=projectDependencyTreeDao.findByNameAndVersion(
+        ProjectDependencyTreeDO toDependencyTree = projectDependencyTreeDao.findByNameAndVersion(
                 versionCompareReqDTO.getName(), versionCompareReqDTO.getToVersion());
-        if(toDependencyTree==null){
+        if (toDependencyTree == null) {
             throw new PlatformException(500, "待对比的项目版本依赖树信息不存在");
         }
         // 打上对比标记，生成对比树
-        VersionCompareTreeDTO versionCompareTreeDTO=new VersionCompareTreeDTO();
-        BeanUtils.copyProperties(versionCompareReqDTO,versionCompareTreeDTO);
+        VersionCompareTreeDTO versionCompareTreeDTO = new VersionCompareTreeDTO();
+        BeanUtils.copyProperties(versionCompareReqDTO, versionCompareTreeDTO);
         // 递归处理
         versionCompareTreeDTO.setTree(recursionDealWithChange(
-                fromDependencyTree.getTree(),toDependencyTree.getTree()));
+                fromDependencyTree.getTree(), toDependencyTree.getTree()));
         return versionCompareTreeDTO;
     }
 
     /**
      * 递归处理变更的组件
+     *
      * @param from 被对比者
-     * @param to 待对比者
+     * @param to   待对比者
      * @return ComponentCompareTreeDTO 对比树
      */
-    private ComponentCompareTreeDTO recursionDealWithChange(ComponentDependencyTreeDO from,ComponentDependencyTreeDO to){
-        if(from==null || to==null){
+    private ComponentCompareTreeDTO recursionDealWithChange(ComponentDependencyTreeDO from, ComponentDependencyTreeDO to) {
+        if (from == null || to == null) {
             return null;
         }
         // 变更的组件打上CHANGE标记
-        ComponentCompareTreeDTO root=new ComponentCompareTreeDTO();
-        BeanUtils.copyProperties(to,root);
+        ComponentCompareTreeDTO root = new ComponentCompareTreeDTO();
+        BeanUtils.copyProperties(to, root);
         root.setMark("CHANGE");
         // 分析各子树应属于何种标记
-        Map<String,ComponentDependencyTreeDO> fromMap=new HashMap<>();
-        Map<String,ComponentDependencyTreeDO> toMap=new HashMap<>();
-        Set<String> intersection=new HashSet<>();
-        for(ComponentDependencyTreeDO fromChild:from.getDependencies()){
-            fromMap.put(fromChild.getGroupId()+fromChild.getArtifactId()+fromChild.getOpensource(),fromChild);
+        Map<String, ComponentDependencyTreeDO> fromMap = new HashMap<>();
+        Map<String, ComponentDependencyTreeDO> toMap = new HashMap<>();
+        Set<String> intersection = new HashSet<>();
+        for (ComponentDependencyTreeDO fromChild : from.getDependencies()) {
+            fromMap.put(fromChild.getGroupId() + fromChild.getArtifactId() + fromChild.getOpensource(), fromChild);
         }
-        for(ComponentDependencyTreeDO toChild:to.getDependencies()){
-            toMap.put(toChild.getGroupId()+toChild.getArtifactId()+toChild.getOpensource(),toChild);
+        for (ComponentDependencyTreeDO toChild : to.getDependencies()) {
+            toMap.put(toChild.getGroupId() + toChild.getArtifactId() + toChild.getOpensource(), toChild);
         }
-        for(String key:toMap.keySet()){
+        for (String key : toMap.keySet()) {
             // 求交集
-            if(fromMap.containsKey(key)){
+            if (fromMap.containsKey(key)) {
                 intersection.add(key);
             }
         }
         // 依次进行分析
-        for(ComponentDependencyTreeDO toChild:to.getDependencies()){
-            String key=toChild.getGroupId()+toChild.getArtifactId()+toChild.getOpensource();
-            if(intersection.contains(key)){
-                if(fromMap.get(key).getVersion().equals(toMap.get(key).getVersion())){
-                    root.getDependencies().add(recursionMark(toMap.get(key),"SAME"));
-                }
-                else{
+        for (ComponentDependencyTreeDO toChild : to.getDependencies()) {
+            String key = toChild.getGroupId() + toChild.getArtifactId() + toChild.getOpensource();
+            if (intersection.contains(key)) {
+                if (fromMap.get(key).getVersion().equals(toMap.get(key).getVersion())) {
+                    root.getDependencies().add(recursionMark(toMap.get(key), "SAME"));
+                } else {
                     // CHANGE
-                    root.getDependencies().add(recursionDealWithChange(fromMap.get(key),toMap.get(key)));
+                    root.getDependencies().add(recursionDealWithChange(fromMap.get(key), toMap.get(key)));
                 }
-            }else{
-                root.getDependencies().add(recursionMark(toMap.get(key),"ADD"));
+            } else {
+                root.getDependencies().add(recursionMark(toMap.get(key), "ADD"));
             }
         }
-        for(ComponentDependencyTreeDO fromChild:from.getDependencies()){
-            String key=fromChild.getGroupId()+fromChild.getArtifactId()+fromChild.getOpensource();
-            if(!intersection.contains(key)){
-                root.getDependencies().add(recursionMark(fromMap.get(key),"DELETE"));
+        for (ComponentDependencyTreeDO fromChild : from.getDependencies()) {
+            String key = fromChild.getGroupId() + fromChild.getArtifactId() + fromChild.getOpensource();
+            if (!intersection.contains(key)) {
+                root.getDependencies().add(recursionMark(fromMap.get(key), "DELETE"));
             }
         }
         return root;
@@ -540,20 +541,21 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 递归打上标记
-     * @param tree  树状信息
+     *
+     * @param tree 树状信息
      * @param mark 标记符号（ADD,DELETE,SAME）
      * @return ComponentCompareTreeDTO 对比树
      */
-    private ComponentCompareTreeDTO recursionMark(ComponentDependencyTreeDO tree,String mark){
-        if(tree==null){
+    private ComponentCompareTreeDTO recursionMark(ComponentDependencyTreeDO tree, String mark) {
+        if (tree == null) {
             return null;
         }
-        ComponentCompareTreeDTO root=new ComponentCompareTreeDTO();
-        BeanUtils.copyProperties(tree,root);
+        ComponentCompareTreeDTO root = new ComponentCompareTreeDTO();
+        BeanUtils.copyProperties(tree, root);
         root.setMark(mark);
-        for(ComponentDependencyTreeDO child:tree.getDependencies()){
-            ComponentCompareTreeDTO childAns=recursionMark(child,mark);
-            if(childAns!=null){
+        for (ComponentDependencyTreeDO child : tree.getDependencies()) {
+            ComponentCompareTreeDTO childAns = recursionMark(child, mark);
+            if (childAns != null) {
                 root.getDependencies().add(childAns);
             }
         }
@@ -565,9 +567,9 @@ public class ProjectServiceImpl implements ProjectService {
      *
      * @param projectDependencyTreeDO 项目依赖信息树状
      */
-    private void projectDependencyTable(ProjectDependencyTreeDO projectDependencyTreeDO) {
+    private void createProjectDependencyTable(ProjectDependencyTreeDO projectDependencyTreeDO) {
         // 先删除已有记录
-        projectDependencyTableDao.deleteAllByNameAndVersion(projectDependencyTreeDO.getName(), projectDependencyTreeDO.getVersion());
+        projectDependencyTableDao.deleteAllByProjectNameAndProjectVersion(projectDependencyTreeDO.getName(), projectDependencyTreeDO.getVersion());
         List<ProjectDependencyTableDO> result = new ArrayList<>();
         Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(projectDependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {

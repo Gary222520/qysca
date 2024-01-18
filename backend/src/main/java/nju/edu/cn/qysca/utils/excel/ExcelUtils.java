@@ -49,6 +49,7 @@ public final class ExcelUtils {
     private static final char LEAN_LINE = '/';
     private static final int BYTES_DEFAULT_LENGTH = 10240;
     private static final NumberFormat NUMBER_FORMAT = NumberFormat.getNumberInstance();
+
     private ExcelUtils() {
     }
 
