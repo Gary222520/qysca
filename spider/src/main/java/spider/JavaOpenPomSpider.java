@@ -218,7 +218,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
         // 生成一个临时pom文件
         createPomFile(document.outerHtml());
         // 调用mvn dependency:tree命令获取依赖
-        Node node = MavenUtil.mavenDependencyTreeAnalyzer(POM_FILE_TEMP_PATH);
+        Node node = MavenUtil.mavenDependencyTreeAnalyzer_restart_when_timeout(POM_FILE_TEMP_PATH);
         // 解析依赖，获得组件树
         MavenUtil mavenUtil = new MavenUtil();
         ComponentDependencyTreeDO dependencyTreeDO = mavenUtil.convertNode(node, 0);
