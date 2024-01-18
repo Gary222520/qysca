@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -183,6 +184,7 @@ public class ComponentServiceImpl implements ComponentService {
                 fileWriter.flush();
                 fileWriter.close();
                 ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(tempPath, "maven", 0);
+                componentDependencyTreeDO.setOpensource(true);
                 javaOpenDependencyTreeDO = new JavaOpenDependencyTreeDO();
                 javaOpenDependencyTreeDO.setId(UUIDGenerator.getUUID());
                 javaOpenDependencyTreeDO.setGroupId(componentGavDTO.getGroupId());
@@ -369,6 +371,8 @@ public class ComponentServiceImpl implements ComponentService {
         javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
         javaCloseDependencyTreeDO.setVersion(model.getVersion() == null ? "-" : model.getVersion());
         ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(filePath, builder, 1);
+        componentDependencyTreeDO.setName(model.getName() == null ? "-" : model.getName());
+        componentDependencyTreeDO.setOpensource(false);
         javaCloseDependencyTreeDO.setTree(componentDependencyTreeDO);
         return javaCloseDependencyTreeDO;
     }
@@ -411,7 +415,7 @@ public class ComponentServiceImpl implements ComponentService {
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        ZipFile zipFile = new ZipFile(filePath);
+        ZipFile zipFile = new ZipFile(filePath, Charset.forName("GBK"));
         Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
         while (zipEntries.hasMoreElements()) {
             ZipEntry zipEntry = zipEntries.nextElement();
