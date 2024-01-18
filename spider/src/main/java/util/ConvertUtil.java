@@ -6,9 +6,11 @@ import domain.component.LicenseDO;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.codehaus.plexus.util.xml.pull.XmlSerializer;
 import org.json.JSONObject;
 import org.json.XML;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import util.idGenerator.UUIDGenerator;
 
 import java.io.IOException;
@@ -37,7 +39,7 @@ public class ConvertUtil {
         String groupId = String.join(".", Arrays.copyOfRange(parts, MAVEN_REPO_BASE_URL.split("/").length, parts.length - 3));
 
         // 将jsoup document转化为maven-model
-        Model model = convertToModel(document);
+        Model model = convertToModel(document.outerHtml());
         if (model == null) {
             return null;
         }
@@ -59,7 +61,7 @@ public class ConvertUtil {
 
         javaOpenComponentDO.setDevelopers(getDevelopers(model));
         javaOpenComponentDO.setLicenses(getLicense(model));
-        javaOpenComponentDO.setPom(convertToJson(document).toString());
+        javaOpenComponentDO.setPom(document.outerHtml());   //转成字符串后直接存pom.xml文件内容
 
         return javaOpenComponentDO;
 
@@ -115,14 +117,12 @@ public class ConvertUtil {
     }
 
     /**
-     * 将jsoup document转化为maven-model
+     * 将pom string转化为maven-model
      *
-     * @param document jsoup document
+     * @param pomString pom.xml转成字符串
      * @return maven-model
      */
-    private static Model convertToModel(Document document) {
-        // 从document中获取全部内容，得到一个xml格式的字符串
-        String pomString = document.outerHtml();
+    private static Model convertToModel(String pomString) {
         Model model = null;
         try {
             // 使用Maven的Xpp3Reader解析xml格式的字符串,获得maven-model
