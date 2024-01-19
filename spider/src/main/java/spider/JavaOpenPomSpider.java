@@ -196,6 +196,8 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
             return null;
 
         JavaOpenComponentDO javaOpenComponentDO = ConvertUtil.convertToJavaOpenComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
+        if (javaOpenComponentDO == null)
+            return null;
         componentWriter.enqueue(javaOpenComponentDO);
 
         return javaOpenComponentDO;
@@ -221,6 +223,8 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
 
         // 获得组件信息
         JavaOpenComponentDO javaOpenComponentDO = ConvertUtil.convertToJavaOpenComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
+        if (javaOpenComponentDO == null)
+            return null;
 
         MongoDBAccess<JavaOpenDependencyTreeDO> treeDBAccess = MongoDBAccess.getInstance(DEPENDENCY_TREE_COLLECTION_NAME, JavaOpenDependencyTreeDO.class);
         if (treeDBAccess.readByGAV(javaOpenComponentDO.getGroupId(), javaOpenComponentDO.getArtifactId(), javaOpenComponentDO.getVersion()) != null) {
@@ -303,7 +307,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
      * @param failedUrl 失败的url
      */
     private void writeFailedUrl(String failedUrl) {
-        System.err.println("爬取或生成依赖树失败：" + failedUrl);
+        System.err.println("爬取或解析pom或生成依赖树失败：" + failedUrl);
         try (OutputStream outputStream = new FileOutputStream(FAILED_URLS_PATH);
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
             writer.write(failedUrl);
