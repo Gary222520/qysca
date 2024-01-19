@@ -163,6 +163,12 @@ public class ProjectServiceImpl implements ProjectService {
         try {
             ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath(), updateProjectDTO.getBuilder(), 0);
             ProjectDependencyTreeDO projectDependencyTreeDO = projectDependencyTreeDao.findByNameAndVersion(updateProjectDTO.getName(), updateProjectDTO.getVersion());
+            if (projectDependencyTreeDO == null) {
+                projectDependencyTreeDO = new ProjectDependencyTreeDO();
+                projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
+                projectDependencyTreeDO.setName(updateProjectDTO.getName());
+                projectDependencyTreeDO.setVersion(updateProjectDTO.getVersion());
+            }
             projectDependencyTreeDO.setTree(componentDependencyTreeDO);
             projectDependencyTreeDao.save(projectDependencyTreeDO);
             // 批量更新依赖平铺表
