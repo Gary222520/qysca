@@ -1,11 +1,4 @@
-import dataAccess.MongoDBAccess;
-import domain.component.DeveloperDO;
-import domain.component.JavaOpenComponentDO;
 import org.junit.Test;
-import util.idGenerator.UUIDGenerator;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MongoDBTest {
 

@@ -110,7 +110,6 @@ public class MavenUtil {
 //    }
 
 
-
     /**
      * 递归解析依赖树 返回根节点
      *
@@ -181,7 +180,8 @@ public class MavenUtil {
     }
 
     /**
-     *  通过JavaOpenDependencyTreeDO构建JavaOpenDependencyTableDO对象
+     * 通过JavaOpenDependencyTreeDO构建JavaOpenDependencyTableDO对象
+     *
      * @param javaOpenDependencyTreeDO 依赖树DO
      * @return JavaOpenDependencyTableDO 平铺依赖表DO
      */
@@ -207,7 +207,8 @@ public class MavenUtil {
 
     /**
      * 检查进程是否超时
-     * @param process 进程
+     *
+     * @param process       进程
      * @param timeoutMillis 限时
      * @return 是否没有超时
      */

@@ -68,7 +68,7 @@ public class MongoDBAccess<T> {
             // 插入数据
             collection.insertMany(dataList, insertManyOptions);
             System.out.println("Data written to MongoDB successfully! Collection name = " + collection.getNamespace().toString() + ". This Batch Number = " + dataList.size());
-        } catch (MongoBulkWriteException | IllegalArgumentException e){
+        } catch (MongoBulkWriteException | IllegalArgumentException e) {
             // do nothing
         } catch (Exception e) {
             e.printStackTrace();
@@ -97,6 +97,7 @@ public class MongoDBAccess<T> {
 
     /**
      * 获取collection中所有文档
+     *
      * @return
      */
     public FindIterable<T> findAll() {

@@ -1,16 +1,5 @@
 package run;
 
-import com.mongodb.client.FindIterable;
-import dataAccess.MongoDBAccess;
-import domain.component.JavaOpenComponentDO;
-import domain.component.JavaOpenDependencyTableDO;
-import spider.JavaOpenPomSpider;
-import spider.Spider;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 public class DBChanger {
 
 //    public static void main(String[] args) {

@@ -50,12 +50,12 @@ public class ConvertUtil {
         javaOpenComponentDO.setVersion(version);
 
         javaOpenComponentDO.setLanguage("Java");
-        javaOpenComponentDO.setName(model.getName()==null?"-":model.getName());
-        javaOpenComponentDO.setDescription(model.getDescription()==null?"-":model.getDescription());
+        javaOpenComponentDO.setName(model.getName() == null ? "-" : model.getName());
+        javaOpenComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
 
-        javaOpenComponentDO.setUrl(model.getUrl()==null?"-":model.getUrl());
+        javaOpenComponentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
         javaOpenComponentDO.setDownloadUrl(getDownloadUrl(pomUrl));
-        javaOpenComponentDO.setSourceUrl(model.getScm()==null?"-":(model.getScm().getUrl()==null?"-":model.getScm().getUrl()));
+        javaOpenComponentDO.setSourceUrl(model.getScm() == null ? "-" : (model.getScm().getUrl() == null ? "-" : model.getScm().getUrl()));
 
         javaOpenComponentDO.setDevelopers(getDevelopers(model));
         javaOpenComponentDO.setLicenses(getLicense(model));

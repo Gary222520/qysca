@@ -1,10 +1,4 @@
-import dataAccess.MongoDBAccess;
-import domain.component.JavaOpenComponentDO;
-import domain.component.JavaOpenComponentInformationDO;
-import domain.component.JavaOpenDependencyTableDO;
-import domain.component.JavaOpenDependencyTreeDO;
 import org.junit.Test;
-import spider.JavaOpenPomSpider;
 
 public class JavaOpenPomSpiderTest {
 
