@@ -33,12 +33,12 @@ const data = reactive({
     { title: '组件名称', dataIndex: 'name', key: 'name' },
     { title: '组织ID', dataIndex: 'groupId', key: 'groupId' },
     { title: '工件ID', dataIndex: 'artifactId', key: 'artifactId' },
-    { title: '版本', dataIndex: 'version', key: 'version' },
-    { title: '语言', dataIndex: 'language', key: 'language' },
-    { title: '依赖方式', dataIndex: 'direct', key: 'direct' },
-    { title: '依赖层级', dataIndex: 'depth', key: 'depth' },
-    { title: '依赖范围', dataIndex: 'scope', key: 'scope' },
-    { title: '是否开源', dataIndex: 'opensource', key: 'opensource' },
+    { title: '版本', dataIndex: 'version', key: 'version', width: 80 },
+    { title: '语言', dataIndex: 'language', key: 'language', width: 80 },
+    { title: '依赖方式', dataIndex: 'direct', key: 'direct', width: 90 },
+    { title: '依赖层级', dataIndex: 'depth', key: 'depth', width: 90 },
+    { title: '依赖范围', dataIndex: 'scope', key: 'scope', width: 90 },
+    { title: '是否开源', dataIndex: 'opensource', key: 'opensource', width: 90 },
     { title: '许可证', dataIndex: 'licenses', key: 'licenses' }
   ]
 })
@@ -77,7 +77,7 @@ const hide = () => {
   data.visible = false
 }
 const showInfo = (record) => {
-  drawer.value.open(record)
+  drawer.value.open(record, false)
 }
 defineExpose({ show, hide })
 </script>

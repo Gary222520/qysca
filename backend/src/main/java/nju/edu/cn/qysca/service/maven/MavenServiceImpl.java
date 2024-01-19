@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -87,7 +88,7 @@ public class MavenServiceImpl implements MavenService {
         }
         request.setGoals(Collections.singletonList("dependency:tree -DoutputFile=result -DoutputType=text"));
         invoker.execute(request);
-        if(flag == 1){
+        if (flag == 1) {
             request.setGoals(Collections.singletonList("install"));
             invoker.execute(request);
         }
@@ -174,7 +175,7 @@ public class MavenServiceImpl implements MavenService {
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        ZipFile zipFile = new ZipFile(filePath);
+        ZipFile zipFile = new ZipFile(filePath, Charset.forName("GBK"));
         Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
         while (zipEntries.hasMoreElements()) {
             ZipEntry zipEntry = zipEntries.nextElement();

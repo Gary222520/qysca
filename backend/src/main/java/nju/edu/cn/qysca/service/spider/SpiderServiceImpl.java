@@ -126,7 +126,7 @@ public class SpiderServiceImpl implements SpiderService {
 
         javaOpenComponentDO.setDevelopers(getDevelopers(model));
         javaOpenComponentDO.setLicenses(getLicense(model));
-        javaOpenComponentDO.setPom(convertToJson(document).toString());
+        javaOpenComponentDO.setPom(document.outerHtml());
 
         return javaOpenComponentDO;
 

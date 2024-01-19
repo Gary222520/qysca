@@ -9,6 +9,7 @@ import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.Invoker;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
@@ -72,7 +73,7 @@ public class MavenUtil {
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        ZipFile zipFile = new ZipFile(filePath);
+        ZipFile zipFile = new ZipFile(filePath, Charset.forName("GBK"));
         Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
         while (zipEntries.hasMoreElements()) {
             ZipEntry zipEntry = zipEntries.nextElement();

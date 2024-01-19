@@ -72,7 +72,9 @@
                   <div class="action_icon">
                     <a-tooltip>
                       <template #title>更新</template>
-                      <SyncOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="changeVersion(record)" />
+                      <SyncOutlined
+                        :style="{ fontSize: '18px', color: '#6f005f' }"
+                        @click="changeVersion(project, record)" />
                     </a-tooltip>
                   </div>
                   <div class="action_icon">
@@ -96,6 +98,20 @@
                   <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
                   <div style="margin-left: 10px">扫描分析中...</div>
                 </div>
+                <div style="display: flex; align-items: center" v-if="record.state === 'FAILED'">
+                  <a-popconfirm v-model:open="record.popconfirm" title="扫描出错，请重试或删除">
+                    <template #cancelButton>
+                      <a-button class="cancel_btn" size="small" @click="retry(project, record)">重试</a-button>
+                    </template>
+                    <template #okButton>
+                      <a-button danger type="primary" size="small" @click="deleteVersion(project, record)">
+                        删除
+                      </a-button>
+                    </template>
+                    <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+                    <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
+                  </a-popconfirm>
+                </div>
               </template>
             </template>
             <template #emptyText>暂无数据</template>
@@ -113,8 +129,8 @@
       </div>
     </a-card>
     <AddModal ref="addModal" @success="getProjectList"></AddModal>
-    <ChangeModal ref="changeModal"></ChangeModal>
-    <UpgradeModal ref="upgradeModal"></UpgradeModal>
+    <ChangeModal ref="changeModal" @success="getProjectInfo"></ChangeModal>
+    <UpgradeModal ref="upgradeModal" @success="getProjectInfo"></UpgradeModal>
     <DeleteModal ref="deleteModal" @success="getProjectList"></DeleteModal>
   </div>
 </template>
@@ -131,7 +147,8 @@ import {
   LoadingOutlined,
   SwapOutlined,
   CloseOutlined,
-  RedoOutlined
+  RedoOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { reactive, ref, onMounted } from 'vue'
@@ -157,7 +174,7 @@ const data = reactive({
     { title: '版本', dataIndex: 'version', key: 'version', width: 120 },
     { title: '语言', dataIndex: 'language', key: 'language', width: 120 },
     { title: '构建工具', dataIndex: 'builder', key: 'builder', width: 120 },
-    { title: '扫描对象', dataIndex: 'scanner', key: 'scanner', width: 120 },
+    { title: '扫描对象', dataIndex: 'scanner', key: 'scanner', width: 150 },
     { title: '最近一次扫描时间', dataIndex: 'time', key: 'time', width: 210 },
     { title: '备注', dataIndex: 'note', key: 'note' },
     { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
@@ -228,7 +245,7 @@ const getProjectInfo = async (project, number = 1, size = 5) => {
       project.analysing = res.data !== 0
     })
     .catch((err) => {
-      console.log(err)
+      console.error(err)
     })
   await GetProjectInfo(params)
     .then((res) => {
@@ -296,7 +313,7 @@ const compare = (project, value) => {
         }
       },
       getCheckboxProps: (record) => {
-        return { disabled: record.state === 'RUNNING' }
+        return { disabled: record.state !== 'SUCCESS' }
       }
     }
   } else {
@@ -304,13 +321,21 @@ const compare = (project, value) => {
     data.rowSelection = null
   }
 }
-const changeVersion = (record) => {
-  changeModal.value.open(record)
+const changeVersion = (project, record) => {
+  changeModal.value.open(project, record)
+}
+const retry = (project, record) => {
+  record.popconfirm = false
+  changeVersion(project, record)
 }
 const deleteVersion = (project, record) => {
   DeleteVersion({ name: record.name, version: record.version })
     .then((res) => {
-      console.log('DeleteVersion', res)
+      // console.log('DeleteVersion', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
       message.success('删除版本成功')
       getProjectInfo(project)
     })

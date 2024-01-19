@@ -14,6 +14,8 @@ export const API = {
   PROJECT_TREE: '/qysca/project/findProjectDependencyTree',
   // 查询具体项目具体版本的组件信息-平铺展示
   PROJECT_TILED: '/qysca/project/findProjectDependencyTable',
+  // 获取项目版本对比树
+  COMPARE_TREE: '/qysca/project/getProjectVersionCompareTree',
 
   // 获取项目的所有版本
   VERSION_LIST: '/qysca/project/getVersionsList',

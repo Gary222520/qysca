@@ -3,7 +3,7 @@
     <a-card class="header_card">
       <div class="card_header">
         <LeftOutlined :style="{ fontSize: '18px' }" @click="back" />
-        <div style="margin-left: 10px; font-weight: bold">版本快照对比</div>
+        <div style="margin-left: 10px; font-weight: bold">版本对比</div>
       </div>
       <div class="card_title">
         当前版本：
@@ -30,7 +30,7 @@
     </a-card>
     <a-card class="content_card">
       <div class="content">
-        <div class="content_header">
+        <!-- <div class="content_header">
           <a-radio-group v-model:value="data.mode">
             <a-tooltip>
               <template #title>树形展示</template>
@@ -45,17 +45,10 @@
               </a-radio-button>
             </a-tooltip>
           </a-radio-group>
-          <div v-if="data.mode === 'tiled'">
-            <a-input-search
-              v-model:value="data.search.name"
-              placeholder="请输入组件名称"
-              style="width: 250px"></a-input-search>
-            <a-button type="primary" style="margin-left: 10px"><ExportOutlined />导出Excel</a-button>
-          </div>
-        </div>
-        <div style="margin-top: 20px">
-          <TreeList ref="treeList"></TreeList>
-          <TiledList ref="tiledList"></TiledList>
+        </div> -->
+        <div>
+          <CompareTree ref="compareTree"></CompareTree>
+          <!-- <TiledList ref="tiledList"></TiledList> -->
         </div>
       </div>
     </a-card>
@@ -67,23 +60,23 @@ import { reactive, ref, onMounted, defineExpose } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { LeftOutlined, ApartmentOutlined, UnorderedListOutlined, ExportOutlined } from '@ant-design/icons-vue'
 import { GetVersionList } from '@/api/frontend'
-import TreeList from './components/TreeList.vue'
+import CompareTree from './components/CompareTree.vue'
 import TiledList from './components/TiledList.vue'
 import { message } from 'ant-design-vue'
 
 onMounted(async () => {
-  const name = route.query.name
+  data.name = route.query.name
   data.currentVersion = route.query.currentVersion || ''
   data.compareVersion = route.query.compareVersion || ''
-  await getVersions(name)
+  await getVersions(data.name)
   compare()
 })
 
 const router = useRouter()
 const route = useRoute()
-const treeList = ref()
-const tiledList = ref()
+const compareTree = ref()
 const data = reactive({
+  name: '',
   currentVersion: '',
   compareVersion: '',
   versionOptions: [],
@@ -110,7 +103,7 @@ const getVersions = async (name) => {
         if (data.currentVersion === '') data.currentVersion = data.versionOptions[0].value
         if (data.compareVersion === '') {
           const index = data.versionOptions.findIndex((option) => option.value === data.currentVersion)
-          data.compareVersion = data.versionOptions[index + 1] || data.versionOptions[index]
+          data.compareVersion = data.versionOptions[index + 1]?.value || data.versionOptions[index]?.value
         }
       }
     })
@@ -121,7 +114,9 @@ const getVersions = async (name) => {
 const changeVersion = (value) => {
   compare()
 }
-const compare = () => {}
+const compare = () => {
+  compareTree.value.show(data.name, data.currentVersion, data.compareVersion)
+}
 const filterOption = (input, option) => {
   return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
 }

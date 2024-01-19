@@ -70,14 +70,15 @@ const options = {
    * 判断分片是否上传，秒传和断点续传基于此方法
    * 这里根据实际业务来 用来判断哪些片已经上传过了 不用再重复上传了 [这里可以用来写断点续传！！！]
    */
-  checkChunkUploadedByResponse: (chunk, message) => {
-    // message是后台返回
-    const res = JSON.parse(message)
+  checkChunkUploadedByResponse: (chunk, msg) => {
+    // msg是后台返回
+    const res = JSON.parse(msg)
     const resData = res.data
     if (!resData.skipUpload) return false
     if (resData.skipUpload) {
       upload.skip = true
-      upload.progress.status = 'success'
+      clear()
+      message.info('该文件对应的组件已存在，请勿重复上传')
       return true
     }
     // 判断文件或分片是否已上传，已上传返回 true
@@ -112,7 +113,7 @@ const upload = reactive({
     status: 'normal'
   },
   skip: false,
-  maxSize: 100 * 1024 * 1024
+  maxSize: 500 * 1024 * 1024
 })
 const fileStatusText = (status, response) => {
   if (status === 'md5') {
@@ -195,7 +196,7 @@ const onFileSuccess = (rootFile, file, response, chunk) => {
       totalChunks: chunk.offset
     })
       .then((res) => {
-        console.log('FileMerge', res)
+        // console.log('FileMerge', res)
         if (res.code !== 200) {
           message.error(res.message)
           return
