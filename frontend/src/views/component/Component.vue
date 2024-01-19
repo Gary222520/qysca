@@ -35,7 +35,7 @@
               placeholder="请选择语言"
               style="width: 200px; margin-right: 10px"
               @change="(value, option) => getComponents()">
-              <a-select-option value="">All</a-select-option>
+              <!-- <a-select-option value="">All</a-select-option> -->
               <a-select-option value="java">Java</a-select-option>
             </a-select>
           </span>
@@ -92,7 +92,7 @@
         <template #emptyText>暂无数据</template>
       </a-table>
       <Drawer ref="drawer"></Drawer>
-      <AddModal ref="addModal"></AddModal>
+      <AddModal ref="addModal" @success="getComponents"></AddModal>
     </a-card>
   </div>
 </template>
@@ -105,6 +105,9 @@ import Drawer from '@/views/application/components/Drawer.vue'
 import AddModal from './components/AddModal.vue'
 import { message } from 'ant-design-vue'
 
+onMounted(() => {
+  getComponents()
+})
 const drawer = ref()
 const addModal = ref()
 const data = reactive({
@@ -115,7 +118,7 @@ const data = reactive({
     groupId: '',
     artifactId: '',
     version: '',
-    language: ''
+    language: 'java'
   },
   datasource: [],
   columns: [
@@ -156,6 +159,7 @@ const getComponents = (number = 1, size = 10) => {
         }
         data.datasource = res.data.content
         pagination.total = res.data.totalElements
+        pagination.current = number
       })
       .catch((err) => {
         console.error(err)
@@ -175,6 +179,7 @@ const getComponents = (number = 1, size = 10) => {
         }
         data.datasource = res.data.content
         pagination.total = res.data.totalElements
+        pagination.current = number
       })
       .catch((err) => {
         console.error(err)
