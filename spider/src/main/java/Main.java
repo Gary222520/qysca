@@ -29,6 +29,8 @@ public class Main {
 
         // 开始爬取
         for (String targetUrl : targetUrls) {
+            if (targetUrl.isEmpty() || targetUrl.startsWith("//"))
+                continue;
             System.out.println("开始按目录爬取：" + targetUrl);
             spider.crawlManyWithDependency(targetUrl);
             System.out.println("该目录爬取完毕: " + targetUrl);
