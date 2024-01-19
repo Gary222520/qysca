@@ -16,9 +16,10 @@ public class RunSBOM {
 
     /**
      * 解析SBOM中的json，并爬取其中的java开源组件，存进数据库
+     *
      * @param filePath
      */
-    private void parseSBOM(String filePath){
+    private void parseSBOM(String filePath) {
         File jsonFile = new File(filePath);
 
         JavaOpenPomSpider spider = JavaOpenPomSpider.getInstance();
@@ -41,7 +42,7 @@ public class RunSBOM {
 
                 // 打印结果
                 System.out.println("Group: " + group + ", Name: " + name + ", Version: " + version);
-                JavaOpenComponentInformationDO informationDO = spider.crawlWithDependencyByGav(group,name,version);
+                JavaOpenComponentInformationDO informationDO = spider.crawlWithDependencyByGav(group, name, version);
                 if (informationDO == null)
                     System.out.println("未爬取到相关信息");
                 System.out.println("--------------------------------------");
@@ -65,8 +66,6 @@ public class RunSBOM {
         runSBOM.parseSBOM(filePath1);
         runSBOM.parseSBOM(filePath2);
         runSBOM.parseSBOM(filePath3);
-
-
 
 
     }

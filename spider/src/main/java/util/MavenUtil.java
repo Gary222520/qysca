@@ -18,9 +18,9 @@ public class MavenUtil {
     /**
      * 根据pom文件路径在pom文件路径下生成result.txt文件，文件中记录了pom文件中所有依赖的树形结构
      * 调用 maven dependency:tree命令
-     * Maven_HOME
      *
      * @param filePath
+     * @return fr.dutra.tools.maven.deptree.core.Nod
      */
     public static Node mavenDependencyTreeAnalyzer(String filePath) {
         InvocationRequest request = new DefaultInvocationRequest();
@@ -58,6 +58,57 @@ public class MavenUtil {
         }
         return null;
     }
+
+    /**
+     * 限时，120s = 2minutes
+     */
+    private static long timeoutMillis = 120000;
+
+    /**
+     * 与 mavenDependencyTreeAnalyzer方法功能类似，区别在于当调用mvn dependency:tree超时时，程序会重新调用该方法
+     * 最多会调用3次
+     * @param filePath
+     * @return fr.dutra.tools.maven.deptree.core.Nod
+     */
+//    public static Node mavenDependencyTreeAnalyzer_restart_when_timeout(String filePath) {
+//        String mavenCommand = "mvn dependency:tree -DoutputFile=result -DoutputType=text";
+//        File pom = new File(filePath);
+//
+//        try {
+//            ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/c", mavenCommand);
+//            processBuilder.directory(pom.getParentFile());
+//
+//            Process process = processBuilder.start();
+//            System.out.println("执行命令中："+ mavenCommand);
+//
+//            // 等待进程执行完成或超时
+//            if (!waitForProcess(process, timeoutMillis)) {
+//                // 如果超时，强制终止进程并重新执行
+//                process.destroyForcibly();
+//                process = processBuilder.start();
+//                // 继续等待新进程执行完成或超时
+//                if (!waitForProcess(process, timeoutMillis)) {
+//                    // 如果仍然超时，返回 null 或者采取其他处理
+//                    process.destroyForcibly();
+//                    return null;
+//                }
+//            }
+//            // 等待进程执行完成
+//            process.waitFor();
+//
+//            // 获得 result 结果的路径
+//            FileInputStream fis = new FileInputStream(new File(pom.getParent() + File.separator + "result"));
+//            Reader reader = new BufferedReader(new InputStreamReader(fis));
+//            InputType type = InputType.TEXT;
+//            Parser parser = type.newParser();
+//            Node node = parser.parse(reader);
+//            return node;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
+
 
     /**
      * 递归解析依赖树 返回根节点
@@ -128,12 +179,19 @@ public class MavenUtil {
         return componentDependencyTreeDO;
     }
 
+    /**
+     * 通过JavaOpenDependencyTreeDO构建JavaOpenDependencyTableDO对象
+     *
+     * @param javaOpenDependencyTreeDO 依赖树DO
+     * @return JavaOpenDependencyTableDO 平铺依赖表DO
+     */
     public static List<JavaOpenDependencyTableDO> buildJavaOpenDependencyTable(JavaOpenDependencyTreeDO javaOpenDependencyTreeDO) {
         List<JavaOpenDependencyTableDO> result = new ArrayList<>();
         Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(javaOpenDependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {
             JavaOpenDependencyTableDO javaOpenDependencyTableDO = new JavaOpenDependencyTableDO();
             javaOpenDependencyTableDO.setId(UUIDGenerator.getUUID());
+            // 设置依赖表DO的属性，表示这张表是属于Parent这个组件的平铺依赖表
             javaOpenDependencyTableDO.setParentGroupId(javaOpenDependencyTreeDO.getGroupId());
             javaOpenDependencyTableDO.setParentArtifactId(javaOpenDependencyTreeDO.getArtifactId());
             javaOpenDependencyTableDO.setParentVersion(javaOpenDependencyTreeDO.getVersion());
@@ -145,6 +203,37 @@ public class MavenUtil {
         }
 
         return result;
+    }
+
+    /**
+     * 检查进程是否超时
+     *
+     * @param process       进程
+     * @param timeoutMillis 限时
+     * @return 是否没有超时
+     */
+    private static boolean waitForProcess(Process process, long timeoutMillis) {
+        long startTime = System.currentTimeMillis();
+        long elapsedTime;
+
+        try {
+            while (true) {
+                if (!process.isAlive()) {
+                    return true; // 进程执行完成
+                }
+
+                elapsedTime = System.currentTimeMillis() - startTime;
+
+                if (elapsedTime > timeoutMillis) {
+                    return false; // 超过时限
+                }
+
+                Thread.sleep(100); // 等待一段时间再检查进程状态
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 }
 
