@@ -1,6 +1,7 @@
 package spider;
 
 import data.BatchDataWriter;
+import dataAccess.MongoDBAccess;
 import domain.component.*;
 import fr.dutra.tools.maven.deptree.core.Node;
 import org.jsoup.nodes.Document;
@@ -31,6 +32,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
      */
     private Set<String> visitedUrls;
     private final String VISITED_URLS_PATH = "spider/src/main/resources/visited_urls.txt";
+    private final String FAILED_URLS_PATH = "spider/src/main/resources/failed_urls.txt";
     private final static String POM_FILE_TEMP_PATH = "spider/src/main/resources/pomFile/temp_pom.xml";
     private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
     /**
@@ -94,11 +96,12 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
 
     /**
      * 根据给定gav信息爬取pom文件，同时获得其依赖树和平铺依赖图，并将这些数据存储到数据库中
+     *
      * @param groupId
      * @param artifactId
      * @param version
      */
-    public JavaOpenComponentInformationDO crawlWithDependencyByGav(String groupId, String artifactId, String version){
+    public JavaOpenComponentInformationDO crawlWithDependencyByGav(String groupId, String artifactId, String version) {
 
         // 根据gav拼出pomUrl
         String downloadUrl = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
@@ -147,7 +150,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
      *
      * @param directoryUrl 目录url
      */
-    private void crawlDirectoryWithDependency(String directoryUrl){
+    private void crawlDirectoryWithDependency(String directoryUrl) {
         if (visitedUrls.contains(directoryUrl)) {
             return;
         }
@@ -165,14 +168,18 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
                 crawlDirectoryWithDependency(fileAbsUrl);
             } else if (fileAbsUrl.endsWith(".pom") && !fileAbsUrl.contains("-javadoc")) {
                 // 如果为pom文件，则直接爬取
-                crawlWithDependency(fileAbsUrl);
+                Object o = crawlWithDependency(fileAbsUrl);
+                if (o == null) {
+                    writeFailedUrl(fileAbsUrl);
+                }
             }
         }
 
         visitedUrls.add(directoryUrl);
     }
 
-    /**l
+    /**
+     * l
      * 根据pom文件的url爬取单个pom文件，并转换为DO，存进数据库
      *
      * @param pomUrl pom url
@@ -182,7 +189,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
             return null;
         }
 
-        System.out.println("Crawling " + pomUrl);
+        System.out.println("  Crawling " + pomUrl);
 
         Document document = UrlConnector.getDocumentByUrl(pomUrl);
         if (document == null)
@@ -201,7 +208,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
      * @param pomUrl
      * @return JavaOpenComponentInformationDO
      */
-    private JavaOpenComponentInformationDO crawlWithDependency(String pomUrl){
+    private JavaOpenComponentInformationDO crawlWithDependency(String pomUrl) {
         if (!pomUrl.endsWith(".pom")) {
             return null;
         }
@@ -215,12 +222,21 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
         // 获得组件信息
         JavaOpenComponentDO javaOpenComponentDO = ConvertUtil.convertToJavaOpenComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
 
+        MongoDBAccess<JavaOpenDependencyTreeDO> treeDBAccess = MongoDBAccess.getInstance(DEPENDENCY_TREE_COLLECTION_NAME, JavaOpenDependencyTreeDO.class);
+        if (treeDBAccess.readByGAV(javaOpenComponentDO.getGroupId(), javaOpenComponentDO.getArtifactId(), javaOpenComponentDO.getVersion()) != null) {
+            // 表示这个组件已经被爬取过，并且依赖树也生成了
+            System.out.println("This component has been crawled with dependency tree before, skip it");
+            return new JavaOpenComponentInformationDO();
+        }
+
         // 生成一个临时pom文件
         createPomFile(document.outerHtml());
         // 调用mvn dependency:tree命令获取依赖
         Node node = MavenUtil.mavenDependencyTreeAnalyzer(POM_FILE_TEMP_PATH);
         // 解析依赖，获得组件树
         MavenUtil mavenUtil = new MavenUtil();
+        if (node == null)
+            return null;
         ComponentDependencyTreeDO dependencyTreeDO = mavenUtil.convertNode(node, 0);
 
         // 封装依赖树
@@ -275,6 +291,23 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
                 writer.write(link);
                 writer.newLine();
             }
+            System.out.println("visited links saved.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 记录爬取或解析依赖树失败的url
+     *
+     * @param failedUrl 失败的url
+     */
+    private void writeFailedUrl(String failedUrl) {
+        System.err.println("爬取或生成依赖树失败：" + failedUrl);
+        try (OutputStream outputStream = new FileOutputStream(FAILED_URLS_PATH);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+            writer.write(failedUrl);
+            writer.newLine();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -336,7 +369,7 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
     /**
      * 手动刷新
      */
-    public void flush(){
+    public void flush() {
         componentWriter.flush();
         dependencyTreeWriter.flush();
         dependencyTableWriter.flush();

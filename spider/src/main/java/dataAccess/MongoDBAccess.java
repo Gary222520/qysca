@@ -6,6 +6,7 @@ import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.InsertManyOptions;
 import config.DatabaseConfig;
+import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -66,8 +67,8 @@ public class MongoDBAccess<T> {
         try {
             // 插入数据
             collection.insertMany(dataList, insertManyOptions);
-            System.out.println("Data written to MongoDB successfully! Collection name = " + collection.getNamespace().toString() + "This Batch Number = " + dataList.size());
-        } catch (MongoBulkWriteException e){
+            System.out.println("Data written to MongoDB successfully! Collection name = " + collection.getNamespace().toString() + ". This Batch Number = " + dataList.size());
+        } catch (MongoBulkWriteException | IllegalArgumentException e) {
             // do nothing
         } catch (Exception e) {
             e.printStackTrace();
@@ -91,6 +92,38 @@ public class MongoDBAccess<T> {
         } catch (Exception e) {
             e.printStackTrace();
             return null; // 或者根据需要抛出异常
+        }
+    }
+
+    /**
+     * 获取collection中所有文档
+     *
+     * @return
+     */
+    public FindIterable<T> findAll() {
+        try {
+            // 无限制条件，获取所有文档
+            FindIterable<T> result = collection.find();
+            // 返回所有文档
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 或者根据需要抛出异常
+            return null;
+        }
+    }
+
+    /**
+     * 删除collection中所有文档
+     */
+    public void deleteAllDocuments() {
+        try {
+            // 删除集合中的所有文档
+            collection.deleteMany(new Document());
+
+            System.out.println("All documents deleted from the collection.");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

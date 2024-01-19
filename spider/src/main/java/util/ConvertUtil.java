@@ -6,11 +6,9 @@ import domain.component.LicenseDO;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.codehaus.plexus.util.xml.pull.XmlSerializer;
 import org.json.JSONObject;
 import org.json.XML;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import util.idGenerator.UUIDGenerator;
 
 import java.io.IOException;
@@ -52,12 +50,12 @@ public class ConvertUtil {
         javaOpenComponentDO.setVersion(version);
 
         javaOpenComponentDO.setLanguage("Java");
-        javaOpenComponentDO.setName(model.getName()==null?"-":model.getName());
-        javaOpenComponentDO.setDescription(model.getDescription()==null?"-":model.getDescription());
+        javaOpenComponentDO.setName(model.getName() == null ? "-" : model.getName());
+        javaOpenComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
 
-        javaOpenComponentDO.setUrl(model.getUrl()==null?"-":model.getUrl());
+        javaOpenComponentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
         javaOpenComponentDO.setDownloadUrl(getDownloadUrl(pomUrl));
-        javaOpenComponentDO.setSourceUrl(model.getScm()==null?"-":(model.getScm().getUrl()==null?"-":model.getScm().getUrl()));
+        javaOpenComponentDO.setSourceUrl(model.getScm() == null ? "-" : (model.getScm().getUrl() == null ? "-" : model.getScm().getUrl()));
 
         javaOpenComponentDO.setDevelopers(getDevelopers(model));
         javaOpenComponentDO.setLicenses(getLicense(model));
