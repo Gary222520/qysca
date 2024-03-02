@@ -185,6 +185,7 @@ public class ComponentServiceImpl implements ComponentService {
                 fileWriter.close();
                 ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(tempPath, "maven", 0);
                 componentDependencyTreeDO.setOpensource(true);
+                componentDependencyTreeDO.setName(javaOpenComponentDO.getName());
                 javaOpenDependencyTreeDO = new JavaOpenDependencyTreeDO();
                 javaOpenDependencyTreeDO.setId(UUIDGenerator.getUUID());
                 javaOpenDependencyTreeDO.setGroupId(componentGavDTO.getGroupId());

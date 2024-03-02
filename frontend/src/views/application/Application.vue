@@ -190,7 +190,8 @@ const data = reactive({
 const pagination = reactive({
   current: 1,
   total: 0,
-  pageSize: 5
+  pageSize: 5,
+  showSizeChanger: false
 })
 const getProjectList = async (page = 1, size = 5) => {
   let projectList = []
