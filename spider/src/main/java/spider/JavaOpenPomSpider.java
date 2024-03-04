@@ -168,9 +168,16 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
                 crawlDirectoryWithDependency(fileAbsUrl);
             } else if (fileAbsUrl.endsWith(".pom") && !fileAbsUrl.contains("-javadoc")) {
                 // 如果为pom文件，则直接爬取
-                Object o = crawlWithDependency(fileAbsUrl);
+                JavaOpenComponentInformationDO o = crawlWithDependency(fileAbsUrl);
                 if (o == null) {
                     writeFailedUrl(fileAbsUrl);
+                } else if (o.getJavaOpenDependencyTreeDO() != null){
+                    // 成功爬取后，加入写数据库队列
+                    componentWriter.enqueue(o.getJavaOpenComponentDO());
+                    dependencyTreeWriter.enqueue(o.getJavaOpenDependencyTreeDO());
+                    for (JavaOpenDependencyTableDO javaOpenDependencyTableDO : o.getJavaOpenDependencyTableDO()){
+                        dependencyTableWriter.enqueue(javaOpenDependencyTableDO);
+                    }
                 }
             }
         }
@@ -205,15 +212,15 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
 
 
     /**
-     * 根据pom文件的url爬取单个pom文件，并转换为DO，同时获得其依赖树和平铺依赖图，存进数据库
+     * 根据pom文件的url爬取单个pom文件，并转换为DO，同时获得其依赖树和平铺依赖表
+     * 该方法不会将url指向的组件信息、依赖树、依赖表存入数据库，但会将依赖树中出现的其他组件信息存入数据库
      *
      * @param pomUrl
-     * @return JavaOpenComponentInformationDO
+     * @return JavaOpenComponentInformationDO (无法获取时，返回null；已经被爬取过，并且依赖树也生成时，返回一个只含JavaOpenComponentDO的对象（tree和table为null）；否则返回完整的对象）
      */
     private JavaOpenComponentInformationDO crawlWithDependency(String pomUrl) {
-        if (!pomUrl.endsWith(".pom")) {
+        if (!pomUrl.endsWith(".pom"))
             return null;
-        }
 
         System.out.println("Crawling " + pomUrl);
 
@@ -227,10 +234,16 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
             return null;
 
         MongoDBAccess<JavaOpenDependencyTreeDO> treeDBAccess = MongoDBAccess.getInstance(DEPENDENCY_TREE_COLLECTION_NAME, JavaOpenDependencyTreeDO.class);
+        MongoDBAccess<JavaOpenComponentDO> componentDBAccess = MongoDBAccess.getInstance(COMPONENT_COLLECTION_NAME, JavaOpenComponentDO.class);
+
         if (treeDBAccess.readByGAV(javaOpenComponentDO.getGroupId(), javaOpenComponentDO.getArtifactId(), javaOpenComponentDO.getVersion()) != null) {
             // 表示这个组件已经被爬取过，并且依赖树也生成了
-            System.out.println("This component has been crawled with dependency tree before, skip it");
-            return new JavaOpenComponentInformationDO();
+            System.out.println("This component has been crawled with dependency tree before.");
+
+            // 那么返回一个只包含组件信息（JavaOpenComponentDO）的JavaOpenComponentInformationDO
+            JavaOpenComponentInformationDO informationDO = new JavaOpenComponentInformationDO();
+            informationDO.setJavaOpenComponentDO(componentDBAccess.readByGAV(javaOpenComponentDO.getGroupId(), javaOpenComponentDO.getArtifactId(), javaOpenComponentDO.getVersion()));
+            return informationDO;
         }
 
         // 生成一个临时pom文件
@@ -254,11 +267,6 @@ public class JavaOpenPomSpider implements Spider<JavaOpenComponentDO> {
 
         // 封装依赖表
         List<JavaOpenDependencyTableDO> javaOpenDependencyTableDOList = MavenUtil.buildJavaOpenDependencyTable(javaOpenDependencyTreeDO);
-
-        componentWriter.enqueue(javaOpenComponentDO);
-        dependencyTreeWriter.enqueue(javaOpenDependencyTreeDO);
-        for (JavaOpenDependencyTableDO javaOpenDependencyTableDO : javaOpenDependencyTableDOList)
-            dependencyTableWriter.enqueue(javaOpenDependencyTableDO);
 
         // 封装
         JavaOpenComponentInformationDO javaOpenComponentInformationDO = new JavaOpenComponentInformationDO();

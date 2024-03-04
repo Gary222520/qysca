@@ -2,16 +2,38 @@ package run;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import domain.component.JavaOpenComponentInformationDO;
+import data.BatchDataWriter;
+import dataAccess.MongoDBAccess;
+import domain.component.*;
 import spider.JavaOpenPomSpider;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.PublicKey;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 用于爬取甲方SBOM中出现的java开源组件
  */
 public class RunSBOM {
+
+
+    /**
+     * 连接数据库
+     */
+    private final BatchDataWriter<JavaOpenComponentDO> componentWriter;
+    private final BatchDataWriter<JavaOpenDependencyTreeDO> dependencyTreeWriter;
+    private final BatchDataWriter<JavaOpenDependencyTableDO> dependencyTableWriter;
+    private final static String COMPONENT_COLLECTION_NAME = "java_component_open_detail";
+    private final static String DEPENDENCY_TREE_COLLECTION_NAME = "java_component_open_dependency_tree";
+    private final static String DEPENDENCY_TABLE_COLLECTION_NAME = "java_component_open_dependency_table";
+
+    public RunSBOM(){
+        componentWriter = new BatchDataWriter<JavaOpenComponentDO>(COMPONENT_COLLECTION_NAME, JavaOpenComponentDO.class);
+        dependencyTreeWriter = new BatchDataWriter<JavaOpenDependencyTreeDO>(DEPENDENCY_TREE_COLLECTION_NAME, JavaOpenDependencyTreeDO.class);
+        dependencyTableWriter = new BatchDataWriter<JavaOpenDependencyTableDO>(DEPENDENCY_TABLE_COLLECTION_NAME, JavaOpenDependencyTableDO.class);
+    }
 
 
     /**
@@ -42,9 +64,34 @@ public class RunSBOM {
 
                 // 打印结果
                 System.out.println("Group: " + group + ", Name: " + name + ", Version: " + version);
+                // 按照GAV爬取
                 JavaOpenComponentInformationDO informationDO = spider.crawlWithDependencyByGav(group, name, version);
                 if (informationDO == null)
                     System.out.println("未爬取到相关信息");
+                else {
+                    // 查找SBOM中的hashes信息
+                    List<HashDO> hashes = new ArrayList<>();
+
+                    JsonNode hashesNode = componentNode.get("hashes");
+                    for (JsonNode hashNode : hashesNode){
+                        HashDO hashDO = new HashDO();
+                        hashDO.setAlgorithm(hashNode.get("alg").asText());
+                        hashDO.setContent(hashNode.get("content").asText());
+                        hashes.add(hashDO);
+                    }
+                    informationDO.getJavaOpenComponentDO().setHashes(hashes);
+
+                    // 写入数据库
+                    componentWriter.enqueue(informationDO.getJavaOpenComponentDO());
+
+                    if (informationDO.getJavaOpenDependencyTreeDO() != null)
+                        dependencyTreeWriter.enqueue(informationDO.getJavaOpenDependencyTreeDO());
+
+                    if (informationDO.getJavaOpenDependencyTableDO() != null)
+                        for (JavaOpenDependencyTableDO javaOpenDependencyTableDO : informationDO.getJavaOpenDependencyTableDO())
+                            dependencyTableWriter.enqueue(javaOpenDependencyTableDO);
+
+                }
                 System.out.println("--------------------------------------");
             }
 

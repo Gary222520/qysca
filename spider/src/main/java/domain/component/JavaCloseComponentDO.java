@@ -20,9 +20,9 @@ public class JavaCloseComponentDO {
 
     private String version;
 
-    private String name;
-
     private String language;
+
+    private String name;
 
     private String description;
 
@@ -37,4 +37,6 @@ public class JavaCloseComponentDO {
     private List<LicenseDO> licenses;
 
     private String pom;
+
+    private List<HashDO> hashes;
 }

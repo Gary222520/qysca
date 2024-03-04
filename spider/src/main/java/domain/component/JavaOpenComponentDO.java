@@ -40,4 +40,6 @@ public class JavaOpenComponentDO {
     private List<LicenseDO> licenses;
 
     private String pom;
+
+    private List<HashDO> hashes;
 }
