@@ -5,7 +5,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -19,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "components",uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id","artifact_id","version"})})
+@Table(name= "component",uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id","artifact_id","version"})})
 @TypeDefs({
         @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
 })
@@ -47,9 +46,13 @@ public class ComponentDO {
     @ApiModelProperty(value = "组件名称", example = "spring-boot-starter")
     private String name;
 
-    @Column(name="language")
+    @Column(name="language",nullable = false)
     @ApiModelProperty(value = "语言", example = "java")
     private String language;
+
+    @Column(name="opensource",nullable = false)
+    @ApiModelProperty(value = "是否开源",example = "true")
+    private Boolean opensource;
 
     @Column(name = "description")
     @ApiModelProperty(value = "组件描述", example = "Core starter, including auto-configuration support, logging and YAML")
@@ -66,6 +69,10 @@ public class ComponentDO {
     @Column(name = "source_url")
     @ApiModelProperty(value = "源码地址", example = "https://github.com/spring-projects/spring-boot")
     private String sourceUrl;
+
+    @Column(name = "p_url")
+    @ApiModelProperty(value = "包获取地址",example = "pkg:maven/io.grpc/grpc-protobuf@1.44.1?type=jar")
+    private String pUrl;
 
     @Column(name="developers")
     @ApiModelProperty(value = "开发者列表")
