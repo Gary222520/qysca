@@ -5,9 +5,9 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
-    url: jdbc:postgresql://127.0.0.1:5432/sca
-    username: postgres
-    password: 2002jiale
+    url: jdbc:postgresql://172.29.7.168:35432/qysca
+    username: qysca
+    password: qysca
     show-sql: true
   jpa:
     database: postgresql
