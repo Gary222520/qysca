@@ -4,9 +4,20 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-  data:
-    mongodb:
-      uri: mongodb://172.29.7.168:37018/qysca
+  datasource:
+    url: jdbc:postgresql://172.29.7.168:35432/qysca
+    username: qysca
+    password: qysca
+    show-sql: true
+  jpa:
+    database: postgresql
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        temp:
+          use-jdbc-metadata-defaults: false
   redis:
     host: 172.29.7.168
     port: 37379
@@ -23,6 +34,7 @@ spring:
         max-active: 8
         # 连接池最大阻塞等待时间 负值表示没有限制
         max-wait: -1ms
+
 uploadFolder: src/main/resources/static/upload/
 tempPomFolder: src/main/resources/static/temp/
 # maxFileSize 单个数据大小
