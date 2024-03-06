@@ -2,12 +2,15 @@ package nju.edu.cn.qysca.dao.component;
 
 import nju.edu.cn.qysca.domain.component.dos.DependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
+import nju.edu.cn.qysca.domain.project.dtos.TableExcelBriefDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 @Repository
 public interface DependencyTableDao extends JpaRepository<DependencyTableDO, String> {
@@ -41,4 +44,7 @@ public interface DependencyTableDao extends JpaRepository<DependencyTableDO, Str
      */
     @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.opensource, d.language, d.opensource) from DependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
     Page<ComponentTableDTO> findByGroupIdAndArtifactIdAndVersion(@Param("groupId")String groupId, @Param("artifactId") String artifactId, @Param("version") String version, Pageable pageable);
+
+    @Query("SELECT new nju.edu.cn.qysca.domain.project.dtos.TableExcelBriefDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.language, d.direct, d.depth, d.scope, d.opensource) FROM DependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
+    List<TableExcelBriefDTO>  findTableListByGroupIdAndArtifactIdAndVersion(String groupId, String artifactId, String version);
 }

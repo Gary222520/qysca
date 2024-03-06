@@ -4,10 +4,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import nju.edu.cn.qysca.controller.ResponseMsg;
+import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
-import nju.edu.cn.qysca.domain.project.dos.ProjectDependencyTreeDO;
-import nju.edu.cn.qysca.domain.project.dos.ProjectInfoDO;
-import nju.edu.cn.qysca.domain.project.dos.ProjectVersionDO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
 import nju.edu.cn.qysca.domain.project.dtos.*;
 import nju.edu.cn.qysca.service.project.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,42 +62,45 @@ public class ProjectController {
     }
 
     @ApiOperation("分页获取项目信息")
-    @GetMapping("/findProjectInfoPage")
-    public ResponseMsg<Page<ProjectInfoDO>> findProjectInfoPage(@ApiParam(value = "项目名称", allowEmptyValue = true) @RequestParam String name,
-                                                                @ApiParam(value = "页码", required = true) @RequestParam int number,
-                                                                @ApiParam(value = "页大小", required = true) @RequestParam int size) {
-        return new ResponseMsg<>(projectService.findProjectInfoPage(name, number, size));
+    @GetMapping("/findProjectPage")
+    public ResponseMsg<Page<ProjectDO>> findProjectPage(@ApiParam(value = "组织Id", allowEmptyValue = true) @RequestParam String groupId,
+                                                            @ApiParam(value = "工件Id", allowEmptyValue = true) @RequestParam String artifactId,
+                                                            @ApiParam(value = "版本", allowEmptyValue = true) @RequestParam String version,
+                                                            @ApiParam(value = "页码", required = true) @RequestParam int number,
+                                                            @ApiParam(value = "页大小", required = true) @RequestParam int size) {
+        return new ResponseMsg<>(projectService.findProjectPage(groupId, artifactId, version, number, size));
     }
 
     @ApiOperation("分页获取指定项目的版本信息")
     @GetMapping("/findProjectVersionPage")
-    public ResponseMsg<Page<ProjectVersionDO>> findProjectVersionPage(@ApiParam(value = "项目名称", required = true) @RequestParam String name,
+    public ResponseMsg<Page<ProjectDO>> findProjectVersionPage(@ApiParam(value = "组件Id", required = true) @RequestParam String groupId,
+                                                                      @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId,
                                                                       @ApiParam(value = "页码", required = true) @RequestParam int number,
                                                                       @ApiParam(value = "页大小", required = true) @RequestParam int size) {
-        return new ResponseMsg<>(projectService.findProjectVersionPage(name, number, size));
+        return new ResponseMsg<>(projectService.findProjectVersionPage(groupId, artifactId, number, size));
     }
 
     @ApiOperation("检查指定项目扫描中组件的个数")
     @GetMapping("/checkRunningProject")
-    public ResponseMsg<Integer> checkRunningProject(@ApiParam(value = "项目名称", required = true) @RequestParam String name) {
-        return new ResponseMsg<>(projectService.checkRunningProject(name));
+    public ResponseMsg<Integer> checkRunningProject(@ApiParam(value = "项目名称", required = true) @RequestParam String groupId, @RequestParam String artifactId) {
+        return new ResponseMsg<>(projectService.checkRunningProject(groupId, artifactId));
     }
 
     @ApiOperation("获取指定项目的所有版本列表")
     @GetMapping("/getVersionsList")
-    public ResponseMsg<List<String>> getVersionsList(@ApiParam(value = "项目名称", required = true) @RequestParam String name) {
-        return new ResponseMsg<>(projectService.getVersionsList(name));
+    public ResponseMsg<List<String>> getVersionsList(@ApiParam(value = "组织Id", required = true) @RequestParam String groupId, @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId) {
+        return new ResponseMsg<>(projectService.getVersionsList(groupId, artifactId));
     }
 
     @ApiOperation("获取指定项目指定版本的详细信息")
     @PostMapping("/findProjectVersionInfo")
-    public ResponseMsg<ProjectVersionDO> findProjectVersionInfo(@RequestBody ProjectSearchDTO dto) {
+    public ResponseMsg<ProjectDO> findProjectVersionInfo(@RequestBody ProjectSearchDTO dto) {
         return new ResponseMsg<>(projectService.findProjectVersionInfo(dto));
     }
 
     @ApiOperation("查询项目依赖树信息")
     @PostMapping("/findProjectDependencyTree")
-    public ResponseMsg<ProjectDependencyTreeDO> findProjectDependencyTree(@RequestBody ProjectSearchDTO dto) {
+    public ResponseMsg<DependencyTreeDO> findProjectDependencyTree(@RequestBody ProjectSearchDTO dto) {
         return new ResponseMsg<>(projectService.findProjectDependencyTree(dto));
     }
 

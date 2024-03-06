@@ -1,8 +1,9 @@
 package nju.edu.cn.qysca.service.project;
 
+import nju.edu.cn.qysca.dao.component.ComponentDao;
 import nju.edu.cn.qysca.dao.component.DependencyTableDao;
 import nju.edu.cn.qysca.dao.component.DependencyTreeDao;
-import nju.edu.cn.qysca.dao.component.ProjectDao;
+import nju.edu.cn.qysca.dao.project.ProjectDao;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentCompareTreeDTO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentDetailDTO;
@@ -11,12 +12,10 @@ import nju.edu.cn.qysca.domain.project.dos.*;
 import nju.edu.cn.qysca.domain.project.dtos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
-import nju.edu.cn.qysca.utils.JsonUtil;
 import nju.edu.cn.qysca.utils.excel.ExcelUtils;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -41,23 +40,10 @@ public class ProjectServiceImpl implements ProjectService {
     private DependencyTableDao dependencyTableDao;
 
     @Autowired
-    private ProjectDependencyTreeDao projectDependencyTreeDao;
-
-    @Autowired
-    private ProjectDependencyTableDao projectDependencyTableDao;
-
-    @Autowired
-    private ProjectVersionDao projectVersionDao;
+    private ComponentDao componentDao;
 
     @Autowired
     private MavenService mavenService;
-
-    @Autowired
-    private JavaOpenComponentDao javaOpenComponentDao;
-
-    @Autowired
-    private JavaCloseComponentDao javaCloseComponentDao;
-
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -261,7 +247,8 @@ public class ProjectServiceImpl implements ProjectService {
     /**
      * 删除某个项目某个版本
      *
-     * @param name    项目名称
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
      * @param version 版本名称
      * @return 删除某个项目某个版本是否成功
      */
@@ -277,76 +264,83 @@ public class ProjectServiceImpl implements ProjectService {
     /**
      * 分页获取项目信息
      *
-     * @param name   项目名称
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
+     * @param version 版本名称
      * @param number 页码
      * @param size   页大小
-     * @return Page<ProjectVersionDO> 项目信息分页结果
+     * @return Page<ProjectDO> 项目信息分页结果
      */
     @Override
-    public Page<ProjectInfoDO> findProjectInfoPage(String name, int number, int size) {
+    public Page<ProjectDO> findProjectPage(String groupId, String artifactId, String version, int number, int size) {
         // 模糊查询，允许参数name为空值
         ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("id").withIgnoreNullValues();
-        ProjectInfoDO projectInfoDO = new ProjectInfoDO();
-        if (name != null && !name.equals("")) {
-            projectInfoDO.setName(name);
+        ProjectDO projectDO = new ProjectDO();
+        if (groupId != null && !groupId.equals("")) {
+            projectDO.setGroupId(groupId);
         }
-        Example<ProjectInfoDO> example = Example.of(projectInfoDO, matcher);
+        if (artifactId != null && !artifactId.equals("")) {
+            projectDO.setArtifactId(artifactId);
+        }
+        if(version != null && !version.equals("")){
+            projectDO.setVersion(version);
+        }
+        Example<ProjectDO> example = Example.of(projectDO, matcher);
         // 数据库页号从0开始，需减1
         Pageable pageable = PageRequest.of(number - 1, size);
-        return projectInfoDao.findAll(example, pageable);
+        return projectDao.findAll(example, pageable);
     }
 
     /**
      * 分页获取指定项目的版本信息
      *
-     * @param name   项目名称
+     * @param groupId 组织Id
+     * @Param artifactId 工件Id
      * @param number 页码
      * @param size   页大小
-     * @return Page<ProjectVersionDO> 项目版本信息分页结果
+     * @return Page<ProjectDO> 项目版本信息分页结果
      */
     @Override
-    public Page<ProjectVersionDO> findProjectVersionPage(String name, int number, int size) {
+    public Page<ProjectDO> findProjectVersionPage(String groupId, String artifactId, int number, int size) {
         // 数据库页号从0开始，需减1
-        return projectVersionDao.findAllByName(name, PageRequest.of(number - 1, size, Sort.by(Sort.Order.desc("version").nullsLast())));
+        return projectDao.findAllByGroupIdAndArtifactId(groupId, artifactId, PageRequest.of(number - 1, size, Sort.by(Sort.Order.desc("version").nullsLast())));
     }
 
     /**
      * 检查指定项目扫描中组件的个数
      *
-     * @param name 项目名称
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
      * @return Integer 扫描中组件的个数
      */
     @Override
-    public Integer checkRunningProject(String name) {
-        return projectVersionDao.countByNameAndState(name, "RUNNING");
+    public Integer checkRunningProject(String groupId, String artifactId){
+        return projectDao.countByGroupIdAndArtifactIdAndState(groupId, artifactId, "RUNNING");
     }
 
     /**
      * 获取指定项目的所有版本列表
      *
-     * @param name 项目名称
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
      * @return List<String> 版本列表
      */
     @Override
-    public List<String> getVersionsList(String name) {
-        List<String> kvList = projectVersionDao.findVersionsByName(name, Sort.by(new Sort.Order(Sort.Direction.DESC, "version")));
-        List<String> ans = new ArrayList<>();
-        for (String s : kvList) {
-            ans.add(JsonUtil.extractValue(s, "version"));
-        }
-        return ans;
+    public List<String> getVersionsList(String groupId, String artifactId) {
+        return projectDao.findVersionsByGroupIdAndArtifactId(groupId, artifactId);
     }
 
     /**
      * 获取指定项目指定版本的详细信息
      *
      * @param projectSearchDTO 项目版本搜索信息
-     * @return ProjectVersionDO 项目版本的详细信息
+     * @return ProjectDO 项目版本的详细信息
      */
     @Override
-    public ProjectVersionDO findProjectVersionInfo(ProjectSearchDTO projectSearchDTO) {
-        return projectVersionDao.findByNameAndVersion(
-                projectSearchDTO.getName(),
+    public ProjectDO findProjectVersionInfo(ProjectSearchDTO projectSearchDTO) {
+        return projectDao.findByGroupIdAndArtifactIdAndVersion(
+                projectSearchDTO.getGroupId(),
+                projectSearchDTO.getArtifactId(),
                 projectSearchDTO.getVersion());
     }
 
@@ -354,12 +348,13 @@ public class ProjectServiceImpl implements ProjectService {
      * 查询项目依赖树信息
      *
      * @param projectSearchDTO 项目版本搜索信息
-     * @return ProjectDependencyTreeDO 项目依赖树信息
+     * @return DependencyTreeDO 项目依赖树信息
      */
     @Override
-    public ProjectDependencyTreeDO findProjectDependencyTree(ProjectSearchDTO projectSearchDTO) {
-        return projectDependencyTreeDao.findByNameAndVersion(
-                projectSearchDTO.getName(),
+    public DependencyTreeDO findProjectDependencyTree(ProjectSearchDTO projectSearchDTO) {
+        return dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
+                projectSearchDTO.getGroupId(),
+                projectSearchDTO.getArtifactId(),
                 projectSearchDTO.getVersion());
     }
 
@@ -380,8 +375,9 @@ public class ProjectServiceImpl implements ProjectService {
         orders.add(new Sort.Order(Sort.Direction.DESC, "version").nullsLast());
         // 数据库页号从0开始，需减1
         Pageable pageable = PageRequest.of(projectSearchPageDTO.getNumber() - 1, projectSearchPageDTO.getSize(), Sort.by(orders));
-        return projectDependencyTableDao.findByNV(
-                projectSearchPageDTO.getName(),
+        return dependencyTableDao.findByGroupIdAndArtifactIdAndVersion(
+                projectSearchPageDTO.getGroupId(),
+                projectSearchPageDTO.getArtifactId(),
                 projectSearchPageDTO.getVersion(), pageable);
     }
 
@@ -393,9 +389,9 @@ public class ProjectServiceImpl implements ProjectService {
      */
     @Override
     public void exportTableExcelBrief(ProjectSearchDTO projectSearchDTO, HttpServletResponse response) {
-        List<TableExcelBriefDTO> resList = projectDependencyTableDao.findTableListByProject(
-                projectSearchDTO.getName(), projectSearchDTO.getVersion());
-        String fileName = projectSearchDTO.getName() + "-" + projectSearchDTO.getVersion() + "-dependencyTable-brief";
+        List<TableExcelBriefDTO> resList = dependencyTableDao.findTableListByGroupIdAndArtifactIdAndVersion(
+                projectSearchDTO.getGroupId(), projectSearchDTO.getArtifactId(), projectSearchDTO.getVersion());
+        String fileName = projectSearchDTO.getArtifactId() + "-" + projectSearchDTO.getVersion() + "-dependencyTable-brief";
         try {
             ExcelUtils.export(response, fileName, resList, TableExcelBriefDTO.class);
         } catch (Exception e) {
@@ -412,26 +408,21 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void exportTableExcelDetail(ProjectSearchDTO projectSearchDTO, HttpServletResponse response) {
         List<TableExcelDetailDTO> resList = new ArrayList<>();
-        String fileName = projectSearchDTO.getName() + "-" + projectSearchDTO.getVersion() + "-dependencyTable-detail";
+        String fileName = projectSearchDTO.getArtifactId() + "-" + projectSearchDTO.getVersion() + "-dependencyTable-detail";
         // 先获取依赖平铺的简明信息
-        List<TableExcelBriefDTO> briefList = projectDependencyTableDao.findTableListByProject(
-                projectSearchDTO.getName(), projectSearchDTO.getVersion());
+        List<TableExcelBriefDTO> briefList = dependencyTableDao.findTableListByGroupIdAndArtifactIdAndVersion(
+                projectSearchDTO.getGroupId(), projectSearchDTO.getArtifactId(), projectSearchDTO.getVersion());
         for (TableExcelBriefDTO brief : briefList) {
             TableExcelDetailDTO detail = new TableExcelDetailDTO();
             BeanUtils.copyProperties(brief, detail);
-            ComponentDetailDTO componentDetailDTO;
+            ComponentDetailDTO componentDetailDTO = new ComponentDetailDTO();
             // 获取对应依赖组件的详细信息
-            if (detail.getOpensource()) {
-                componentDetailDTO = javaOpenComponentDao.findDetailByGav(
-                        detail.getGroupId(), detail.getArtifactId(), detail.getVersion());
-            } else {
-                componentDetailDTO = javaCloseComponentDao.findDetailByGav(
-                        detail.getGroupId(), detail.getArtifactId(), detail.getVersion());
-            }
-            if (componentDetailDTO == null) {
+            ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(projectSearchDTO.getGroupId(), projectSearchDTO.getArtifactId(), projectSearchDTO.getVersion());
+            if (componentDO == null) {
                 resList.add(detail);
                 continue;
             }
+            BeanUtils.copyProperties(componentDO, componentDetailDTO);
             detail.setDescription(componentDetailDTO.getDescription());
             detail.setUrl(componentDetailDTO.getUrl());
             detail.setDownloadUrl(componentDetailDTO.getDownloadUrl());
@@ -443,13 +434,13 @@ public class ProjectServiceImpl implements ProjectService {
             StringBuilder devName = new StringBuilder();
             StringBuilder devEmail = new StringBuilder();
             for (LicenseDO licenseDO : componentDetailDTO.getLicenses()) {
-                liName.append(licenseDO.getLicenseName()).append(";");
-                liUrl.append(licenseDO.getLicenseUrl()).append(";");
+                liName.append(licenseDO.getName()).append(";");
+                liUrl.append(licenseDO.getUrl()).append(";");
             }
             for (DeveloperDO developerDO : componentDetailDTO.getDevelopers()) {
-                devId.append(developerDO.getDeveloperId()).append(";");
-                devName.append(developerDO.getDeveloperName()).append(";");
-                devEmail.append(developerDO.getDeveloperEmail()).append(";");
+                devId.append(developerDO.getId()).append(";");
+                devName.append(developerDO.getName()).append(";");
+                devEmail.append(developerDO.getEmail()).append(";");
             }
             detail.setLicensesName(liName.toString());
             detail.setLicensesUrl(liUrl.toString());
@@ -474,13 +465,13 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public VersionCompareTreeDTO getProjectVersionCompareTree(VersionCompareReqDTO versionCompareReqDTO) {
         // 获取需对比的两个项目版本依赖树信息
-        ProjectDependencyTreeDO fromDependencyTree = projectDependencyTreeDao.findByNameAndVersion(
-                versionCompareReqDTO.getName(), versionCompareReqDTO.getFromVersion());
+        DependencyTreeDO fromDependencyTree = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
+                versionCompareReqDTO.getGroupId(), versionCompareReqDTO.getArtifactId(), versionCompareReqDTO.getFromVersion());
         if (fromDependencyTree == null) {
             throw new PlatformException(500, "被对比的项目版本依赖树信息不存在");
         }
-        ProjectDependencyTreeDO toDependencyTree = projectDependencyTreeDao.findByNameAndVersion(
-                versionCompareReqDTO.getName(), versionCompareReqDTO.getToVersion());
+        DependencyTreeDO toDependencyTree = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
+                versionCompareReqDTO.getGroupId(), versionCompareReqDTO.getArtifactId(), versionCompareReqDTO.getToVersion());
         if (toDependencyTree == null) {
             throw new PlatformException(500, "待对比的项目版本依赖树信息不存在");
         }

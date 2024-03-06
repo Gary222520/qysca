@@ -1,12 +1,10 @@
 package nju.edu.cn.qysca.service.project;
 
+import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
-import nju.edu.cn.qysca.domain.project.dos.ProjectDependencyTreeDO;
-import nju.edu.cn.qysca.domain.project.dos.ProjectInfoDO;
-import nju.edu.cn.qysca.domain.project.dos.ProjectVersionDO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
 import nju.edu.cn.qysca.domain.project.dtos.*;
 import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -73,54 +71,59 @@ public interface ProjectService {
     /**
      * 分页获取项目信息
      *
-     * @param name   项目名称
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
+     * @param version 版本号
      * @param number 页码
      * @param size   页大小
      * @return Page<ProjectVersionDO> 项目信息分页结果
      */
-    Page<ProjectInfoDO> findProjectInfoPage(String name, int number, int size);
+    Page<ProjectDO> findProjectPage(String groupId, String artifactId, String version, int number, int size);
 
     /**
      * 分页获取指定项目的版本信息
      *
-     * @param name   项目名称
+     * @param groupId 组织Id
+     * @Param artifactId 工件Id
      * @param number 页码
      * @param size   页大小
      * @return Page<ProjectVersionDO> 项目版本信息分页结果
      */
-    Page<ProjectVersionDO> findProjectVersionPage(String name, int number, int size);
+    Page<ProjectDO> findProjectVersionPage(String groupId, String artifactId,  int number, int size);
 
     /**
      * 检查指定项目扫描中组件的个数
      *
-     * @param name 项目名称
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
      * @return Integer 扫描中组件的个数
      */
-    Integer checkRunningProject(String name);
+    Integer checkRunningProject(String groupId, String artifactId);
 
     /**
      * 获取指定项目的所有版本列表
      *
-     * @param name 项目名称
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
      * @return List<String> 版本列表
      */
-    List<String> getVersionsList(String name);
+    List<String> getVersionsList(String groupId, String artifactId);
 
     /**
      * 获取指定项目指定版本的详细信息
      *
      * @param projectSearchDTO 项目版本搜索信息
-     * @return ProjectVersionDO 项目版本的详细信息
+     * @return ProjectDO 项目版本的详细信息
      */
-    ProjectVersionDO findProjectVersionInfo(ProjectSearchDTO projectSearchDTO);
+    ProjectDO findProjectVersionInfo(ProjectSearchDTO projectSearchDTO);
 
     /**
      * 查询项目依赖树信息
      *
      * @param projectSearchDTO 项目版本搜索信息
-     * @return ProjectDependencyTreeDO 项目依赖树信息
+     * @return DependencyTreeDO 项目依赖树信息
      */
-    ProjectDependencyTreeDO findProjectDependencyTree(ProjectSearchDTO projectSearchDTO);
+    DependencyTreeDO findProjectDependencyTree(ProjectSearchDTO projectSearchDTO);
 
     /**
      * 分页查询项目依赖平铺信息

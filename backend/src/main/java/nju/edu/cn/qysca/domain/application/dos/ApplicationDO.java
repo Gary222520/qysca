@@ -1,10 +1,11 @@
-package nju.edu.cn.qysca.domain.project.dos;
+package nju.edu.cn.qysca.domain.application.dos;
 
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -44,7 +45,7 @@ public class ApplicationDO {
     @ApiModelProperty(value = "应用描述", example = "A system designed for software composition analysis")
     private String description;
 
-    @OneToMany(mappedBy = "project")
+    @OneToMany(mappedBy = "application")
     @ApiModelProperty(value = "所包含的项目")
     private List<ProjectDO> projects=new ArrayList<>();
 }
