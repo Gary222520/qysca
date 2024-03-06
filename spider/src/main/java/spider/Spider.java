@@ -1,6 +1,6 @@
 package spider;
 
-public interface Spider<T> {
+public interface Spider {
 
     void crawlManyWithDependency(String directoryUrl);
 }

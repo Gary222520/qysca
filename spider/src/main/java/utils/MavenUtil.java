@@ -1,14 +1,12 @@
-package util;
+package utils;
 
-import dataAccess.MongoDBAccess;
 import domain.component.*;
 import fr.dutra.tools.maven.deptree.core.InputType;
 import fr.dutra.tools.maven.deptree.core.Node;
 import fr.dutra.tools.maven.deptree.core.Parser;
 import org.apache.maven.shared.invoker.*;
 import org.springframework.beans.BeanUtils;
-import spider.JavaOpenPomSpider;
-import util.idGenerator.UUIDGenerator;
+import utils.idGenerator.UUIDGenerator;
 
 import java.io.*;
 import java.util.*;
@@ -68,7 +66,7 @@ public class MavenUtil {
      * 与 mavenDependencyTreeAnalyzer方法功能类似，区别在于当调用mvn dependency:tree超时时，程序会重新调用该方法
      * 最多会调用3次
      * @param filePath
-     * @return fr.dutra.tools.maven.deptree.core.Nod
+     * @return fr.dutra.tools.maven.deptree.core.Node
      */
 //    public static Node mavenDependencyTreeAnalyzer_restart_when_timeout(String filePath) {
 //        String mavenCommand = "mvn dependency:tree -DoutputFile=result -DoutputType=text";
@@ -119,86 +117,91 @@ public class MavenUtil {
      */
     public ComponentDependencyTreeDO convertNode(Node node, int depth) {
 
-        ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        componentDependencyTreeDO.setGroupId(node.getGroupId());
-        componentDependencyTreeDO.setArtifactId(node.getArtifactId());
-        componentDependencyTreeDO.setVersion(node.getVersion());
-        componentDependencyTreeDO.setScope(node.getScope());
-        componentDependencyTreeDO.setLanguage("Java");
-
-        if (depth != 0) {
-            // 从开源知识库中查找
-            JavaOpenComponentDO javaOpenComponentDO = null;
-            JavaCloseComponentDO javaCloseComponentDO = null;
-
-            MongoDBAccess<JavaOpenComponentDO> javaOpenComponentDOMongoDBAccess = MongoDBAccess.getInstance("java_component_open_detail", JavaOpenComponentDO.class);
-            javaOpenComponentDO = javaOpenComponentDOMongoDBAccess.readByGAV(node.getGroupId(), node.getArtifactId(), node.getVersion());
-            // 如果开源知识库中没有则查看闭源知识库
-            if (javaOpenComponentDO == null) {
-                MongoDBAccess<JavaCloseComponentDO> javaCloseComponentDOMongoDBAccess = MongoDBAccess.getInstance("java_component_close_detail", JavaCloseComponentDO.class);
-                javaCloseComponentDO = javaCloseComponentDOMongoDBAccess.readByGAV(node.getGroupId(), node.getArtifactId(), node.getVersion());
-                // 如果闭源知识库中没有则爬取 爬取过程已经包含插入数据库的步骤
-                if (javaCloseComponentDO == null) {
-                    javaOpenComponentDO = JavaOpenPomSpider.getInstance().crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
-                }
-                //如果爬虫没有爬到则扫描错误 通过抛出异常处理
-
-            }
-
-            //设置依赖树中的信息
-            if (javaOpenComponentDO != null) {
-                componentDependencyTreeDO.setName(javaOpenComponentDO.getName());
-                componentDependencyTreeDO.setOpensource(true);
-                List<LicenseDO> licenses = javaOpenComponentDO.getLicenses();
-                StringBuilder license = new StringBuilder();
-                for (LicenseDO licenseDO : licenses) {
-                    license.append(licenseDO.getLicenseName()).append(";");
-                }
-                componentDependencyTreeDO.setLicenses(license.toString());
-            } else if (javaCloseComponentDO != null) {
-                componentDependencyTreeDO.setName(javaCloseComponentDO.getName());
-                componentDependencyTreeDO.setOpensource(false);
-                List<LicenseDO> licenses = javaCloseComponentDO.getLicenses();
-                StringBuilder license = new StringBuilder();
-                for (LicenseDO licenseDO : licenses) {
-                    license.append(licenseDO.getLicenseName()).append(";");
-                }
-                componentDependencyTreeDO.setLicenses(license.toString());
-            }
-            componentDependencyTreeDO.setDirect(depth == 1);
-        }
-
-        componentDependencyTreeDO.setDepth(depth);
-
-        // 递归处理子节点
-        for (Node child : node.getChildNodes()) {
-            ComponentDependencyTreeDO childDependencyTreeDO = convertNode(child, depth + 1);
-            componentDependencyTreeDO.getDependencies().add(childDependencyTreeDO);
-        }
-
-        return componentDependencyTreeDO;
+//        ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
+//        componentDependencyTreeDO.setGroupId(node.getGroupId());
+//        componentDependencyTreeDO.setArtifactId(node.getArtifactId());
+//        componentDependencyTreeDO.setVersion(node.getVersion());
+//
+//        if (depth != 0) {
+//            // 从开源知识库中查找
+//            JavaOpenComponentDO javaOpenComponentDO = null;
+//            JavaCloseComponentDO javaCloseComponentDO = null;
+//
+//            MongoDBAccess<JavaOpenComponentDO> javaOpenComponentDOMongoDBAccess = MongoDBAccess.getInstance("java_component_open_detail", JavaOpenComponentDO.class);
+//            javaOpenComponentDO = javaOpenComponentDOMongoDBAccess.readByGAV(node.getGroupId(), node.getArtifactId(), node.getVersion());
+//            // 如果开源知识库中没有则查看闭源知识库
+//            if (javaOpenComponentDO == null) {
+//                MongoDBAccess<JavaCloseComponentDO> javaCloseComponentDOMongoDBAccess = MongoDBAccess.getInstance("java_component_close_detail", JavaCloseComponentDO.class);
+//                javaCloseComponentDO = javaCloseComponentDOMongoDBAccess.readByGAV(node.getGroupId(), node.getArtifactId(), node.getVersion());
+//                // 如果闭源知识库中没有则爬取 爬取过程已经包含插入数据库的步骤
+//                if (javaCloseComponentDO == null) {
+//                    javaOpenComponentDO = JavaOpenSpider.getInstance().crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
+//                }
+//                //如果爬虫没有爬到则扫描错误 通过抛出异常处理
+//
+//            }
+//
+//            //设置依赖树中的信息
+//            if (javaOpenComponentDO != null) {
+//                componentDependencyTreeDO.setName(javaOpenComponentDO.getName());
+//                componentDependencyTreeDO.setOpensource(true);
+//                List<LicenseDO> licenses = javaOpenComponentDO.getLicenses();
+//                StringBuilder license = new StringBuilder();
+//                for (LicenseDO licenseDO : licenses) {
+//                    license.append(licenseDO.getLicenseName()).append(";");
+//                }
+//                componentDependencyTreeDO.setLicenses(license.toString());
+//            } else if (javaCloseComponentDO != null) {
+//                componentDependencyTreeDO.setName(javaCloseComponentDO.getName());
+//                componentDependencyTreeDO.setOpensource(false);
+//                List<LicenseDO> licenses = javaCloseComponentDO.getLicenses();
+//                StringBuilder license = new StringBuilder();
+//                for (LicenseDO licenseDO : licenses) {
+//                    license.append(licenseDO.getLicenseName()).append(";");
+//                }
+//                componentDependencyTreeDO.setLicenses(license.toString());
+//            }
+//            componentDependencyTreeDO.setDirect(depth == 1);
+//        }
+//
+//        componentDependencyTreeDO.setDepth(depth);
+//
+//        // 递归处理子节点
+//        for (Node child : node.getChildNodes()) {
+//            ComponentDependencyTreeDO childDependencyTreeDO = convertNode(child, depth + 1);
+//            componentDependencyTreeDO.getDependencies().add(childDependencyTreeDO);
+//        }
+//
+//        return componentDependencyTreeDO;
+        return null;
     }
 
     /**
      * 通过JavaOpenDependencyTreeDO构建JavaOpenDependencyTableDO对象
      *
-     * @param javaOpenDependencyTreeDO 依赖树DO
-     * @return JavaOpenDependencyTableDO 平铺依赖表DO
+     * @param dependencyTreeDO 依赖树DO
+     * @return List<DependencyTableDO> 平铺依赖表DO列表
      */
-    public static List<JavaOpenDependencyTableDO> buildJavaOpenDependencyTable(JavaOpenDependencyTreeDO javaOpenDependencyTreeDO) {
-        List<JavaOpenDependencyTableDO> result = new ArrayList<>();
-        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(javaOpenDependencyTreeDO.getTree().getDependencies());
+    public static List<DependencyTableDO> buildDependencyTable(DependencyTreeDO dependencyTreeDO) {
+        List<DependencyTableDO> result = new ArrayList<>();
+        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(dependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {
-            JavaOpenDependencyTableDO javaOpenDependencyTableDO = new JavaOpenDependencyTableDO();
-            javaOpenDependencyTableDO.setId(UUIDGenerator.getUUID());
-            // 设置依赖表DO的属性，表示这张表是属于Parent这个组件的平铺依赖表
-            javaOpenDependencyTableDO.setParentGroupId(javaOpenDependencyTreeDO.getGroupId());
-            javaOpenDependencyTableDO.setParentArtifactId(javaOpenDependencyTreeDO.getArtifactId());
-            javaOpenDependencyTableDO.setParentVersion(javaOpenDependencyTreeDO.getVersion());
+            DependencyTableDO dependencyTableDO = new DependencyTableDO();
+            dependencyTableDO.setId(UUIDGenerator.getUUID());
+            // 设置依赖表DO的属性，表示这张表是属于这个组件的平铺依赖表
+            dependencyTableDO.setGroupId(dependencyTreeDO.getGroupId());
+            dependencyTableDO.setArtifactId(dependencyTreeDO.getArtifactId());
+            dependencyTableDO.setVersion(dependencyTreeDO.getVersion());
 
             ComponentDependencyTreeDO componentDependencyTreeDO = Objects.requireNonNull(queue.poll());
-            BeanUtils.copyProperties(componentDependencyTreeDO, javaOpenDependencyTableDO);
-            result.add(javaOpenDependencyTableDO);
+
+            //todo 需要修改，componentDependencyTreeDO中的gav对应dependencyTableDO中的child的gav
+            // 似乎存在一个问题，dependencyTree中没有scope、opensource、language了，dependencyTable该如何获取
+            BeanUtils.copyProperties(componentDependencyTreeDO, dependencyTableDO);
+
+
+
+            result.add(dependencyTableDO);
             queue.addAll(componentDependencyTreeDO.getDependencies());
         }
 

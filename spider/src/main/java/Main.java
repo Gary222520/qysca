@@ -1,5 +1,5 @@
-import domain.component.JavaOpenComponentDO;
-import spider.JavaOpenPomSpider;
+import domain.component.ComponentDO;
+import spider.JavaSpider;
 import spider.Spider;
 
 import java.io.BufferedReader;
@@ -11,7 +11,7 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        Spider<JavaOpenComponentDO> spider = JavaOpenPomSpider.getInstance();
+        Spider spider = JavaSpider.getInstance();
 
         List<String> targetUrls = new ArrayList<>();
         String TARGET_URLS_FILE = "target_urls.txt";

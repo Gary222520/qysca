@@ -1,4 +1,4 @@
-package util.idGenerator;
+package utils.idGenerator;
 
 import java.util.UUID;
 

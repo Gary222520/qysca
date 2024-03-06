@@ -1,17 +1,25 @@
 package domain.component;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeveloperDO {
+@ApiModel("开发者信息")
+public class DeveloperDO implements Serializable {
 
-    private String developerId;
+    @ApiModelProperty(value = "开发者id", example = "piv")
+    private String id;
 
-    private String developerName;
+    @ApiModelProperty(value = "开发者名称", example = "Pivotal")
+    private String name;
 
-    private String developerEmail;
+    @ApiModelProperty(value = "开发者邮箱", example = "info@pivotal.io")
+    private String email;
 }

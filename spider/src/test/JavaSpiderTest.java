@@ -1,6 +1,6 @@
 import org.junit.Test;
 
-public class JavaOpenPomSpiderTest {
+public class JavaSpiderTest {
 
     @Test
     public void testOpenPomSpider() {

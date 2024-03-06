@@ -1,15 +1,22 @@
 package domain.component;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LicenseDO {
+@ApiModel("许可证DO")
+public class LicenseDO implements Serializable {
 
-    private String licenseName;
+    @ApiModelProperty(value = "许可证名称", example = "Eclipse Public License v2.0")
+    private String name;
 
-    private String licenseUrl;
+    @ApiModelProperty(value = "许可证URL", example = "https://www.eclipse.org/legal/epl-v20.html")
+    private String url;
 }

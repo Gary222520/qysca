@@ -1,7 +1,7 @@
-package util;
+package utils;
 
+import domain.component.ComponentDO;
 import domain.component.DeveloperDO;
-import domain.component.JavaOpenComponentDO;
 import domain.component.LicenseDO;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -9,7 +9,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.json.JSONObject;
 import org.json.XML;
 import org.jsoup.nodes.Document;
-import util.idGenerator.UUIDGenerator;
+import utils.idGenerator.UUIDGenerator;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -22,14 +22,13 @@ import java.util.stream.Collectors;
 public class ConvertUtil {
 
     /**
-     * 将一个jsoup Document转化为JavaOpenComponentDO
      *
-     * @param document            jsoup document 从pomUrl爬取
-     * @param pomUrl              pomUrl
-     * @param MAVEN_REPO_BASE_URL maven仓库基地址
-     * @return JavaOpenComponentDO
+     * @param document
+     * @param pomUrl
+     * @param MAVEN_REPO_BASE_URL
+     * @return
      */
-    public static JavaOpenComponentDO convertToJavaOpenComponentDO(Document document, String pomUrl, String MAVEN_REPO_BASE_URL) {
+    public static ComponentDO convertToComponentDO(Document document, String pomUrl, String MAVEN_REPO_BASE_URL){
         // 从pom url中提取groupId, artifactId, and version
         String[] parts = pomUrl.split("/");
         String version = parts[parts.length - 2];
@@ -42,27 +41,30 @@ public class ConvertUtil {
             return null;
         }
 
-        // 创建JavaOpenComponentDO对象，填充值
-        JavaOpenComponentDO javaOpenComponentDO = new JavaOpenComponentDO();
-        javaOpenComponentDO.setId(UUIDGenerator.getUUID());
-        javaOpenComponentDO.setGroupId(groupId);
-        javaOpenComponentDO.setArtifactId(artifactId);
-        javaOpenComponentDO.setVersion(version);
+        ComponentDO componentDO = new ComponentDO();
+        componentDO.setId(UUIDGenerator.getUUID());
+        componentDO.setGroupId(groupId);
+        componentDO.setArtifactId(artifactId);
+        componentDO.setVersion(version);
 
-        javaOpenComponentDO.setLanguage("Java");
-        javaOpenComponentDO.setName(model.getName() == null ? "-" : model.getName());
-        javaOpenComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
+        componentDO.setName(model.getName() == null ? "-" : model.getName());
+        componentDO.setLanguage("Java");
+        componentDO.setOpensource(true);
+        componentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
 
-        javaOpenComponentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
-        javaOpenComponentDO.setDownloadUrl(getDownloadUrl(pomUrl));
-        javaOpenComponentDO.setSourceUrl(model.getScm() == null ? "-" : (model.getScm().getUrl() == null ? "-" : model.getScm().getUrl()));
+        componentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
+        componentDO.setDownloadUrl(getDownloadUrl(pomUrl));
+        componentDO.setSourceUrl(model.getScm() == null ? "-" : (model.getScm().getUrl() == null ? "-" : model.getScm().getUrl()));
 
-        javaOpenComponentDO.setDevelopers(getDevelopers(model));
-        javaOpenComponentDO.setLicenses(getLicense(model));
-        javaOpenComponentDO.setPom(document.outerHtml());   //转成字符串后直接存pom.xml文件内容
+        //todo
+        componentDO.setPUrl("-");
+        componentDO.setDevelopers(getDevelopers(model));
+        componentDO.setLicenses(getLicense(model));
 
-        return javaOpenComponentDO;
+        //todo
+        componentDO.setHashes(null);
 
+        return componentDO;
     }
 
     /**
@@ -88,9 +90,9 @@ public class ConvertUtil {
         return mavenDevelopers.stream()
                 .map(mavenDeveloper -> {
                     DeveloperDO developer = new DeveloperDO();
-                    developer.setDeveloperId(mavenDeveloper.getId());
-                    developer.setDeveloperName(mavenDeveloper.getName());
-                    developer.setDeveloperEmail(mavenDeveloper.getEmail());
+                    developer.setId(mavenDeveloper.getId());
+                    developer.setName(mavenDeveloper.getName());
+                    developer.setEmail(mavenDeveloper.getEmail());
                     return developer;
                 })
                 .collect(Collectors.toList());
@@ -107,8 +109,8 @@ public class ConvertUtil {
         return mavenLicenses.stream()
                 .map(mavenLicense -> {
                     LicenseDO license = new LicenseDO();
-                    license.setLicenseName(mavenLicense.getName());
-                    license.setLicenseUrl(mavenLicense.getUrl());
+                    license.setName(mavenLicense.getName());
+                    license.setUrl(mavenLicense.getUrl());
                     return license;
                 })
                 .collect(Collectors.toList());
