@@ -6,11 +6,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import utils.ConvertUtil;
-import utils.HashUtil;
 import utils.MavenUtil;
 import utils.idGenerator.UUIDGenerator;
 
-import javax.tools.JavaCompiler;
 import java.io.*;
 import java.util.HashSet;
 import java.util.List;
@@ -105,16 +103,28 @@ public class JavaSpider implements Spider {
     }
 
     /**
+     * 根据GAV信息带依赖的爬取组件
+     * @param groupId 组织id
+     * @param artifactId 工件ig
+     * @param version 版本号
+     * @return componentInformationDO
+     */
+    private ComponentInformationDO crawlWithDependencyByGAV(String groupId, String artifactId, String version){
+        String url = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
+        return crawlWithDependency(url);
+    }
+
+    /**
      * 带依赖的爬取url下的组件
      *  会获取该组件的组件信息、依赖树、平铺依赖表
      *  该组件的所有依赖（依赖树中出现的）仅爬取组件信息本身
      * @param url 组件的url，该url目录下应该包含pom文件、（可选）jar包
-     * @return
+     * @return componentInformationDO
      */
     private ComponentInformationDO crawlWithDependency(String url){
 
-        // 爬取组件信息
-        String pomUrl = findPomFileInDirectory(url);
+        // 爬取pom文件中的组件信息
+        String pomUrl = findPomUrlInDirectory(url);
         if (!pomUrl.endsWith(".pom")) {
             return null;
         }
@@ -127,7 +137,8 @@ public class JavaSpider implements Spider {
         if (componentDO == null)
             return null;
 
-        String jarUrl = findJarFileInDirectory(url);
+        // 爬取jar包，生成hash信息
+        String jarUrl = findJarUrlInDirectory(url);
         if (jarUrl != null){
             Document jarDocument = UrlConnector.getDocumentByUrl(jarUrl);
 //             List<HashDO> hashes = HashUtil.getHashes(document.outerHtml());
@@ -176,7 +187,7 @@ public class JavaSpider implements Spider {
      * @return
      */
     private ComponentDO crawl(String url){
-        String pomUrl = findPomFileInDirectory(url);
+        String pomUrl = findPomUrlInDirectory(url);
 
         if (!pomUrl.endsWith(".pom")) {
             return null;
@@ -190,7 +201,7 @@ public class JavaSpider implements Spider {
         if (componentDO == null)
             return null;
 
-        String jarUrl = findJarFileInDirectory(url);
+        String jarUrl = findJarUrlInDirectory(url);
         if (jarUrl != null){
             Document jarDocument = UrlConnector.getDocumentByUrl(jarUrl);
 //            List<HashDO> hashes = HashUtil.getHashes(jarDocument.outerHtml());
@@ -202,10 +213,10 @@ public class JavaSpider implements Spider {
 
     /**
      * 在指定目录url下寻找pom文件，并返回其url
-     * @param directoryUrl
+     * @param directoryUrl 目录url
      * @return pomUrl
      */
-    private String findPomFileInDirectory(String directoryUrl){
+    private String findPomUrlInDirectory(String directoryUrl){
         Document document = UrlConnector.getDocumentByUrl(directoryUrl);
 
         if (document == null) {
@@ -229,10 +240,10 @@ public class JavaSpider implements Spider {
 
     /**
      * 在指定目录下寻找jar包，并返回其url
-     * @param directoryUrl
+     * @param directoryUrl 目录url
      * @return jarUrl
      */
-    private String findJarFileInDirectory(String directoryUrl){
+    private String findJarUrlInDirectory(String directoryUrl){
         Document document = UrlConnector.getDocumentByUrl(directoryUrl);
 
         if (document == null) {
