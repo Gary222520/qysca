@@ -18,7 +18,7 @@ public interface ApplicationProjectDao extends JpaRepository<ApplicationProjectD
      * @param version 应用版本
      * @return List<ProjectDO> 项目列表
      */
-    @Query("select ap.projectDO from ApplicationProjectDO ap where ap.applicationDO.groupId = :groupIdand ap.applicationDO.artifactId = :artifactId and ap.applicationDO.version = :version")
+    @Query("select ap.projectDO from ApplicationProjectDO ap where ap.applicationDO.groupId = :groupId and ap.applicationDO.artifactId = :artifactId and ap.applicationDO.version = :version")
     List<ProjectDO> findProjectByApplicationGAV(String groupId, String artifactId, String version);
 
     /**
