@@ -4,9 +4,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import nju.edu.cn.qysca.controller.ResponseMsg;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.application.dtos.AddProjectDTO;
 import nju.edu.cn.qysca.domain.application.dtos.CreateApplicationDTO;
+import nju.edu.cn.qysca.domain.application.dtos.DeleteProjectDTO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
 import nju.edu.cn.qysca.service.application.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +23,13 @@ public class ApplicationController {
     @Autowired
     private ApplicationService applicationService;
 
+
+    @ApiOperation("获取所有应用")
+    @GetMapping("/getApplicationList")
+    public ResponseMsg<Page<ApplicationDO>> getApplicationList(@RequestParam Integer number, @RequestParam Integer size) {
+        return new ResponseMsg<>(applicationService.getApplicationList(number, size));
+    }
+
     @ApiOperation("创建新应用")
     @PostMapping("/createApplication")
     public ResponseMsg<Boolean> createApplication(@RequestBody CreateApplicationDTO createApplicationDTO) {
@@ -27,15 +38,16 @@ public class ApplicationController {
 
     @ApiOperation("删除应用")
     @PostMapping("/deleteApplication")
-    public ResponseMsg<Boolean> deleteApplication(@RequestParam String groupId, @RequestParam String artifactId, @RequestParam String version) {
-        return new ResponseMsg<>(applicationService.deleteApplication(groupId, artifactId, version));
+    public ResponseMsg<Boolean> deleteApplication(@RequestParam String groupId, @RequestParam String artifactId) {
+        return new ResponseMsg<>(applicationService.deleteApplication(groupId, artifactId));
     }
 
-    @ApiOperation("查询应用信息")
-    @GetMapping("/getApplication")
-    public ResponseMsg<List<ApplicationDO>> getApplication(@RequestParam String groupId, @RequestParam String artifactId) {
-        return new ResponseMsg<>(applicationService.getApplication(groupId, artifactId));
+    @ApiOperation("删除应用某个版本")
+    @PostMapping("/deleteApplicationVersion")
+    public ResponseMsg<Boolean> deleteApplicationVersion(@RequestParam String groupId, @RequestParam String artifactId, @RequestParam String version) {
+        return new ResponseMsg<>(applicationService.deleteApplicationVersion(groupId, artifactId, version));
     }
+
 
     @ApiOperation("查看应用版本信息")
     @GetMapping("/getApplicationVersionList")
@@ -45,7 +57,21 @@ public class ApplicationController {
 
     @ApiOperation("查看系统具体版本信息")
     @GetMapping("/getApplicationVersion")
-    public ResponseMsg<ApplicationDO> getApplicationVersion(@RequestParam String groupId, @RequestParam String artifactId, @RequestParam String version) {
+    public ResponseMsg<List<ProjectDO>> getApplicationVersion(@RequestParam String groupId, @RequestParam String artifactId, @RequestParam String version) {
         return new ResponseMsg<>(applicationService.getApplicationVersion(groupId, artifactId, version));
     }
+
+    @ApiOperation("向应用中增加项目")
+    @PostMapping("/addProject")
+    public ResponseMsg<Boolean> addProject(@RequestBody AddProjectDTO addProjectDTO) {
+        return new ResponseMsg<>(applicationService.addProject(addProjectDTO));
+    }
+
+    @ApiOperation("在应用中删除项目")
+    @PostMapping("/deleteProject")
+    public ResponseMsg<Boolean> deleteProject(@RequestBody DeleteProjectDTO deleteProjectDTO) {
+        return new ResponseMsg<>(applicationService.deleteProject(deleteProjectDTO));
+    }
+
+
 }

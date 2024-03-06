@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @ApiModel("保存项目信息DTO")
 public class SaveProjectDTO {
-
     @ApiModelProperty(value = "组织Id", example = "nju.edu.cn")
     private String groupId;
 

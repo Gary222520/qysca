@@ -2,10 +2,20 @@ package nju.edu.cn.qysca.service.application;
 
 
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
+import nju.edu.cn.qysca.dao.application.ApplicationProjectDao;
+import nju.edu.cn.qysca.dao.project.ProjectDao;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.application.dos.ApplicationProjectDO;
+import nju.edu.cn.qysca.domain.application.dtos.AddProjectDTO;
 import nju.edu.cn.qysca.domain.application.dtos.CreateApplicationDTO;
+import nju.edu.cn.qysca.domain.application.dtos.DeleteProjectDTO;
+import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
+import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +26,12 @@ public class ApplicationServiceImpl implements ApplicationService{
 
     @Autowired
     private ApplicationDao applicationDao;
+
+    @Autowired
+    private ApplicationProjectDao applicationProjectDao;
+
+    @Autowired
+    private ProjectDao projectDao;
     @Override
     @Transactional
     public Boolean createApplication(CreateApplicationDTO createApplicationDTO) {
@@ -25,16 +41,24 @@ public class ApplicationServiceImpl implements ApplicationService{
         return true;
     }
 
+
     @Override
     @Transactional
-    public Boolean deleteApplication(String groupId, String artifactId, String version) {
+    public Boolean deleteApplication(String groupId, String artifactId) {
+        return null;
+    }
+
+    @Override
+    @Transactional
+    public Boolean deleteApplicationVersion(String groupId, String artifactId, String version) {
         applicationDao.deleteByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
         return true;
     }
 
     @Override
-    public List<ApplicationDO> getApplication(String groupId, String artifactId) {
-        return applicationDao.findAllByGroupIdAndArtifactId(groupId, artifactId);
+    public Page<ApplicationDO> getApplicationList(Integer number, Integer size) {
+        Pageable pageable = PageRequest.of(number - 1, size);
+        return applicationDao.findLatestVersionOfAllProjects(pageable);
     }
 
     @Override
@@ -43,7 +67,30 @@ public class ApplicationServiceImpl implements ApplicationService{
     }
 
     @Override
-    public ApplicationDO getApplicationVersion(String groupId, String artifactId, String version) {
-        return applicationDao.findByGroupIdAndArtifactIdAndVersionWithProject(groupId, artifactId, version);
+    public List<ProjectDO> getApplicationVersion(String groupId, String artifactId, String version) {
+        return applicationProjectDao.findProjectByApplicationGAV(groupId, artifactId, version);
+    }
+
+    @Override
+    @Transactional
+    public Boolean addProject(AddProjectDTO addProjectDTO) {
+        ApplicationProjectDO applicationProjectDO = new ApplicationProjectDO();
+        applicationProjectDO.setId(UUIDGenerator.getUUID());
+        ApplicationDO applicationDO = applicationDao.findByGroupIdAndArtifactIdAndVersion(addProjectDTO.getAppGroupId(), addProjectDTO.getAppArtifactId(), addProjectDTO.getAppVersion());
+        ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(addProjectDTO.getGroupId(), addProjectDTO.getArtifactId(), addProjectDTO.getVersion());
+        applicationProjectDO.setApplicationDO(applicationDO);
+        applicationProjectDO.setProjectDO(projectDO);
+        applicationProjectDO.setDeleted(false);
+        applicationProjectDao.save(applicationProjectDO);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public Boolean deleteProject(DeleteProjectDTO deleteProjectDTO) {
+        ApplicationDO applicationDO = applicationDao.findByGroupIdAndArtifactIdAndVersion(deleteProjectDTO.getAppGroupId(), deleteProjectDTO.getAppArtifactId(), deleteProjectDTO.getAppVersion());
+        ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(deleteProjectDTO.getGroupId(), deleteProjectDTO.getArtifactId(), deleteProjectDTO.getVersion());
+        applicationProjectDao.deleteByApplicationDO_IdAndProjectDO_Id(applicationDO.getId(), projectDO.getId());
+        return true;
     }
 }

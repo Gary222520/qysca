@@ -4,7 +4,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -65,9 +64,4 @@ public class ProjectDO {
     @Column(name = "time",nullable = false)
     @ApiModelProperty(value = "最近一次更新时间", example = "yyyy-MM-dd HH:mm:ss")
     private String time;
-
-    @ManyToOne(targetEntity = ApplicationDO.class)
-    @JoinColumn(name="a_p_id",referencedColumnName = "id")
-    @ApiModelProperty(value = "所属的应用")
-    private ApplicationDO application;
 }
