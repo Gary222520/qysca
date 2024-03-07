@@ -18,15 +18,15 @@ public class TableExcelDetailDTO {
 
     @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
     @ExcelExport(value = "组织ID")
-    private String groupId;
+    private String cGroupId;
 
     @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
     @ExcelExport(value = "工件ID")
-    private String artifactId;
+    private String cArtifactId;
 
     @ApiModelProperty(value = "版本号", example = "2.5.15")
     @ExcelExport(value = "版本")
-    private String version;
+    private String cVersion;
 
     @ApiModelProperty(value = "语言", example = "java")
     @ExcelExport(value = "语言")

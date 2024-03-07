@@ -412,6 +412,7 @@ public class ProjectServiceImpl implements ProjectService {
                 continue;
             }
             BeanUtils.copyProperties(componentDO, componentDetailDTO);
+            detail.setName(componentDetailDTO.getName());
             detail.setDescription(componentDetailDTO.getDescription());
             detail.setUrl(componentDetailDTO.getUrl());
             detail.setDownloadUrl(componentDetailDTO.getDownloadUrl());
