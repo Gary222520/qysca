@@ -406,7 +406,7 @@ public class ProjectServiceImpl implements ProjectService {
             BeanUtils.copyProperties(brief, detail);
             ComponentDetailDTO componentDetailDTO = new ComponentDetailDTO();
             // 获取对应依赖组件的详细信息
-            ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(projectSearchDTO.getGroupId(), projectSearchDTO.getArtifactId(), projectSearchDTO.getVersion());
+            ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(detail.getCGroupId(), detail.getCArtifactId(), detail.getCVersion());
             if (componentDO == null) {
                 resList.add(detail);
                 continue;
