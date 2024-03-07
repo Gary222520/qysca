@@ -1,3 +1,0 @@
-database:
-  url: mongodb://172.29.7.168:37018/
-  name: qysca

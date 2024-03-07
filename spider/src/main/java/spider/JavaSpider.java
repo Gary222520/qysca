@@ -1,10 +1,15 @@
 package spider;
 
+import dao.component.ComponentDao;
+import dao.component.DependencyTableDao;
+import dao.component.DependencyTreeDao;
 import domain.component.*;
 import fr.dutra.tools.maven.deptree.core.Node;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import utils.ConvertUtil;
 import utils.HashUtil;
 import utils.MavenUtil;
@@ -15,7 +20,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
+@Service
 public class JavaSpider implements Spider {
+
+    @Autowired
+    private ComponentDao componentDao;
+
+    @Autowired
+    private DependencyTreeDao dependencyTreeDao;
+
+    @Autowired
+    private DependencyTableDao dependencyTableDao;
+
     /**
      * 用以记录以及爬取过的url，防止重复爬取
      */
@@ -120,24 +137,57 @@ public class JavaSpider implements Spider {
      * 带依赖的爬取url下的组件
      *  会获取该组件的组件信息、依赖树、平铺依赖表
      *  该组件的所有依赖（依赖树中出现的）仅爬取组件信息本身
+     *  该函数添加了synchronized，来确保其原子性，使得程序终止时，仍会等待该函数运行完毕
      * @param url 组件的url，该url目录下应该包含pom文件、（可选）jar包
      * @return componentInformationDO
      */
-    private ComponentInformationDO crawlWithDependency(String url){
+    private synchronized ComponentInformationDO crawlWithDependency(String url){
 
         // 爬取pom文件中的组件信息
-        ComponentDO componentDO = crawl(url);
+        String pomUrl = findPomUrlInDirectory(url);
+        if(pomUrl == null){
+            System.err.println();
+            return null;
+        }
+
+        Document document = UrlConnector.getDocumentByUrl(pomUrl);
+        if (document == null)
+            return null;
+
+        ComponentDO componentDO = ConvertUtil.convertToComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
         if (componentDO == null)
             return null;
 
-        // 生成组件依赖树
-        // todo 先查数据库检查是否已存在依赖树
+        ComponentDO searchResult = componentDao.findByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion());
+        if (searchResult == null){
+            // 表示该组件的组件信息未被爬取过
+            // 爬取jar包，生成hash信息
+            String jarUrl = findJarUrlInDirectory(url);
+            if (jarUrl != null){
+                componentDO.setHashes(HashUtil.getHashes(jarUrl));
+            }
+            // 存数据库
+            componentDao.save(componentDO);
+        }
 
+
+        // 先查询数据库中是否已有依赖树
+        DependencyTreeDO searchTreeResult = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion());
+        if (searchTreeResult != null){
+            // 数据库中已经有依赖树，表示该组件已被完整地爬取过（包括依赖）
+            ComponentInformationDO componentInformationDO = new ComponentInformationDO();
+            componentInformationDO.setComponentDO(componentDO);
+            componentInformationDO.setDependencyTreeDO(searchTreeResult);
+            componentInformationDO.setDependencyTableDO(dependencyTableDao.findAllByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion()));
+            return componentInformationDO;
+        }
+
+        // 生成依赖树
         // 生成一个临时pom文件
-        //createPomFile(document.outerHtml());
+        createPomFile(document.outerHtml());
         // 调用mvn dependency:tree命令获取依赖
         Node node = MavenUtil.mavenDependencyTreeAnalyzer(POM_FILE_TEMP_PATH);
-        // 解析依赖，获得组件树
+        // 解析依赖，获得组件依赖树
         MavenUtil mavenUtil = new MavenUtil();
         if (node == null)
             return null;
@@ -155,6 +205,10 @@ public class JavaSpider implements Spider {
         // 生成依赖表
         List<DependencyTableDO> dependencyTableDOList = MavenUtil.buildDependencyTable(dependencyTreeDO);
 
+        // 存数据库
+        dependencyTreeDao.save(dependencyTreeDO);
+        dependencyTableDao.saveAll(dependencyTableDOList);
+
         // 封装
         ComponentInformationDO componentInformationDO = new ComponentInformationDO();
         componentInformationDO.setComponentDO(componentDO);
@@ -169,9 +223,9 @@ public class JavaSpider implements Spider {
      * 爬取url下的组件，不爬取其依赖
      *  只会获取该组件自身的组件信息
      * @param url 组件的url，该url目录下应该包含pom文件、（可选）jar包
-     * @return
+     * @return ComponentDO
      */
-    private ComponentDO crawl(String url){
+    private synchronized ComponentDO crawl(String url){
         // 爬取pom文件中的组件信息
         String pomUrl = findPomUrlInDirectory(url);
         Document document = UrlConnector.getDocumentByUrl(pomUrl);
@@ -182,11 +236,20 @@ public class JavaSpider implements Spider {
         if (componentDO == null)
             return null;
 
+        ComponentDO searchResult = componentDao.findByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion());
+        if (searchResult != null){
+            // 表示该组件的组件信息已被爬取过
+            return searchResult;
+        }
+
         // 爬取jar包，生成hash信息
         String jarUrl = findJarUrlInDirectory(url);
         if (jarUrl != null){
             componentDO.setHashes(HashUtil.getHashes(jarUrl));
         }
+
+        // 存数据库
+        componentDao.save(componentDO);
 
         return componentDO;
     }
@@ -273,7 +336,7 @@ public class JavaSpider implements Spider {
     /**
      * 保存已访问过的url
      */
-    private void saveVisitedLinks() {
+    private synchronized void saveVisitedLinks() {
         try (OutputStream outputStream = new FileOutputStream(VISITED_URLS_PATH);
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
             for (String link : visitedUrls) {
@@ -291,7 +354,7 @@ public class JavaSpider implements Spider {
      *
      * @param failedUrl 失败的url
      */
-    private void writeFailedUrl(String failedUrl) {
+    private synchronized void writeFailedUrl(String failedUrl) {
         System.err.println("爬取或解析pom或生成依赖树失败：" + failedUrl);
         try (OutputStream outputStream = new FileOutputStream(FAILED_URLS_PATH);
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
@@ -303,11 +366,23 @@ public class JavaSpider implements Spider {
     }
 
     /**
+     * 创建临时的pom文件（用以调用mvn命令）
+     *
+     * @param pomString
+     */
+    private static void createPomFile(String pomString) {
+        try (OutputStream outputStream = new FileOutputStream(POM_FILE_TEMP_PATH);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+            writer.write(pomString);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * 在程序终止时，保存数据
      */
-    private void saveAndFlush() {
-        //todo
-
+    private synchronized void saveAndFlush() {
         saveVisitedLinks();
     }
 
