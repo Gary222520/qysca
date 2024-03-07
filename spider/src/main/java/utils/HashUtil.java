@@ -1,19 +1,12 @@
 package utils;
 
 import domain.component.HashDO;
-import org.jsoup.nodes.Document;
-import spider.UrlConnector;
 
 import java.io.*;
-import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,12 +14,13 @@ public class HashUtil {
 
     /**
      * 对指定url的jar包进行hash算法，并封装为List<HashDO>
+     *
      * @param jarUrl jar包url
      * @return List<HashDO>
      */
-    public static List<HashDO> getHashes(String jarUrl){
+    public static List<HashDO> getHashes(String jarUrl) {
         File file = null;
-        try{
+        try {
             InputStream in = new URL(jarUrl).openStream();
             //创建临时文件
             file = File.createTempFile("temp", "");
@@ -34,14 +28,14 @@ public class HashUtil {
             byte[] buffer = new byte[8192]; // 8 KB buffer
             int bytesRead;
             OutputStream outputStream = new FileOutputStream(file);
-            while((bytesRead = in.read(buffer)) != -1){
+            while ((bytesRead = in.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (file == null){
+        if (file == null) {
             System.err.println("无效的jar包url: " + jarUrl);
         }
 
@@ -61,12 +55,13 @@ public class HashUtil {
 
     /**
      * 对指定文件进行hash
+     *
      * @param file File 需要hash的文件
-     * @param alg hash算法
+     * @param alg  hash算法
      * @return hash值
      */
-    private static String hash(File file, String alg){
-        try (InputStream in = Files.newInputStream(file.toPath())){
+    private static String hash(File file, String alg) {
+        try (InputStream in = Files.newInputStream(file.toPath())) {
             MessageDigest digest = MessageDigest.getInstance(alg);
             byte[] block = new byte[4096];
             int length;
@@ -74,7 +69,7 @@ public class HashUtil {
                 digest.update(block, 0, length);
             }
             return bytesToHex(digest.digest());
-        } catch (NoSuchAlgorithmException e){
+        } catch (NoSuchAlgorithmException e) {
             System.err.println("不存在该哈希算法: " + alg);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -84,6 +79,7 @@ public class HashUtil {
 
     /**
      * 将字节数组转换为十六进制字符串
+     *
      * @param bytes 字符数组
      * @return 十六进制字符串
      */

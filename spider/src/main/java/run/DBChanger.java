@@ -1,7 +1,7 @@
-package run;
-
-public class DBChanger {
-
+//package run;
+//
+//public class DBChanger {
+//
 //    public static void main(String[] args) {
 //        JavaOpenPomSpider spider = JavaOpenPomSpider.getInstance();
 //
@@ -27,5 +27,5 @@ public class DBChanger {
 //        spider.flush();
 //        System.out.println("finished");
 //    }
-
-}
+//
+//}

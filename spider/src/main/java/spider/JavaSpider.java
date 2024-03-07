@@ -125,24 +125,9 @@ public class JavaSpider implements Spider {
     private ComponentInformationDO crawlWithDependency(String url){
 
         // 爬取pom文件中的组件信息
-        String pomUrl = findPomUrlInDirectory(url);
-        if (!pomUrl.endsWith(".pom")) {
-            return null;
-        }
-
-        Document document = UrlConnector.getDocumentByUrl(pomUrl);
-        if (document == null)
-            return null;
-
-        ComponentDO componentDO = ConvertUtil.convertToComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
+        ComponentDO componentDO = crawl(url);
         if (componentDO == null)
             return null;
-
-        // 爬取jar包，生成hash信息
-        String jarUrl = findJarUrlInDirectory(url);
-        if (jarUrl != null){
-            componentDO.setHashes(HashUtil.getHashes(jarUrl));
-        }
 
         // 生成组件依赖树
         // todo 先查数据库检查是否已存在依赖树
@@ -186,12 +171,8 @@ public class JavaSpider implements Spider {
      * @return
      */
     private ComponentDO crawl(String url){
+        // 爬取pom文件中的组件信息
         String pomUrl = findPomUrlInDirectory(url);
-
-        if (!pomUrl.endsWith(".pom")) {
-            return null;
-        }
-
         Document document = UrlConnector.getDocumentByUrl(pomUrl);
         if (document == null)
             return null;
@@ -254,12 +235,10 @@ public class JavaSpider implements Spider {
         //遍历目录下文件，找到其中以.jar结尾的文件
         for (Element fileElement : fileElements) {
             String fileAbsUrl = fileElement.absUrl("href");
-            // todo 怎么精确找到jar包
-            if (fileAbsUrl.endsWith(".jar") && !fileAbsUrl.contains("-javadoc")) {
+            if (fileAbsUrl.endsWith(".jar") && !fileAbsUrl.endsWith("-javadoc.jar") && !fileAbsUrl.endsWith("-sources.jar") && !fileAbsUrl.endsWith("-tests.jar")) {
                 return fileAbsUrl;
             }
         }
-        System.err.println("No .pom file found in \"" + directoryUrl + "\"");
         return null;
     }
 
