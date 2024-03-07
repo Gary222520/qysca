@@ -4,12 +4,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import nju.edu.cn.qysca.controller.ResponseMsg;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
-import nju.edu.cn.qysca.domain.application.dtos.AddProjectDTO;
-import nju.edu.cn.qysca.domain.application.dtos.CreateAppProjectDTO;
-import nju.edu.cn.qysca.domain.application.dtos.CreateApplicationDTO;
-import nju.edu.cn.qysca.domain.application.dtos.DeleteProjectDTO;
+import nju.edu.cn.qysca.domain.application.dtos.*;
 import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
 import nju.edu.cn.qysca.service.application.ApplicationService;
+import nju.edu.cn.qysca.service.project.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +21,9 @@ public class ApplicationController {
 
     @Autowired
     private ApplicationService applicationService;
+
+    @Autowired
+    private ProjectService projectService;
 
 
     @ApiOperation("获取所有应用")
@@ -76,8 +77,21 @@ public class ApplicationController {
 
     @ApiOperation("在应用中创建项目")
     @PostMapping("/createProject")
-    public ResponseMsg<Boolean> createProject(@RequestBody CreateAppProjectDTO createProjectDTO) {
-        return new ResponseMsg<>(applicationService.createAppProject(createProjectDTO));
+    public ResponseMsg<Boolean> createProject(@RequestBody CreateAppProjectDTO createAppProjectDTO) {
+        return new ResponseMsg<>(applicationService.createAppProject(createAppProjectDTO));
     }
+
+    @ApiOperation("在应用中更新项目")
+    @PostMapping("/updateProject")
+    public ResponseMsg<Boolean> updateProject(@RequestBody UpdateAppProjectDTO updateAppProjectDTO) {
+        return new ResponseMsg<>(applicationService.updateAppProject(updateAppProjectDTO));
+    }
+
+    @ApiOperation("在应用中升级项目")
+    @PostMapping("/upgradeProject")
+    public ResponseMsg<Boolean> upgradeProject(@RequestBody UpgradeAppProjectDTO upgradeAppProjectDTO) {
+        return new ResponseMsg<>(applicationService.upgradeAppProject(upgradeAppProjectDTO));
+    }
+
 
 }

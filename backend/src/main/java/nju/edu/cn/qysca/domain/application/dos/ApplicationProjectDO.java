@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
-import org.apache.poi.sl.usermodel.ObjectMetaData;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
