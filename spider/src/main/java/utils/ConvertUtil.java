@@ -6,15 +6,11 @@ import domain.component.LicenseDO;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.json.JSONObject;
-import org.json.XML;
 import org.jsoup.nodes.Document;
 import utils.idGenerator.UUIDGenerator;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,9 +19,9 @@ public class ConvertUtil {
 
     /**
      *
-     * @param document
-     * @param pomUrl
-     * @param MAVEN_REPO_BASE_URL
+     * @param document pom Document
+     * @param pomUrl pom文件url
+     * @param MAVEN_REPO_BASE_URL maven仓库根地址
      * @return
      */
     public static ComponentDO convertToComponentDO(Document document, String pomUrl, String MAVEN_REPO_BASE_URL){
@@ -56,13 +52,9 @@ public class ConvertUtil {
         componentDO.setDownloadUrl(getDownloadUrl(pomUrl));
         componentDO.setSourceUrl(model.getScm() == null ? "-" : (model.getScm().getUrl() == null ? "-" : model.getScm().getUrl()));
 
-        //todo
-        componentDO.setPUrl("-");
+        componentDO.setPUrl(getMavenPUrl(groupId, artifactId, version, model.getPackaging()));
         componentDO.setDevelopers(getDevelopers(model));
         componentDO.setLicenses(getLicense(model));
-
-        //todo
-        componentDO.setHashes(null);
 
         return componentDO;
     }
@@ -76,6 +68,22 @@ public class ConvertUtil {
      */
     private static String getDownloadUrl(String pomUrl) {
         return pomUrl.substring(0, pomUrl.lastIndexOf('/') + 1);
+    }
+
+    /**
+     * 生成PUrl（仅对maven组件）
+     * 例如：pkg:maven/commons-codec/commons-codec@1.15?type=jar
+     * @param groupId 组织Id
+     * @param artifactId 工件id
+     * @param version 版本号
+     * @param packaging 打包方式，如pom、jar
+     * @return PUrl
+     */
+    private static String getMavenPUrl(String groupId, String artifactId, String version, String packaging){
+        String pUrl = "pkg:maven/" + groupId + "/" + artifactId + "@" + version;
+        if (packaging.equals("jar"))
+            pUrl += "?type=jar";
+        return pUrl;
     }
 
     /**
@@ -133,31 +141,5 @@ public class ConvertUtil {
             e.printStackTrace();
             return null;
         }
-    }
-
-    /**
-     * 将jsoup document转化为json对象
-     *
-     * @param document jsoup document
-     * @return json对象
-     */
-    private static JSONObject convertToJson(Document document) {
-        return XML.toJSONObject(document.outerHtml());
-    }
-
-    /**
-     * 从指定地址的pom文件获取json对象
-     *
-     * @param pomFilePath pom文件地址
-     * @return json对象
-     */
-    private static JSONObject convertToJson(String pomFilePath) {
-        try {
-            String pomString = new String(Files.readAllBytes(Paths.get(pomFilePath)));
-            return XML.toJSONObject(pomString);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 }
