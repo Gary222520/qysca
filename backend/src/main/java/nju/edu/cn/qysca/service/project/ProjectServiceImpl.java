@@ -266,13 +266,12 @@ public class ProjectServiceImpl implements ProjectService {
      *
      * @param groupId 组织Id
      * @param artifactId 工件Id
-     * @param version 版本名称
      * @param number 页码
      * @param size   页大小
      * @return Page<ProjectDO> 项目信息分页结果
      */
     @Override
-    public Page<ProjectDO> findProjectPage(String groupId, String artifactId, String version, int number, int size) {
+    public Page<ProjectDO> findProjectPage(String groupId, String artifactId, int number, int size) {
         // 模糊查询，允许参数name为空值
         ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("id").withIgnoreNullValues();
         ProjectDO projectDO = new ProjectDO();
@@ -281,9 +280,6 @@ public class ProjectServiceImpl implements ProjectService {
         }
         if (artifactId != null && !artifactId.equals("")) {
             projectDO.setArtifactId(artifactId);
-        }
-        if(version != null && !version.equals("")){
-            projectDO.setVersion(version);
         }
         Example<ProjectDO> example = Example.of(projectDO, matcher);
         // 数据库页号从0开始，需减1

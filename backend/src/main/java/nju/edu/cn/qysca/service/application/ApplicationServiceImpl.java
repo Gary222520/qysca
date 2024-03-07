@@ -7,9 +7,12 @@ import nju.edu.cn.qysca.dao.project.ProjectDao;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationProjectDO;
 import nju.edu.cn.qysca.domain.application.dtos.AddProjectDTO;
+import nju.edu.cn.qysca.domain.application.dtos.CreateAppProjectDTO;
 import nju.edu.cn.qysca.domain.application.dtos.CreateApplicationDTO;
 import nju.edu.cn.qysca.domain.application.dtos.DeleteProjectDTO;
 import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
+import nju.edu.cn.qysca.domain.project.dtos.SaveProjectDTO;
+import nju.edu.cn.qysca.service.project.ProjectService;
 import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService{
@@ -32,6 +36,9 @@ public class ApplicationServiceImpl implements ApplicationService{
 
     @Autowired
     private ProjectDao projectDao;
+
+    @Autowired
+    private ProjectService projectService;
     @Override
     @Transactional
     public Boolean createApplication(CreateApplicationDTO createApplicationDTO) {
@@ -91,6 +98,18 @@ public class ApplicationServiceImpl implements ApplicationService{
         ApplicationDO applicationDO = applicationDao.findByGroupIdAndArtifactIdAndVersion(deleteProjectDTO.getAppGroupId(), deleteProjectDTO.getAppArtifactId(), deleteProjectDTO.getAppVersion());
         ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(deleteProjectDTO.getGroupId(), deleteProjectDTO.getArtifactId(), deleteProjectDTO.getVersion());
         applicationProjectDao.deleteByApplicationDO_IdAndProjectDO_Id(applicationDO.getId(), projectDO.getId());
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public Boolean createAppProject(CreateAppProjectDTO createAppProjectDTO) {
+        SaveProjectDTO saveProjectDTO = new SaveProjectDTO();
+        BeanUtils.copyProperties(createAppProjectDTO, saveProjectDTO);
+        projectService.saveProject(saveProjectDTO);
+        AddProjectDTO addProjectDTO = new AddProjectDTO();
+        BeanUtils.copyProperties(createAppProjectDTO, addProjectDTO);
+        addProject(addProjectDTO);
         return true;
     }
 }

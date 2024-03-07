@@ -65,10 +65,9 @@ public class ProjectController {
     @GetMapping("/findProjectPage")
     public ResponseMsg<Page<ProjectDO>> findProjectPage(@ApiParam(value = "组织Id", allowEmptyValue = true) @RequestParam String groupId,
                                                             @ApiParam(value = "工件Id", allowEmptyValue = true) @RequestParam String artifactId,
-                                                            @ApiParam(value = "版本", allowEmptyValue = true) @RequestParam String version,
                                                             @ApiParam(value = "页码", required = true) @RequestParam int number,
                                                             @ApiParam(value = "页大小", required = true) @RequestParam int size) {
-        return new ResponseMsg<>(projectService.findProjectPage(groupId, artifactId, version, number, size));
+        return new ResponseMsg<>(projectService.findProjectPage(groupId, artifactId, number, size));
     }
 
     @ApiOperation("分页获取指定项目的版本信息")

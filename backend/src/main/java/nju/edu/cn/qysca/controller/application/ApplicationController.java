@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiOperation;
 import nju.edu.cn.qysca.controller.ResponseMsg;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.application.dtos.AddProjectDTO;
+import nju.edu.cn.qysca.domain.application.dtos.CreateAppProjectDTO;
 import nju.edu.cn.qysca.domain.application.dtos.CreateApplicationDTO;
 import nju.edu.cn.qysca.domain.application.dtos.DeleteProjectDTO;
 import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
@@ -73,5 +74,10 @@ public class ApplicationController {
         return new ResponseMsg<>(applicationService.deleteProject(deleteProjectDTO));
     }
 
+    @ApiOperation("在应用中创建项目")
+    @PostMapping("/createProject")
+    public ResponseMsg<Boolean> createProject(@RequestBody CreateAppProjectDTO createProjectDTO) {
+        return new ResponseMsg<>(applicationService.createAppProject(createProjectDTO));
+    }
 
 }

@@ -2,6 +2,7 @@ package nju.edu.cn.qysca.service.application;
 
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.application.dtos.AddProjectDTO;
+import nju.edu.cn.qysca.domain.application.dtos.CreateAppProjectDTO;
 import nju.edu.cn.qysca.domain.application.dtos.CreateApplicationDTO;
 import nju.edu.cn.qysca.domain.application.dtos.DeleteProjectDTO;
 import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
@@ -26,4 +27,6 @@ public interface ApplicationService {
     Boolean addProject(AddProjectDTO addProjectDTO);
 
     Boolean deleteProject(DeleteProjectDTO deleteProjectDTO);
+
+    Boolean createAppProject(CreateAppProjectDTO createAppProjectDTO);
 }
