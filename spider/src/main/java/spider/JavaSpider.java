@@ -52,6 +52,7 @@ public class JavaSpider implements Spider {
         }
         return instance;
     }
+
     private JavaSpider(){
 
     }
@@ -202,14 +203,19 @@ public class JavaSpider implements Spider {
             return null;
         }
 
+        // 从目录中提取出工件号和版本号
+        String[] parts = directoryUrl.split("/");
+        String artifactId = parts[parts.length - 2];
+        String version = parts[parts.length - 1];
+
         // 获取目录下所有文件
         Elements fileElements = document.select("a[href]");
 
         //遍历目录下文件，找到其中以.pom结尾的文件
         for (Element fileElement : fileElements) {
             String fileAbsUrl = fileElement.absUrl("href");
-            // 一般含-javadoc的不是需要的pom文件，这样的处理可能比较简单了
-            if (fileAbsUrl.endsWith(".pom") && !fileAbsUrl.contains("-javadoc")) {
+            // 一般只有形如“artifactId-version.pom"的才是需要的pom文件
+            if (fileAbsUrl.endsWith(artifactId + "-" + version + ".pom")) {
                 return fileAbsUrl;
             }
         }
@@ -229,13 +235,19 @@ public class JavaSpider implements Spider {
             return null;
         }
 
+        // 从目录中提取出工件号和版本号
+        String[] parts = directoryUrl.split("/");
+        String artifactId = parts[parts.length - 2];
+        String version = parts[parts.length - 1];
+
         // 获取目录下所有文件
         Elements fileElements = document.select("a[href]");
 
         //遍历目录下文件，找到其中以.jar结尾的文件
         for (Element fileElement : fileElements) {
             String fileAbsUrl = fileElement.absUrl("href");
-            if (fileAbsUrl.endsWith(".jar") && !fileAbsUrl.endsWith("-javadoc.jar") && !fileAbsUrl.endsWith("-sources.jar") && !fileAbsUrl.endsWith("-tests.jar")) {
+            // 一般只有形如“artifactId-version.jar"的才是需要的jar包
+            if (fileAbsUrl.endsWith(artifactId + "-" + version + ".jar")) {
                 return fileAbsUrl;
             }
         }
