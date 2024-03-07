@@ -26,13 +26,11 @@ public class ApplicationProjectDO {
 
     @ManyToOne
     @JoinColumn(name = "application_id")
-    @Column(name = "application_id", nullable = false)
     @ApiModelProperty(value = "应用id", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private ApplicationDO applicationDO;
 
     @ManyToOne
     @JoinColumn(name = "project_id")
-    @Column(name = "project_id", nullable = false)
     @ApiModelProperty(value = "项目id", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private ProjectDO projectDO;
 
