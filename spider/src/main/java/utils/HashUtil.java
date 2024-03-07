@@ -4,10 +4,13 @@ import domain.component.HashDO;
 import org.jsoup.nodes.Document;
 import spider.UrlConnector;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -17,55 +20,64 @@ import java.util.List;
 public class HashUtil {
 
     /**
-     * 对指定字符串进行hash算法，并封装为List<HashDO>
-     * @param bytes
+     * 对指定url的jar包进行hash算法，并封装为List<HashDO>
+     * @param jarUrl jar包url
      * @return List<HashDO>
      */
-    public static List<HashDO> getHashes(byte[] bytes){
-        List<HashDO> hashes = new ArrayList<>();
+    public static List<HashDO> getHashes(String jarUrl){
+        File file = null;
+        try{
+            InputStream in = new URL(jarUrl).openStream();
+            //创建临时文件
+            file = File.createTempFile("temp", "");
+            //写入jar包
+            byte[] buffer = new byte[8192]; // 8 KB buffer
+            int bytesRead;
+            OutputStream outputStream = new FileOutputStream(file);
+            while((bytesRead = in.read(buffer)) != -1){
+                outputStream.write(buffer, 0, bytesRead);
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
 
-        hashes.add(new HashDO("MD5", md5(bytes)));
-        hashes.add(new HashDO("SHA-1", sha(bytes, "SHA-1")));
-        hashes.add(new HashDO("SHA-256", sha(bytes, "SHA-256")));
-        hashes.add(new HashDO("SHA-512", sha(bytes, "SHA-512")));
-        hashes.add(new HashDO("SHA-384", sha(bytes, "SHA-384")));
-        hashes.add(new HashDO("SHA3-384", sha(bytes, "SHA3-384")));
-        hashes.add(new HashDO("SHA3-256", sha(bytes, "SHA-256")));
-        hashes.add(new HashDO("SHA3-512", sha(bytes, "SHA-512")));
+        if (file == null){
+            System.err.println("无效的jar包url: " + jarUrl);
+        }
+
+        // 调用哈希算法
+        List<HashDO> hashes = new ArrayList<>();
+        hashes.add(new HashDO("MD5", hash(file, "MD5")));
+        hashes.add(new HashDO("SHA-1", hash(file, "SHA-1")));
+        hashes.add(new HashDO("SHA-256", hash(file, "SHA-256")));
+        hashes.add(new HashDO("SHA-512", hash(file, "SHA-512")));
+        hashes.add(new HashDO("SHA-384", hash(file, "SHA-384")));
+        hashes.add(new HashDO("SHA3-384", hash(file, "SHA3-384")));
+        hashes.add(new HashDO("SHA3-256", hash(file, "SHA-256")));
+        hashes.add(new HashDO("SHA3-512", hash(file, "SHA-512")));
 
         return hashes;
     }
 
     /**
-     * MD5哈希算法
-     * @param bytes
-     * @return hash字符串
+     * 对指定文件进行hash
+     * @param file File 需要hash的文件
+     * @param alg hash算法
+     * @return hash值
      */
-    private static String md5(byte[] bytes){
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] md5Hash = md.digest(bytes);
-            return bytesToHex(md5Hash);
-        }catch (NoSuchAlgorithmException e){
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * SHA哈希算法
-     * @param bytes
-     * @param alg 算法名
-     * @return hash字符串
-     */
-    private static String sha(byte[] bytes, String alg){
-        try {
-            MessageDigest md = MessageDigest.getInstance(alg);
-            md.update(getSalt());
-            byte[] hash = md.digest(bytes);
-            return bytesToHex(hash);
+    private static String hash(File file, String alg){
+        try (InputStream in = Files.newInputStream(file.toPath())){
+            MessageDigest digest = MessageDigest.getInstance(alg);
+            byte[] block = new byte[4096];
+            int length;
+            while ((length = in.read(block)) > 0) {
+                digest.update(block, 0, length);
+            }
+            return bytesToHex(digest.digest());
         } catch (NoSuchAlgorithmException e){
-            e.printStackTrace();
+            System.err.println("不存在该哈希算法: " + alg);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         return null;
     }
@@ -81,40 +93,5 @@ public class HashUtil {
             result.append(String.format("%02x", b));
         }
         return result.toString();
-    }
-
-    private static byte[] getSalt() throws NoSuchAlgorithmException {
-        SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
-        byte[] salt = new byte[16];
-        sr.nextBytes(salt);
-        return salt;
-    }
-
-    public static void main(String[] args) {
-
-
-        String jarUrl = "https://repo.maven.apache.org/maven2/javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2-sources.jar";
-
-        try {
-            URL url = new URL(jarUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-
-            InputStream inputStream = connection.getInputStream();
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
-
-
-            List<HashDO> hashes = HashUtil.getHashes(outputStream.toByteArray());
-            System.out.println(hashes);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-
     }
 }

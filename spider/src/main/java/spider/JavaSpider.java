@@ -6,6 +6,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import utils.ConvertUtil;
+import utils.HashUtil;
 import utils.MavenUtil;
 import utils.idGenerator.UUIDGenerator;
 
@@ -140,9 +141,7 @@ public class JavaSpider implements Spider {
         // 爬取jar包，生成hash信息
         String jarUrl = findJarUrlInDirectory(url);
         if (jarUrl != null){
-            Document jarDocument = UrlConnector.getDocumentByUrl(jarUrl);
-//             List<HashDO> hashes = HashUtil.getHashes(document.outerHtml());
-//            componentDO.setHashes(hashes);
+            componentDO.setHashes(HashUtil.getHashes(jarUrl));
         }
 
         // 生成组件依赖树
@@ -201,11 +200,10 @@ public class JavaSpider implements Spider {
         if (componentDO == null)
             return null;
 
+        // 爬取jar包，生成hash信息
         String jarUrl = findJarUrlInDirectory(url);
         if (jarUrl != null){
-            Document jarDocument = UrlConnector.getDocumentByUrl(jarUrl);
-//            List<HashDO> hashes = HashUtil.getHashes(jarDocument.outerHtml());
-//            componentDO.setHashes(hashes);
+            componentDO.setHashes(HashUtil.getHashes(jarUrl));
         }
 
         return componentDO;
