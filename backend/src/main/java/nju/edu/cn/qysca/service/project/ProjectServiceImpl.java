@@ -26,8 +26,6 @@ import java.io.File;
 import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class ProjectServiceImpl implements ProjectService {
@@ -279,10 +277,7 @@ public class ProjectServiceImpl implements ProjectService {
      */
     @Override
     public Page<ProjectDO> findProjectPage(String name, int number, int size) {
-        Pageable pageable = PageRequest.of(number, size);
-        if(name.equals("")) {
-            name = null;
-        }
+        Pageable pageable = PageRequest.of(number - 1, size);
         return projectDao.findDistinctProjectPageByName(name, pageable);
     }
 
@@ -364,7 +359,6 @@ public class ProjectServiceImpl implements ProjectService {
         // 设置排序规则
         List<Sort.Order> orders = new ArrayList<>();
         orders.add(new Sort.Order(Sort.Direction.ASC, "depth").nullsLast());
-        orders.add(new Sort.Order(Sort.Direction.ASC, "name").nullsLast());
         orders.add(new Sort.Order(Sort.Direction.ASC, "groupId").nullsLast());
         orders.add(new Sort.Order(Sort.Direction.ASC, "artifactId").nullsLast());
         orders.add(new Sort.Order(Sort.Direction.DESC, "version").nullsLast());

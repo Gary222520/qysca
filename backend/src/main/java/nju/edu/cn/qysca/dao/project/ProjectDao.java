@@ -66,9 +66,15 @@ public interface ProjectDao extends JpaRepository<ProjectDO, String> {
     List<String> findVersionsByGroupIdAndArtifactId(String groupId, String artifactId);
 
 
+    /**
+     *  根据项目名称模糊查询项目信息
+     * @param name 项目名称
+     * @param pageable 分页信息
+     * @return Page<ProjectDO> 项目分页信息
+     */
 
-    @Query(value = "select distinct on (p.group_id, p.artifact_id, p.name) p.* from project p where (:name is null or p.name = :name)",
-            countQuery = "select count(distinct p.group_id, p.artifactId, p.name) from  project p where (:name is null or p.name = :name)",
+    @Query(value = "select distinct on (p.group_id, p.artifact_id, p.name) p.* from project p where (:name = '' or p.name = :name)",
+            countQuery = "select count(*) from (select distinct p.group_id, p.artifact_id, p.name from  project p where (:name = '' or p.name = :name)) as unique_combinations",
             nativeQuery = true)
     Page<ProjectDO> findDistinctProjectPageByName(@Param("name") String name, Pageable pageable);
 }
