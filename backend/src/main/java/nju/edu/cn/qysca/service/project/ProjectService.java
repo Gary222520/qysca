@@ -71,13 +71,12 @@ public interface ProjectService {
     /**
      * 分页获取项目信息
      *
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
+     * @param name 项目名称
      * @param number 页码
      * @param size   页大小
      * @return Page<ProjectVersionDO> 项目信息分页结果
      */
-    Page<ProjectDO> findProjectPage(String groupId, String artifactId, int number, int size);
+    Page<ProjectDO> findProjectPage(String name, int number, int size);
 
     /**
      * 分页获取指定项目的版本信息

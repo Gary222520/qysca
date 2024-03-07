@@ -26,6 +26,8 @@ import java.io.File;
 import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjectServiceImpl implements ProjectService {
@@ -270,34 +272,25 @@ public class ProjectServiceImpl implements ProjectService {
     /**
      * 分页获取项目信息
      *
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
+     * @param name 项目名称
      * @param number 页码
      * @param size   页大小
      * @return Page<ProjectDO> 项目信息分页结果
      */
     @Override
-    public Page<ProjectDO> findProjectPage(String groupId, String artifactId, int number, int size) {
-        // 模糊查询，允许参数name为空值
-        ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("id").withIgnoreNullValues();
-        ProjectDO projectDO = new ProjectDO();
-        if (groupId != null && !groupId.equals("")) {
-            projectDO.setGroupId(groupId);
+    public Page<ProjectDO> findProjectPage(String name, int number, int size) {
+        Pageable pageable = PageRequest.of(number, size);
+        if(name.equals("")) {
+            name = null;
         }
-        if (artifactId != null && !artifactId.equals("")) {
-            projectDO.setArtifactId(artifactId);
-        }
-        Example<ProjectDO> example = Example.of(projectDO, matcher);
-        // 数据库页号从0开始，需减1
-        Pageable pageable = PageRequest.of(number - 1, size);
-        return projectDao.findAll(example, pageable);
+        return projectDao.findDistinctProjectPageByName(name, pageable);
     }
 
     /**
      * 分页获取指定项目的版本信息
      *
      * @param groupId 组织Id
-     * @Param artifactId 工件Id
+     * @param artifactId 工件Id
      * @param number 页码
      * @param size   页大小
      * @return Page<ProjectDO> 项目版本信息分页结果
