@@ -152,6 +152,9 @@ public class ProjectServiceImpl implements ProjectService {
             dependencyTreeDao.save(projectDependencyTreeDO);
             // 批量更新依赖平铺表
             List<DependencyTableDO> projectDependencyTableDOS = createProjectDependencyTable(projectDependencyTreeDO);
+            for (DependencyTableDO dependencyTableDO : projectDependencyTableDOS) {
+                dependencyTableDO.setLanguage(updateProjectDTO.getLanguage());
+            }
             dependencyTableDao.saveAll(projectDependencyTableDOS);
             ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(updateProjectDTO.getGroupId(), updateProjectDTO.getArtifactId(), updateProjectDTO.getVersion());
             projectDO.setState("SUCCESS");
@@ -210,6 +213,9 @@ public class ProjectServiceImpl implements ProjectService {
             dependencyTreeDao.save(projectDependencyTreeDO);
             // 批量更新依赖平铺表
             List<DependencyTableDO> projectDependencyTableDOS = createProjectDependencyTable(projectDependencyTreeDO);
+            for (DependencyTableDO dependencyTableDO : projectDependencyTableDOS) {
+                dependencyTableDO.setLanguage(upgradeProjectDTO.getLanguage());
+            }
             dependencyTableDao.saveAll(projectDependencyTableDOS);
             // 更改状态为SUCCESS
             ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(upgradeProjectDTO.getGroupId(), upgradeProjectDTO.getArtifactId(), upgradeProjectDTO.getVersion());
