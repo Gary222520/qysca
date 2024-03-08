@@ -1,7 +1,7 @@
 <template>
   <a-modal v-model:open="data.open" width="800px" :footer="null">
     <template #title>
-      <div style="font-size: 20px">版本升级</div>
+      <div style="font-size: 20px">更新版本信息</div>
     </template>
     <div style="display: flex; margin: 20px 0">
       <a-steps class="steps" direction="vertical" :current="data.currentStep" :items="data.steps"></a-steps>
@@ -61,17 +61,30 @@
       </div>
       <div v-if="data.currentStep === 1">
         <a-form :model="formState" ref="formRef" name="project" :label-col="{ span: 8 }">
+          <a-form-item label="组织ID" name="groupId">
+            <a-input v-model:value="formState.groupId" style="width: 300px" disabled />
+          </a-form-item>
+          <a-form-item label="工件ID" name="artifactId">
+            <a-input v-model:value="formState.artifactId" style="width: 300px" disabled />
+          </a-form-item>
           <a-form-item label="项目名称" name="name">
             <a-input v-model:value="formState.name" style="width: 300px" disabled />
           </a-form-item>
-          <a-form-item
-            label="版本编号"
-            name="version"
-            :rules="[{ required: true, validator: validateVersion, trigger: 'change' }]">
-            <a-input v-model:value="formState.version" :placeholder="data.versionPlaceholder" style="width: 300px" />
+          <a-form-item label="版本编号" name="version">
+            <a-input v-model:value="formState.version" style="width: 300px" disabled />
           </a-form-item>
-          <a-form-item label="备注信息" name="note">
-            <a-input v-model:value="formState.note" style="width: 300px" />
+          <a-form-item label="项目类型" name="type" :rules="[{ required: true, message: '请选择项目类型' }]">
+            <a-select v-model:value="formState.type" style="width: 300px">
+              <a-select-option value="agent">agent</a-select-option>
+              <a-select-option value="backend">backend</a-select-option>
+              <a-select-option value="collector">collector</a-select-option>
+              <a-select-option value="filter">filter</a-select-option>
+              <a-select-option value="raw storage">raw storage</a-select-option>
+              <a-select-option value="web UI">web UI</a-select-option>
+            </a-select>
+          </a-form-item>
+          <a-form-item label="备注信息" name="description">
+            <a-input v-model:value="formState.description" style="width: 300px" />
           </a-form-item>
         </a-form>
       </div>
@@ -88,7 +101,7 @@
     </div>
     <div class="button">
       <a-button class="cancel-btn" @click="close">取消</a-button>
-      <a-button class="btn" v-if="data.currentStep === 1" @click="validateForm">下一步</a-button>
+      <a-button class="btn" v-if="data.currentStep === 1" @click="next">下一步</a-button>
       <a-button class="btn" v-if="data.currentStep === 2" @click="submit">提交</a-button>
       <a-button class="btn" v-if="data.currentStep > 0" @click="back">上一步</a-button>
     </div>
@@ -97,8 +110,8 @@
 
 <script setup>
 import { reactive, ref, defineExpose, defineEmits } from 'vue'
-import { UpgradeVersion } from '@/api/frontend'
 import Upload from './Upload.vue'
+import { UpdateVersion } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 
 const emit = defineEmits(['success'])
@@ -106,38 +119,46 @@ const uploadRef = ref()
 const data = reactive({
   open: false,
   project: {},
-  versionPlaceholder: '',
+  record: {},
   currentStep: 0,
   steps: [{ title: '选择工具' }, { title: '项目信息' }, { title: '上传文件' }]
 })
 const formRef = ref()
 const formState = reactive({
+  groupId: '',
+  artifactId: '',
   name: '',
   version: '',
-  note: ''
+  type: '',
+  description: ''
 })
 const projectInfo = reactive({
   language: '',
   builder: '',
-  scanner: '',
-  filePath: ''
+  filePath: '',
+  scanner: ''
 })
-const open = (project) => {
+const open = (project, record) => {
   data.project = project
-  data.versionPlaceholder = `当前版本为${project.content[0]?.version}`
-  formState.name = project.name
-  projectInfo.language = project.content[0]?.language
+  data.record = record
+  projectInfo.language = record.language
+  formState.groupId = record.groupId
+  formState.artifactId = record.artifactId
+  formState.name = record.name
+  formState.version = record.version
+  formState.type = record.type
+  formState.description = record.description
   data.open = true
 }
 const close = () => {
   data.open = false
 }
 const clear = () => {
-  data.currentStep = 0
-  formState.name = ''
-  formState.version = '1.0.0'
-  formState.note = ''
   uploadRef.value.clear()
+}
+const handleUpload = (uploadInfo) => {
+  projectInfo.filePath = uploadInfo.filePath
+  projectInfo.scanner = uploadInfo.scanner
 }
 const selectTool = (builder) => {
   if (builder === 'gradle' || builder === 'jar') {
@@ -146,28 +167,6 @@ const selectTool = (builder) => {
   }
   projectInfo.builder = builder
   next()
-}
-const handleUpload = (uploadInfo) => {
-  projectInfo.filePath = uploadInfo.filePath
-  projectInfo.scanner = uploadInfo.scanner
-}
-const validateVersion = async (_rule, value) => {
-  const reg = /^[1-9]\d?(\.([1-9]?\d)){2}$/
-  if (value === '') {
-    return Promise.reject(new Error('请输入版本编号'))
-  } else if (!reg.test(value)) {
-    return Promise.reject(new Error('版本编号格式为x.x.x（1-99.0-99.0-99）'))
-  } else {
-    return Promise.resolve()
-  }
-}
-const validateForm = () => {
-  formRef.value
-    .validate()
-    .then(() => {
-      next()
-    })
-    .catch(() => {})
 }
 const back = () => {
   data.currentStep -= 1
@@ -180,14 +179,14 @@ const submit = () => {
     ...formState,
     ...projectInfo
   }
-  UpgradeVersion(params)
+  UpdateVersion(params)
     .then((res) => {
-      // console.log('UpgradeVersion', res)
+      // console.log('UpdateVersion', res)
       if (res.code !== 200) {
         message.error(res.message)
         return
       }
-      message.success('版本升级成功')
+      message.success('版本更新成功')
       emit('success', data.project)
       close()
       clear()
@@ -199,7 +198,7 @@ const submit = () => {
 defineExpose({ open })
 </script>
 
-<style lang="less" scoped>
+<style scoped>
 .steps {
   width: 150px;
 }
@@ -261,5 +260,7 @@ defineExpose({ open })
   color: #6f005f;
 }
 </style>
-<style scoped src="@/atdv/steps.css"></style>
 <style scoped src="@/atdv/input.css"></style>
+<style scoped src="@/atdv/radio-btn.css"></style>
+<style scoped src="@/atdv/steps.css"></style>
+<style scoped src="@/atdv/select.css"></style>

@@ -30,16 +30,14 @@ const data = reactive({
   projectInfo: {},
   datasource: [],
   columns: [
-    { title: '组件名称', dataIndex: 'name', key: 'name' },
-    { title: '组织ID', dataIndex: 'groupId', key: 'groupId' },
-    { title: '工件ID', dataIndex: 'artifactId', key: 'artifactId' },
-    { title: '版本', dataIndex: 'version', key: 'version', width: 80 },
+    { title: '组织ID', dataIndex: 'cgroupId', key: 'groupId' },
+    { title: '工件ID', dataIndex: 'cartifactId', key: 'artifactId' },
+    { title: '版本', dataIndex: 'cversion', key: 'version', width: 80 },
     { title: '语言', dataIndex: 'language', key: 'language', width: 80 },
     { title: '依赖方式', dataIndex: 'direct', key: 'direct', width: 90 },
     { title: '依赖层级', dataIndex: 'depth', key: 'depth', width: 90 },
     { title: '依赖范围', dataIndex: 'scope', key: 'scope', width: 90 },
-    { title: '是否开源', dataIndex: 'opensource', key: 'opensource', width: 90 },
-    { title: '许可证', dataIndex: 'licenses', key: 'licenses' }
+    { title: '是否开源', dataIndex: 'opensource', key: 'opensource', width: 90 }
   ]
 })
 const pagination = reactive({
@@ -49,17 +47,19 @@ const pagination = reactive({
   showSizeChanger: false,
   onChange: (page, size) => {
     pagination.current = page
-    getProjectTiled(data.projectInfo.name, data.projectInfo.version, page, size)
-  }
+    getProjectTiled(data.projectInfo.groupId, data.projectInfo.artifactId, data.projectInfo.version, page, size)
+  },
+  hideOnSinglePage: true
 })
-const show = (name, version) => {
+const show = (groupId, artifactId, version) => {
   data.visible = true
-  data.projectInfo.name = name
+  data.projectInfo.groupId = groupId
+  data.projectInfo.artifactId = artifactId
   data.projectInfo.version = version
-  getProjectTiled(name, version)
+  getProjectTiled(groupId, artifactId, version)
 }
-const getProjectTiled = (name, version, number = 1, size = 10) => {
-  GetProjectTiled({ name, version, number, size })
+const getProjectTiled = (groupId, artifactId, version, number = 1, size = 10) => {
+  GetProjectTiled({ groupId, artifactId, version, number, size })
     .then((res) => {
       // console.log('GetProjectTiled', res)
       if (res.code !== 200) {
