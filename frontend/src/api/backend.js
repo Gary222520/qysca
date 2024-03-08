@@ -1,6 +1,30 @@
 export const API = {
+  // 创建新应用
+  CREATE_APPLICATION: '/qysca/application/createApplication',
+  // 查询应用信息
+  APPLICATION_LIST: '/qysca/application/getApplicationList',
+  // 查询应用版本的信息
+  APPLICATION_INFO: '/qysca/application/getApplicationVersion',
+  // 获取应用所有版本号
+  APPLICATION_VERSIONS: '/qysca/application/getApplicationVersionList',
+  // 删除应用某个版本
+  DELETE_APPLICATION_VERSION: '/qysca/application/deleteApplicationVersion',
+  // 删除应用
+  DELETE_APPLICATION: '/qysca/application/deleteApplication',
+
+  // 在应用中创建项目
+  APP_CREATE_PROJECT: '/qysca/application/createProject',
+  // 向应用中增加项目
+  APP_ADD_PROJECT: '/qysca/application/addProject',
+  // 在应用中更新项目
+  APP_UPDATE_PROJECT: '/qysca/application/updateProject',
+  // 在应用中升级项目
+  APP_UPGRADE_PROJECT: '/qysca/application/upgradeProject',
+  // 在应用中删除项目
+  APP_DELETE_PROJECT: '/qysca/application/deleteProject',
+
   // 分页获取项目信息
-  PROJECT_LIST: '/qysca/project/findProjectInfoPage',
+  PROJECT_LIST: '/qysca/project/findProjectPage',
   // 查询具体项目的信息
   PROJECT_INFO: '/qysca/project/findProjectVersionPage',
   // 新建项目
@@ -28,22 +52,14 @@ export const API = {
   // 版本升级
   UPGRADE_VERSION: '/qysca/project/upgradeProject',
 
-  // 分页查询开源组件
-  OPEN_COMPONENT_LIST: '/qysca/components/findOpenComponentsPage',
-  // 分页查询闭源组件
-  CLOSE_COMPONENT_LIST: '/qysca/components/findCloseComponentsPage',
-  // 查询开源组件详细信息
-  OPEN_COMPONENT_INFO: '/qysca/components/findOpenComponentDetail',
-  // 查询闭源组件详细信息
-  CLOSE_COMPONENT_INFO: '/qysca/components/findCloseComponentDetail',
-  // 查询开源组件树形依赖
-  OPEN_COMPONENT_TREE: '/qysca/components/findOpenComponentDependencyTree',
-  // 查询闭源组件树形依赖
-  CLOSE_COMPONENT_TREE: '/qysca/components/findCloseComponentDependencyTree',
-  // 查询开源组件平铺依赖
-  OPEN_COMPONENT_TILED: '/qysca/components/findOpenComponentDependencyTable',
-  // 查询闭源组件平铺依赖
-  CLOSE_COMPONENT_TILED: '/qysca/components/findCloseComponentDependencyTable',
+  // 分页查询组件
+  COMPONENT_LIST: '/qysca/components/findComponentsPage',
+  // 查询组件详细信息
+  COMPONENT_INFO: '/qysca/components/findComponentDetail',
+  // 查询组件树形依赖
+  COMPONENT_TREE: '/qysca/components/findComponentDependencyTree',
+  // 查询组件平铺依赖
+  COMPONENT_TILED: '/qysca/components/findComponentDependencyTable',
   // 添加闭源组件
   ADD_COMPONENT: '/qysca/components/saveCloseComponent',
 

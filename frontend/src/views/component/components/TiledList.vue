@@ -22,8 +22,8 @@
 
 <script setup>
 import { reactive, ref, defineExpose } from 'vue'
-import { GetOpenComponentTiled, GetCloseComponentTiled } from '@/api/frontend'
-import Drawer from '@/views/application/components/Drawer.vue'
+import { GetComponentTiled } from '@/api/frontend'
+import Drawer from '@/views/project/components/Drawer.vue'
 import { message } from 'ant-design-vue'
 
 const drawer = ref()
@@ -33,16 +33,14 @@ const data = reactive({
   component: {},
   datasource: [],
   columns: [
-    { title: '组件名称', dataIndex: 'name', key: 'name' },
-    { title: '组织ID', dataIndex: 'groupId', key: 'groupId' },
-    { title: '工件ID', dataIndex: 'artifactId', key: 'artifactId' },
-    { title: '版本', dataIndex: 'version', key: 'version', width: 80 },
+    { title: '组织ID', dataIndex: 'cgroupId', key: 'groupId' },
+    { title: '工件ID', dataIndex: 'cartifactId', key: 'artifactId' },
+    { title: '版本', dataIndex: 'cversion', key: 'version', width: 80 },
     { title: '语言', dataIndex: 'language', key: 'language', width: 80 },
     { title: '依赖方式', dataIndex: 'direct', key: 'direct', width: 90 },
     { title: '依赖层级', dataIndex: 'depth', key: 'depth', width: 90 },
     { title: '依赖范围', dataIndex: 'scope', key: 'scope', width: 90 },
-    { title: '是否开源', dataIndex: 'opensource', key: 'opensource', width: 90 },
-    { title: '许可证', dataIndex: 'licenses', key: 'licenses' }
+    { title: '是否开源', dataIndex: 'opensource', key: 'opensource', width: 90 }
   ]
 })
 const pagination = reactive({
@@ -53,7 +51,8 @@ const pagination = reactive({
   onchange: (page, size) => {
     pagination.current = page
     getComponentTiled(data.component, page, size)
-  }
+  },
+  hideOnSinglePage: true
 })
 const show = (component) => {
   data.visible = true
@@ -65,43 +64,26 @@ const getComponentTiled = (component, number = 1, size = 10) => {
     groupId: component.groupId,
     artifactId: component.artifactId,
     version: component.version,
+    // opensource: component.opensource,
     number,
     size
   }
   data.spinning = true
-  if (component.opensource) {
-    GetOpenComponentTiled(params)
-      .then((res) => {
-        // console.log('GetOpenComponentTiled', res)
-        data.spinning = false
-        if (res.code !== 200) {
-          message.error(res.message)
-          return
-        }
-        data.datasource = res.data.content
-        pagination.total = res.data.totalElements
-      })
-      .catch((err) => {
-        data.spinning = false
-        console.error(err)
-      })
-  } else {
-    GetCloseComponentTiled(params)
-      .then((res) => {
-        // console.log('GetCloseComponentTiled', res)
-        data.spinning = false
-        if (res.code !== 200) {
-          message.error(res.message)
-          return
-        }
-        data.datasource = res.data.content
-        pagination.total = res.data.totalElements
-      })
-      .catch((err) => {
-        data.spinning = false
-        console.error(err)
-      })
-  }
+  GetComponentTiled(params)
+    .then((res) => {
+      // console.log('GetComponentTiled', res)
+      data.spinning = false
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      data.datasource = res.data.content
+      pagination.total = res.data.totalElements
+    })
+    .catch((err) => {
+      data.spinning = false
+      console.error(err)
+    })
 }
 const hide = () => {
   data.visible = false

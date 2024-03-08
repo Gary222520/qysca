@@ -42,7 +42,7 @@
 <script setup>
 import { reactive, defineExpose } from 'vue'
 import { useRouter } from 'vue-router'
-import { GetOpenComponentInfo, GetCloseComponentInfo } from '@/api/frontend'
+import { GetComponentInfo } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 
 const router = useRouter()
@@ -74,36 +74,22 @@ const getComponentInfo = () => {
   const params = {
     groupId: data.component.groupId,
     artifactId: data.component.artifactId,
-    version: data.component.version
+    version: data.component.version,
+    opensource: data.component.opensource
   }
   // console.log('params', params)
-  if (data.component.opensource) {
-    GetOpenComponentInfo(params)
-      .then((res) => {
-        // console.log('GetOpenComponentInfo', res)
-        if (res.code !== 200) {
-          message.error(res.message)
-          return
-        }
-        data.detail = res.data
-      })
-      .catch((err) => {
-        console.error(err)
-      })
-  } else {
-    GetCloseComponentInfo(params)
-      .then((res) => {
-        // console.log('GetCloseComponentInfo', res)
-        if (res.code !== 200) {
-          message.error(res.message)
-          return
-        }
-        data.detail = res.data
-      })
-      .catch((err) => {
-        console.error(err)
-      })
-  }
+  GetComponentInfo(params)
+    .then((res) => {
+      // console.log('GetComponentInfo', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      data.detail = res.data
+    })
+    .catch((err) => {
+      console.error(err)
+    })
 }
 const showDependency = () => {
   router.push({
