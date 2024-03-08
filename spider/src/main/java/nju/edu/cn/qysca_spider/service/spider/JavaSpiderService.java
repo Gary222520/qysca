@@ -6,9 +6,9 @@ import nju.edu.cn.qysca_spider.dao.DependencyTableDao;
 import nju.edu.cn.qysca_spider.dao.DependencyTreeDao;
 import nju.edu.cn.qysca_spider.domain.*;
 import nju.edu.cn.qysca_spider.service.maven.MavenServiceImpl;
-import nju.edu.cn.qysca_spider.utils.UrlConnector;
 import nju.edu.cn.qysca_spider.utils.ConvertUtil;
 import nju.edu.cn.qysca_spider.utils.HashUtil;
+import nju.edu.cn.qysca_spider.utils.UrlConnector;
 import nju.edu.cn.qysca_spider.utils.idGenerator.UUIDGenerator;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -54,14 +54,14 @@ public class JavaSpiderService implements SpiderService {
      */
     private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
 
-    public JavaSpiderService(){
+    public JavaSpiderService() {
 
     }
 
     /**
      * 带依赖的爬取指定目录url下所有组件
      */
-    public void crawlManyWithDependency(String directoryUrl){
+    public void crawlManyWithDependency(String directoryUrl) {
         // 程序中断时自动调用，保存数据
         Runtime.getRuntime().addShutdownHook(new Thread(this::saveAndFlush));
 
@@ -71,9 +71,9 @@ public class JavaSpiderService implements SpiderService {
     }
 
     /**
-     *  递归地爬取目录url下（带依赖的）所有组件
+     * 递归地爬取目录url下（带依赖的）所有组件
      */
-    private void crawlDirectoryWithDependency(String directoryUrl){
+    private void crawlDirectoryWithDependency(String directoryUrl) {
         // 如果该url已被访问过，跳过
         if (visitedUrls.contains(directoryUrl)) {
             return;
@@ -89,7 +89,7 @@ public class JavaSpiderService implements SpiderService {
         for (Element link : links) {
             String fileAbsUrl = link.absUrl("href");
             // 如果该目录下的链接为目录，说明自身不是最后一层目录，同时递归爬取该链接
-            if (fileAbsUrl.endsWith("/") && fileAbsUrl.length() > directoryUrl.length()){
+            if (fileAbsUrl.endsWith("/") && fileAbsUrl.length() > directoryUrl.length()) {
                 isLastLevel = false;
                 crawlDirectoryWithDependency(fileAbsUrl);
             }
@@ -109,29 +109,31 @@ public class JavaSpiderService implements SpiderService {
 
     /**
      * 根据GAV信息带依赖的爬取组件
-     * @param groupId 组织id
+     *
+     * @param groupId    组织id
      * @param artifactId 工件ig
-     * @param version 版本号
+     * @param version    版本号
      * @return componentInformationDO
      */
-    private ComponentInformationDO crawlWithDependencyByGAV(String groupId, String artifactId, String version){
+    public ComponentInformationDO crawlWithDependencyByGAV(String groupId, String artifactId, String version) {
         String url = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
         return crawlWithDependency(url);
     }
 
     /**
      * 带依赖的爬取url下的组件
-     *  会获取该组件的组件信息、依赖树、平铺依赖表
-     *  该组件的所有依赖（依赖树中出现的）仅爬取组件信息本身
-     *  该函数添加了synchronized，来确保其原子性，使得程序终止时，仍会等待该函数运行完毕
+     * 会获取该组件的组件信息、依赖树、平铺依赖表
+     * 该组件的所有依赖（依赖树中出现的）仅爬取组件信息本身
+     * 该函数添加了synchronized，来确保其原子性，使得程序终止时，仍会等待该函数运行完毕
+     *
      * @param url 组件的url，该url目录下应该包含pom文件、（可选）jar包
      * @return componentInformationDO
      */
-    private synchronized ComponentInformationDO crawlWithDependency(String url){
+    private synchronized ComponentInformationDO crawlWithDependency(String url) {
 
         // 爬取pom文件中的组件信息
         String pomUrl = findPomUrlInDirectory(url);
-        if(pomUrl == null){
+        if (pomUrl == null) {
             System.err.println("该url中找不到pom文件: " + url);
             return null;
         }
@@ -145,11 +147,11 @@ public class JavaSpiderService implements SpiderService {
             return null;
 
         ComponentDO searchResult = componentDao.findByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion());
-        if (searchResult == null){
+        if (searchResult == null) {
             // 表示该组件的组件信息未被爬取过
             // 爬取jar包，生成hash信息
             String jarUrl = findJarUrlInDirectory(url);
-            if (jarUrl != null){
+            if (jarUrl != null) {
                 componentDO.setHashes(HashUtil.getHashes(jarUrl));
             }
             // 存数据库
@@ -160,7 +162,7 @@ public class JavaSpiderService implements SpiderService {
 
         // 先查询数据库中是否已有依赖树
         DependencyTreeDO searchTreeResult = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion());
-        if (searchTreeResult != null){
+        if (searchTreeResult != null) {
             // 数据库中已经有依赖树，表示该组件已被完整地爬取过（包括依赖）
             ComponentInformationDO componentInformationDO = new ComponentInformationDO();
             componentInformationDO.setComponentDO(searchResult);
@@ -207,7 +209,6 @@ public class JavaSpiderService implements SpiderService {
 
 
     /**
-     *
      * @param groupId
      * @param artifactId
      * @param version
@@ -221,17 +222,18 @@ public class JavaSpiderService implements SpiderService {
 
     /**
      * 爬取url下的组件，不爬取其依赖
-     *  只会获取该组件自身的组件信息
+     * 只会获取该组件自身的组件信息
+     *
      * @param url 组件的url，该url目录下应该包含pom文件、（可选）jar包
      * @return ComponentDO
      */
-    private synchronized ComponentDO crawl(String url){
+    private synchronized ComponentDO crawl(String url) {
         // 爬取pom文件中的组件信息
         String pomUrl = findPomUrlInDirectory(url);
-        if(pomUrl == null){
-            System.err.println("该url中找不到pom文件: " + url);
+        if (pomUrl == null) {
             return null;
         }
+
         Document document = UrlConnector.getDocumentByUrl(pomUrl);
         if (document == null)
             return null;
@@ -241,7 +243,7 @@ public class JavaSpiderService implements SpiderService {
             return null;
 
         ComponentDO searchResult = componentDao.findByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion());
-        if (searchResult != null){
+        if (searchResult != null) {
             // 表示该组件的组件信息已被爬取过
             System.out.println("    组件已在数据库：" + url);
             return searchResult;
@@ -249,7 +251,7 @@ public class JavaSpiderService implements SpiderService {
 
         // 爬取jar包，生成hash信息
         String jarUrl = findJarUrlInDirectory(url);
-        if (jarUrl != null){
+        if (jarUrl != null) {
             componentDO.setHashes(HashUtil.getHashes(jarUrl));
         }
 
@@ -262,10 +264,11 @@ public class JavaSpiderService implements SpiderService {
 
     /**
      * 在指定目录url下寻找pom文件，并返回其url
+     *
      * @param directoryUrl 目录url
      * @return pomUrl
      */
-    private String findPomUrlInDirectory(String directoryUrl){
+    private String findPomUrlInDirectory(String directoryUrl) {
         Document document = UrlConnector.getDocumentByUrl(directoryUrl);
 
         if (document == null) {
@@ -294,10 +297,11 @@ public class JavaSpiderService implements SpiderService {
 
     /**
      * 在指定目录下寻找jar包，并返回其url
+     *
      * @param directoryUrl 目录url
      * @return jarUrl
      */
-    private String findJarUrlInDirectory(String directoryUrl){
+    private String findJarUrlInDirectory(String directoryUrl) {
         Document document = UrlConnector.getDocumentByUrl(directoryUrl);
 
         if (document == null) {

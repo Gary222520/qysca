@@ -1,10 +1,13 @@
 package nju.edu.cn.qysca_spider.service.maven;
 
-import nju.edu.cn.qysca_spider.dao.ComponentDao;
-import nju.edu.cn.qysca_spider.domain.*;
 import fr.dutra.tools.maven.deptree.core.InputType;
 import fr.dutra.tools.maven.deptree.core.Node;
 import fr.dutra.tools.maven.deptree.core.Parser;
+import nju.edu.cn.qysca_spider.dao.ComponentDao;
+import nju.edu.cn.qysca_spider.domain.ComponentDO;
+import nju.edu.cn.qysca_spider.domain.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca_spider.domain.DependencyTableDO;
+import nju.edu.cn.qysca_spider.domain.DependencyTreeDO;
 import nju.edu.cn.qysca_spider.service.spider.JavaSpiderService;
 import nju.edu.cn.qysca_spider.utils.idGenerator.UUIDGenerator;
 import org.apache.maven.shared.invoker.*;
@@ -15,7 +18,7 @@ import java.io.*;
 import java.util.*;
 
 @Service
-public class MavenServiceImpl implements MavenService{
+public class MavenServiceImpl implements MavenService {
 
     @Autowired
     private ComponentDao componentDao;
@@ -76,7 +79,7 @@ public class MavenServiceImpl implements MavenService{
             Parser parser = type.newParser();
             Node node = parser.parse(reader);
             return node;
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -86,11 +89,11 @@ public class MavenServiceImpl implements MavenService{
     /**
      * 递归解析依赖树 返回根节点
      *
-     * @param node 封装好的依赖信息树
+     * @param node  封装好的依赖信息树
      * @param depth 深度
      * @return
      */
-    public ComponentDependencyTreeDO convertNode(Node node, int depth){
+    public ComponentDependencyTreeDO convertNode(Node node, int depth) {
         ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
         componentDependencyTreeDO.setGroupId(node.getGroupId() == null ? "-" : node.getGroupId());
         componentDependencyTreeDO.setArtifactId(node.getArtifactId() == null ? "-" : node.getArtifactId());
@@ -109,8 +112,9 @@ public class MavenServiceImpl implements MavenService{
                 } else {
                     //如果爬虫没有爬到则扫描错误 报错
                     System.err.println("未识别的组件：" + node.getGroupId() + ":" + node.getArtifactId() + ":" + node.getVersion());
+                    componentDependencyTreeDO.setOpensource(false);
                 }
-            } else{
+            } else {
                 System.out.println("    组件已被爬取: " + componentDO.getDownloadUrl());
                 componentDependencyTreeDO.setOpensource(componentDO.getOpensource());
             }
@@ -147,11 +151,12 @@ public class MavenServiceImpl implements MavenService{
             dependencyTableDO.setCGroupId(componentDependencyTreeDO.getGroupId());
             dependencyTableDO.setCArtifactId(componentDependencyTreeDO.getArtifactId());
             dependencyTableDO.setCVersion(componentDependencyTreeDO.getVersion());
+
             dependencyTableDO.setDepth(componentDependencyTreeDO.getDepth());
             dependencyTableDO.setScope(componentDependencyTreeDO.getScope());
             dependencyTableDO.setOpensource(componentDependencyTreeDO.getOpensource());
             dependencyTableDO.setLanguage("java");
-            dependencyTableDO.setDirect(componentDependencyTreeDO.getDepth()==1);
+            dependencyTableDO.setDirect(componentDependencyTreeDO.getDepth() == 1);
 
             result.add(dependencyTableDO);
             queue.addAll(componentDependencyTreeDO.getDependencies());
