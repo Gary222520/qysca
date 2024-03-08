@@ -164,16 +164,6 @@
             <version>4.5.7</version>
         </dependency>
 
-
-
-        <!--mongodb-driver-->
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongo-java-driver</artifactId>
-            <version>3.12.12</version>
-        </dependency>
-
-
         <!--yaml-->
         <dependency>
             <groupId>org.yaml</groupId>
@@ -231,7 +221,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>Main</mainClass>
+                            <mainClass>SpiderApplication</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

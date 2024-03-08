@@ -1,6 +1,6 @@
-package dao.component;
+package nju.edu.cn.qysca_spider.dao;
 
-import domain.component.DependencyTreeDO;
+import nju.edu.cn.qysca_spider.domain.DependencyTreeDO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

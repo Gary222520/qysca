@@ -1,10 +1,8 @@
-package dao.component;
+package nju.edu.cn.qysca_spider.dao;
 
-import domain.component.ComponentDO;
+import nju.edu.cn.qysca_spider.domain.ComponentDO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface ComponentDao extends JpaRepository<ComponentDO, String> {

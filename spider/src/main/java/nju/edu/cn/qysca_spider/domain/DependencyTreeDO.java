@@ -1,4 +1,4 @@
-package domain.component;
+package nju.edu.cn.qysca_spider.domain;
 
 
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;

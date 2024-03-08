@@ -1,6 +1,6 @@
-package utils;
+package nju.edu.cn.qysca_spider.utils;
 
-import domain.component.HashDO;
+import nju.edu.cn.qysca_spider.domain.HashDO;
 
 import java.io.*;
 import java.net.URL;

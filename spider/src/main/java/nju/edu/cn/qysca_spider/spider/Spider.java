@@ -1,4 +1,4 @@
-package spider;
+package nju.edu.cn.qysca_spider.spider;
 
 public interface Spider {
 

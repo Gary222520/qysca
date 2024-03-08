@@ -1,13 +1,14 @@
-package utils;
+package nju.edu.cn.qysca_spider.utils;
 
-import domain.component.ComponentDO;
-import domain.component.DeveloperDO;
-import domain.component.LicenseDO;
+import nju.edu.cn.qysca_spider.domain.ComponentDO;
+import nju.edu.cn.qysca_spider.domain.DeveloperDO;
+import nju.edu.cn.qysca_spider.domain.LicenseDO;
+import nju.edu.cn.qysca_spider.utils.idGenerator.UUIDGenerator;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.jsoup.nodes.Document;
-import utils.idGenerator.UUIDGenerator;
+
 
 import java.io.IOException;
 import java.io.StringReader;

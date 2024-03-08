@@ -1,12 +1,12 @@
-package utils;
+package nju.edu.cn.qysca_spider.utils;
 
-import domain.component.*;
+import nju.edu.cn.qysca_spider.domain.*;
 import fr.dutra.tools.maven.deptree.core.InputType;
 import fr.dutra.tools.maven.deptree.core.Node;
 import fr.dutra.tools.maven.deptree.core.Parser;
+import nju.edu.cn.qysca_spider.utils.idGenerator.UUIDGenerator;
 import org.apache.maven.shared.invoker.*;
 import org.springframework.beans.BeanUtils;
-import utils.idGenerator.UUIDGenerator;
 
 import java.io.*;
 import java.util.*;

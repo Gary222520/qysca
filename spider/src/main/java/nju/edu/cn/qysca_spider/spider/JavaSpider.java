@@ -1,23 +1,19 @@
-package spider;
+package nju.edu.cn.qysca_spider.spider;
 
-import dao.component.ComponentDao;
-import dao.component.DependencyTableDao;
-import dao.component.DependencyTreeDao;
-import domain.component.*;
-import fr.dutra.tools.maven.deptree.core.Node;
+import nju.edu.cn.qysca_spider.dao.ComponentDao;
+import nju.edu.cn.qysca_spider.dao.DependencyTableDao;
+import nju.edu.cn.qysca_spider.dao.DependencyTreeDao;
+import nju.edu.cn.qysca_spider.domain.*;
+import nju.edu.cn.qysca_spider.utils.ConvertUtil;
+import nju.edu.cn.qysca_spider.utils.HashUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import utils.ConvertUtil;
-import utils.HashUtil;
-import utils.MavenUtil;
-import utils.idGenerator.UUIDGenerator;
 
 import java.io.*;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -54,23 +50,7 @@ public class JavaSpider implements Spider {
      */
     private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
 
-    /**
-     * 单例模式
-     */
-    private static JavaSpider instance;
-
-    /**
-     * 全局访问点，synchronized 关键字确保线程安全
-     * @return
-     */
-    public static synchronized JavaSpider getInstance() {
-        if (instance == null) {
-            instance = new JavaSpider();
-        }
-        return instance;
-    }
-
-    private JavaSpider(){
+    public JavaSpider(){
 
     }
 
@@ -105,13 +85,14 @@ public class JavaSpider implements Spider {
         for (Element link : links) {
             String fileAbsUrl = link.absUrl("href");
             // 如果该目录下的链接为目录，说明自身不是最后一层目录，同时递归爬取该链接
-            if (fileAbsUrl.endsWith("/") && !fileAbsUrl.endsWith("../")){
+            if (fileAbsUrl.endsWith("/") && fileAbsUrl.length() > directoryUrl.length()){
                 isLastLevel = false;
                 crawlDirectoryWithDependency(fileAbsUrl);
             }
         }
         // 如果该目录为最后一层，进行爬取
         if (isLastLevel) {
+            System.out.println("开始爬取：" + directoryUrl);
             ComponentInformationDO informationDO = crawlWithDependency(directoryUrl);
             if (informationDO == null)
                 writeFailedUrl(directoryUrl);
@@ -168,52 +149,53 @@ public class JavaSpider implements Spider {
             }
             // 存数据库
             componentDao.save(componentDO);
+            System.out.println("已存入数据库：" + url);
         }
 
 
-        // 先查询数据库中是否已有依赖树
-        DependencyTreeDO searchTreeResult = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion());
-        if (searchTreeResult != null){
-            // 数据库中已经有依赖树，表示该组件已被完整地爬取过（包括依赖）
-            ComponentInformationDO componentInformationDO = new ComponentInformationDO();
-            componentInformationDO.setComponentDO(componentDO);
-            componentInformationDO.setDependencyTreeDO(searchTreeResult);
-            componentInformationDO.setDependencyTableDO(dependencyTableDao.findAllByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion()));
-            return componentInformationDO;
-        }
-
-        // 生成依赖树
-        // 生成一个临时pom文件
-        createPomFile(document.outerHtml());
-        // 调用mvn dependency:tree命令获取依赖
-        Node node = MavenUtil.mavenDependencyTreeAnalyzer(POM_FILE_TEMP_PATH);
-        // 解析依赖，获得组件依赖树
-        MavenUtil mavenUtil = new MavenUtil();
-        if (node == null)
-            return null;
-        ComponentDependencyTreeDO componentDependencyTreeDO = mavenUtil.convertNode(node, 0);
-
-        // 封装依赖树
-        DependencyTreeDO dependencyTreeDO = new DependencyTreeDO();
-        dependencyTreeDO.setTree(componentDependencyTreeDO);
-
-        dependencyTreeDO.setId(UUIDGenerator.getUUID());
-        dependencyTreeDO.setGroupId(componentDO.getGroupId());
-        dependencyTreeDO.setArtifactId(componentDO.getArtifactId());
-        dependencyTreeDO.setVersion(componentDO.getVersion());
-
-        // 生成依赖表
-        List<DependencyTableDO> dependencyTableDOList = MavenUtil.buildDependencyTable(dependencyTreeDO);
-
-        // 存数据库
-        dependencyTreeDao.save(dependencyTreeDO);
-        dependencyTableDao.saveAll(dependencyTableDOList);
+//        // 先查询数据库中是否已有依赖树
+//        DependencyTreeDO searchTreeResult = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion());
+//        if (searchTreeResult != null){
+//            // 数据库中已经有依赖树，表示该组件已被完整地爬取过（包括依赖）
+//            ComponentInformationDO componentInformationDO = new ComponentInformationDO();
+//            componentInformationDO.setComponentDO(componentDO);
+//            componentInformationDO.setDependencyTreeDO(searchTreeResult);
+//            componentInformationDO.setDependencyTableDO(dependencyTableDao.findAllByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion()));
+//            return componentInformationDO;
+//        }
+//
+//        // 生成依赖树
+//        // 生成一个临时pom文件
+//        createPomFile(document.outerHtml());
+//        // 调用mvn dependency:tree命令获取依赖
+//        Node node = MavenUtil.mavenDependencyTreeAnalyzer(POM_FILE_TEMP_PATH);
+//        // 解析依赖，获得组件依赖树
+//        MavenUtil mavenUtil = new MavenUtil();
+//        if (node == null)
+//            return null;
+//        ComponentDependencyTreeDO componentDependencyTreeDO = mavenUtil.convertNode(node, 0);
+//
+//        // 封装依赖树
+//        DependencyTreeDO dependencyTreeDO = new DependencyTreeDO();
+//        dependencyTreeDO.setTree(componentDependencyTreeDO);
+//
+//        dependencyTreeDO.setId(UUIDGenerator.getUUID());
+//        dependencyTreeDO.setGroupId(componentDO.getGroupId());
+//        dependencyTreeDO.setArtifactId(componentDO.getArtifactId());
+//        dependencyTreeDO.setVersion(componentDO.getVersion());
+//
+//        // 生成依赖表
+//        List<DependencyTableDO> dependencyTableDOList = MavenUtil.buildDependencyTable(dependencyTreeDO);
+//
+//        // 存数据库
+//        dependencyTreeDao.save(dependencyTreeDO);
+//        dependencyTableDao.saveAll(dependencyTableDOList);
 
         // 封装
         ComponentInformationDO componentInformationDO = new ComponentInformationDO();
         componentInformationDO.setComponentDO(componentDO);
-        componentInformationDO.setDependencyTreeDO(dependencyTreeDO);
-        componentInformationDO.setDependencyTableDO(dependencyTableDOList);
+//        componentInformationDO.setDependencyTreeDO(dependencyTreeDO);
+//        componentInformationDO.setDependencyTableDO(dependencyTableDOList);
 
         return componentInformationDO;
     }
