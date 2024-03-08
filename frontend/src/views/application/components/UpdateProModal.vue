@@ -1,7 +1,7 @@
 <template>
   <a-modal v-model:open="data.open" width="800px" :footer="null">
     <template #title>
-      <div style="font-size: 20px">更新版本信息</div>
+      <div style="font-size: 20px">更新项目版本信息</div>
     </template>
     <div style="display: flex; margin: 20px 0">
       <a-steps class="steps" direction="vertical" :current="data.currentStep" :items="data.steps"></a-steps>
@@ -61,14 +61,30 @@
       </div>
       <div v-if="data.currentStep === 1">
         <a-form :model="formState" ref="formRef" name="project" :label-col="{ span: 8 }">
+          <a-form-item label="组织ID" name="groupId">
+            <a-input v-model:value="formState.groupId" style="width: 300px" disabled />
+          </a-form-item>
+          <a-form-item label="工件ID" name="artifactId">
+            <a-input v-model:value="formState.artifactId" style="width: 300px" disabled />
+          </a-form-item>
           <a-form-item label="项目名称" name="name">
             <a-input v-model:value="formState.name" style="width: 300px" disabled />
           </a-form-item>
           <a-form-item label="版本编号" name="version">
             <a-input v-model:value="formState.version" style="width: 300px" disabled />
           </a-form-item>
-          <a-form-item label="备注信息" name="note">
-            <a-input v-model:value="formState.note" style="width: 300px" />
+          <a-form-item label="项目类型" name="type" :rules="[{ required: true, message: '请选择项目类型' }]">
+            <a-select v-model:value="formState.type" style="width: 300px">
+              <a-select-option value="agent">agent</a-select-option>
+              <a-select-option value="backend">backend</a-select-option>
+              <a-select-option value="collector">collector</a-select-option>
+              <a-select-option value="filter">filter</a-select-option>
+              <a-select-option value="raw storage">raw storage</a-select-option>
+              <a-select-option value="web UI">web UI</a-select-option>
+            </a-select>
+          </a-form-item>
+          <a-form-item label="备注信息" name="description">
+            <a-input v-model:value="formState.description" style="width: 300px" />
           </a-form-item>
         </a-form>
       </div>
@@ -94,12 +110,15 @@
 
 <script setup>
 import { reactive, ref, defineExpose, defineEmits } from 'vue'
-import Upload from './Upload.vue'
-import { UpdateVersion } from '@/api/frontend'
+import Upload from '@/views/project/components/Upload.vue'
+import { AppUpdateProject } from '@/api/frontend'
 import { message } from 'ant-design-vue'
+import { useStore } from 'vuex'
 
 const emit = defineEmits(['success'])
 const uploadRef = ref()
+const store = useStore()
+
 const data = reactive({
   open: false,
   project: {},
@@ -109,9 +128,12 @@ const data = reactive({
 })
 const formRef = ref()
 const formState = reactive({
+  groupId: '',
+  artifactId: '',
   name: '',
   version: '',
-  note: ''
+  type: '',
+  description: ''
 })
 const projectInfo = reactive({
   language: '',
@@ -119,13 +141,24 @@ const projectInfo = reactive({
   filePath: '',
   scanner: ''
 })
+const applicationInfo = reactive({
+  appGroupId: '',
+  appArtifactId: '',
+  appVersion: ''
+})
 const open = (project, record) => {
   data.project = project
   data.record = record
   projectInfo.language = record.language
+  formState.groupId = record.groupId
+  formState.artifactId = record.artifactId
   formState.name = record.name
   formState.version = record.version
-  formState.note = record.note
+  formState.type = record.type
+  formState.description = record.description
+  applicationInfo.appGroupId = store.getters.currentApp.groupId
+  applicationInfo.appArtifactId = store.getters.currentApp.artifactId
+  applicationInfo.appVersion = store.getters.currentApp.version
   data.open = true
 }
 const close = () => {
@@ -155,9 +188,10 @@ const next = () => {
 const submit = () => {
   const params = {
     ...formState,
-    ...projectInfo
+    ...projectInfo,
+    ...applicationInfo
   }
-  UpdateVersion(params)
+  AppUpdateProject(params)
     .then((res) => {
       // console.log('UpdateVersion', res)
       if (res.code !== 200) {
@@ -241,3 +275,4 @@ defineExpose({ open })
 <style scoped src="@/atdv/input.css"></style>
 <style scoped src="@/atdv/radio-btn.css"></style>
 <style scoped src="@/atdv/steps.css"></style>
+<style scoped src="@/atdv/select.css"></style>

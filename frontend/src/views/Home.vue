@@ -3,7 +3,7 @@
     <a-layout-sider class="sider" :collapsed="data.collapsed" :trigger="null" collapsible>
       <div class="title">
         <img style="width: 40px" src="@/assets/logo_big.png" />
-        <div class="title_text" v-if="!data.collapsed">QYSCA</div>
+        <div class="title_text" v-if="!data.collapsed">SCA</div>
       </div>
       <a-menu v-model:selectedKeys="data.selectedKeys" theme="light" mode="inline" @click="handleMenu">
         <!-- <a-menu-item key="summary">
@@ -17,6 +17,10 @@
         <a-menu-item key="application">
           <ScheduleOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('application') }}</span>
+        </a-menu-item>
+        <a-menu-item key="project">
+          <LayoutOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('project') }}</span>
         </a-menu-item>
         <a-menu-item key="component">
           <AppstoreOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
@@ -44,6 +48,7 @@ import {
   AppstoreOutlined,
   SearchOutlined,
   ScheduleOutlined,
+  LayoutOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
   PieChartOutlined

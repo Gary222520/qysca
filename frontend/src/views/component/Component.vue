@@ -100,8 +100,8 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import { PlusOutlined, FileTextOutlined, SyncOutlined, DeleteOutlined, RollbackOutlined } from '@ant-design/icons-vue'
-import { GetOpenComponents, GetCloseComponents } from '@/api/frontend'
-import Drawer from '@/views/application/components/Drawer.vue'
+import { GetComponents } from '@/api/frontend'
+import Drawer from '@/views/project/components/Drawer.vue'
 import AddModal from './components/AddModal.vue'
 import { message } from 'ant-design-vue'
 
@@ -126,7 +126,7 @@ const data = reactive({
     { title: '版本', dataIndex: 'version', key: 'version' },
     { title: 'groupId', dataIndex: 'groupId', key: 'groupId' },
     { title: 'artifactId', dataIndex: 'artifactId', key: 'artifactId' },
-    { title: '语言', dataIndex: 'language', key: 'language' },
+    { title: '语言', dataIndex: 'language', key: 'language', width: 120 },
     { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
   ]
 })
@@ -138,53 +138,36 @@ const pagination = reactive({
   onChange: (page, size) => {
     pagination.current = page
     getComponents(page, size)
-  }
+  },
+  hideOnSinglePage: true
 })
 const getComponents = (number = 1, size = 10) => {
   data.datasource = []
   if (data.accurate && data.search.groupId === '') return
   if (!data.accurate && data.search.language === '' && data.search.name === '') return
-  if (data.opensource) {
-    const params = {
-      ...data.search,
-      number,
-      size
-    }
-    GetOpenComponents(params)
-      .then((res) => {
-        // console.log('GetOpenComponents', res)
-        if (res.code !== 200) {
-          message.error(res.message)
-          return
-        }
-        data.datasource = res.data.content
-        pagination.total = res.data.totalElements
-        pagination.current = number
-      })
-      .catch((err) => {
-        console.error(err)
-      })
-  } else {
-    const params = {
-      ...data.search,
-      number,
-      size
-    }
-    GetCloseComponents(params)
-      .then((res) => {
-        // console.log('GetCloseComponents', res)
-        if (res.code !== 200) {
-          message.error(res.message)
-          return
-        }
-        data.datasource = res.data.content
-        pagination.total = res.data.totalElements
-        pagination.current = number
-      })
-      .catch((err) => {
-        console.error(err)
-      })
+  const params = {
+    ...data.search,
+    opensource: data.opensource,
+    number,
+    size
   }
+  GetComponents(params)
+    .then((res) => {
+      // console.log('GetComponents', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      data.datasource = res.data.content
+      data.datasource.forEach((item) => {
+        if (item.name === '-') item.name = item.artifactId
+      })
+      pagination.total = res.data.totalElements
+      pagination.current = number
+    })
+    .catch((err) => {
+      console.error(err)
+    })
 }
 const changeMode = (value) => {
   data.accurate = value

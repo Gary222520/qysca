@@ -27,9 +27,9 @@
 
 <script setup>
 import { reactive, ref, defineExpose } from 'vue'
-import { GetOpenComponentTree, GetCloseComponentTree } from '@/api/frontend'
+import { GetComponentTree } from '@/api/frontend'
 import { DownOutlined, ExperimentOutlined } from '@ant-design/icons-vue'
-import Drawer from '@/views/application/components/Drawer.vue'
+import Drawer from '@/views/project/components/Drawer.vue'
 import { message } from 'ant-design-vue'
 
 const drawer = ref()
@@ -45,48 +45,28 @@ const show = (component) => {
   const params = {
     groupId: component.groupId,
     artifactId: component.artifactId,
-    version: component.version
+    version: component.version,
+    opensource: component.opensource
   }
   data.spinning = true
-  if (component.opensource) {
-    GetOpenComponentTree(params)
-      .then((res) => {
-        // console.log('GetOpenComponentTree', res)
-        data.spinning = false
-        if (res.code !== 200) {
-          message.error(res.message)
-          return
-        }
-        const resData = res.data
-        data.treeData = []
-        if (resData) {
-          data.treeData = createTree([resData.tree], '0')
-        }
-      })
-      .catch((err) => {
-        data.spinning = false
-        console.error(err)
-      })
-  } else {
-    GetCloseComponentTree(params)
-      .then((res) => {
-        // console.log('GetCloseComponentTree', res)
-        data.spinning = false
-        if (res.code !== 200) {
-          message.error(res.message)
-          return
-        }
-        const resData = res.data
-        data.treeData = []
-        if (resData) {
-          data.treeData = createTree([resData.tree], '0')
-        }
-      })
-      .catch((err) => {
-        data.spinning = false
-        console.error(err)
-      })
-  }
+  GetComponentTree(params)
+    .then((res) => {
+      // console.log('GetComponentTree', res)
+      data.spinning = false
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      const resData = res.data
+      data.treeData = []
+      if (resData) {
+        data.treeData = createTree([resData.tree], '0')
+      }
+    })
+    .catch((err) => {
+      data.spinning = false
+      console.error(err)
+    })
 }
 const createTree = (arr, preKey) => {
   if (!arr) return []
@@ -95,7 +75,7 @@ const createTree = (arr, preKey) => {
     const key = `${preKey}-${index}`
     const data = {
       ...item,
-      title: item?.name,
+      title: item?.artifactId,
       key,
       children: createTree(item?.dependencies, key)
     }
