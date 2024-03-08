@@ -182,7 +182,6 @@ public class ComponentServiceImpl implements ComponentService {
         // 设置排序规则
         List<Sort.Order> orders = new ArrayList<>();
         orders.add(new Sort.Order(Sort.Direction.ASC, "depth").nullsLast());
-        orders.add(new Sort.Order(Sort.Direction.ASC, "name").nullsLast());
         orders.add(new Sort.Order(Sort.Direction.ASC, "groupId").nullsLast());
         orders.add(new Sort.Order(Sort.Direction.ASC, "artifactId").nullsLast());
         orders.add(new Sort.Order(Sort.Direction.DESC, "version").nullsLast());
