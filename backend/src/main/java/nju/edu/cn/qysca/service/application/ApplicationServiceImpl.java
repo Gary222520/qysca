@@ -51,12 +51,19 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Transactional
     public Boolean deleteApplication(String groupId, String artifactId) {
-        return null;
+        List<ApplicationDO> applicationDOS = applicationDao.findAllByGroupIdAndArtifactId(groupId, artifactId);
+        for(ApplicationDO applicationDO : applicationDOS) {
+            applicationProjectDao.deleteAllByApplicationDO_Id(applicationDO.getId());
+            applicationDao.delete(applicationDO);
+        }
+        return true;
     }
 
     @Override
     @Transactional
     public Boolean deleteApplicationVersion(String groupId, String artifactId, String version) {
+        ApplicationDO applicationDO = applicationDao.findByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
+        applicationProjectDao.deleteAllByApplicationDO_Id(applicationDO.getId());
         applicationDao.deleteByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
         return true;
     }

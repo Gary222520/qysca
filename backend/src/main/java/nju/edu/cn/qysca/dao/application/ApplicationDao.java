@@ -46,4 +46,12 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      */
     @Query("select version from ApplicationDO where groupId = ?1 and artifactId = ?2 order by version desc")
     List<String> findVersionsByGroupIdAndArtifactId(String groupId, String artifactId);
+
+    /**
+     * 根据groupId和artifactId查询应用
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
+     * @return List<ApplicationDO> 应用列表
+     */
+    List<ApplicationDO> findAllByGroupIdAndArtifactId(String groupId, String artifactId);
 }
