@@ -28,4 +28,10 @@ public interface ApplicationProjectDao extends JpaRepository<ApplicationProjectD
      * @return
      */
     void deleteByApplicationDO_IdAndProjectDO_Id(String applicationId, String projectId);
+
+    /**
+     *  根据应用Id删除应用项目关联
+     * @param applicationId 应用Id
+     */
+    void deleteAllByApplicationDO_Id(String applicationId);
 }
