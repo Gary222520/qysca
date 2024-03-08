@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca_spider.spider;
+package nju.edu.cn.qysca_spider.utils;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

@@ -1,12 +1,13 @@
 package nju.edu.cn.qysca_spider;
 
-import nju.edu.cn.qysca_spider.spider.JavaSpider;
+import nju.edu.cn.qysca_spider.service.spider.JavaSpiderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import java.util.List;
 public class SpiderApplication {
 
     @Autowired
-    private JavaSpider spider;
+    private JavaSpiderService spider;
 
     public static void main(String[] args) {
 
@@ -44,18 +45,18 @@ public class SpiderApplication {
         printDatabaseInfo();
 
         List<String> targetUrls = new ArrayList<>();
-//        String TARGET_URLS_FILE = "target_urls.txt";
-//
-//        // 从target_urls.txt文件中读取目标URL
-//        try (InputStream inputStream = Main.class.getClassLoader().getResourceAsStream(TARGET_URLS_FILE);
-//             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-//            String line;
-//            while ((line = reader.readLine()) != null) {
-//                targetUrls.add(line);
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        String TARGET_URLS_FILE = "spider/src/main/resources/target_urls.txt";
+
+        // 从target_urls.txt文件中读取目标URL
+        try (InputStream inputStream = new FileInputStream(TARGET_URLS_FILE);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                targetUrls.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         targetUrls.add("https://repo1.maven.org/maven2/junit/");
         // 开始爬取

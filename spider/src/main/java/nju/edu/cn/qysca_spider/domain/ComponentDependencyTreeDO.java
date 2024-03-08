@@ -29,6 +29,9 @@ public class ComponentDependencyTreeDO {
     @ApiModelProperty(value = "是否开源",example = "true")
     private Boolean opensource;
 
+    @ApiModelProperty(value = "范围", example = "test")
+    private String scope;
+
     @ApiModelProperty(value = "依赖子树")
     private List<ComponentDependencyTreeDO> dependencies = new ArrayList<>();
 
