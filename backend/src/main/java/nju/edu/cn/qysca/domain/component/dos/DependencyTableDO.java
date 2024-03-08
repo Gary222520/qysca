@@ -1,6 +1,5 @@
 package nju.edu.cn.qysca.domain.component.dos;
 
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;

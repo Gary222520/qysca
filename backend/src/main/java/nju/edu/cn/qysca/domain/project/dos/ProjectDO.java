@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -66,9 +64,4 @@ public class ProjectDO {
     @Column(name = "time",nullable = false)
     @ApiModelProperty(value = "最近一次更新时间", example = "yyyy-MM-dd HH:mm:ss")
     private String time;
-
-    @ManyToOne(targetEntity = ApplicationDO.class)
-    @JoinColumn(name="a_p_id",referencedColumnName = "id")
-    @ApiModelProperty(value = "所属的应用")
-    private ApplicationDO application;
 }
