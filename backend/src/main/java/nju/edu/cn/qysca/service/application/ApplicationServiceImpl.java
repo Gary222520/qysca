@@ -136,6 +136,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         ProjectDO newProjectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(upgradeAppProjectDTO.getGroupId(), upgradeAppProjectDTO.getArtifactId(), upgradeAppProjectDTO.getVersion());
         applicationProjectDO.setApplicationDO(applicationDO);
         applicationProjectDO.setProjectDO(newProjectDO);
+        applicationProjectDO.setDeleted(false);
         applicationProjectDao.save(applicationProjectDO);
         ProjectDO oldProjectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(upgradeAppProjectDTO.getGroupId(), upgradeAppProjectDTO.getArtifactId(), upgradeAppProjectDTO.getOldVersion());
         applicationProjectDao.deleteByApplicationDO_IdAndProjectDO_Id(applicationDO.getId(), oldProjectDO.getId());
