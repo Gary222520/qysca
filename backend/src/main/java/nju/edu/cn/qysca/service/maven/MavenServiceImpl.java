@@ -114,11 +114,10 @@ public class MavenServiceImpl implements MavenService {
             if (componentDO == null) {
                 componentDO = spiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 if (componentDO != null) {
-                    componentDO.setId(UUIDGenerator.getUUID());
-                    componentDO.setLanguage("java");
                     componentDao.save(componentDO);
                     componentDependencyTreeDO.setOpensource(true);
                 } else {
+                    componentDependencyTreeDO.setOpensource(false);
                     //如果爬虫没有爬到则扫描错误 通过抛出异常处理
                     throw new PlatformException(500, "存在未识别的组件");
                 }
