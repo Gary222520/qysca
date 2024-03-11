@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.project.dtos;
+package nju.edu.cn.qysca.domain.sbom;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel(description = "项目级别SBOM")
-public class SBOMDTO {
+public class SbomProjectDTO {
     @ApiModelProperty(value = "组织Id", example = "nju.edu.cn")
     private String groupId;
 
@@ -24,5 +24,5 @@ public class SBOMDTO {
     private String version;
 
     @ApiModelProperty(value = "直接依赖组件")
-    private List<ComponentDO> components;
+    private List<SbomComponentDTO> components;
 }
