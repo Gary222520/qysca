@@ -37,9 +37,9 @@ const data = reactive({
   expandedKeys: [],
   selectedKeys: []
 })
-const show = (name, version) => {
+const show = (groupId, artifactId, version) => {
   data.visible = true
-  GetProjectTree({ name, version })
+  GetProjectTree({ groupId, artifactId, version })
     .then((res) => {
       // console.log('GetProjectTree', res)
       if (res.code !== 200) {
@@ -63,7 +63,7 @@ const createTree = (arr, preKey) => {
     const key = `${preKey}-${index}`
     const data = {
       ...item,
-      title: item?.name,
+      title: item?.artifactId,
       key,
       children: createTree(item?.dependencies, key)
     }

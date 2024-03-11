@@ -34,7 +34,8 @@ const close = () => {
 }
 const deleteProject = () => {
   const params = {
-    name: data.project.name
+    groupId: data.project.groupId,
+    artifactId: data.project.artifactId
   }
   DeleteProject(params)
     .then((res) => {

@@ -1,6 +1,30 @@
 import { request } from './request'
 import { API } from './backend'
 
+// 创建新应用
+export const CreateApplication = (data) => request('post', API.CREATE_APPLICATION, { data })
+// 查询应用信息
+export const GetApplicationList = (params) => request('get', API.APPLICATION_LIST, { params })
+// 查询应用某个版本的信息
+export const GetApplicationInfo = (params) => request('get', API.APPLICATION_INFO, { params })
+// 获取应用所有版本号
+export const GetApplicationVersions = (params) => request('get', API.APPLICATION_VERSIONS, { params })
+// 删除应用某个版本
+export const DeleteApplicationVersion = (params) => request('post', API.DELETE_APPLICATION_VERSION, { params })
+// 删除应用
+export const DeleteApplication = (params) => request('post', API.DELETE_APPLICATION, { params })
+
+// 在应用中创建项目
+export const AppCreateProject = (data) => request('post', API.APP_CREATE_PROJECT, { data })
+// 向应用中增加项目
+export const AppAddProject = (data) => request('post', API.APP_ADD_PROJECT, { data })
+// 在应用中更新项目
+export const AppUpdateProject = (data) => request('post', API.APP_UPDATE_PROJECT, { data })
+// 在应用中升级项目
+export const AppUpgradeProject = (data) => request('post', API.APP_UPGRADE_PROJECT, { data })
+// 在应用中删除项目
+export const AppDeleteProject = (data) => request('post', API.APP_DELETE_PROJECT, { data })
+
 // 查询所有项目
 export const GetProjectList = (params) => request('get', API.PROJECT_LIST, { params })
 // 查询具体项目的信息
@@ -30,22 +54,14 @@ export const DeleteVersion = (params) => request('post', API.DELETE_VERSION, { p
 // 版本升级
 export const UpgradeVersion = (data) => request('post', API.UPGRADE_VERSION, { data })
 
-// 分页查询开源组件
-export const GetOpenComponents = (data) => request('post', API.OPEN_COMPONENT_LIST, { data })
-// 分页查询闭源组件
-export const GetCloseComponents = (data) => request('post', API.CLOSE_COMPONENT_LIST, { data })
-// 查询开源组件详细信息
-export const GetOpenComponentInfo = (data) => request('post', API.OPEN_COMPONENT_INFO, { data })
-// 查询闭源组件详细信息
-export const GetCloseComponentInfo = (data) => request('post', API.CLOSE_COMPONENT_INFO, { data })
-// 查询开源组件树形依赖
-export const GetOpenComponentTree = (data) => request('post', API.OPEN_COMPONENT_TREE, { data })
-// 查询闭源组件树形依赖
-export const GetCloseComponentTree = (data) => request('post', API.CLOSE_COMPONENT_TREE, { data })
-// 查询开源组件平铺依赖
-export const GetOpenComponentTiled = (data) => request('post', API.OPEN_COMPONENT_TILED, { data })
-// 查询闭源组件平铺依赖
-export const GetCloseComponentTiled = (data) => request('post', API.CLOSE_COMPONENT_TILED, { data })
+// 分页查询组件
+export const GetComponents = (data) => request('post', API.COMPONENT_LIST, { data })
+// 查询组件详细信息
+export const GetComponentInfo = (data) => request('post', API.COMPONENT_INFO, { data })
+// 查询组件树形依赖
+export const GetComponentTree = (data) => request('post', API.COMPONENT_TREE, { data })
+// 查询组件平铺依赖
+export const GetComponentTiled = (data) => request('post', API.COMPONENT_TILED, { data })
 // 添加闭源组件
 export const AddComponent = (data) => request('post', API.ADD_COMPONENT, { data })
 
