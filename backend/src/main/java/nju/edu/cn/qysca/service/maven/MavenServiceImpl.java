@@ -21,7 +21,6 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 @Service
 public class MavenServiceImpl implements MavenService {
@@ -68,7 +67,7 @@ public class MavenServiceImpl implements MavenService {
             //jar包实现方式暂为从jar包中解析出pom文件
             File file = new File(filePath);
             request.setBaseDirectory(file.getParentFile());
-            resultPath = file.getPath() + FILE_SEPARATOR + "result";
+            resultPath = file.getParent() + FILE_SEPARATOR + "result";
             int count  = 0;
             try (ZipFile zipFile = new ZipFile(filePath)) {
                 Enumeration<? extends ZipEntry> entries = zipFile.entries();
@@ -77,12 +76,11 @@ public class MavenServiceImpl implements MavenService {
                     String name = entry.getName();
                     if (name.startsWith("META-INF/maven") && (name.endsWith("pom.xml"))) {
                         count++;
-                        try (FileInputStream fis = new FileInputStream(zipFile.getName());
-                             ZipInputStream zis = new ZipInputStream(fis);
-                             FileOutputStream fos = new FileOutputStream(file.getParentFile())) {
+                        try (InputStream inputStream = zipFile.getInputStream(entry);
+                             FileOutputStream fos = new FileOutputStream(file.getParentFile() + FILE_SEPARATOR + "pom.xml")) {
                             byte[] buffer = new byte[1024];
                             int length;
-                            while ((length = zis.read(buffer)) >= 0) {
+                            while ((length = inputStream.read(buffer)) > 0) {
                                 fos.write(buffer, 0, length);
                             }
                         }
