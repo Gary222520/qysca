@@ -21,6 +21,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 @Service
 public class MavenServiceImpl implements MavenService {
@@ -64,12 +65,33 @@ public class MavenServiceImpl implements MavenService {
             request.setPomFile(pom);
             resultPath = pom.getParent() + FILE_SEPARATOR + "result";
         } else if (builder.equals("jar")) {
-            //jar包不能这样实现
+            //jar包实现方式暂为从jar包中解析出pom文件
             File file = new File(filePath);
             request.setBaseDirectory(file.getParentFile());
-            request.setGoals(Collections.singletonList("clean install:install " + filePath));
-            invoker.execute(request);
-            resultPath = file.getParent() + FILE_SEPARATOR + "result";
+            resultPath = file.getPath() + FILE_SEPARATOR + "result";
+            int count  = 0;
+            try (ZipFile zipFile = new ZipFile(filePath)) {
+                Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    String name = entry.getName();
+                    if (name.startsWith("META-INF/maven") && (name.endsWith("pom.xml"))) {
+                        count++;
+                        try (FileInputStream fis = new FileInputStream(zipFile.getName());
+                             ZipInputStream zis = new ZipInputStream(fis);
+                             FileOutputStream fos = new FileOutputStream(file.getParentFile())) {
+                            byte[] buffer = new byte[1024];
+                            int length;
+                            while ((length = zis.read(buffer)) >= 0) {
+                                fos.write(buffer, 0, length);
+                            }
+                        }
+                    }
+                }
+            }
+            if(count == 0) {
+                throw new PlatformException(500, "No pom.xml found in the zip file");
+            }
         } else if (builder.equals("zip")) {
             unzip(filePath);
             File file = new File(filePath.substring(0, filePath.lastIndexOf('/')));
@@ -121,7 +143,7 @@ public class MavenServiceImpl implements MavenService {
                     //如果爬虫没有爬到则扫描错误 通过抛出异常处理
                     throw new PlatformException(500, "存在未识别的组件");
                 }
-            } else{
+            } else {
                 componentDependencyTreeDO.setOpensource(componentDO.getOpensource());
             }
         }
