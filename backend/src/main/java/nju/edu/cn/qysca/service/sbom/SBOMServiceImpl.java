@@ -101,11 +101,11 @@ public class SBOMServiceImpl implements SBOMService {
                 }
 
                 // 将 SBOM JSON 写入临时文件
-                String fileName = "sbom-" + projectDO.getName() + ".json";
+                String fileName = "sbom-" + projectDO.getArtifactId() + ".json";
                 File sbomFile = new File(typeFolder, fileName);
-
                 FileWriter writer = new FileWriter(sbomFile);
                 writer.write(json);
+                writer.close();
             } catch (IOException e){
                 e.printStackTrace();
                 return;
@@ -114,7 +114,7 @@ public class SBOMServiceImpl implements SBOMService {
 
 
         // 将临时文件夹打包为 zip 文件
-        String zipFileName = "sbom.zip";
+        String zipFileName = "SBOM.zip";
         File zipFile = new File(zipFileName);
         try {
             ZipUtil.zipDirectory(sbomFolder, zipFile);
@@ -136,6 +136,7 @@ public class SBOMServiceImpl implements SBOMService {
         } finally {
             // 删除临时文件夹及其内容
             ZipUtil.deleteDirectory(sbomFolder);
+            ZipUtil.deleteDirectory(zipFile);
         }
 
     }
