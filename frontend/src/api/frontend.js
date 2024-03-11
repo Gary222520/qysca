@@ -72,3 +72,10 @@ export const FileMerge = (data) => request('post', API.FILE_MERGE, { data })
 export const ExportBrief = (data) => request('post', API.EXPORT_BRIEF, { data, responseType: 'blob' })
 // 导出项目详细依赖信息
 export const ExportDetail = (data) => request('post', API.EXPORT_DETAIL, { data, responseType: 'blob' })
+
+// 用户登录
+export const Login = (data) => request('post', API.LOGIN, { data })
+// 用户鉴权
+export const Auth = (params) => request('get', API.AUTH, { params })
+// 用户注册
+export const Register = (data) => request('post', API.REGISTER, { data })

@@ -71,5 +71,12 @@ export const API = {
   // 导出项目简明依赖信息
   EXPORT_BRIEF: '/qysca/project/exportTableExcelBrief',
   // 导出项目详细依赖信息
-  EXPORT_DETAIL: '/qysca/project/exportTableExcelDetail'
+  EXPORT_DETAIL: '/qysca/project/exportTableExcelDetail',
+
+  // 用户登录
+  LOGIN: '/qysca/user/login',
+  // 用户鉴权
+  AUTH: '/qysca/user/auth',
+  // 用户注册
+  REGISTER: '/qysca/user/register'
 }

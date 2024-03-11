@@ -1,6 +1,6 @@
 import { createStore } from 'vuex'
 import { message } from 'ant-design-vue'
-import { GetApplicationList, GetApplicationInfo, GetApplicationVersions } from '@/api/frontend'
+import { GetApplicationList, GetApplicationInfo, GetApplicationVersions, Login, Auth } from '@/api/frontend'
 
 export default createStore({
   state: {
@@ -31,6 +31,32 @@ export default createStore({
     }
   },
   actions: {
+    login: async (context, data) => {
+      return new Promise((resolve, reject) => {
+        Login(data)
+          .then((res) => {
+            if (res.code !== 200) {
+              message.error(res.message)
+              return
+            }
+            // console.log('Login', res)
+            const token = res.data
+            sessionStorage.setItem('token', token)
+            Auth({ token }).then((res) => {
+              if (res.code !== 200) {
+                message.error(res.message)
+                return
+              }
+              // console.log('Auth', res)
+              sessionStorage.setItem('user', JSON.stringify(res.data))
+              resolve(res.data)
+            })
+          })
+          .catch((err) => {
+            reject(new Error(err))
+          })
+      })
+    },
     getAppList: async (context, params) => {
       return new Promise((resolve, reject) => {
         GetApplicationList(params)

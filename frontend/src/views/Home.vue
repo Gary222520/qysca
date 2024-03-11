@@ -26,12 +26,29 @@
           <AppstoreOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('component') }}</span>
         </a-menu-item>
+        <a-menu-item key="userManage">
+          <UserOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('userManage') }}</span>
+        </a-menu-item>
       </a-menu>
     </a-layout-sider>
     <a-layout>
       <a-layout-header class="header">
         <menu-unfold-outlined v-if="data.collapsed" class="trigger" @click="() => (data.collapsed = !data.collapsed)" />
         <menu-fold-outlined v-else class="trigger" @click="() => (data.collapsed = !data.collapsed)" />
+        <div class="user">
+          <a-dropdown style="height: 50px">
+            <span>
+              <a-avatar></a-avatar>
+              <span style="margin-left: 10px">{{ data.username }}</span>
+            </span>
+            <template #overlay>
+              <a-menu>
+                <a-menu-item @click="logout">退出登录</a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+        </div>
       </a-layout-header>
       <a-layout-content class="content">
         <router-view />
@@ -43,6 +60,7 @@
 <script setup>
 import { reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
 import routes from '@/router/routeTable'
 import {
   AppstoreOutlined,
@@ -51,13 +69,22 @@ import {
   LayoutOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
-  PieChartOutlined
+  PieChartOutlined,
+  UserOutlined
 } from '@ant-design/icons-vue'
 
 const router = useRouter()
+const store = useStore()
+
+onMounted(() => {
+  data.selectedKeys = [router.currentRoute.value.meta.menu]
+  data.username = JSON.parse(sessionStorage.getItem('user')).name
+})
+
 const data = reactive({
   collapsed: false,
-  selectedKeys: [router.currentRoute.value.meta.menu]
+  selectedKeys: [],
+  username: ''
 })
 const handleMenu = ({ item, key, keyPath }) => {
   router.push(`/home/${key}`)
@@ -65,6 +92,11 @@ const handleMenu = ({ item, key, keyPath }) => {
 const getTitle = (key) => {
   const homeRoutes = routes.find((item) => item.name === 'home')
   return homeRoutes.children.find((item) => item.name === key)?.meta.title
+}
+const logout = () => {
+  sessionStorage.removeItem('token')
+  sessionStorage.removeItem('user')
+  router.push('/login')
 }
 </script>
 
@@ -75,6 +107,14 @@ const getTitle = (key) => {
 .header {
   background: #fff;
   padding: 0 20px;
+  height: 50px;
+  line-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.user {
+  margin-right: 10px;
   height: 50px;
   display: flex;
   align-items: center;
