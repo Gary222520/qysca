@@ -44,4 +44,7 @@ public class SaveProjectDTO {
 
     @ApiModelProperty(value = "扫描对象", example = "zip")
     private String scanner;
+
+    @ApiModelProperty(value = "项目创建者", example = "000000000")
+    private String creator;
 }
