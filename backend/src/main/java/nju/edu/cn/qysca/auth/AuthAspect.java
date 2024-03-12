@@ -1,6 +1,5 @@
 package nju.edu.cn.qysca.auth;
 
-import nju.edu.cn.qysca.MyApplication;
 import nju.edu.cn.qysca.config.JwtConfig;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.exception.PlatformException;

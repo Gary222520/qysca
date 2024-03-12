@@ -22,17 +22,7 @@ VALUES(
 
 
 DROP TABLE IF EXISTS project;
-DROP TABLE IF EXISTS application;
 
-CREATE TABLE application(
-	id VARCHAR(32) PRIMARY KEY,
-	group_id VARCHAR(255) NOT NULL,
-	artifact_id VARCHAR(255) NOT NULL,
-	version VARCHAR(255) NOT NULL,
-	name VARCHAR(255),
-	description VARCHAR(2000),
-	UNIQUE(group_id,artifact_id,version)
-);
 
 CREATE TABLE project(
 	id VARCHAR(32) PRIMARY KEY,
@@ -47,8 +37,12 @@ CREATE TABLE project(
 	scanner VARCHAR(255) NOT NULL,
 	state VARCHAR(255) NOT NULL,
 	time VARCHAR(255) NOT NULL,
-	a_p_id VARCHAR(32) NOT NULL,
-	FOREIGN KEY(a_p_id) REFERENCES application(id),
+    lock Boolean NOT NULL,
+	release Boolean NOT NULL,
+    root Boolean NOT NULL,
+    creator VARCHAR(32) NOT NULL,
+    child_project text[],
+    child_component text[],
 	UNIQUE(group_id,artifact_id,version)
 );
 

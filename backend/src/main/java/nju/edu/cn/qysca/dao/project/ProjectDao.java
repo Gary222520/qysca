@@ -1,11 +1,11 @@
 package nju.edu.cn.qysca.dao.project;
 
+import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
 import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -67,14 +67,50 @@ public interface ProjectDao extends JpaRepository<ProjectDO, String> {
 
 
     /**
-     *  根据项目名称模糊查询项目信息
-     * @param name 项目名称
+     * 分页获取根项目 并返回根项目的最新版本
      * @param pageable 分页信息
      * @return Page<ProjectDO> 项目分页信息
      */
-
-    @Query(value = "select distinct on (p.group_id, p.artifact_id, p.name) p.* from project p where (:name = '' or p.name = :name)",
-            countQuery = "select count(*) from (select distinct p.group_id, p.artifact_id, p.name from  project p where (:name = '' or p.name = :name)) as unique_combinations",
+    @Query(value = "select distinct on (p.group_id, p.artifact_id, p.name) p.* from project p where p.root = true",
+            countQuery = "select count(*) from (select distinct p.group_id, p.artifact_id, p.name from  project p where p.root = true) as unique_combinations",
             nativeQuery = true)
-    Page<ProjectDO> findDistinctProjectPageByName(@Param("name") String name, Pageable pageable);
+    Page<ProjectDO> findRootPage(Pageable pageable);
+
+    /**
+     * 模糊查询项目名称
+     * @param name 项目名称
+     * @return List<String> 模糊查询项目名称
+     */
+    @Query("select name from ProjectDO where name like %?1%")
+    List<String> searchProjectName(String name);
+
+    /**
+     * 根据名称查询项目 并返回项目的最新版本
+     * @param name 项目名称
+     * @return ProjectDO 项目信息
+     */
+    @Query(value = "select * from project where name = :name order by version desc limit 1", nativeQuery = true)
+    ProjectDO findProject(String name);
+
+    /**
+     * 根据项目Id查询子项目
+     * @param projectId 项目Id
+     * @return List<ProjectDO> 子项目列表
+     */
+    @Query(value = "select * from project where id = any(select child_project from project where id = :projectId)", nativeQuery = true)
+    List<ProjectDO> findSubProject(String projectId);
+
+    /**
+     * 根据项目Id查询子组件
+     * @param projectId 项目Id
+     * @return List<ComponentDO> 子组件列表
+     */
+    @Query(value = "select * from component where id = any(select child_component from project where id = :projectId)", nativeQuery = true)
+    List<ComponentDO> findSubComponent(String projectId);
+
+    /**
+     * 根据Id查找项目
+     * @param id 项目Id
+     */
+    ProjectDO findProjectDOById(String id);
 }

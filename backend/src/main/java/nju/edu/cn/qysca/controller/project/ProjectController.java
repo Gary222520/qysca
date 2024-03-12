@@ -11,6 +11,7 @@ import nju.edu.cn.qysca.domain.project.dtos.*;
 import nju.edu.cn.qysca.service.project.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -25,21 +26,50 @@ public class ProjectController {
     @Autowired
     private ProjectService projectService;
 
-    @ApiOperation("创建新项目")
+
+    @ApiOperation("分页获取根项目信息")
+    @GetMapping("/findRootPage")
+    public ResponseMsg<Page<ProjectDO>> findRootPage(
+            @ApiParam(value = "页码", required = true) @RequestParam int number,
+            @ApiParam(value = "页大小", required = true) @RequestParam int size) {
+        return new ResponseMsg<>(projectService.findRootPage(number, size));
+    }
+
+
+    @ApiOperation("模糊查询项目名称")
+    @GetMapping("/searchProjectName")
+    public ResponseMsg<List<String>> searchProjectName(@ApiParam(value = "项目名称", required = true) @RequestParam String name) {
+        return new ResponseMsg<>(projectService.searchProjectName(name));
+    }
+
+
+    @ApiOperation("根据名称查询项目 并返回项目的最新版本")
+    @GetMapping("/findProject")
+    public ResponseMsg<ProjectDO> findProject(@ApiParam(value = "项目名称", required = true) @RequestParam String name) {
+        return new ResponseMsg<>(projectService.findProject(name));
+    }
+
+    @ApiOperation("查询子项目和子组件")
+    @GetMapping("/findSubProject")
+    public ResponseMsg<SubProjectDTO> findSubProject(@ApiParam(value = "项目Id", required = true) @RequestParam String projectId) {
+        return new ResponseMsg<>(projectService.findSubProject(projectId));
+    }
+
+
+    @ApiOperation("新增/更新项目")
     @PostMapping("/saveProject")
     public ResponseMsg<Boolean> saveProject(@RequestBody SaveProjectDTO saveProjectDTO) {
         Boolean result = projectService.saveProject(saveProjectDTO);
-        projectService.saveProjectDependency(saveProjectDTO);
         return new ResponseMsg<>(result);
     }
 
-    @ApiOperation("更新项目")
-    @PostMapping("/updateProject")
-    public ResponseMsg<Boolean> uploadProject(@RequestBody UpdateProjectDTO updateProjectDTO) {
-        Boolean result = projectService.updateProject(updateProjectDTO);
-        projectService.updateProjectDependency(updateProjectDTO);
+    @ApiOperation("新增/更新项目依赖信息")
+    @PostMapping("/saveProjectDependency")
+    public ResponseMsg<Boolean> saveProjectDependency(@RequestBody SaveProjectDependencyDTO saveProjectDependencyDTO) {
+        Boolean result = projectService.saveProjectDependency(saveProjectDependencyDTO);
         return new ResponseMsg<>(result);
     }
+
 
     @ApiOperation("升级项目")
     @PostMapping("/upgradeProject")
@@ -51,30 +81,23 @@ public class ProjectController {
 
     @ApiOperation("删除项目")
     @PostMapping("/deleteProject")
-    public ResponseMsg<Boolean> deleteProject(@RequestParam String groupId, @RequestParam String artifactId){
+    public ResponseMsg<Boolean> deleteProject(@RequestParam String groupId, @RequestParam String artifactId) {
         return new ResponseMsg<>(projectService.deleteProject(groupId, artifactId));
     }
 
     @ApiOperation("删除项目某个版本")
     @PostMapping("/deleteProjectVersion")
-    public ResponseMsg<Boolean> deleteProjectVersion(@RequestParam String groupId, @RequestParam String artifactId, @RequestParam String version){
+    public ResponseMsg<Boolean> deleteProjectVersion(@RequestParam String groupId, @RequestParam String artifactId, @RequestParam String version) {
         return new ResponseMsg<>(projectService.deleteProjectVersion(groupId, artifactId, version));
     }
 
-    @ApiOperation("分页获取项目信息")
-    @GetMapping("/findProjectPage")
-    public ResponseMsg<Page<ProjectDO>> findProjectPage(@ApiParam(value = "项目名称", allowEmptyValue = true) @RequestParam String name,
-                                                            @ApiParam(value = "页码", required = true) @RequestParam int number,
-                                                            @ApiParam(value = "页大小", required = true) @RequestParam int size) {
-        return new ResponseMsg<>(projectService.findProjectPage(name, number, size));
-    }
 
     @ApiOperation("分页获取指定项目的版本信息")
     @GetMapping("/findProjectVersionPage")
     public ResponseMsg<Page<ProjectDO>> findProjectVersionPage(@ApiParam(value = "组件Id", required = true) @RequestParam String groupId,
-                                                                      @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId,
-                                                                      @ApiParam(value = "页码", required = true) @RequestParam int number,
-                                                                      @ApiParam(value = "页大小", required = true) @RequestParam int size) {
+                                                               @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId,
+                                                               @ApiParam(value = "页码", required = true) @RequestParam int number,
+                                                               @ApiParam(value = "页大小", required = true) @RequestParam int size) {
         return new ResponseMsg<>(projectService.findProjectVersionPage(groupId, artifactId, number, size));
     }
 
@@ -125,5 +148,6 @@ public class ProjectController {
     public ResponseMsg<VersionCompareTreeDTO> getProjectVersionCompareTree(@RequestBody VersionCompareReqDTO dto) {
         return new ResponseMsg<>(projectService.getProjectVersionCompareTree(dto));
     }
+
 
 }

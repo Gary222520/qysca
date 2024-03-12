@@ -21,6 +21,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
 import javax.servlet.http.HttpServletResponse;
@@ -47,8 +48,59 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
+
     /**
-     * 新增项目信息
+     * 分页获取根项目信息
+     *
+     * @param number 页码
+     * @param size   页大小
+     * @return Page<ProjectDO> 项目信息分页结果
+     */
+    @Override
+    public Page<ProjectDO> findRootPage(int number, int size) {
+        Pageable pageable = PageRequest.of(number - 1, size);
+        return projectDao.findRootPage(pageable);
+    }
+
+
+    /**
+     * 模糊查询项目名称
+     * @param name 项目名称
+     * @return List<String> 模糊查询项目名称列表
+     */
+    @Override
+    public List<String> searchProjectName(String name) {
+        return projectDao.searchProjectName(name);
+    }
+
+    /**
+     * 根据名称查询项目 并返回项目的最新版本
+     * @param name 项目名称
+     * @return ProjectDO 项目信息
+     */
+    @Override
+    public ProjectDO findProject(String name) {
+        return projectDao.findProject(name);
+    }
+
+
+    /**
+     * 根据项目Id返回子项目信息
+     * @param projectId 项目Id
+     * @return SubProjectDTO 子项目信息
+     */
+    @Override
+    public SubProjectDTO findSubProject(String projectId) {
+        List<ProjectDO> subProject = projectDao.findSubProject(projectId);
+        List<ComponentDO> subComponent = projectDao.findSubComponent(projectId);
+        SubProjectDTO subProjectDTO = new SubProjectDTO();
+        subProjectDTO.setSubProject(subProject);
+        subProjectDTO.setSubComponent(subComponent);
+        return subProjectDTO;
+    }
+
+    /**
+     * 新增/更新项目信息
      *
      * @param saveProjectDTO 保存项目接口信息
      * @return Boolean 新增项目是否成功
@@ -56,14 +108,30 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional
     public Boolean saveProject(SaveProjectDTO saveProjectDTO) {
-        ProjectDO projectDO = new ProjectDO();
-        projectDO.setId(UUIDGenerator.getUUID());
-        BeanUtils.copyProperties(saveProjectDTO, projectDO);
+        ProjectDO projectDO = null;
+        if(StringUtils.isEmpty(saveProjectDTO.getId())){
+            projectDO = new ProjectDO();
+            projectDO.setId(UUIDGenerator.getUUID());
+            BeanUtils.copyProperties(saveProjectDTO, projectDO);
+            projectDO.setState("RUNNING");
+            if(saveProjectDTO.getParentId() == null) {
+                projectDO.setRoot(true);
+                ProjectDO parentProjectDO = projectDao.findProjectDOById(saveProjectDTO.getParentId());
+                ArrayList<String> temp = new ArrayList<String>(Arrays.asList(parentProjectDO.getChildProject()));
+                temp.add(projectDO.getId());
+                projectDO.setChildProject(temp.toArray(new String[temp.size()]));
+                projectDO.setLock(false);
+                projectDO.setRelease(false);
+            }else{
+                projectDO.setRoot(false);
+            }
+        }else{
+            //TODO: 确认允许更新的信息
+        }
         Date now = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String timeStamp = dateFormat.format(now);
         projectDO.setTime(timeStamp);
-        projectDO.setState("RUNNING");
         projectDao.save(projectDO);
         return true;
     }
@@ -71,104 +139,49 @@ public class ProjectServiceImpl implements ProjectService {
     /**
      * 保存项目依赖关系
      *
-     * @param saveProjectDTO 保存项目接口信息
+     * @param saveProjectDependencyDTO 保存项目接口信息
      */
     @Async("taskExecutor")
     @Override
     @Transactional
-    public void saveProjectDependency(SaveProjectDTO saveProjectDTO) {
+    public Boolean saveProjectDependency(SaveProjectDependencyDTO saveProjectDependencyDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDTO.getFilePath(), saveProjectDTO.getBuilder(), 0);
-            DependencyTreeDO projectDependencyTreeDO = new DependencyTreeDO();
-            projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
-            projectDependencyTreeDO.setGroupId(saveProjectDTO.getGroupId());
-            projectDependencyTreeDO.setArtifactId(saveProjectDTO.getArtifactId());
-            projectDependencyTreeDO.setVersion(saveProjectDTO.getVersion());
-            projectDependencyTreeDO.setTree(componentDependencyTreeDO);
+            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDependencyDTO.getFilePath(), saveProjectDependencyDTO.getBuilder(), 0);
+            DependencyTreeDO projectDependencyTreeDO = null;
+            if(StringUtils.isEmpty(saveProjectDependencyDTO.getId())) {
+                projectDependencyTreeDO = new DependencyTreeDO();
+                projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
+                projectDependencyTreeDO.setGroupId(saveProjectDependencyDTO.getGroupId());
+                projectDependencyTreeDO.setArtifactId(saveProjectDependencyDTO.getArtifactId());
+                projectDependencyTreeDO.setVersion(saveProjectDependencyDTO.getVersion());
+                projectDependencyTreeDO.setTree(componentDependencyTreeDO);
+            }else{
+                projectDependencyTreeDO = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(saveProjectDependencyDTO.getGroupId(), saveProjectDependencyDTO.getArtifactId(), saveProjectDependencyDTO.getVersion());
+                projectDependencyTreeDO.setTree(componentDependencyTreeDO);
+            }
             dependencyTreeDao.save(projectDependencyTreeDO);
             // 批量更新依赖平铺表
             List<DependencyTableDO> projectDependencyTableDOS = createProjectDependencyTable(projectDependencyTreeDO);
             for (DependencyTableDO dependencyTableDO : projectDependencyTableDOS) {
-                dependencyTableDO.setLanguage(saveProjectDTO.getLanguage());
+                dependencyTableDO.setLanguage(saveProjectDependencyDTO.getLanguage());
             }
             dependencyTableDao.saveAll(projectDependencyTableDOS);
             // 更改状态为SUCCESS
-            ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(saveProjectDTO.getGroupId(), saveProjectDTO.getArtifactId(), saveProjectDTO.getVersion());
+            ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(saveProjectDependencyDTO.getGroupId(), saveProjectDependencyDTO.getArtifactId(), saveProjectDependencyDTO.getVersion());
             projectDO.setState("SUCCESS");
             projectDao.save(projectDO);
-            File file = new File(saveProjectDTO.getFilePath());
+            File file = new File(saveProjectDependencyDTO.getFilePath());
             redisTemplate.delete(file.getParentFile().getName());
-            deleteFolder(saveProjectDTO.getFilePath().substring(0, saveProjectDTO.getFilePath().lastIndexOf("/")));
+            deleteFolder(saveProjectDependencyDTO.getFilePath().substring(0, saveProjectDependencyDTO.getFilePath().lastIndexOf("/")));
+            return true;
         } catch (Exception e) {
-            ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(saveProjectDTO.getGroupId(), saveProjectDTO.getArtifactId(), saveProjectDTO.getVersion());
+            ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(saveProjectDependencyDTO.getGroupId(), saveProjectDependencyDTO.getArtifactId(), saveProjectDependencyDTO.getVersion());
             projectDO.setState("FAILED");
             projectDao.save(projectDO);
-            File file = new File(saveProjectDTO.getFilePath());
+            File file = new File(saveProjectDependencyDTO.getFilePath());
             redisTemplate.delete(file.getParentFile().getName());
-            deleteFolder(saveProjectDTO.getFilePath().substring(0, saveProjectDTO.getFilePath().lastIndexOf("/")));
-        }
-    }
-
-    /**
-     * 更新项目信息
-     *
-     * @param updateProjectDTO 更新项目接口信息
-     * @return 更新项目信息是否成功
-     */
-    @Override
-    @Transactional
-    public Boolean updateProject(UpdateProjectDTO updateProjectDTO) {
-        ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(updateProjectDTO.getGroupId(), updateProjectDTO.getArtifactId(), updateProjectDTO.getVersion());
-        BeanUtils.copyProperties(updateProjectDTO, projectDO);
-        Date now = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String timeStamp = dateFormat.format(now);
-        projectDO.setTime(timeStamp);
-        projectDO.setState("RUNNING");
-        projectDao.save(projectDO);
-        return true;
-    }
-
-    /**
-     * 更新项目依赖关系
-     *
-     * @param updateProjectDTO 更新项目接口信息
-     */
-    @Async("taskExecutor")
-    @Override
-    @Transactional
-    public void updateProjectDependency(UpdateProjectDTO updateProjectDTO) {
-        try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(updateProjectDTO.getFilePath(), updateProjectDTO.getBuilder(), 0);
-            DependencyTreeDO projectDependencyTreeDO = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(updateProjectDTO.getGroupId(), updateProjectDTO.getArtifactId(), updateProjectDTO.getVersion());
-            if (projectDependencyTreeDO == null) {
-                projectDependencyTreeDO = new DependencyTreeDO();
-                projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
-                projectDependencyTreeDO.setGroupId(updateProjectDTO.getGroupId());
-                projectDependencyTreeDO.setArtifactId(updateProjectDTO.getArtifactId());
-                projectDependencyTreeDO.setVersion(updateProjectDTO.getVersion());
-            }
-            projectDependencyTreeDO.setTree(componentDependencyTreeDO);
-            dependencyTreeDao.save(projectDependencyTreeDO);
-            // 批量更新依赖平铺表
-            List<DependencyTableDO> projectDependencyTableDOS = createProjectDependencyTable(projectDependencyTreeDO);
-            for (DependencyTableDO dependencyTableDO : projectDependencyTableDOS) {
-                dependencyTableDO.setLanguage(updateProjectDTO.getLanguage());
-            }
-            dependencyTableDao.saveAll(projectDependencyTableDOS);
-            ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(updateProjectDTO.getGroupId(), updateProjectDTO.getArtifactId(), updateProjectDTO.getVersion());
-            projectDO.setState("SUCCESS");
-            projectDao.save(projectDO);
-            File file = new File(updateProjectDTO.getFilePath());
-            redisTemplate.delete(file.getParentFile().getName());
-            deleteFolder(updateProjectDTO.getFilePath().substring(0, updateProjectDTO.getFilePath().lastIndexOf("/")));
-        } catch (Exception e) {
-            ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(updateProjectDTO.getGroupId(), updateProjectDTO.getArtifactId(), updateProjectDTO.getVersion());
-            projectDO.setState("FAILED");
-            projectDao.save(projectDO);
-            File file = new File(updateProjectDTO.getFilePath());
-            redisTemplate.delete(file.getParentFile().getName());
-            deleteFolder(updateProjectDTO.getFilePath().substring(0, updateProjectDTO.getFilePath().lastIndexOf("/")));
+            deleteFolder(saveProjectDependencyDTO.getFilePath().substring(0, saveProjectDependencyDTO.getFilePath().lastIndexOf("/")));
+            return false;
         }
     }
 
@@ -265,20 +278,6 @@ public class ProjectServiceImpl implements ProjectService {
         dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
         dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
         return Boolean.TRUE;
-    }
-
-    /**
-     * 分页获取项目信息
-     *
-     * @param name 项目名称
-     * @param number 页码
-     * @param size   页大小
-     * @return Page<ProjectDO> 项目信息分页结果
-     */
-    @Override
-    public Page<ProjectDO> findProjectPage(String name, int number, int size) {
-        Pageable pageable = PageRequest.of(number - 1, size);
-        return projectDao.findDistinctProjectPageByName(name, pageable);
     }
 
     /**

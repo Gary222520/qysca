@@ -11,36 +11,54 @@ import java.util.List;
 
 
 public interface ProjectService {
+
     /**
-     * 保存项目信息
+     * 分页获取根项目信息
+     *
+     * @param number 页码
+     * @param size   页大小
+     * @return Page<ProjectDO> 根项目信息分页结果
+     */
+    Page<ProjectDO> findRootPage(int number, int size);
+
+    /**
+     * 模糊查询项目名称
+     * @param name 项目名称
+     * @return 模糊查询项目名称列表
+     */
+    List<String> searchProjectName(String name);
+
+
+    /**
+     * 根据名称查询项目 并返回项目的最新版本
+     * @param name 项目名称
+     * @return ProjectDTO 项目信息
+     */
+    ProjectDO findProject(String name);
+
+
+    /**
+     * 根据项目Id查询子项目信息
+     * @param projectId 项目Id
+     * @return SubProjectDTO 子项目信息
+     */
+    SubProjectDTO  findSubProject(String projectId);
+
+    /**
+     * 新增/更新项目信息
      *
      * @param saveProjectDTO 保存项目接口信息
      * @return Boolean 项目是否保存成功
      */
-
     Boolean saveProject(SaveProjectDTO saveProjectDTO);
 
     /**
-     * 保存项目依赖信息
+     * 新增/更新项目依赖信息
      *
-     * @param saveProjectDTO 保存项目接口信息
+     * @param saveProjectDependencyDTO 保存项目接口信息
      */
-    void saveProjectDependency(SaveProjectDTO saveProjectDTO);
+    Boolean saveProjectDependency(SaveProjectDependencyDTO saveProjectDependencyDTO);
 
-    /**
-     * 更新项目信息
-     *
-     * @param updateProjectDTO 更新项目接口信息
-     * @return Boolean 项目是否更新成功
-     */
-    Boolean updateProject(UpdateProjectDTO updateProjectDTO);
-
-    /**
-     * 更新项目依赖信息
-     *
-     * @param updateProjectDTO 更新项目接口信息
-     */
-    void updateProjectDependency(UpdateProjectDTO updateProjectDTO);
 
     /**
      * 升级项目
@@ -64,35 +82,26 @@ public interface ProjectService {
      * @param artifactId 项目Id
      * @return 删除项目是否成功
      */
-    Boolean deleteProject(String groupId,  String artifactId);
+    Boolean deleteProject(String groupId, String artifactId);
 
-    Boolean deleteProjectVersion(String groupId,  String artifactId, String version);
+    Boolean deleteProjectVersion(String groupId, String artifactId, String version);
 
-    /**
-     * 分页获取项目信息
-     *
-     * @param name 项目名称
-     * @param number 页码
-     * @param size   页大小
-     * @return Page<ProjectVersionDO> 项目信息分页结果
-     */
-    Page<ProjectDO> findProjectPage(String name, int number, int size);
 
     /**
      * 分页获取指定项目的版本信息
      *
      * @param groupId 组织Id
-     * @Param artifactId 工件Id
-     * @param number 页码
-     * @param size   页大小
+     * @param number  页码
+     * @param size    页大小
      * @return Page<ProjectVersionDO> 项目版本信息分页结果
+     * @Param artifactId 工件Id
      */
-    Page<ProjectDO> findProjectVersionPage(String groupId, String artifactId,  int number, int size);
+    Page<ProjectDO> findProjectVersionPage(String groupId, String artifactId, int number, int size);
 
     /**
      * 检查指定项目扫描中组件的个数
      *
-     * @param groupId 组织Id
+     * @param groupId    组织Id
      * @param artifactId 工件Id
      * @return Integer 扫描中组件的个数
      */
@@ -101,7 +110,7 @@ public interface ProjectService {
     /**
      * 获取指定项目的所有版本列表
      *
-     * @param groupId 组织Id
+     * @param groupId    组织Id
      * @param artifactId 工件Id
      * @return List<String> 版本列表
      */

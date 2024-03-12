@@ -11,6 +11,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @ApiModel("保存项目信息DTO")
 public class SaveProjectDTO {
+
+    @ApiModelProperty(value = "父项目Id", example = "123e456-e74-b37-4d7a-9421d59bf3b")
+    private String parentId;
+
+    @ApiModelProperty(value = "项目Id", example = "123e456-e74-b37-4d7a-9421d59bf3b")
+    private String id;
+
     @ApiModelProperty(value = "组织Id", example = "nju.edu.cn")
     private String groupId;
 
@@ -37,7 +44,4 @@ public class SaveProjectDTO {
 
     @ApiModelProperty(value = "扫描对象", example = "zip")
     private String scanner;
-
-    @ApiModelProperty(value = "pom文件路径", example = "/resources/static/upload/qysca/1.0.0/pom.xml")
-    private String filePath;
 }
