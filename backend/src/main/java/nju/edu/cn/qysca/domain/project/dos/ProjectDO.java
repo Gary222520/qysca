@@ -91,10 +91,10 @@ public class ProjectDO {
     @Column(name = "childProject", nullable = false)
     @ApiModelProperty(value = "子项目", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
     @Type(type = "string-array")
-    private String[] childProject;
+    private String[] childProject = {};
 
     @Column(name = "childComponent", nullable = false)
     @ApiModelProperty(value = "子组件", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
     @Type(type = "string-array")
-    private  String[] childComponent;
+    private  String[] childComponent = {};
 }

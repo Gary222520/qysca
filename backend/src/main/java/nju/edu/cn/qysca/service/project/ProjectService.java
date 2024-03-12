@@ -39,10 +39,12 @@ public interface ProjectService {
 
     /**
      * 根据项目Id查询子项目信息
-     * @param projectId 项目Id
+     * @param groupId 项目Id
+     * @param artifactId 工件Id
+     * @param version 项目版本
      * @return SubProjectDTO 子项目信息
      */
-    SubProjectDTO  findSubProject(String projectId);
+    SubProjectDTO  findSubProject(String groupId, String artifactId, String version);
 
     /**
      * 新增/更新项目信息

@@ -51,9 +51,12 @@ public class ProjectController {
 
     @ApiOperation("查询子项目和子组件")
     @GetMapping("/findSubProject")
-    public ResponseMsg<SubProjectDTO> findSubProject(@ApiParam(value = "项目Id", required = true) @RequestParam String projectId) {
-        return new ResponseMsg<>(projectService.findSubProject(projectId));
+    public ResponseMsg<SubProjectDTO> findSubProject(@ApiParam(value = "项目组织Id", required = true) @RequestParam String groupId,
+                                                     @ApiParam(value = "项目工件Id", required = true)@RequestParam String artifactId,
+                                                     @ApiParam(value = "项目版本", required = true) @RequestParam String version) {
+        return new ResponseMsg<>(projectService.findSubProject(groupId, artifactId, version));
     }
+
 
 
     @ApiOperation("新增/更新项目")

@@ -86,13 +86,16 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 根据项目Id返回子项目信息
-     * @param projectId 项目Id
+     * @param  groupId 组织Id
+     * @param  artifactId 项目Id
+     * @param  version 项目版本
      * @return SubProjectDTO 子项目信息
      */
     @Override
-    public SubProjectDTO findSubProject(String projectId) {
-        List<ProjectDO> subProject = projectDao.findSubProject(projectId);
-        List<ComponentDO> subComponent = projectDao.findSubComponent(projectId);
+    public SubProjectDTO findSubProject(String groupId, String artifactId, String version) {
+        ProjectDO projectDO =  projectDao.findByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
+        List<ProjectDO> subProject = projectDao.findSubProject(projectDO.getId());
+        List<ComponentDO> subComponent = projectDao.findSubComponent(projectDO.getId());
         SubProjectDTO subProjectDTO = new SubProjectDTO();
         subProjectDTO.setSubProject(subProject);
         subProjectDTO.setSubComponent(subComponent);
@@ -120,7 +123,7 @@ public class ProjectServiceImpl implements ProjectService {
                 projectDO.setRoot(true);
             }else{
                 ProjectDO parentProjectDO = projectDao.findProjectDOById(saveProjectDTO.getParentId());
-                ArrayList<String> temp = new ArrayList<String>(Arrays.asList(parentProjectDO.getChildProject()));
+                ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentProjectDO.getChildProject()));
                 temp.add(projectDO.getId());
                 projectDO.setChildProject(temp.toArray(new String[temp.size()]));
                 projectDO.setRoot(false);
