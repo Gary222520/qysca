@@ -146,6 +146,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional
     public void saveProjectDependency(SaveProjectDependencyDTO saveProjectDependencyDTO) {
         try {
+
             ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDependencyDTO.getFilePath(), saveProjectDependencyDTO.getBuilder(), 0);
             DependencyTreeDO projectDependencyTreeDO = null;
             if(StringUtils.isEmpty(saveProjectDependencyDTO.getId())) {
@@ -168,6 +169,9 @@ public class ProjectServiceImpl implements ProjectService {
             dependencyTableDao.saveAll(projectDependencyTableDOS);
             // 更改状态为SUCCESS
             ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(saveProjectDependencyDTO.getGroupId(), saveProjectDependencyDTO.getArtifactId(), saveProjectDependencyDTO.getVersion());
+            projectDO.setBuilder(saveProjectDependencyDTO.getBuilder());
+            projectDO.setScanner(saveProjectDependencyDTO.getScanner());
+            projectDO.setLanguage(saveProjectDependencyDTO.getLanguage());
             projectDO.setState("SUCCESS");
             projectDao.save(projectDO);
             File file = new File(saveProjectDependencyDTO.getFilePath());

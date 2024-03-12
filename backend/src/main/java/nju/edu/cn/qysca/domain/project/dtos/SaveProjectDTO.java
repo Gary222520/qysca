@@ -36,15 +36,6 @@ public class SaveProjectDTO {
     @ApiModelProperty(value = "类型",example = "UI")
     private String type;
 
-    @ApiModelProperty(value = "项目语言", example = "java")
-    private String language;
-
-    @ApiModelProperty(value = "构建工具", example = "maven")
-    private String builder;
-
-    @ApiModelProperty(value = "扫描对象", example = "zip")
-    private String scanner;
-
     @ApiModelProperty(value = "项目创建者", example = "000000000")
     private String creator;
 }

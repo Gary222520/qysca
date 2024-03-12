@@ -33,4 +33,7 @@ public class SaveProjectDependencyDTO {
 
     @ApiModelProperty(value = "构建工具",example = "maven")
     private String builder;
+
+    @ApiModelProperty(value = "扫描工具", example = "pom")
+    private String scanner;
 }
