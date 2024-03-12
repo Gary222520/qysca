@@ -144,7 +144,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Async("taskExecutor")
     @Override
     @Transactional
-    public Boolean saveProjectDependency(SaveProjectDependencyDTO saveProjectDependencyDTO) {
+    public void saveProjectDependency(SaveProjectDependencyDTO saveProjectDependencyDTO) {
         try {
             ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDependencyDTO.getFilePath(), saveProjectDependencyDTO.getBuilder(), 0);
             DependencyTreeDO projectDependencyTreeDO = null;
@@ -173,7 +173,6 @@ public class ProjectServiceImpl implements ProjectService {
             File file = new File(saveProjectDependencyDTO.getFilePath());
             redisTemplate.delete(file.getParentFile().getName());
             deleteFolder(saveProjectDependencyDTO.getFilePath().substring(0, saveProjectDependencyDTO.getFilePath().lastIndexOf("/")));
-            return true;
         } catch (Exception e) {
             ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(saveProjectDependencyDTO.getGroupId(), saveProjectDependencyDTO.getArtifactId(), saveProjectDependencyDTO.getVersion());
             projectDO.setState("FAILED");
@@ -181,7 +180,6 @@ public class ProjectServiceImpl implements ProjectService {
             File file = new File(saveProjectDependencyDTO.getFilePath());
             redisTemplate.delete(file.getParentFile().getName());
             deleteFolder(saveProjectDependencyDTO.getFilePath().substring(0, saveProjectDependencyDTO.getFilePath().lastIndexOf("/")));
-            return false;
         }
     }
 

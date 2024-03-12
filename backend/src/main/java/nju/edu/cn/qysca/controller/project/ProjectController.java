@@ -65,9 +65,9 @@ public class ProjectController {
 
     @ApiOperation("新增/更新项目依赖信息")
     @PostMapping("/saveProjectDependency")
-    public ResponseMsg<Boolean> saveProjectDependency(@RequestBody SaveProjectDependencyDTO saveProjectDependencyDTO) {
-        Boolean result = projectService.saveProjectDependency(saveProjectDependencyDTO);
-        return new ResponseMsg<>(result);
+    public ResponseMsg<Void> saveProjectDependency(@RequestBody SaveProjectDependencyDTO saveProjectDependencyDTO) {
+        projectService.saveProjectDependency(saveProjectDependencyDTO);
+        return new ResponseMsg<>();
     }
 
 

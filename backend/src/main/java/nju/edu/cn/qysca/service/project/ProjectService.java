@@ -57,7 +57,7 @@ public interface ProjectService {
      *
      * @param saveProjectDependencyDTO 保存项目接口信息
      */
-    Boolean saveProjectDependency(SaveProjectDependencyDTO saveProjectDependencyDTO);
+    void saveProjectDependency(SaveProjectDependencyDTO saveProjectDependencyDTO);
 
 
     /**
