@@ -114,15 +114,15 @@ public class ProjectServiceImpl implements ProjectService {
             projectDO.setId(UUIDGenerator.getUUID());
             BeanUtils.copyProperties(saveProjectDTO, projectDO);
             projectDO.setState("RUNNING");
+            projectDO.setLock(false);
+            projectDO.setRelease(false);
             if(saveProjectDTO.getParentId() == null) {
                 projectDO.setRoot(true);
+            }else{
                 ProjectDO parentProjectDO = projectDao.findProjectDOById(saveProjectDTO.getParentId());
                 ArrayList<String> temp = new ArrayList<String>(Arrays.asList(parentProjectDO.getChildProject()));
                 temp.add(projectDO.getId());
                 projectDO.setChildProject(temp.toArray(new String[temp.size()]));
-                projectDO.setLock(false);
-                projectDO.setRelease(false);
-            }else{
                 projectDO.setRoot(false);
             }
         }else{
