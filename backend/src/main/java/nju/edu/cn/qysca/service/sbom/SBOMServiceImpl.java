@@ -1,7 +1,6 @@
 package nju.edu.cn.qysca.service.sbom;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nju.edu.cn.qysca.dao.application.ApplicationProjectDao;
 import nju.edu.cn.qysca.dao.component.ComponentDao;
 import nju.edu.cn.qysca.dao.component.DependencyTableDao;
 import nju.edu.cn.qysca.dao.project.ProjectDao;
@@ -27,8 +26,6 @@ import java.util.stream.Stream;
 public class SBOMServiceImpl implements SBOMService {
 
 
-    @Autowired
-    private ApplicationProjectDao applicationProjectDao;
 
     @Autowired
     private DependencyTableDao dependencyTableDao;
@@ -49,7 +46,7 @@ public class SBOMServiceImpl implements SBOMService {
      */
     public void exportSBOM(HttpServletResponse response, String applicationGroupId, String applicationArtifactId, String applicationVersion){
         // 找到application的所有project，一个project为一个json文件
-        List<ProjectDO> projectDOList = applicationProjectDao.findProjectByApplicationGAV(applicationGroupId, applicationArtifactId, applicationVersion);
+        List<ProjectDO> projectDOList = null;
 
         // 创建临时SBOM文件夹
         File sbomFolder = new File("SBOM");
