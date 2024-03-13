@@ -8,10 +8,12 @@ import nju.edu.cn.qysca.domain.application.dtos.*;
 import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
 import nju.edu.cn.qysca.service.application.ApplicationService;
 import nju.edu.cn.qysca.service.project.ProjectService;
+import nju.edu.cn.qysca.service.sbom.SBOMService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @Api(tags = "应用管理")
@@ -25,6 +27,8 @@ public class ApplicationController {
     @Autowired
     private ProjectService projectService;
 
+    @Autowired
+    private SBOMService sbomService;
 
     @ApiOperation("获取所有应用")
     @GetMapping("/getApplicationList")
@@ -93,5 +97,10 @@ public class ApplicationController {
         return new ResponseMsg<>(applicationService.upgradeAppProject(upgradeAppProjectDTO));
     }
 
+    @ApiOperation("应用级别导出SBOM")
+    @PostMapping("/exportSBOM")
+    public void exportSBOM(HttpServletResponse response, @RequestParam String groupId, @RequestParam String artifactId, @RequestParam String version){
+        sbomService.exportSBOM(response, groupId, artifactId, version);
+    }
 
 }

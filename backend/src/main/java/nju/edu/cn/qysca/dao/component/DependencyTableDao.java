@@ -45,6 +45,16 @@ public interface DependencyTableDao extends JpaRepository<DependencyTableDO, Str
     @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.opensource, d.language, d.opensource) from DependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
     Page<ComponentTableDTO> findByGroupIdAndArtifactIdAndVersion(@Param("groupId")String groupId, @Param("artifactId") String artifactId, @Param("version") String version, Pageable pageable);
 
+    /**
+     * 根据gav查询组件直接依赖平铺信息
+     * @param groupId    组织id
+     * @param artifactId 工件id
+     * @param version    版本号
+     * @return List<ComponentTableDTO> 组件所有直接依赖
+     */
+    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.opensource, d.language, d.opensource) from DependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version and d.direct = true")
+    List<ComponentTableDTO> findDirectDependenciesByGroupIdAndArtifactIdAndVersion(@Param("groupId")String groupId, @Param("artifactId") String artifactId, @Param("version") String version);
+
     @Query("SELECT new nju.edu.cn.qysca.domain.project.dtos.TableExcelBriefDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.language, d.direct, d.depth, d.scope, d.opensource) FROM DependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
     List<TableExcelBriefDTO>  findTableListByGroupIdAndArtifactIdAndVersion(String groupId, String artifactId, String version);
 }
