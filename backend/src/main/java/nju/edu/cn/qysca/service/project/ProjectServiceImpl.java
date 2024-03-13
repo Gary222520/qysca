@@ -133,6 +133,7 @@ public class ProjectServiceImpl implements ProjectService {
             ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentProjectDO.getChildProject()));
             temp.add(projectDO.getId());
             parentProjectDO.setChildProject(temp.toArray(new String[temp.size()]));
+            projectDao.save(parentProjectDO);
         }
         return true;
     }
@@ -209,14 +210,26 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional
     public Boolean upgradeProject(UpgradeProjectDTO upgradeProjectDTO) {
-        ProjectDO projectDO = new ProjectDO();
-        BeanUtils.copyProperties(upgradeProjectDTO, projectDO);
+        // 保存新项目
+        ProjectDO oldProjectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(upgradeProjectDTO.getGroupId(), upgradeProjectDTO.getArtifactId(), upgradeProjectDTO.getOldVersion());
+        ProjectDO newProjectDO = new ProjectDO();
+        BeanUtils.copyProperties(oldProjectDO, newProjectDO);
+        newProjectDO.setDescription(upgradeProjectDTO.getDescription());
+        newProjectDO.setCreator(upgradeProjectDTO.getCreator());
         Date now = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String timeStamp = dateFormat.format(now);
-        projectDO.setTime(timeStamp);
-        projectDO.setState("RUNNING");
-        projectDao.save(projectDO);
+        newProjectDO.setTime(timeStamp);
+        projectDao.save(newProjectDO);
+        // 新增新项目关系 删除旧项目关系
+        if(!StringUtils.isEmpty(upgradeProjectDTO.getParentGroupId()) && !StringUtils.isEmpty(upgradeProjectDTO.getParentArtifactId()) && !StringUtils.isEmpty(upgradeProjectDTO.getParentVersion())){
+            ProjectDO parentProjectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(upgradeProjectDTO.getParentGroupId(), upgradeProjectDTO.getParentArtifactId(), upgradeProjectDTO.getParentVersion());
+            ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentProjectDO.getChildProject()));
+            temp.remove(oldProjectDO.getId());
+            temp.add(newProjectDO.getId());
+            parentProjectDO.setChildProject(temp.toArray(new String[temp.size()]));
+            projectDao.save(parentProjectDO);
+        }
         return true;
     }
 
