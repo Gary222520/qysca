@@ -78,7 +78,6 @@ public class ProjectController {
     @PostMapping("/upgradeProject")
     public ResponseMsg<Boolean> upgradeProject(@RequestBody UpgradeProjectDTO upgradeProjectDTO) {
         Boolean result = projectService.upgradeProject(upgradeProjectDTO);
-        projectService.upgradeProjectDependency(upgradeProjectDTO);
         return new ResponseMsg<>(result);
     }
 
