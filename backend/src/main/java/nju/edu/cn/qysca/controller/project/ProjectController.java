@@ -51,17 +51,30 @@ public class ProjectController {
     @ApiOperation("查询子项目和子组件")
     @GetMapping("/findSubProject")
     public ResponseMsg<SubProjectDTO> findSubProject(@ApiParam(value = "项目组织Id", required = true) @RequestParam String groupId,
-                                                     @ApiParam(value = "项目工件Id", required = true)@RequestParam String artifactId,
+                                                     @ApiParam(value = "项目工件Id", required = true) @RequestParam String artifactId,
                                                      @ApiParam(value = "项目版本", required = true) @RequestParam String version) {
         return new ResponseMsg<>(projectService.findSubProject(groupId, artifactId, version));
     }
-
 
 
     @ApiOperation("新增/更新项目")
     @PostMapping("/saveProject")
     public ResponseMsg<Boolean> saveProject(@RequestBody SaveProjectDTO saveProjectDTO) {
         Boolean result = projectService.saveProject(saveProjectDTO);
+        return new ResponseMsg<>(result);
+    }
+
+    @ApiOperation("向项目中增加组件")
+    @PostMapping("/saveProjectComponent")
+    public ResponseMsg<Boolean> saveProjectComponent(@RequestBody ProjectComponentDTO projectComponentDTO) {
+        Boolean result = projectService.saveProjectComponent(projectComponentDTO);
+        return new ResponseMsg<>(result);
+    }
+
+    @ApiOperation("删除项目中的组件")
+    @PostMapping("/deleteProjectComponent")
+    public ResponseMsg<Boolean> deleteProjectComponent(@RequestBody ProjectComponentDTO projectComponentDTO) {
+        Boolean result = projectService.deleteProjectComponent(projectComponentDTO);
         return new ResponseMsg<>(result);
     }
 
@@ -81,16 +94,10 @@ public class ProjectController {
         return new ResponseMsg<>(result);
     }
 
-    @ApiOperation("删除项目")
-    @PostMapping("/deleteProject")
-    public ResponseMsg<Boolean> deleteProject(@RequestParam String groupId, @RequestParam String artifactId) {
-        return new ResponseMsg<>(projectService.deleteProject(groupId, artifactId));
-    }
-
     @ApiOperation("删除项目某个版本")
     @PostMapping("/deleteProjectVersion")
-    public ResponseMsg<Boolean> deleteProjectVersion(@RequestParam String groupId, @RequestParam String artifactId, @RequestParam String version) {
-        return new ResponseMsg<>(projectService.deleteProjectVersion(groupId, artifactId, version));
+    public ResponseMsg<Boolean> deleteProjectVersion(@RequestBody DeleteProjectDTO deleteProjectDTO) {
+        return new ResponseMsg<>(projectService.deleteProjectVersion(deleteProjectDTO));
     }
 
 
@@ -151,5 +158,17 @@ public class ProjectController {
         return new ResponseMsg<>(projectService.getProjectVersionCompareTree(dto));
     }
 
+    @ApiOperation("改变项目锁定状态")
+    @PostMapping("/changeLockState")
+    public ResponseMsg<Void> changeLockState(@ApiParam(value = "组织Id", required = true) @RequestParam String groupId, @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId, @ApiParam(value = "版本号", required = true) @RequestParam String version) {
+        projectService.changeLockState(groupId, artifactId, version);
+        return new ResponseMsg<>(null);
+    }
 
+    @ApiOperation("改变项目发布状态")
+    @PostMapping("/changeReleaseState")
+    public ResponseMsg<Void> changeReleaseState(@ApiParam(value = "组织Id", required = true) @RequestParam String groupId, @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId, @ApiParam(value = "版本号", required = true) @RequestParam String version) {
+        projectService.changeReleaseState(groupId, artifactId, version);
+        return new ResponseMsg<>(null);
+    }
 }

@@ -79,16 +79,17 @@ public interface ProjectService {
      */
     Boolean upgradeProject(UpgradeProjectDTO upgradeProjectDTO);
 
-    /**
-     * 删除项目
-     *
-     * @param groupId 组织Id
-     * @param artifactId 项目Id
-     * @return 删除项目是否成功
-     */
-    Boolean deleteProject(String groupId, String artifactId);
 
-    Boolean deleteProjectVersion(String groupId, String artifactId, String version);
+    /**
+     * 删除项目的某个版本
+     * @param deleteProjectDTO 删除项目接口信息
+     * @return 删除项目的某个版本是否成功
+     */
+    Boolean deleteProjectVersion(DeleteProjectDTO deleteProjectDTO);
+
+    Boolean saveProjectComponent(ProjectComponentDTO projectComponentDTO);
+
+    Boolean deleteProjectComponent(ProjectComponentDTO projectComponentDTO);
 
 
     /**
@@ -167,4 +168,20 @@ public interface ProjectService {
      * @return VersionCompareTreeDTO 对比树
      */
     VersionCompareTreeDTO getProjectVersionCompareTree(VersionCompareReqDTO versionCompareReqDTO);
+
+    /**
+     * 改变项目锁定状态
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
+     * @param version 版本号
+     */
+    void changeLockState(String groupId, String artifactId, String version);
+
+    /**
+     * 改变项目发布状态
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
+     * @param version 版本号
+     */
+    void changeReleaseState(String groupId, String artifactId, String version);
 }

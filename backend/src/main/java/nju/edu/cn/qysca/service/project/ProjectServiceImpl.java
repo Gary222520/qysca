@@ -233,37 +233,121 @@ public class ProjectServiceImpl implements ProjectService {
         return true;
     }
 
-    /**
-     * 删除项目
-     *
-     * @param groupId    组织Id
-     * @param artifactId 项目Id
-     * @return 删除项目是否成功
-     */
-    @Override
-    @Transactional
-    public Boolean deleteProject(String groupId, String artifactId) {
-        projectDao.deleteAllByGroupIdAndArtifactId(groupId, artifactId);
-        dependencyTreeDao.deleteAllByGroupIdAndArtifactId(groupId, artifactId);
-        dependencyTableDao.deleteAllByGroupIdAndArtifactId(groupId, artifactId);
-        return Boolean.TRUE;
-    }
 
     /**
      * 删除某个项目某个版本
      *
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
-     * @param version 版本名称
+     * @param deleteProjectDTO 删除项目DTO
      * @return 删除某个项目某个版本是否成功
      */
     @Override
     @Transactional
-    public Boolean deleteProjectVersion(String groupId, String artifactId, String version) {
-        projectDao.deleteByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
-        dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
-        dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
+    public Boolean deleteProjectVersion(DeleteProjectDTO deleteProjectDTO) {
+        // 先删除在父项目中的依赖信息
+        ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(deleteProjectDTO.getGroupId(), deleteProjectDTO.getArtifactId(), deleteProjectDTO.getVersion());
+        if(!StringUtils.isEmpty(deleteProjectDTO.getParentGroupId()) && !StringUtils.isEmpty(deleteProjectDTO.getParentArtifactId())&& !StringUtils.isEmpty(deleteProjectDTO.getParentVersion())) {
+            ProjectDO parentProjectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(deleteProjectDTO.getParentGroupId(), deleteProjectDTO.getParentArtifactId(), deleteProjectDTO.getParentVersion());
+            ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentProjectDO.getChildProject()));
+            temp.remove(projectDO.getId());
+            parentProjectDO.setChildProject(temp.toArray(new String[temp.size()]));
+            projectDao.save(parentProjectDO);
+        }
+        // 如果项目本身是其他项目的子项目则无需继续操作
+        if(!projectDao.findParentProject(projectDO.getId()).isEmpty()) {
+            return Boolean.TRUE;
+        }
+        // 递归删除子项目 若子项目在其他项目中引用则只删除关系，否则删除项目
+        deleteProjectRecursively(projectDO.getId());
         return Boolean.TRUE;
+    }
+    private void deleteProjectRecursively(String projectId) {
+        ProjectDO projectDO = projectDao.findProjectDOById(projectId);
+        if(projectDO != null){
+            deleteChildrenRecursively(projectDO.getChildProject());
+            projectDao.delete(projectDO);
+            dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(projectDO.getGroupId(), projectDO.getArtifactId(), projectDO.getVersion());
+            dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(projectDO.getGroupId(), projectDO.getArtifactId(), projectDO.getVersion());
+        }
+    }
+
+    private void deleteChildrenRecursively(String[] children) {
+        if(children == null || children.length == 0){
+            return;
+        }
+        for(String child : children){
+            List<ProjectDO> parentProject = projectDao.findParentProject(child);
+            if(parentProject.size() <= 1){
+                deleteProjectRecursively(child);
+            }
+        }
+    }
+
+
+    /**
+     * 在项目中增加组件
+     * @param projectComponentDTO 项目组件信息接口
+     * @return 在项目中增加组件是否成功
+     */
+    @Override
+    @Transactional
+    public Boolean saveProjectComponent(ProjectComponentDTO projectComponentDTO) {
+        ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(projectComponentDTO.getParentGroupId(), projectComponentDTO.getParentArtifactId(), projectComponentDTO.getParentVersion());
+        ArrayList<String> temp = new ArrayList<>(Arrays.asList(projectDO.getChildComponent()));
+        ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(projectComponentDTO.getGroupId(), projectComponentDTO.getArtifactId(), projectComponentDTO.getVersion());
+        temp.add(componentDO.getId());
+        projectDO.setChildComponent(temp.toArray(new String[temp.size()]));
+        projectDao.save(projectDO);
+        return Boolean.TRUE;
+    }
+
+    /**
+     * 在项目中删除组件
+     * @param projectComponentDTO 项目组件信息接口
+     * @return 在项目中删除组件是否成功
+     */
+    @Override
+    public Boolean deleteProjectComponent(ProjectComponentDTO projectComponentDTO) {
+        ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(projectComponentDTO.getParentGroupId(), projectComponentDTO.getParentArtifactId(), projectComponentDTO.getParentVersion());
+        ArrayList<String> temp = new ArrayList<>(Arrays.asList(projectDO.getChildComponent()));
+        ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(projectComponentDTO.getGroupId(), projectComponentDTO.getArtifactId(), projectComponentDTO.getVersion());
+        temp.remove(componentDO.getId());
+        projectDO.setChildComponent(temp.toArray(new String[temp.size()]));
+        projectDao.save(projectDO);
+        return Boolean.TRUE;
+    }
+
+    /**
+     * 改变项目的锁定状态
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
+     * @param version 版本号
+     */
+    @Override
+    public void changeLockState(String groupId, String artifactId, String version) {
+        ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
+        if(projectDO.getLock()){
+            projectDO.setLock(false);
+        }else{
+            projectDO.setLock(true);
+        }
+        projectDao.save(projectDO);
+    }
+
+    /**
+     * 改变项目的发布状态
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
+     * @param version 版本号
+     */
+    @Override
+    public void changeReleaseState(String groupId, String artifactId, String version) {
+        ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
+        if(projectDO.getRelease()) {
+            projectDO.setRelease(false);
+        } else {
+            projectDO.setRelease(true);
+        }
+        projectDao.save(projectDO);
     }
 
     /**
