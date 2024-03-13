@@ -97,16 +97,8 @@ public interface ProjectDao extends JpaRepository<ProjectDO, String> {
      * @param projectId 项目Id
      * @return List<ProjectDO> 子项目列表
      */
-    @Query(value = "select * from project where id = any(select child_project from project where id = :projectId)", nativeQuery = true)
+    @Query(value = "select p.* from project p where p.id = ANY (select unnest(child_project) from project where id = :projectId)", nativeQuery = true)
     List<ProjectDO> findSubProject(String projectId);
-
-    /**
-     * 根据项目Id查询子组件
-     * @param projectId 项目Id
-     * @return List<ComponentDO> 子组件列表
-     */
-    @Query(value = "select * from component where id = any(select child_component from project where id = :projectId)", nativeQuery = true)
-    List<ComponentDO> findSubComponent(String projectId);
 
     /**
      * 根据Id查找项目

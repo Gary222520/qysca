@@ -95,7 +95,7 @@ public class ProjectServiceImpl implements ProjectService {
     public SubProjectDTO findSubProject(String groupId, String artifactId, String version) {
         ProjectDO projectDO =  projectDao.findByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
         List<ProjectDO> subProject = projectDao.findSubProject(projectDO.getId());
-        List<ComponentDO> subComponent = projectDao.findSubComponent(projectDO.getId());
+        List<ComponentDO> subComponent = componentDao.findSubComponent(projectDO.getId());
         SubProjectDTO subProjectDTO = new SubProjectDTO();
         subProjectDTO.setSubProject(subProject);
         subProjectDTO.setSubComponent(subComponent);

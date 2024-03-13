@@ -88,12 +88,12 @@ public class ProjectDO {
     @ApiModelProperty(value = "创建人", example = "000000000")
     private String creator;
 
-    @Column(name = "childProject", nullable = false)
+    @Column(name = "childProject")
     @ApiModelProperty(value = "子项目", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
     @Type(type = "string-array")
     private String[] childProject = {};
 
-    @Column(name = "childComponent", nullable = false)
+    @Column(name = "childComponent")
     @ApiModelProperty(value = "子组件", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
     @Type(type = "string-array")
     private  String[] childComponent = {};
