@@ -33,10 +33,14 @@ export const GetNameList = (params) => request('get', API.NAME_LIST, { params })
 export const GetProject = (params) => request('get', API.FIND_PROJECT, { params })
 // 查询子项目和子组件
 export const GetSubProject = (params) => request('get', API.FIND_SUB_PROJECT, { params })
-// 查询具体项目的信息
-export const GetProjectInfo = (params) => request('get', API.PROJECT_INFO, { params })
 // 新建项目
 export const AddProject = (data) => request('post', API.ADD_PROJECT, { data })
+// 新增/更新项目依赖信息
+export const AddDependency = (data) => request('post', API.ADD_DEPENDENCY, { data })
+// 项目升级
+export const UpgradeProject = (data) => request('post', API.UPGRADE_PROJECT, { data })
+// 查询具体项目的信息
+export const GetProjectInfo = (params) => request('get', API.PROJECT_INFO, { params })
 // 删除项目
 export const DeleteProject = (params) => request('post', API.DELETE_PROJECT, { params })
 // 项目中有版本正在扫描中的个数

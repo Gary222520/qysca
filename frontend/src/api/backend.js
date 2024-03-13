@@ -31,10 +31,14 @@ export const API = {
   FIND_PROJECT: '/qysca/project/findProject',
   // 查询子项目和子组件
   FIND_SUB_PROJECT: '/qysca/project/findSubProject',
-  // 查询具体项目的信息
-  PROJECT_INFO: '/qysca/project/findProjectVersionPage',
   // 新增/更新项目
   ADD_PROJECT: '/qysca/project/saveProject',
+  // 新增/更新项目依赖信息
+  ADD_DEPENDENCY: '/qysca/project/saveProjectDependency',
+  // 项目升级
+  UPGRADE_PROJECT: '/qysca/project/upgradeProject',
+  // 查询具体项目的信息
+  PROJECT_INFO: '/qysca/project/findProjectVersionPage',
   // 删除项目
   DELETE_PROJECT: '/qysca/project/deleteProject',
   // 项目中有版本正在扫描中的个数
