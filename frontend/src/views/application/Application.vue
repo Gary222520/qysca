@@ -4,21 +4,127 @@
     <a-card class="content_card">
       <div class="operations">
         <a-button type="primary" @click="addApplication"><PlusOutlined />新建应用</a-button>
-        <!-- <div style="display: flex; align-items: center">
-          <a-input
-            v-model:value="data.search.groupId"
-            addon-before="组织ID"
-            placeholder="输入groupId..."
-            style="width: 200px; margin-right: 10px"></a-input>
-          <a-input
-            v-model:value="data.search.artifactId"
-            addon-before="工件ID"
-            placeholder="输入artifactId..."
-            style="width: 200px; margin-right: 10px"></a-input>
-          <a-button type="primary" @click="init" style="margin-right: 10px"><SearchOutlined />搜索应用</a-button>
-        </div> -->
+        <a-dropdown>
+          <a-input-search
+            v-model:value="data.search.name"
+            placeholder="请输入项目名称"
+            style="width: 250px; margin-right: 10px"
+            @change="() => getNameList()"
+            @search="() => findProject()"></a-input-search>
+          <template #overlay>
+            <a-menu v-if="menu.items.length">
+              <a-menu-item v-for="(item, index) in menu.items" :key="index" @click="() => chooseName(item)">
+                {{ item }}
+              </a-menu-item>
+            </a-menu>
+          </template>
+        </a-dropdown>
       </div>
       <a-collapse
+        class="collapse"
+        v-model:activeKey="data.activeKey"
+        collapsible="icon"
+        accordion
+        @change="(index) => findSubProject(index)">
+        <a-collapse-panel v-for="(app, index) in data.appList" :key="index">
+          <template #header>
+            <div class="collapse_header">
+              <div style="display: flex; align-items: center">
+                <div style="margin-right: 30px; font-size: 18px; font-weight: bold">{{ app.name }}</div>
+                <div v-if="app.operation" style="font-size: 18px">
+                  <a-input-group compact>
+                    <a-input
+                      value="版本选择"
+                      style="width: 90px; cursor: default; background-color: #6f005f; color: white; text-align: center"
+                      readonly></a-input>
+                    <a-select
+                      v-model:value="app.selection.current"
+                      :options="app.selection.options"
+                      style="width: 100px"
+                      @change="() => changeVersion(index)">
+                    </a-select>
+                  </a-input-group>
+                </div>
+                <!-- <div style="margin-left: 20px">
+                  <a-tag v-if="app.lock" color="orange">已上锁</a-tag>
+                  <a-tag v-else>未上锁</a-tag>
+                </div> -->
+              </div>
+              <div v-if="app.operation" style="display: flex; align-items: center">
+                <a-button type="primary" @click.stop="() => addProject(app)" style="margin-right: 10px">
+                  <PlusOutlined />添加项目
+                </a-button>
+                <a-button type="primary" danger @click.stop="() => deleteVersion(app)" style="margin-right: 10px">
+                  <WarningOutlined />删除该版本
+                </a-button>
+                <a-button type="primary" danger @click.stop="() => deleteApplication(app)">
+                  <WarningOutlined />删除应用
+                </a-button>
+              </div>
+            </div>
+          </template>
+          <a-table :data-source="[app]" :columns="table.columns" :pagination="false" bordered>
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'action'">
+                <div style="display: flex" v-if="record.state === 'SUCCESS'">
+                  <div class="action_icon">
+                    <a-tooltip>
+                      <template #title>组件依赖信息</template>
+                      <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showDetail(record)" />
+                    </a-tooltip>
+                  </div>
+                  <div class="action_icon">
+                    <a-tooltip>
+                      <template #title>更新</template>
+                      <SyncOutlined
+                        :style="{ fontSize: '18px', color: '#6f005f' }"
+                        @click="updateProject(app, record)" />
+                    </a-tooltip>
+                  </div>
+                  <div class="action_icon">
+                    <a-tooltip>
+                      <template #title>升级</template>
+                      <RocketOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="upgradeProject(record)" />
+                    </a-tooltip>
+                  </div>
+                  <div class="action_icon">
+                    <a-tooltip>
+                      <template #title>删除</template>
+                      <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个项目吗？">
+                        <template #cancelButton>
+                          <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
+                        </template>
+                        <template #okButton>
+                          <a-button danger type="primary" size="small" @click="deleteProject(record)">删除</a-button>
+                        </template>
+                        <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+                      </a-popconfirm>
+                    </a-tooltip>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center" v-if="record.state === 'RUNNING'">
+                  <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
+                  <div style="margin-left: 10px">扫描分析中...</div>
+                </div>
+                <div style="display: flex; align-items: center" v-if="record.state === 'FAILED'">
+                  <a-popconfirm v-model:open="record.popconfirm" title="扫描出错，请重试或删除">
+                    <template #cancelButton>
+                      <a-button class="cancel_btn" size="small" @click="retry(record)">重试</a-button>
+                    </template>
+                    <template #okButton>
+                      <a-button danger type="primary" size="small" @click="deleteProject(record)">删除</a-button>
+                    </template>
+                    <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+                    <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
+                  </a-popconfirm>
+                </div>
+              </template>
+            </template>
+            <template #emptyText>暂无数据</template>
+          </a-table>
+        </a-collapse-panel>
+      </a-collapse>
+      <!-- <a-collapse
         class="collapse"
         v-model:activeKey="data.activeKey"
         :bordered="false"
@@ -77,12 +183,6 @@
                       <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showDetail(record)" />
                     </a-tooltip>
                   </div>
-                  <!-- <div class="action_icon">
-                    <a-tooltip>
-                      <template #title>其他版本</template>
-                      <EllipsisOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="subApplication()" />
-                    </a-tooltip>
-                  </div> -->
                   <div class="action_icon">
                     <a-tooltip>
                       <template #title>更新</template>
@@ -133,7 +233,7 @@
             <template #emptyText>暂无数据</template>
           </a-table>
         </a-collapse-panel>
-      </a-collapse>
+      </a-collapse> -->
       <div v-if="pagination.total" class="pagination">
         <a-pagination
           v-model:current="pagination.current"
@@ -145,11 +245,11 @@
           @change="init" />
       </div>
     </a-card>
-    <AddAppModal ref="addAppModal" @success="init"></AddAppModal>
+    <AddAppModal ref="addAppModal" @success="getProjectList()"></AddAppModal>
     <AddProModal ref="addProModal" @success="showApplicationInfo(data.currentApp.name)"></AddProModal>
     <UpdateProModal ref="updateProModal" @success="showApplicationInfo(data.currentApp.name)"></UpdateProModal>
     <UpgradeProModal ref="upgradeProModal" @success="showApplicationInfo(data.currentApp.name)"></UpgradeProModal>
-    <DeleteAppModal ref="deleteAppModal" @success="init"></DeleteAppModal>
+    <DeleteAppModal ref="deleteAppModal" @success="getProjectList()"></DeleteAppModal>
   </div>
 </template>
 
@@ -171,6 +271,11 @@ import {
 import { message } from 'ant-design-vue'
 import { reactive, ref, onMounted } from 'vue'
 import {
+  GetProjectList,
+  GetNameList,
+  GetProject,
+  GetSubProject,
+  GetVersionList,
   CreateApplication,
   GetApplicationList,
   GetApplicationInfo,
@@ -183,11 +288,12 @@ import AddProModal from './components/AddProModal.vue'
 import UpdateProModal from './components/UpdateProModal.vue'
 import UpgradeProModal from './components/UpgradeProModal.vue'
 import DeleteAppModal from './components/DeleteAppModal.vue'
+import AppCollapse from '@/views/application/components/AppCollapse.vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 
 onMounted(async () => {
-  init()
+  await getProjectList()
 })
 
 const addAppModal = ref()
@@ -195,17 +301,20 @@ const addProModal = ref()
 const updateProModal = ref()
 const upgradeProModal = ref()
 const deleteAppModal = ref()
+const appCollapse = ref()
 
 const router = useRouter()
 const store = useStore()
 const data = reactive({
-  activeKey: '',
-  applications: [],
+  activeKey: [],
+  appList: [],
   currentApp: null,
   search: {
-    groupId: '',
-    artifactId: ''
+    name: ''
   }
+})
+const menu = reactive({
+  items: []
 })
 const selection = reactive({
   current: '1.0.0',
@@ -218,12 +327,13 @@ const selection = reactive({
 const table = reactive({
   datasource: [],
   columns: [
-    { title: '项目名称', dataIndex: 'name', key: 'name', width: 120 },
-    { title: '当前版本', dataIndex: 'version', key: 'version', width: 120 },
+    { title: '组织ID', dataIndex: 'groupId', key: 'groupId', width: 120 },
+    { title: '工件ID', dataIndex: 'artifactId', key: 'artifactId', width: 120 },
+    { title: '项目类型', dataIndex: 'type', key: 'type', width: 120 },
     { title: '语言', dataIndex: 'language', key: 'language', width: 120 },
     { title: '构建工具', dataIndex: 'builder', key: 'builder', width: 120 },
     { title: '扫描对象', dataIndex: 'scanner', key: 'scanner', width: 150 },
-    { title: '最近一次扫描时间', dataIndex: 'time', key: 'time', width: 210 },
+    { title: '最近一次更新时间', dataIndex: 'time', key: 'time', width: 210 },
     { title: '备注', dataIndex: 'description', key: 'description' },
     { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
   ],
@@ -243,63 +353,132 @@ const pagination = reactive({
   hideOnSinglePage: true
 })
 
-const init = async () => {
-  await getApplicationList()
-  data.currentApp = data.applications.length > 0 ? data.applications[0] : null
-  store.commit('SET_CURRENT_APP', data.currentApp)
-  if (data.currentApp) {
-    data.activeKey = data.currentApp.name
-    await getApplicationVersions(data.currentApp.groupId, data.currentApp.artifactId)
-    await getApplicationInfo(data.currentApp.groupId, data.currentApp.artifactId, selection.current)
+const getProjectList = async (page = 1, size = 5) => {
+  data.activeKey = []
+  await GetProjectList({ number: page, size })
+    .then((res) => {
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      // console.log('GetProjectList', res)
+      data.appList = res.data.content
+    })
+    .catch((err) => {
+      console.error(err)
+    })
+}
+
+const getNameList = async () => {
+  await GetNameList({ name: data.search.name })
+    .then((res) => {
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      // console.log('GetNameList', res)
+      menu.items = res.data
+    })
+    .catch((err) => {
+      console.error(err)
+    })
+}
+
+const chooseName = (name) => {
+  data.search.name = name
+}
+
+const findProject = async () => {
+  data.activeKey = []
+  if (data.search.name) {
+    await GetProject({ name: data.search.name })
+      .then((res) => {
+        if (res.code !== 200) {
+          message.error(res.message)
+          return
+        }
+        // console.log('GetProject', res)
+        data.appList = [res.data]
+      })
+      .catch((err) => {
+        console.error(err)
+      })
+  } else {
+    getProjectList()
   }
 }
 
-const showApplicationInfo = async (name) => {
-  data.currentApp = data.applications.find((item) => item.name === name)
-  store.commit('SET_CURRENT_APP', data.currentApp)
-  if (data.currentApp) {
-    await getApplicationVersions(data.currentApp.groupId, data.currentApp.artifactId)
-    await getApplicationInfo(data.currentApp.groupId, data.currentApp.artifactId, selection.current)
-  }
-}
-
-const changeVersion = (value) => {
-  getApplicationInfo(data.currentApp.groupId, data.currentApp.artifactId, value)
-}
-
-const getApplicationList = async (page = 1, size = 5) => {
-  await store
-    .dispatch('getAppList', { number: page, size })
+const findSubProject = async (index) => {
+  if (!index) return
+  const app = data.appList[index]
+  app.operation = true
+  app.selection = {}
+  app.selection.current = app.version
+  await GetVersionList({ groupId: app.groupId, artifactId: app.artifactId })
     .then((res) => {
-      data.applications = res.content
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      // console.log('GetVersionList', res)
+      app.selection.options = []
+      res.data.forEach((item) => {
+        const option = { label: item, value: item, key: item }
+        app.selection.options.push(option)
+      })
+    })
+    .catch((err) => {
+      console.error(err)
+    })
+  await GetSubProject({ groupId: app.groupId, artifactId: app.artifactId, version: app.selection.current })
+    .then((res) => {
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      console.log('GetSubProject', res)
     })
     .catch((err) => {
       console.error(err)
     })
 }
 
-const getApplicationVersions = async (groupId, artifactId) => {
-  await store
-    .dispatch('getAppVersions', { groupId, artifactId })
-    .then((res) => {
-      selection.options = res.options
-      selection.current = res.current
-    })
-    .catch((err) => {
-      console.error(err)
-    })
+// const showApplicationInfo = async (name) => {
+//   data.currentApp = data.applications.find((item) => item.name === name)
+//   store.commit('SET_CURRENT_APP', data.currentApp)
+//   if (data.currentApp) {
+//     await getApplicationVersions(data.currentApp.groupId, data.currentApp.artifactId)
+//     await getApplicationInfo(data.currentApp.groupId, data.currentApp.artifactId, selection.current)
+//   }
+// }
+
+const changeVersion = (index) => {
+  findSubProject([index])
+  // getApplicationInfo(data.currentApp.groupId, data.currentApp.artifactId, value)
 }
 
-const getApplicationInfo = async (groupId, artifactId, version, number = 1, size = 5) => {
-  await store
-    .dispatch('getAppInfo', { groupId, artifactId, version })
-    .then((res) => {
-      table.datasource = res.data
-    })
-    .catch((err) => {
-      console.error(err)
-    })
-}
+// const getApplicationVersions = async (groupId, artifactId) => {
+//   await store
+//     .dispatch('getAppVersions', { groupId, artifactId })
+//     .then((res) => {
+//       selection.options = res.options
+//       selection.current = res.current
+//     })
+//     .catch((err) => {
+//       console.error(err)
+//     })
+// }
+
+// const getApplicationInfo = async (groupId, artifactId, version, number = 1, size = 5) => {
+//   await store
+//     .dispatch('getAppInfo', { groupId, artifactId, version })
+//     .then((res) => {
+//       table.datasource = res.data
+//     })
+//     .catch((err) => {
+//       console.error(err)
+//     })
+// }
 
 const addApplication = () => {
   addAppModal.value.open()
@@ -314,8 +493,8 @@ const upgradeApp = () => {
   )
 }
 
-const addProject = () => {
-  addProModal.value.open()
+const addProject = (app) => {
+  addAppModal.value.open(app.id)
 }
 
 const updateProject = (project, record) => {
@@ -348,7 +527,7 @@ const deleteProject = (record) => {
         return
       }
       message.success('删除项目成功')
-      showApplicationInfo(data.currentApp.name)
+      // showApplicationInfo(data.currentApp.name)
     })
     .catch((e) => {
       message.error(e)
@@ -374,12 +553,6 @@ const showDetail = (record) => {
     }
   })
 }
-
-// const subApplication = () => {
-//   router.push({
-//     path: '/home/subApplication'
-//   })
-// }
 </script>
 
 <style scoped>
@@ -404,14 +577,13 @@ const showDetail = (record) => {
 }
 .collapse {
   margin-top: 20px;
-  background: transparent;
+  border-radius: 0;
 }
 .collapse_header {
-  height: 50px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-weight: bold;
 }
 .action_icon {
   margin-right: 10px;
@@ -419,6 +591,14 @@ const showDetail = (record) => {
 .pagination {
   display: flex;
   justify-content: right;
+}
+:deep(.ant-collapse .ant-collapse-content > .ant-collapse-content-box) {
+  padding: 16px 0px 16px 16px;
+}
+:deep(.ant-collapse > .ant-collapse-item:last-child),
+:deep(.ant-collapse > .ant-collapse-item:last-child > .ant-collapse-header),
+:deep(.ant-collapse .ant-collapse-item:last-child > .ant-collapse-content) {
+  border-radius: 0;
 }
 </style>
 <style scoped src="@/atdv/collapse.css"></style>

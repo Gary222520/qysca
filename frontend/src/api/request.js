@@ -4,6 +4,16 @@ import { API } from '@/api/backend'
 export const baseURL = 'http://localhost:9090'
 
 const instance = axios.create({})
+instance.interceptors.request.use(
+  (config) => {
+    const token = sessionStorage.getItem('token')
+    if (token) config.headers = { ...config.headers, Authorization: token }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
 instance.interceptors.response.use(
   (response) => {
     if (response.config.url === API.EXPORT_BRIEF || response.config.url === API.EXPORT_DETAIL) return response

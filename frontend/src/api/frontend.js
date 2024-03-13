@@ -27,6 +27,12 @@ export const AppDeleteProject = (data) => request('post', API.APP_DELETE_PROJECT
 
 // 查询所有项目
 export const GetProjectList = (params) => request('get', API.PROJECT_LIST, { params })
+// 模糊查询项目名称
+export const GetNameList = (params) => request('get', API.NAME_LIST, { params })
+// 根据名称查询项目 并返回项目的最新版本
+export const GetProject = (params) => request('get', API.FIND_PROJECT, { params })
+// 查询子项目和子组件
+export const GetSubProject = (params) => request('get', API.FIND_SUB_PROJECT, { params })
 // 查询具体项目的信息
 export const GetProjectInfo = (params) => request('get', API.PROJECT_INFO, { params })
 // 新建项目

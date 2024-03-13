@@ -10,7 +10,7 @@ router.beforeEach((to, from, next) => {
   if (!sessionStorage.getItem('token')) {
     if (to.path === '/login') next()
     else next('/login')
-  } else if (to.path === '/' || to.path === '/home') next('/home/application')
+  } else if (to.path === '/' || to.path === '/home' || to.path === '/login') next('/home/application')
   else next()
 })
 

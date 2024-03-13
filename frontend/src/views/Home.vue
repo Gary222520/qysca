@@ -26,7 +26,7 @@
           <AppstoreOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('component') }}</span>
         </a-menu-item>
-        <a-menu-item key="userManage">
+        <a-menu-item v-if="permit('userManage')" key="userManage">
           <UserOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('userManage') }}</span>
         </a-menu-item>
@@ -39,8 +39,10 @@
         <div class="user">
           <a-dropdown style="height: 50px">
             <span>
-              <a-avatar></a-avatar>
-              <span style="margin-left: 10px">{{ data.username }}</span>
+              <a-avatar style="color: #ffffff; background-color: #6f005f">
+                <template #icon><UserOutlined /></template>
+              </a-avatar>
+              <span style="margin-left: 10px; font-size: 18px">{{ data.username }}</span>
             </span>
             <template #overlay>
               <a-menu>
@@ -93,6 +95,11 @@ const getTitle = (key) => {
   const homeRoutes = routes.find((item) => item.name === 'home')
   return homeRoutes.children.find((item) => item.name === key)?.meta.title
 }
+const permit = (menu) => {
+  if (menu === 'userManage') {
+    return ['Admin', 'Bu PO', 'App Leader'].includes(store.getters.role)
+  }
+}
 const logout = () => {
   sessionStorage.removeItem('token')
   sessionStorage.removeItem('user')
@@ -115,7 +122,8 @@ const logout = () => {
 }
 .user {
   margin-right: 10px;
-  height: 50px;
+}
+:deep(.ant-dropdown-trigger) {
   display: flex;
   align-items: center;
 }

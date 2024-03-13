@@ -63,8 +63,10 @@ const login = () => {
 .login {
   position: relative;
   width: 500px;
-  /* background-color: #f5f5f5; */
-  padding: 50px;
+  padding: 70px 50px;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px -2px rgba(111, 0, 95, 0.16), 0 3px 6px 0 rgba(111, 0, 95, 0.12),
+    0 5px 12px 4px rgba(111, 0, 95, 0.09);
 }
 .title {
   text-align: center;

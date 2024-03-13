@@ -23,11 +23,17 @@ export const API = {
   // 在应用中删除项目
   APP_DELETE_PROJECT: '/qysca/application/deleteProject',
 
-  // 分页获取项目信息
-  PROJECT_LIST: '/qysca/project/findProjectPage',
+  // 分页获取根项目信息
+  PROJECT_LIST: '/qysca/project/findRootPage',
+  // 模糊查询项目名称
+  NAME_LIST: '/qysca/project/searchProjectName',
+  // 根据名称查询项目 并返回项目的最新版本
+  FIND_PROJECT: '/qysca/project/findProject',
+  // 查询子项目和子组件
+  FIND_SUB_PROJECT: '/qysca/project/findSubProject',
   // 查询具体项目的信息
   PROJECT_INFO: '/qysca/project/findProjectVersionPage',
-  // 新建项目
+  // 新增/更新项目
   ADD_PROJECT: '/qysca/project/saveProject',
   // 删除项目
   DELETE_PROJECT: '/qysca/project/deleteProject',

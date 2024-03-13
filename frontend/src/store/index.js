@@ -17,6 +17,9 @@ export default createStore({
     },
     currentApp: (state) => {
       return state.currentApp
+    },
+    role: (state) => {
+      return JSON.parse(sessionStorage.getItem('user')).role
     }
   },
   mutations: {
