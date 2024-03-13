@@ -114,8 +114,8 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = null;
         if(StringUtils.isEmpty(saveProjectDTO.getId())){
             projectDO = new ProjectDO();
-            projectDO.setId(UUIDGenerator.getUUID());
             BeanUtils.copyProperties(saveProjectDTO, projectDO);
+            projectDO.setId(UUIDGenerator.getUUID());
             projectDO.setState("RUNNING");
             projectDO.setLock(false);
             projectDO.setRelease(false);
@@ -125,11 +125,13 @@ public class ProjectServiceImpl implements ProjectService {
                 ProjectDO parentProjectDO = projectDao.findProjectDOById(saveProjectDTO.getParentId());
                 ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentProjectDO.getChildProject()));
                 temp.add(projectDO.getId());
-                projectDO.setChildProject(temp.toArray(new String[temp.size()]));
+                parentProjectDO.setChildProject(temp.toArray(new String[temp.size()]));
                 projectDO.setRoot(false);
             }
         }else{
-            //TODO: 确认允许更新的信息
+            projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(saveProjectDTO.getGroupId(), saveProjectDTO.getArtifactId(), saveProjectDTO.getVersion());
+            projectDO.setDescription(saveProjectDTO.getDescription());
+            projectDO.setType(saveProjectDTO.getType());
         }
         Date now = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -209,47 +211,6 @@ public class ProjectServiceImpl implements ProjectService {
         projectDO.setState("RUNNING");
         projectDao.save(projectDO);
         return true;
-    }
-
-    /**
-     * 升级项目依赖
-     *
-     * @param upgradeProjectDTO 升级项目接口信息
-     */
-    @Async("taskExecutor")
-    @Override
-    @Transactional
-    public void upgradeProjectDependency(UpgradeProjectDTO upgradeProjectDTO) {
-        try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(upgradeProjectDTO.getFilePath(), upgradeProjectDTO.getBuilder(), 0);
-            DependencyTreeDO projectDependencyTreeDO = new DependencyTreeDO();
-            projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
-            projectDependencyTreeDO.setGroupId(upgradeProjectDTO.getGroupId());
-            projectDependencyTreeDO.setArtifactId(upgradeProjectDTO.getArtifactId());
-            projectDependencyTreeDO.setVersion(upgradeProjectDTO.getVersion());
-            projectDependencyTreeDO.setTree(componentDependencyTreeDO);
-            dependencyTreeDao.save(projectDependencyTreeDO);
-            // 批量更新依赖平铺表
-            List<DependencyTableDO> projectDependencyTableDOS = createProjectDependencyTable(projectDependencyTreeDO);
-            for (DependencyTableDO dependencyTableDO : projectDependencyTableDOS) {
-                dependencyTableDO.setLanguage(upgradeProjectDTO.getLanguage());
-            }
-            dependencyTableDao.saveAll(projectDependencyTableDOS);
-            // 更改状态为SUCCESS
-            ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(upgradeProjectDTO.getGroupId(), upgradeProjectDTO.getArtifactId(), upgradeProjectDTO.getVersion());
-            projectDO.setState("SUCCESS");
-            projectDao.save(projectDO);
-            File file = new File(upgradeProjectDTO.getFilePath());
-            redisTemplate.delete(file.getParentFile().getName());
-            deleteFolder(upgradeProjectDTO.getFilePath().substring(0, upgradeProjectDTO.getFilePath().lastIndexOf("/")));
-        } catch (Exception e) {
-            ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(upgradeProjectDTO.getGroupId(), upgradeProjectDTO.getArtifactId(), upgradeProjectDTO.getVersion());
-            projectDO.setState("FAILED");
-            projectDao.save(projectDO);
-            File file = new File(upgradeProjectDTO.getFilePath());
-            redisTemplate.delete(file.getParentFile().getName());
-            deleteFolder(upgradeProjectDTO.getFilePath().substring(0, upgradeProjectDTO.getFilePath().lastIndexOf("/")));
-        }
     }
 
     /**

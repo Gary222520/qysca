@@ -71,13 +71,6 @@ public interface ProjectService {
     Boolean upgradeProject(UpgradeProjectDTO upgradeProjectDTO);
 
     /**
-     * 升级项目依赖信息
-     *
-     * @param upgradeProjectDTO 升级项目接口信息
-     */
-    void upgradeProjectDependency(UpgradeProjectDTO upgradeProjectDTO);
-
-    /**
      * 删除项目
      *
      * @param groupId 组织Id
