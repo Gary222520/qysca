@@ -24,22 +24,19 @@
                     v-model:value="app.selection.current"
                     :options="app.selection.options"
                     style="width: 100px"
-                    @change="() => findSubProject(index, app.selection.current)">
+                    @change="() => changeVersion(index, app.selection.current)">
                   </a-select>
                 </a-input-group>
               </div>
               <div v-if="app.operation" style="margin-left: 20px">
+                <a-tag color="purple">
+                  <template #icon><FolderOutlined /></template>项目
+                </a-tag>
                 <a-tag v-if="app.lock" color="warning">
                   <template #icon><LockOutlined /></template>已上锁
                 </a-tag>
-                <a-tag v-else color="green">
-                  <template #icon><UnlockOutlined /></template>未上锁
-                </a-tag>
                 <a-tag v-if="app.release" color="success">
                   <template #icon><EyeOutlined /></template>已发布
-                </a-tag>
-                <a-tag v-else color="processing">
-                  <template #icon><EyeInvisibleOutlined /></template>未发布
                 </a-tag>
               </div>
             </div>
@@ -130,6 +127,8 @@ import {
   RedoOutlined,
   FileTextOutlined,
   FileAddOutlined,
+  FolderOutlined,
+  DeleteOutlined,
   SyncOutlined,
   WarningOutlined,
   LoadingOutlined,
@@ -221,9 +220,15 @@ const getVersionList = async (app, groupId, artifactId) => {
     })
 }
 
+const changeVersion = async (index, version) => {
+  await findSubProject(index, version)
+  appCollapse.value[data.currentApp.index].close()
+}
+
 const findSubProject = async (index, version) => {
   if (!index && index !== 0) return
   const app = props.appList[index]
+  if (!app) return
   app.operation = true
   app.selection = {}
   await getVersionList(app, app.groupId, app.artifactId)

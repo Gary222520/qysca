@@ -1,7 +1,7 @@
 <template>
   <div class="main">
     <div class="login">
-      <div class="title">SCA软件成分分析系统</div>
+      <div class="title">SIEMENS SCA</div>
       <div class="form">
         <a-form :model="formState" ref="formRef" name="login" :label-col="{ span: 6 }" hideRequiredMark>
           <a-form-item label="用户编号" name="uid" :rules="[{ required: true, message: '请输入用户编号' }]">

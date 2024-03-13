@@ -45,22 +45,19 @@
                       v-model:value="app.selection.current"
                       :options="app.selection.options"
                       style="width: 100px"
-                      @change="() => findSubProject(index, app.selection.current)">
+                      @change="() => changeVersion(index, app.selection.current)">
                     </a-select>
                   </a-input-group>
                 </div>
                 <div v-if="app.operation" style="margin-left: 20px">
+                  <a-tag color="purple">
+                    <template #icon><FolderOutlined /></template>项目
+                  </a-tag>
                   <a-tag v-if="app.lock" color="warning">
                     <template #icon><LockOutlined /></template>已上锁
                   </a-tag>
-                  <a-tag v-else color="green">
-                    <template #icon><UnlockOutlined /></template>未上锁
-                  </a-tag>
                   <a-tag v-if="app.release" color="success">
                     <template #icon><EyeOutlined /></template>已发布
-                  </a-tag>
-                  <a-tag v-else color="processing">
-                    <template #icon><EyeInvisibleOutlined /></template>未发布
                   </a-tag>
                 </div>
               </div>
@@ -141,116 +138,6 @@
             @refresh="refreshChildren()"></AppCollapse>
         </a-collapse-panel>
       </a-collapse>
-      <!-- <a-collapse
-        class="collapse"
-        v-model:activeKey="data.activeKey"
-        :bordered="false"
-        collapsible="icon"
-        accordion
-        @change="showApplicationInfo">
-        <a-collapse-panel v-for="app in data.applications" :key="app.name">
-          <template #header>
-            <div class="collapse_header">
-              <div style="display: flex; align-items: center">
-                <div style="margin-right: 10px; font-size: 18px">{{ app.name }}</div>
-                <a-tooltip>
-                  <template #title>刷新</template>
-                  <RedoOutlined
-                    :style="{ fontSize: '18px', color: '#6f005f' }"
-                    @click.stop="showApplicationInfo(app.name)" />
-                </a-tooltip>
-                <div v-if="app.id === data.currentApp?.id" style="margin-left: 30px; font-size: 18px">
-                  <a-input-group compact>
-                    <a-input
-                      value="版本选择"
-                      style="width: 90px; cursor: default; background-color: #6f005f; color: white; text-align: center"
-                      readonly></a-input>
-                    <a-select
-                      v-model:value="selection.current"
-                      :options="selection.options"
-                      style="width: 100px"
-                      @change="changeVersion">
-                    </a-select>
-                  </a-input-group>
-                </div>
-              </div>
-              <div v-if="app.id === data.currentApp?.id" style="display: flex; align-items: center">
-                <a-button type="primary" @click.stop="addProject" style="margin-right: 10px">
-                  <PlusOutlined />添加项目
-                </a-button>
-                <a-button type="primary" @click.stop="upgradeApp" style="margin-right: 10px">
-                  <RocketOutlined />应用升级
-                </a-button>
-                <a-button type="primary" danger @click.stop="deleteVersion()" style="margin-right: 10px">
-                  <WarningOutlined />删除该版本
-                </a-button>
-                <a-button type="primary" danger @click.stop="deleteApplication()">
-                  <WarningOutlined />删除应用
-                </a-button>
-              </div>
-            </div>
-          </template>
-          <a-table :data-source="table.datasource" :columns="table.columns" :pagination="table.pagination" bordered>
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'action'">
-                <div style="display: flex" v-if="record.state === 'SUCCESS'">
-                  <div class="action_icon">
-                    <a-tooltip>
-                      <template #title>组件依赖信息</template>
-                      <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showDetail(record)" />
-                    </a-tooltip>
-                  </div>
-                  <div class="action_icon">
-                    <a-tooltip>
-                      <template #title>更新</template>
-                      <SyncOutlined
-                        :style="{ fontSize: '18px', color: '#6f005f' }"
-                        @click="updateProject(app, record)" />
-                    </a-tooltip>
-                  </div>
-                  <div class="action_icon">
-                    <a-tooltip>
-                      <template #title>升级</template>
-                      <RocketOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="upgradeProject(record)" />
-                    </a-tooltip>
-                  </div>
-                  <div class="action_icon">
-                    <a-tooltip>
-                      <template #title>删除</template>
-                      <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个项目吗？">
-                        <template #cancelButton>
-                          <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
-                        </template>
-                        <template #okButton>
-                          <a-button danger type="primary" size="small" @click="deleteProject(record)">删除</a-button>
-                        </template>
-                        <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
-                      </a-popconfirm>
-                    </a-tooltip>
-                  </div>
-                </div>
-                <div style="display: flex; align-items: center" v-if="record.state === 'RUNNING'">
-                  <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
-                  <div style="margin-left: 10px">扫描分析中...</div>
-                </div>
-                <div style="display: flex; align-items: center" v-if="record.state === 'FAILED'">
-                  <a-popconfirm v-model:open="record.popconfirm" title="扫描出错，请重试或删除">
-                    <template #cancelButton>
-                      <a-button class="cancel_btn" size="small" @click="retry(record)">重试</a-button>
-                    </template>
-                    <template #okButton>
-                      <a-button danger type="primary" size="small" @click="deleteProject(record)">删除</a-button>
-                    </template>
-                    <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
-                    <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
-                  </a-popconfirm>
-                </div>
-              </template>
-            </template>
-            <template #emptyText>暂无数据</template>
-          </a-table>
-        </a-collapse-panel>
-      </a-collapse> -->
       <div v-if="pagination.total" class="pagination">
         <a-pagination
           v-model:current="pagination.current"
@@ -265,7 +152,7 @@
     <AddAppModal ref="addAppModal" @root="getProjectList()" @notroot="refresh()"></AddAppModal>
     <AddDepModal ref="addDepModal" @success="refresh()"></AddDepModal>
     <UpgradeAppModal ref="upgradeAppModal" @success="refresh()"></UpgradeAppModal>
-    <DeleteAppModal ref="deleteAppModal" @success="refresh()"></DeleteAppModal>
+    <DeleteAppModal ref="deleteAppModal" @success="refreshChildren()"></DeleteAppModal>
   </div>
 </template>
 
@@ -275,32 +162,18 @@ import {
   RedoOutlined,
   FileTextOutlined,
   FileAddOutlined,
+  FolderOutlined,
   SyncOutlined,
   RocketOutlined,
-  WarningOutlined,
   LoadingOutlined,
   ExclamationCircleOutlined,
   DeleteOutlined,
   LockOutlined,
-  UnlockOutlined,
-  EyeOutlined,
-  EyeInvisibleOutlined
+  EyeOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { reactive, ref, onMounted } from 'vue'
-import {
-  GetProjectList,
-  GetNameList,
-  GetProject,
-  GetSubProject,
-  GetVersionList,
-  CreateApplication,
-  GetApplicationList,
-  GetApplicationInfo,
-  GetApplicationVersions,
-  DeleteApplication,
-  AppDeleteProject
-} from '@/api/frontend'
+import { GetProjectList, GetNameList, GetProject, GetSubProject, GetVersionList } from '@/api/frontend'
 import AddAppModal from './components/AddAppModal.vue'
 import AddDepModal from './components/AddDepModal.vue'
 import UpgradeAppModal from './components/UpgradeAppModal.vue'
@@ -439,9 +312,15 @@ const getVersionList = async (app, groupId, artifactId) => {
     })
 }
 
+const changeVersion = async (index, version) => {
+  await findSubProject(index, version)
+  appCollapse.value[data.currentApp.index].close()
+}
+
 const findSubProject = async (index, version) => {
   if (!index && index !== 0) return
   const app = data.appList[index]
+  if (!app) return
   app.operation = true
   app.selection = {}
   await getVersionList(app, app.groupId, app.artifactId)
@@ -511,44 +390,6 @@ const retry = (record, index) => {
 
 const deleteVersion = (app) => {
   deleteAppModal.value.open(app)
-}
-
-const upgradeApp = () => {
-  addAppModal.value.open(
-    data.currentApp.groupId,
-    data.currentApp.artifactId,
-    data.currentApp.version,
-    data.currentApp.name
-  )
-}
-
-const deleteProject = (record) => {
-  const params = {
-    appGroupId: data.currentApp.groupId,
-    appArtifactId: data.currentApp.artifactId,
-    appVersion: data.currentApp.version,
-    groupId: record.groupId,
-    artifactId: record.artifactId,
-    version: record.version
-  }
-  AppDeleteProject(params)
-    .then((res) => {
-      // console.log('AppDeleteProject', res)
-      if (res.code !== 200) {
-        message.error(res.message)
-        return
-      }
-      message.success('删除项目成功')
-      // showApplicationInfo(data.currentApp.name)
-    })
-    .catch((e) => {
-      message.error(e)
-    })
-  record.popconfirm = false
-}
-
-const deleteApplication = () => {
-  deleteAppModal.value.open(true)
 }
 
 const showDetail = (record) => {
