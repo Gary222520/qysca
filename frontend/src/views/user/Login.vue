@@ -78,6 +78,10 @@ const login = () => {
 .btn {
   text-align: center;
 }
+:deep(.ant-form-item .ant-form-item-label > label) {
+  font-size: 16px;
+  font-weight: bold;
+}
 </style>
 <style scoped src="@/atdv/input.css"></style>
 <style scoped src="@/atdv/primary-btn.css"></style>

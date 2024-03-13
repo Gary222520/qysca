@@ -12,7 +12,9 @@
               <div style="margin-right: 20px; font-size: 18px; font-weight: bold">{{ app.name }}</div>
               <a-tooltip v-if="app.operation">
                 <template #title>刷新</template>
-                <RedoOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click.stop="refreshParent()" />
+                <RedoOutlined
+                  :style="{ fontSize: '18px', color: '#6f005f' }"
+                  @click.stop="refreshParent(data.currentApp.version)" />
               </a-tooltip>
               <div v-if="app.operation" style="font-size: 18px; margin-left: 20px">
                 <a-input-group compact>
@@ -110,11 +112,14 @@
           :parent-app="app"
           :app-list="app.subAppList"
           :com-list="app.subComList"
-          @refresh="refreshChildren()"></AppCollapse>
+          @refresh="(version) => refreshChildren(version)"></AppCollapse>
       </a-collapse-panel>
     </a-collapse>
-    <AddAppModal ref="addAppModal" @root="getProjectList()" @notroot="refreshParent()"></AddAppModal>
-    <AddDepModal ref="addDepModal" @success="refreshParent()"></AddDepModal>
+    <AddAppModal
+      ref="addAppModal"
+      @root="getProjectList()"
+      @notroot="refreshParent(data.currentApp.version)"></AddAppModal>
+    <AddDepModal ref="addDepModal" @success="refreshParent(data.currentApp.version)"></AddDepModal>
     <UpgradeAppModal ref="upgradeAppModal" @success="refreshParent()"></UpgradeAppModal>
     <DeleteAppModal ref="deleteAppModal" @success="refreshParent()"></DeleteAppModal>
   </div>
@@ -138,7 +143,7 @@ import {
   EyeOutlined,
   EyeInvisibleOutlined
 } from '@ant-design/icons-vue'
-import { GetSubProject, GetVersionList } from '@/api/frontend'
+import { GetSubProject, GetVersionList, GetVersionInfo } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 import { reactive, ref, defineEmits, defineProps, defineExpose } from 'vue'
 import AppCollapse from '@/views/application/components/AppCollapse.vue'
@@ -221,6 +226,24 @@ const getVersionList = async (app, groupId, artifactId) => {
 }
 
 const changeVersion = async (index, version) => {
+  if (!index && index !== 0) return
+  const app = props.appList[index]
+  if (!app) return
+  await GetVersionInfo({ groupId: app.groupId, artifactId: app.artifactId, version })
+    .then((res) => {
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      console.log('GetVersionInfo', res)
+      Object.assign(app, res.data)
+      // app.childProject = res.data.childProject
+      // app.childComponent = res.data.childComponent
+      console.log(app)
+    })
+    .catch((err) => {
+      console.error(err)
+    })
   await findSubProject(index, version)
   appCollapse.value[data.currentApp.index].close()
 }
@@ -232,7 +255,7 @@ const findSubProject = async (index, version) => {
   app.operation = true
   app.selection = {}
   await getVersionList(app, app.groupId, app.artifactId)
-  if (app.versions.includes(version)) app.selection.current = version
+  if (version) app.selection.current = version
   else app.selection.current = app.version
   data.currentApp.index = index
   data.currentApp.version = app.selection.current
@@ -251,21 +274,21 @@ const findSubProject = async (index, version) => {
     })
 }
 
-const refreshParent = () => {
-  emit('refresh')
+const refreshParent = (version) => {
+  emit('refresh', version)
 }
 
-const refresh = async () => {
+const refresh = async (version) => {
   if (data.currentApp.index >= 0) {
-    await findSubProject(data.currentApp.index, data.currentApp.version)
-    appCollapse.value[data.currentApp.index].close()
+    await findSubProject(data.currentApp.index, version)
+    appCollapse.value[data.currentApp.index]?.close()
   }
 }
 
-const refreshChildren = async () => {
+const refreshChildren = async (version) => {
   if (data.currentApp.index >= 0) {
     await findSubProject(data.currentApp.index, data.currentApp.version)
-    appCollapse.value[data.currentApp.index].refresh()
+    appCollapse.value[data.currentApp.index]?.refresh(version)
   }
 }
 
@@ -321,6 +344,7 @@ defineExpose({ refresh, close })
 }
 :deep(.ant-collapse) {
   border-radius: 0;
+  border-top: 0;
 }
 :deep(.ant-collapse-header::before) {
   position: absolute;

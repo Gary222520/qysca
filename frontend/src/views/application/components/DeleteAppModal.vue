@@ -33,7 +33,7 @@ const open = (app, parentApp) => {
   data.open = true
   data.app.groupId = app.groupId
   data.app.artifactId = app.artifactId
-  data.app.version = app.version
+  data.app.version = app.selection.current
   if (parentApp) {
     data.parentApp.parentGroupId = parentApp.groupId
     data.parentApp.parentArtifactId = parentApp.artifactId

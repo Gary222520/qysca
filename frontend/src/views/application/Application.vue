@@ -135,7 +135,7 @@
             :parent-app="app"
             :app-list="app.subAppList"
             :com-list="app.subComList"
-            @refresh="refreshChildren()"></AppCollapse>
+            @refresh="(version) => refreshChildren(version)"></AppCollapse>
         </a-collapse-panel>
       </a-collapse>
       <div v-if="pagination.total" class="pagination">
@@ -149,8 +149,8 @@
           @change="init" />
       </div>
     </a-card>
-    <AddAppModal ref="addAppModal" @root="getProjectList()" @notroot="refresh()"></AddAppModal>
-    <AddDepModal ref="addDepModal" @success="refresh()"></AddDepModal>
+    <AddAppModal ref="addAppModal" @root="getProjectList()" @notroot="refresh(data.currentApp.version)"></AddAppModal>
+    <AddDepModal ref="addDepModal" @success="refresh(data.currentApp.version)"></AddDepModal>
     <UpgradeAppModal ref="upgradeAppModal" @success="refresh()"></UpgradeAppModal>
     <DeleteAppModal ref="deleteAppModal" @success="refreshChildren()"></DeleteAppModal>
   </div>
@@ -324,7 +324,7 @@ const findSubProject = async (index, version) => {
   app.operation = true
   app.selection = {}
   await getVersionList(app, app.groupId, app.artifactId)
-  if (app.versions.includes(version)) app.selection.current = version
+  if (version) app.selection.current = version
   else app.selection.current = app.version
   data.currentApp.index = index
   data.currentApp.version = app.selection.current
@@ -343,16 +343,16 @@ const findSubProject = async (index, version) => {
     })
 }
 
-const refresh = async () => {
+const refresh = async (version) => {
   await getProjectList()
-  await findSubProject(data.currentApp.index, data.currentApp.version)
-  appCollapse.value[data.currentApp.index].close()
+  await findSubProject(data.currentApp.index, version)
+  appCollapse.value[data.currentApp.index]?.close()
 }
 
-const refreshChildren = async () => {
+const refreshChildren = async (version) => {
   await getProjectList()
   await findSubProject(data.currentApp.index, data.currentApp.version)
-  appCollapse.value[data.currentApp.index].refresh()
+  appCollapse.value[data.currentApp.index]?.refresh(version)
 }
 
 const addApplication = () => {
@@ -447,6 +447,7 @@ const showDetail = (record) => {
 }
 :deep(.ant-collapse) {
   border-radius: 0;
+  border-top: 0;
 }
 :deep(.ant-collapse .ant-collapse-content > .ant-collapse-content-box) {
   padding: 16px 0px 16px 16px;
@@ -460,6 +461,7 @@ const showDetail = (record) => {
   display: flex;
   align-items: center;
   background-color: rgba(0, 0, 0, 0.04);
+  border-top: 1px solid #d9d9d9;
 }
 </style>
 <style scoped src="@/atdv/pagination.css"></style>
