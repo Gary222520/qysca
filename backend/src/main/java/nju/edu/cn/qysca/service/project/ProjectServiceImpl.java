@@ -13,7 +13,6 @@ import nju.edu.cn.qysca.domain.project.dtos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.utils.excel.ExcelUtils;
-import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -115,19 +114,10 @@ public class ProjectServiceImpl implements ProjectService {
         if(StringUtils.isEmpty(saveProjectDTO.getId())){
             projectDO = new ProjectDO();
             BeanUtils.copyProperties(saveProjectDTO, projectDO);
-            projectDO.setId(UUIDGenerator.getUUID());
-            projectDO.setState("RUNNING");
+            projectDO.setState("CREATED");
             projectDO.setLock(false);
             projectDO.setRelease(false);
-            if(saveProjectDTO.getParentId() == null) {
-                projectDO.setRoot(true);
-            }else{
-                ProjectDO parentProjectDO = projectDao.findProjectDOById(saveProjectDTO.getParentId());
-                ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentProjectDO.getChildProject()));
-                temp.add(projectDO.getId());
-                parentProjectDO.setChildProject(temp.toArray(new String[temp.size()]));
-                projectDO.setRoot(false);
-            }
+            projectDO.setRoot(saveProjectDTO.getParentId() == null);
         }else{
             projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(saveProjectDTO.getGroupId(), saveProjectDTO.getArtifactId(), saveProjectDTO.getVersion());
             projectDO.setDescription(saveProjectDTO.getDescription());
@@ -138,7 +128,27 @@ public class ProjectServiceImpl implements ProjectService {
         String timeStamp = dateFormat.format(now);
         projectDO.setTime(timeStamp);
         projectDao.save(projectDO);
+        if(saveProjectDTO.getParentId() != null) {
+            ProjectDO parentProjectDO = projectDao.findProjectDOById(saveProjectDTO.getParentId());
+            ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentProjectDO.getChildProject()));
+            temp.add(projectDO.getId());
+            parentProjectDO.setChildProject(temp.toArray(new String[temp.size()]));
+        }
         return true;
+    }
+
+
+    /**
+     * 在保存项目依赖时将项目状态改为RUNNING
+     * @param groupId 项目组织Id
+     * @param artifactId 项目工件Id
+     * @param version 项目版本
+     */
+    @Override
+    public void changeProjectState(String groupId, String artifactId, String version) {
+        ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
+        projectDO.setState("RUNNING");
+        projectDao.save(projectDO);
     }
 
     /**
@@ -151,12 +161,10 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional
     public void saveProjectDependency(SaveProjectDependencyDTO saveProjectDependencyDTO) {
         try {
-
             ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDependencyDTO.getFilePath(), saveProjectDependencyDTO.getBuilder(), 0);
             DependencyTreeDO projectDependencyTreeDO = null;
             if(StringUtils.isEmpty(saveProjectDependencyDTO.getId())) {
                 projectDependencyTreeDO = new DependencyTreeDO();
-                projectDependencyTreeDO.setId(UUIDGenerator.getUUID());
                 projectDependencyTreeDO.setGroupId(saveProjectDependencyDTO.getGroupId());
                 projectDependencyTreeDO.setArtifactId(saveProjectDependencyDTO.getArtifactId());
                 projectDependencyTreeDO.setVersion(saveProjectDependencyDTO.getVersion());
@@ -202,7 +210,6 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional
     public Boolean upgradeProject(UpgradeProjectDTO upgradeProjectDTO) {
         ProjectDO projectDO = new ProjectDO();
-        projectDO.setId(UUIDGenerator.getUUID());
         BeanUtils.copyProperties(upgradeProjectDTO, projectDO);
         Date now = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -528,7 +535,6 @@ public class ProjectServiceImpl implements ProjectService {
         Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(projectDependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {
             DependencyTableDO projectDependencyTableDO = new DependencyTableDO();
-            projectDependencyTableDO.setId(UUIDGenerator.getUUID());
             projectDependencyTableDO.setGroupId(projectDependencyTreeDO.getGroupId());
             projectDependencyTableDO.setArtifactId(projectDependencyTreeDO.getArtifactId());
             projectDependencyTableDO.setVersion(projectDependencyTreeDO.getVersion());

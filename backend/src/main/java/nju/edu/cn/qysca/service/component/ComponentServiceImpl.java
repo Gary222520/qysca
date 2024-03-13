@@ -4,7 +4,6 @@ import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.service.spider.SpiderService;
-import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.springframework.beans.BeanUtils;
@@ -148,7 +147,6 @@ public class ComponentServiceImpl implements ComponentService {
                 fileWriter.close();
                 ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(tempPath, "maven", 0);
                 componentDependencyTreeDO.setOpensource(true);
-                dependencyTreeDO.setId(UUIDGenerator.getUUID());
                 dependencyTreeDO.setGroupId(componentGavDTO.getGroupId());
                 dependencyTreeDO.setArtifactId(componentGavDTO.getArtifactId());
                 dependencyTreeDO.setVersion(componentDependencyTreeDO.getVersion());
@@ -258,7 +256,6 @@ public class ComponentServiceImpl implements ComponentService {
      */
     private ComponentDO createJavaCloseComponentDO(Model model, String language) {
         ComponentDO javaCloseComponentDO = new ComponentDO();
-        javaCloseComponentDO.setId(UUIDGenerator.getUUID());
         javaCloseComponentDO.setLanguage(language);
         javaCloseComponentDO.setName(model.getName() == null ? "-" : model.getName());
         javaCloseComponentDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
@@ -288,7 +285,6 @@ public class ComponentServiceImpl implements ComponentService {
      */
     private DependencyTreeDO createJavaCloseDependencyTreeDO(Model model, String filePath, String builder) throws Exception {
         DependencyTreeDO javaCloseDependencyTreeDO = new DependencyTreeDO();
-        javaCloseDependencyTreeDO.setId(UUIDGenerator.getUUID());
         javaCloseDependencyTreeDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
         javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
         javaCloseDependencyTreeDO.setVersion(model.getVersion() == null ? "-" : model.getVersion());
@@ -312,7 +308,6 @@ public class ComponentServiceImpl implements ComponentService {
         Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(componentDependencyTreeDO.getDependencies());
         while (!queue.isEmpty()) {
             DependencyTableDO dependencyTableDO = new DependencyTableDO();
-            dependencyTableDO.setId(UUIDGenerator.getUUID());
             dependencyTableDO.setGroupId(groupId);
             dependencyTableDO.setArtifactId(artifactId);
             dependencyTableDO.setVersion(version);
@@ -381,7 +376,6 @@ public class ComponentServiceImpl implements ComponentService {
         Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(dependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {
             DependencyTableDO dependencyTableDO = new DependencyTableDO();
-            dependencyTableDO.setId(UUIDGenerator.getUUID());
             dependencyTableDO.setGroupId(dependencyTreeDO.getGroupId());
             dependencyTableDO.setArtifactId(dependencyTreeDO.getArtifactId());
             dependencyTableDO.setVersion(dependencyTreeDO.getVersion());

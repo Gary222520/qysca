@@ -54,6 +54,15 @@ public interface ProjectService {
      */
     Boolean saveProject(SaveProjectDTO saveProjectDTO);
 
+
+    /**
+     * 在保存项目依赖时将项目状态变为RUNNING
+     * @param groupId 项目组织Id
+     * @param artifactId 项目工件Id
+     * @param version 项目版本
+     */
+    void changeProjectState(String groupId, String artifactId, String version);
+
     /**
      * 新增/更新项目依赖信息
      *

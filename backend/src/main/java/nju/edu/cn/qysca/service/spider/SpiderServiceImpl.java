@@ -7,7 +7,6 @@ import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
 import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
 import nju.edu.cn.qysca.utils.HashUtil;
-import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import nju.edu.cn.qysca.utils.spider.UrlConnector;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -194,7 +193,6 @@ public class SpiderServiceImpl implements SpiderService {
         }
 
         ComponentDO componentDO = new ComponentDO();
-        componentDO.setId(UUIDGenerator.getUUID());
         componentDO.setGroupId(groupId);
         componentDO.setArtifactId(artifactId);
         componentDO.setVersion(version);
