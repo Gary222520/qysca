@@ -163,8 +163,8 @@ public class ProjectServiceImpl implements ProjectService {
     public void saveProjectDependency(SaveProjectDependencyDTO saveProjectDependencyDTO) {
         try {
             ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(saveProjectDependencyDTO.getFilePath(), saveProjectDependencyDTO.getBuilder(), 0);
-            DependencyTreeDO projectDependencyTreeDO = null;
-            if(StringUtils.isEmpty(saveProjectDependencyDTO.getId())) {
+            DependencyTreeDO projectDependencyTreeDO = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(saveProjectDependencyDTO.getGroupId(), saveProjectDependencyDTO.getArtifactId(), saveProjectDependencyDTO.getVersion());
+            if(projectDependencyTreeDO == null){
                 projectDependencyTreeDO = new DependencyTreeDO();
                 projectDependencyTreeDO.setGroupId(saveProjectDependencyDTO.getGroupId());
                 projectDependencyTreeDO.setArtifactId(saveProjectDependencyDTO.getArtifactId());

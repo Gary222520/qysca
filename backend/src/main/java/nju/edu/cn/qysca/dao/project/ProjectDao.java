@@ -97,7 +97,7 @@ public interface ProjectDao extends JpaRepository<ProjectDO, String> {
      * @param projectId 项目Id
      * @return List<ProjectDO> 子项目列表
      */
-    @Query(value = "select p.* from project p where p.id = ANY (select unnest(child_project) from project where id = :projectId)", nativeQuery = true)
+    @Query(value = "select p.* from project p where p.id = ANY (select unnest(child_project) from project where id = :projectId) order by name desc", nativeQuery = true)
     List<ProjectDO> findSubProject(String projectId);
 
     /**
@@ -112,6 +112,6 @@ public interface ProjectDao extends JpaRepository<ProjectDO, String> {
      * @param id 项目Id
      * @return List<ProjectDO> 父项目列表
      */
-    @Query(value = "select * from project where :id = any(unnest(child_project))", nativeQuery = true)
+    @Query(value = "select * from project where :id = any(child_project)", nativeQuery = true)
     List<ProjectDO> findParentProject(String id);
 }

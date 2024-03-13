@@ -13,9 +13,6 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "新增/更新项目依赖信息")
 public class SaveProjectDependencyDTO {
 
-    @ApiModelProperty(value = "项目Id", example = "123e456-e74-b37-4d7a-9421d59bf3b")
-    private String id;
-
     @ApiModelProperty(value = "项目组织Id", example = "nju.edu,cn")
     private String groupId;
 

@@ -24,6 +24,6 @@ public interface ComponentDao extends JpaRepository<ComponentDO, String> {
      * @param projectId 项目Id
      * @return List<ComponentDO> 子组件列表
      */
-    @Query(value = "select * from component where id = any (select unnest(child_component) from project where id = :projectId)", nativeQuery = true)
+    @Query(value = "select * from component where id = any (select unnest(child_component) from project where id = :projectId) order by name desc", nativeQuery = true)
     List<ComponentDO> findSubComponent(String projectId);
 }
