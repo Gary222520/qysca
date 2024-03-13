@@ -1,7 +1,7 @@
 <template>
   <a-modal v-model:open="data.open">
     <template #title>
-      <div style="font-size: 20px">{{ data.all ? '删除应用' : '删除该版本' }}</div>
+      <div style="font-size: 20px">删除项目版本</div>
     </template>
     <div class="content">
       <WarningOutlined :style="{ fontSize: '30px', color: '#ff4d4f' }" />
@@ -9,14 +9,14 @@
     </div>
     <template #footer>
       <a-button class="cancel_btn" @click="close">取消</a-button>
-      <a-button class="delete_btn" @click="deleteProject">删除</a-button>
+      <a-button class="delete_btn" @click="deleteProject()">删除</a-button>
     </template>
   </a-modal>
 </template>
 
 <script setup>
 import { reactive, defineExpose, defineEmits } from 'vue'
-import { DeleteApplication, DeleteApplicationVersion } from '@/api/frontend'
+import { DeleteProject } from '@/api/frontend'
 import { WarningOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useStore } from 'vuex'
@@ -26,53 +26,41 @@ const store = useStore()
 
 const data = reactive({
   open: false,
-  all: false,
-  currentApp: {}
+  app: {},
+  parentApp: {}
 })
-const open = (all) => {
+const open = (app, parentApp) => {
   data.open = true
-  data.all = all
-  data.currentApp = store.getters.currentApp
+  data.app.groupId = app.groupId
+  data.app.artifactId = app.artifactId
+  data.app.version = app.version
+  if (parentApp) {
+    data.parentApp.parentGroupId = parentApp.groupId
+    data.parentApp.parentArtifactId = parentApp.artifactId
+    data.parentApp.parentVersion = parentApp.version
+  } else data.parentApp = {}
 }
 const close = () => {
   data.open = false
 }
 const deleteProject = () => {
-  if (data.all) {
-    DeleteApplication({ groupId: data.currentApp.groupId, artifactId: data.currentApp.artifactId })
-      .then((res) => {
-        // console.log('DeleteApplication', res)
-        if (res.code !== 200) {
-          message.error(res.message)
-          return
-        }
-        message.success('删除应用成功')
-        data.open = false
-        emit('success')
-      })
-      .catch((e) => {
-        message.error(e)
-      })
-  } else {
-    DeleteApplicationVersion({
-      groupId: data.currentApp.groupId,
-      artifactId: data.currentApp.artifactId,
-      version: data.currentApp.version
+  DeleteProject({
+    ...data.app,
+    ...data.parentApp
+  })
+    .then((res) => {
+      // console.log('DeleteProject', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      message.success('删除版本成功')
+      data.open = false
+      emit('success')
     })
-      .then((res) => {
-        // console.log('DeleteApplicationVersion', res)
-        if (res.code !== 200) {
-          message.error(res.message)
-          return
-        }
-        message.success('删除版本成功')
-        data.open = false
-        emit('success')
-      })
-      .catch((e) => {
-        message.error(e)
-      })
-  }
+    .catch((e) => {
+      message.error(e)
+    })
 }
 defineExpose({ open })
 </script>

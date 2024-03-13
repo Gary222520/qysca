@@ -45,7 +45,7 @@
                       v-model:value="app.selection.current"
                       :options="app.selection.options"
                       style="width: 100px"
-                      @change="() => findSubProject(index)">
+                      @change="() => findSubProject(index, app.selection.current)">
                     </a-select>
                   </a-input-group>
                 </div>
@@ -264,9 +264,8 @@
     </a-card>
     <AddAppModal ref="addAppModal" @root="getProjectList()" @notroot="refresh()"></AddAppModal>
     <AddDepModal ref="addDepModal" @success="refresh()"></AddDepModal>
-    <!-- <UpdateProModal ref="updateProModal" @success="showApplicationInfo(data.currentApp.name)"></UpdateProModal> -->
     <UpgradeAppModal ref="upgradeAppModal" @success="refresh()"></UpgradeAppModal>
-    <DeleteAppModal ref="deleteAppModal" @success="getProjectList()"></DeleteAppModal>
+    <DeleteAppModal ref="deleteAppModal" @success="refresh()"></DeleteAppModal>
   </div>
 </template>
 
@@ -304,7 +303,6 @@ import {
 } from '@/api/frontend'
 import AddAppModal from './components/AddAppModal.vue'
 import AddDepModal from './components/AddDepModal.vue'
-// import UpdateProModal from './components/UpdateProModal.vue'
 import UpgradeAppModal from './components/UpgradeAppModal.vue'
 import DeleteAppModal from './components/DeleteAppModal.vue'
 import AppCollapse from '@/views/application/components/AppCollapse.vue'
@@ -317,7 +315,6 @@ onMounted(async () => {
 
 const addAppModal = ref()
 const addDepModal = ref()
-// const updateProModal = ref()
 const upgradeAppModal = ref()
 const deleteAppModal = ref()
 const appCollapse = ref()
@@ -507,6 +504,15 @@ const updateDependency = (app, index) => {
   addDepModal.value.open(app, false)
 }
 
+const retry = (record, index) => {
+  record.popconfirm = false
+  updateDependency(record, index)
+}
+
+const deleteVersion = (app) => {
+  deleteAppModal.value.open(app)
+}
+
 const upgradeApp = () => {
   addAppModal.value.open(
     data.currentApp.groupId,
@@ -514,11 +520,6 @@ const upgradeApp = () => {
     data.currentApp.version,
     data.currentApp.name
   )
-}
-
-const retry = (record, index) => {
-  record.popconfirm = false
-  updateDependency(record, index)
 }
 
 const deleteProject = (record) => {
@@ -544,10 +545,6 @@ const deleteProject = (record) => {
       message.error(e)
     })
   record.popconfirm = false
-}
-
-const deleteVersion = () => {
-  deleteAppModal.value.open(false)
 }
 
 const deleteApplication = () => {

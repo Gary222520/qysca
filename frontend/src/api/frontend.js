@@ -39,10 +39,10 @@ export const AddProject = (data) => request('post', API.ADD_PROJECT, { data })
 export const AddDependency = (data) => request('post', API.ADD_DEPENDENCY, { data })
 // 项目升级
 export const UpgradeProject = (data) => request('post', API.UPGRADE_PROJECT, { data })
+// 删除项目
+export const DeleteProject = (data) => request('post', API.DELETE_PROJECT, { data })
 // 查询具体项目的信息
 export const GetProjectInfo = (params) => request('get', API.PROJECT_INFO, { params })
-// 删除项目
-export const DeleteProject = (params) => request('post', API.DELETE_PROJECT, { params })
 // 项目中有版本正在扫描中的个数
 export const CheckRunning = (params) => request('get', API.CHECK_RUNNING, { params })
 

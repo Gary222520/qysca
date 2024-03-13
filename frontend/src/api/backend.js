@@ -37,10 +37,10 @@ export const API = {
   ADD_DEPENDENCY: '/qysca/project/saveProjectDependency',
   // 项目升级
   UPGRADE_PROJECT: '/qysca/project/upgradeProject',
+  // 删除项目
+  DELETE_PROJECT: '/qysca/project/deleteProjectVersion',
   // 查询具体项目的信息
   PROJECT_INFO: '/qysca/project/findProjectVersionPage',
-  // 删除项目
-  DELETE_PROJECT: '/qysca/project/deleteProject',
   // 项目中有版本正在扫描中的个数
   CHECK_RUNNING: '/qysca/project/checkRunningProject',
 

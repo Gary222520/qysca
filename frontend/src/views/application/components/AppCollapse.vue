@@ -24,7 +24,7 @@
                     v-model:value="app.selection.current"
                     :options="app.selection.options"
                     style="width: 100px"
-                    @change="() => findSubProject(index)">
+                    @change="() => findSubProject(index, app.selection.current)">
                   </a-select>
                 </a-input-group>
               </div>
@@ -119,6 +119,7 @@
     <AddAppModal ref="addAppModal" @root="getProjectList()" @notroot="refreshParent()"></AddAppModal>
     <AddDepModal ref="addDepModal" @success="refreshParent()"></AddDepModal>
     <UpgradeAppModal ref="upgradeAppModal" @success="refreshParent()"></UpgradeAppModal>
+    <DeleteAppModal ref="deleteAppModal" @success="refreshParent()"></DeleteAppModal>
   </div>
 </template>
 
@@ -145,6 +146,7 @@ import AppCollapse from '@/views/application/components/AppCollapse.vue'
 import AddAppModal from './AddAppModal.vue'
 import AddDepModal from './AddDepModal.vue'
 import UpgradeAppModal from './UpgradeAppModal.vue'
+import DeleteAppModal from './DeleteAppModal.vue'
 
 const emit = defineEmits(['refresh'])
 
@@ -167,6 +169,7 @@ const appCollapse = ref()
 const addAppModal = ref()
 const addDepModal = ref()
 const upgradeAppModal = ref()
+const deleteAppModal = ref()
 
 const data = reactive({
   activeKey: '',
@@ -270,7 +273,7 @@ const addProject = (app, index) => {
 const upgradeProject = (app, index) => {
   data.currentApp.index = index
   data.currentApp.version = app.selection.current
-  upgradeAppModal.value.open(app)
+  upgradeAppModal.value.open(app, props.parentApp)
 }
 
 const addDependency = (app, index) => {
@@ -283,6 +286,15 @@ const updateDependency = (app, index) => {
   data.currentApp.index = index
   data.currentApp.version = app.selection.current
   addDepModal.value.open(app, false)
+}
+
+const retry = (record, index) => {
+  record.popconfirm = false
+  updateDependency(record, index)
+}
+
+const deleteVersion = (app) => {
+  deleteAppModal.value.open(app, props.parentApp)
 }
 
 const close = () => {
