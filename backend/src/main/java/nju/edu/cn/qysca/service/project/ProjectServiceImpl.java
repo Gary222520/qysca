@@ -214,6 +214,7 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO oldProjectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(upgradeProjectDTO.getGroupId(), upgradeProjectDTO.getArtifactId(), upgradeProjectDTO.getOldVersion());
         ProjectDO newProjectDO = new ProjectDO();
         BeanUtils.copyProperties(oldProjectDO, newProjectDO);
+        newProjectDO.setId(null);
         newProjectDO.setVersion(upgradeProjectDTO.getNewVersion());
         newProjectDO.setDescription(upgradeProjectDTO.getDescription());
         newProjectDO.setCreator(upgradeProjectDTO.getCreator());
