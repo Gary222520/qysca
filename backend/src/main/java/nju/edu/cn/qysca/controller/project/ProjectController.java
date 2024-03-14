@@ -71,6 +71,14 @@ public class ProjectController {
         return new ResponseMsg<>(result);
     }
 
+    @ApiOperation("向项目中增加已有子项目")
+    @PostMapping("/addSubProject")
+    public ResponseMsg<Boolean> addSubProject(@RequestBody AddSubProjectDTO addSubProjectDTO) {
+        Boolean result = projectService.addSubProject(addSubProjectDTO);
+        return new ResponseMsg<>(result);
+    }
+
+
     @ApiOperation("删除项目中的组件")
     @PostMapping("/deleteProjectComponent")
     public ResponseMsg<Boolean> deleteProjectComponent(@RequestBody ProjectComponentDTO projectComponentDTO) {

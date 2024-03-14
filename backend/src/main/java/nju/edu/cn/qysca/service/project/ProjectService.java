@@ -87,10 +87,26 @@ public interface ProjectService {
      */
     Boolean deleteProjectVersion(DeleteProjectDTO deleteProjectDTO);
 
+    /**
+     * 向项目中添加组件
+     * @param projectComponentDTO 项目组件接口
+     * @return 向项目中添加组件是否成功
+     */
     Boolean saveProjectComponent(ProjectComponentDTO projectComponentDTO);
 
+    /**
+     * 删除项目中某个组件
+     * @param projectComponentDTO 项目组件接口
+     * @return 删除项目中组件是否成功
+     */
     Boolean deleteProjectComponent(ProjectComponentDTO projectComponentDTO);
 
+    /**
+     * 向项目中添加已有项目
+     * @param addSubProjectDTO 添加已有项目接口信息
+     * @return 添加已有项目是否成功
+     */
+    Boolean addSubProject(AddSubProjectDTO addSubProjectDTO);
 
     /**
      * 分页获取指定项目的版本信息

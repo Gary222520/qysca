@@ -308,6 +308,7 @@ public class ProjectServiceImpl implements ProjectService {
      * @return 在项目中删除组件是否成功
      */
     @Override
+    @Transactional
     public Boolean deleteProjectComponent(ProjectComponentDTO projectComponentDTO) {
         ProjectDO projectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(projectComponentDTO.getParentGroupId(), projectComponentDTO.getParentArtifactId(), projectComponentDTO.getParentVersion());
         ArrayList<String> temp = new ArrayList<>(Arrays.asList(projectDO.getChildComponent()));
@@ -315,6 +316,18 @@ public class ProjectServiceImpl implements ProjectService {
         temp.remove(componentDO.getId());
         projectDO.setChildComponent(temp.toArray(new String[temp.size()]));
         projectDao.save(projectDO);
+        return Boolean.TRUE;
+    }
+
+    @Override
+    @Transactional
+    public Boolean addSubProject(AddSubProjectDTO addSubProjectDTO) {
+        ProjectDO parentProjectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(addSubProjectDTO.getParentGroupId(), addSubProjectDTO.getParentArtifactId(), addSubProjectDTO.getParentVersion());
+        ProjectDO subProjectDO = projectDao.findByGroupIdAndArtifactIdAndVersion(addSubProjectDTO.getGroupId(), addSubProjectDTO.getArtifactId(), addSubProjectDTO.getVersion());
+        ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentProjectDO.getChildComponent()));
+        temp.add(subProjectDO.getId());
+        parentProjectDO.setChildComponent(temp.toArray(new String[temp.size()]));
+        projectDao.save(parentProjectDO);
         return Boolean.TRUE;
     }
 
