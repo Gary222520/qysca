@@ -43,12 +43,12 @@
                     <a-select
                       v-model:value="app.selection.current"
                       :options="app.selection.options"
-                      style="width: 100px"
+                      style="width: 90px"
                       @change="() => changeVersion(app, app.selection.current)">
                     </a-select>
                   </a-input-group>
                 </div>
-                <div style="margin-left: 20px">
+                <div style="margin-left: 20px; margin-right: 20px">
                   <a-tag color="purple">
                     <template #icon><FolderOutlined /></template>应用
                   </a-tag>
@@ -59,9 +59,18 @@
                     <template #icon><EyeOutlined /></template>已发布
                   </a-tag>
                 </div>
+                <!-- <FileSearchOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
+                <PlusOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
+                <RocketOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
+                <DeleteOutlined :style="{ fontSize: '24px', color: '#ff4d4f', marginRight: '10px' }" /> -->
               </div>
               <div style="display: flex; align-items: center">
-                <a-button type="primary" @click.stop="showAppDetail(app, true, index)" style="margin-right: 10px">
+                <FileSearchOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
+                <PlusOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
+                <RocketOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
+                <DeleteOutlined :style="{ fontSize: '24px', color: '#ff4d4f', marginRight: '10px' }" />
+
+                <!-- <a-button type="primary" @click.stop="showAppDetail(app, true, index)" style="margin-right: 10px">
                   <FileSearchOutlined />查看详情
                 </a-button>
                 <a-button type="primary" @click.stop="addProject(app, index)" style="margin-right: 10px">
@@ -72,7 +81,7 @@
                 </a-button>
                 <a-button type="primary" danger @click.stop="deleteVersion(app, index)" style="margin-right: 10px">
                   <DeleteOutlined />删除该版本
-                </a-button>
+                </a-button> -->
               </div>
             </div>
           </template>
@@ -373,7 +382,7 @@ const showAppDetail = (app, isProject, index) => {
   border-radius: 0;
 }
 .collapse_header {
-  height: 40px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -394,7 +403,7 @@ const showAppDetail = (app, isProject, index) => {
   border-top: 0;
 }
 :deep(.ant-collapse .ant-collapse-content > .ant-collapse-content-box) {
-  padding: 0px 0px 0px 16px;
+  padding: 0px 0px 0px 32px;
 }
 :deep(.ant-collapse > .ant-collapse-item:last-child),
 :deep(.ant-collapse > .ant-collapse-item:last-child > .ant-collapse-header),

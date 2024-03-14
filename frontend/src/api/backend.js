@@ -1,28 +1,4 @@
 export const API = {
-  // 创建新应用
-  CREATE_APPLICATION: '/qysca/application/createApplication',
-  // 查询应用信息
-  APPLICATION_LIST: '/qysca/application/getApplicationList',
-  // 查询应用版本的信息
-  APPLICATION_INFO: '/qysca/application/getApplicationVersion',
-  // 获取应用所有版本号
-  APPLICATION_VERSIONS: '/qysca/application/getApplicationVersionList',
-  // 删除应用某个版本
-  DELETE_APPLICATION_VERSION: '/qysca/application/deleteApplicationVersion',
-  // 删除应用
-  DELETE_APPLICATION: '/qysca/application/deleteApplication',
-
-  // 在应用中创建项目
-  APP_CREATE_PROJECT: '/qysca/application/createProject',
-  // 向应用中增加项目
-  APP_ADD_PROJECT: '/qysca/application/addProject',
-  // 在应用中更新项目
-  APP_UPDATE_PROJECT: '/qysca/application/updateProject',
-  // 在应用中升级项目
-  APP_UPGRADE_PROJECT: '/qysca/application/upgradeProject',
-  // 在应用中删除项目
-  APP_DELETE_PROJECT: '/qysca/application/deleteProject',
-
   // 分页获取根项目信息
   PROJECT_LIST: '/qysca/project/findRootPage',
   // 模糊查询项目名称
@@ -33,8 +9,14 @@ export const API = {
   FIND_SUB_PROJECT: '/qysca/project/findSubProject',
   // 新增/更新项目
   ADD_PROJECT: '/qysca/project/saveProject',
+  // 向项目中增加已有子项目
+  ADD_SUBPROJECT: '/qysca/project/addSubProject',
   // 新增/更新项目依赖信息
   ADD_DEPENDENCY: '/qysca/project/saveProjectDependency',
+  // 向项目中增加组件
+  ADD_PROJECT_COMPONENT: '/qysca/project/saveProjectComponent',
+  // 删除项目中的组件
+  DELETE_PROJECT_COMPONENT: '/qysca/project/deleteProjectComponent',
   // 项目升级
   UPGRADE_PROJECT: '/qysca/project/upgradeProject',
   // 删除项目

@@ -1,30 +1,6 @@
 import { request } from './request'
 import { API } from './backend'
 
-// 创建新应用
-export const CreateApplication = (data) => request('post', API.CREATE_APPLICATION, { data })
-// 查询应用信息
-export const GetApplicationList = (params) => request('get', API.APPLICATION_LIST, { params })
-// 查询应用某个版本的信息
-export const GetApplicationInfo = (params) => request('get', API.APPLICATION_INFO, { params })
-// 获取应用所有版本号
-export const GetApplicationVersions = (params) => request('get', API.APPLICATION_VERSIONS, { params })
-// 删除应用某个版本
-export const DeleteApplicationVersion = (params) => request('post', API.DELETE_APPLICATION_VERSION, { params })
-// 删除应用
-export const DeleteApplication = (params) => request('post', API.DELETE_APPLICATION, { params })
-
-// 在应用中创建项目
-export const AppCreateProject = (data) => request('post', API.APP_CREATE_PROJECT, { data })
-// 向应用中增加项目
-export const AppAddProject = (data) => request('post', API.APP_ADD_PROJECT, { data })
-// 在应用中更新项目
-export const AppUpdateProject = (data) => request('post', API.APP_UPDATE_PROJECT, { data })
-// 在应用中升级项目
-export const AppUpgradeProject = (data) => request('post', API.APP_UPGRADE_PROJECT, { data })
-// 在应用中删除项目
-export const AppDeleteProject = (data) => request('post', API.APP_DELETE_PROJECT, { data })
-
 // 查询所有项目
 export const GetProjectList = (params) => request('get', API.PROJECT_LIST, { params })
 // 模糊查询项目名称
@@ -35,8 +11,14 @@ export const GetProject = (params) => request('get', API.FIND_PROJECT, { params 
 export const GetSubProject = (params) => request('get', API.FIND_SUB_PROJECT, { params })
 // 新建项目
 export const AddProject = (data) => request('post', API.ADD_PROJECT, { data })
+// 向项目中增加已有子项目
+export const AddSubProject = (data) => request('post', API.ADD_SUBPROJECT, { data })
 // 新增/更新项目依赖信息
 export const AddDependency = (data) => request('post', API.ADD_DEPENDENCY, { data })
+// 向项目中增加组件
+export const AddProjectComponent = (data) => request('post', API.ADD_PROJECT_COMPONENT, { data })
+// 删除项目中的组件
+export const DeleteProjectComponent = (data) => request('post', API.DELETE_PROJECT_COMPONENT, { data })
 // 项目升级
 export const UpgradeProject = (data) => request('post', API.UPGRADE_PROJECT, { data })
 // 删除项目

@@ -24,9 +24,9 @@
                   </a-select>
                 </a-input-group>
               </div>
-              <div style="margin-left: 20px">
+              <div style="margin-left: 20px; margin-right: 20px">
                 <a-tag color="purple">
-                  <template #icon><FolderOutlined /></template>项目
+                  <template #icon><FolderOutlined /></template>应用
                 </a-tag>
                 <a-tag v-if="app.lock" color="warning">
                   <template #icon><LockOutlined /></template>已上锁
@@ -35,20 +35,29 @@
                   <template #icon><EyeOutlined /></template>已发布
                 </a-tag>
               </div>
+              <!-- <FileSearchOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
+              <PlusOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
+              <RocketOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
+              <DeleteOutlined :style="{ fontSize: '24px', color: '#ff4d4f', marginRight: '10px' }" /> -->
             </div>
             <div style="display: flex; align-items: center">
-              <a-button type="primary" @click.stop="showAppDetail(app, true, index)" style="margin-right: 10px">
+              <FileSearchOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
+              <PlusOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
+              <RocketOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
+              <DeleteOutlined :style="{ fontSize: '24px', color: '#ff4d4f', marginRight: '10px' }" />
+
+              <!-- <a-button type="primary" @click.stop="showAppDetail(app, true, index)" style="margin-right: 10px">
                 <FileSearchOutlined />查看详情
               </a-button>
               <a-button type="primary" @click.stop="addProject(app, index)" style="margin-right: 10px">
-                <PlusOutlined />添加项目
+                <PlusOutlined />添加应用
               </a-button>
               <a-button type="primary" @click.stop="upgradeProject(app, index)" style="margin-right: 10px">
-                <RocketOutlined />项目升级
+                <RocketOutlined />应用升级
               </a-button>
               <a-button type="primary" danger @click.stop="deleteVersion(app, index)" style="margin-right: 10px">
                 <DeleteOutlined />删除该版本
-              </a-button>
+              </a-button> -->
             </div>
           </div>
         </template>
@@ -135,7 +144,7 @@ const table = reactive({
   columns: [
     { title: '组织ID', dataIndex: 'groupId', key: 'groupId', width: 120 },
     { title: '工件ID', dataIndex: 'artifactId', key: 'artifactId', width: 120 },
-    { title: '项目类型', dataIndex: 'type', key: 'type', width: 120 },
+    { title: '应用类型', dataIndex: 'type', key: 'type', width: 120 },
     { title: '语言', dataIndex: 'language', key: 'language', width: 120 },
     { title: '构建工具', dataIndex: 'builder', key: 'builder', width: 120 },
     { title: '扫描对象', dataIndex: 'scanner', key: 'scanner', width: 150 },
@@ -272,7 +281,7 @@ defineExpose({ refresh, close })
 
 <style scoped>
 .collapse_header {
-  height: 40px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -287,14 +296,14 @@ defineExpose({ refresh, close })
 :deep(.ant-collapse-header::before) {
   position: absolute;
   top: 50%;
-  left: -17px;
-  width: 17px;
+  left: -33px;
+  width: 33px;
   height: 1px;
   background-color: #d9d9d9;
   content: '';
 }
 :deep(.ant-collapse .ant-collapse-content > .ant-collapse-content-box) {
-  padding: 0px 0px 0px 16px;
+  padding: 0px 0px 0px 32px;
 }
 :deep(.ant-collapse > .ant-collapse-item:last-child),
 :deep(.ant-collapse > .ant-collapse-item:last-child > .ant-collapse-header),

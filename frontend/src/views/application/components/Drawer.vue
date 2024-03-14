@@ -34,39 +34,49 @@
     </a-descriptions>
 
     <div class="relative">
-      <div class="drawer_title">应用状态</div>
+      <div class="drawer_title">
+        应用状态
+        <a-tag v-if="data.detail.state === 'CREATED'" color="processing" :bordered="false" class="label">
+          暂未扫描
+        </a-tag>
+        <a-tag v-if="data.detail.state === 'RUNNING'" color="warning">扫描中</a-tag>
+        <a-tag v-if="data.detail.state === 'SUCCESS'" color="success" :bordered="false" class="label">扫描成功</a-tag>
+        <a-tag v-if="data.detail.state === 'FAILED'" color="error">扫描失败</a-tag>
+      </div>
     </div>
-    <a-descriptions>
+    <!-- <a-descriptions>
       <a-descriptions-item>
         <template #label>
           <div v-if="data.detail.state === 'CREATED'" class="label">暂未扫描</div>
           <div v-if="data.detail.state === 'RUNNING'" class="label">扫描中</div>
           <div v-if="data.detail.state === 'SUCCESS'" class="label">扫描成功</div>
           <div v-if="data.detail.state === 'FAILED'" class="label">扫描失败</div>
-        </template>
-        <div style="display: flex" v-if="data.detail.state === 'CREATED'">
-          <a-button class="btn" type="primary" @click="addDependency()"> <FileAddOutlined />添加依赖信息</a-button>
-        </div>
-        <div style="display: flex" v-if="data.detail.state === 'SUCCESS'">
-          <a-button class="btn" type="primary" @click="showDetail()"> <FileTextOutlined />查看依赖信息</a-button>
-          <a-button class="btn" type="primary" @click="updateDependency()"> <SyncOutlined />更新依赖信息</a-button>
-        </div>
-        <div style="display: flex; align-items: center; height: 32px" v-if="data.detail.state === 'RUNNING'">
-          <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
-          <div style="margin-left: 10px">扫描分析中...</div>
-        </div>
-        <div style="display: flex; align-items: center; height: 32px" v-if="data.detail.state === 'FAILED'">
-          <a-popconfirm v-model:open="data.popconfirm" title="扫描出错，请重试">
-            <template #cancelButton>
-              <a-button class="cancel_btn" size="small" @click="retry()">重试</a-button>
-            </template>
-            <template #okButton></template>
-            <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
-            <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
-          </a-popconfirm>
-        </div>
-      </a-descriptions-item>
-    </a-descriptions>
+        </template> -->
+    <div style="margin-top: 10px">
+      <div style="display: flex" v-if="data.detail.state === 'CREATED'">
+        <a-button class="btn" type="primary" @click="addDependency()"> <FileAddOutlined />添加依赖信息</a-button>
+      </div>
+      <div style="display: flex" v-if="data.detail.state === 'SUCCESS'">
+        <a-button class="btn" type="primary" @click="showDetail()"> <FileTextOutlined />查看依赖信息</a-button>
+        <a-button class="btn" type="primary" @click="updateDependency()"> <SyncOutlined />更新依赖信息</a-button>
+      </div>
+      <div style="display: flex; align-items: center; height: 32px" v-if="data.detail.state === 'RUNNING'">
+        <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
+        <div style="margin-left: 10px">扫描分析中...</div>
+      </div>
+      <div style="display: flex; align-items: center; height: 32px" v-if="data.detail.state === 'FAILED'">
+        <a-popconfirm v-model:open="data.popconfirm" title="扫描出错，请重试">
+          <template #cancelButton>
+            <a-button class="cancel_btn" size="small" @click="retry()">重试</a-button>
+          </template>
+          <template #okButton></template>
+          <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+          <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
+        </a-popconfirm>
+      </div>
+    </div>
+    <!-- </a-descriptions-item>
+    </a-descriptions> -->
     <AddDepModal ref="addDepModal" @success="refresh()"></AddDepModal>
   </a-drawer>
 </template>
@@ -173,11 +183,9 @@ defineExpose({ open })
   align-items: center;
 }
 .label {
-  height: 32px;
   font-size: 16px;
-  color: #6f005f;
-  display: flex;
-  align-items: center;
+  font-weight: normal;
+  margin-left: 10px;
 }
 .btn {
   margin-left: 10px;
