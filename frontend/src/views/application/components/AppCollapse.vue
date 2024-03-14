@@ -1,22 +1,16 @@
 <template>
-  <div>
-    <a-collapse
-      v-model:activeKey="data.activeKey"
-      collapsible="icon"
-      accordion
-      @change="(index) => findSubProject(index)">
+  <div style="margin: 16px 0">
+    <a-collapse v-model:activeKey="data.activeKey" collapsible="icon" @change="(index) => changeCollapse(index)">
       <a-collapse-panel v-for="(app, index) in props.appList" :key="index">
         <template #header>
           <div class="collapse_header">
             <div style="display: flex; align-items: center">
               <div style="margin-right: 20px; font-size: 18px; font-weight: bold">{{ app.name }}</div>
-              <a-tooltip v-if="app.operation">
+              <a-tooltip v-if="app.selection">
                 <template #title>刷新</template>
-                <RedoOutlined
-                  :style="{ fontSize: '18px', color: '#6f005f' }"
-                  @click.stop="refreshParent(data.currentApp.version)" />
+                <RedoOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click.stop="refresh(index)" />
               </a-tooltip>
-              <div v-if="app.operation" style="font-size: 18px; margin-left: 20px">
+              <div v-if="app.selection" style="font-size: 18px; margin-left: 20px">
                 <a-input-group compact>
                   <a-input
                     value="版本选择"
@@ -26,11 +20,11 @@
                     v-model:value="app.selection.current"
                     :options="app.selection.options"
                     style="width: 100px"
-                    @change="() => changeVersion(index, app.selection.current)">
+                    @change="() => changeVersion(app, app.selection.current)">
                   </a-select>
                 </a-input-group>
               </div>
-              <div v-if="app.operation" style="margin-left: 20px">
+              <div style="margin-left: 20px">
                 <a-tag color="purple">
                   <template #icon><FolderOutlined /></template>项目
                 </a-tag>
@@ -42,86 +36,34 @@
                 </a-tag>
               </div>
             </div>
-            <div v-if="app.operation" style="display: flex; align-items: center">
-              <a-button type="primary" @click.stop="() => addProject(app, index)" style="margin-right: 10px">
+            <div style="display: flex; align-items: center">
+              <a-button type="primary" @click.stop="showAppDetail(app, true, index)" style="margin-right: 10px">
+                <FileSearchOutlined />查看详情
+              </a-button>
+              <a-button type="primary" @click.stop="addProject(app, index)" style="margin-right: 10px">
                 <PlusOutlined />添加项目
               </a-button>
-              <a-button type="primary" @click.stop="() => upgradeProject(app, index)" style="margin-right: 10px">
+              <a-button type="primary" @click.stop="upgradeProject(app, index)" style="margin-right: 10px">
                 <RocketOutlined />项目升级
               </a-button>
-              <a-button type="primary" danger @click.stop="() => deleteVersion(app)" style="margin-right: 10px">
+              <a-button type="primary" danger @click.stop="deleteVersion(app, index)" style="margin-right: 10px">
                 <DeleteOutlined />删除该版本
               </a-button>
             </div>
           </div>
         </template>
-        <a-table
-          :data-source="[app]"
-          :columns="table.columns"
-          :pagination="false"
-          bordered
-          style="margin-right: 8px; margin-bottom: 8px">
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'action'">
-              <div style="display: flex" v-if="record.state === 'CREATED'">
-                <div class="action_icon">
-                  <a-tooltip>
-                    <template #title>添加依赖信息</template>
-                    <FileAddOutlined
-                      :style="{ fontSize: '18px', color: '#6f005f' }"
-                      @click="addDependency(app, index)" />
-                  </a-tooltip>
-                </div>
-              </div>
-              <div style="display: flex" v-if="record.state === 'SUCCESS'">
-                <div class="action_icon">
-                  <a-tooltip>
-                    <template #title>组件依赖信息</template>
-                    <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showDetail(record)" />
-                  </a-tooltip>
-                </div>
-                <div class="action_icon">
-                  <a-tooltip>
-                    <template #title>更新依赖信息</template>
-                    <SyncOutlined
-                      :style="{ fontSize: '18px', color: '#6f005f' }"
-                      @click="updateDependency(app, index)" />
-                  </a-tooltip>
-                </div>
-              </div>
-              <div style="display: flex; align-items: center" v-if="record.state === 'RUNNING'">
-                <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
-                <div style="margin-left: 10px">扫描分析中...</div>
-              </div>
-              <div style="display: flex; align-items: center" v-if="record.state === 'FAILED'">
-                <a-popconfirm v-model:open="record.popconfirm" title="扫描出错，请重试">
-                  <template #cancelButton>
-                    <a-button class="cancel_btn" size="small" @click="retry(record, index)">重试</a-button>
-                  </template>
-                  <template #okButton></template>
-                  <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
-                  <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
-                </a-popconfirm>
-              </div>
-            </template>
-          </template>
-          <template #emptyText>暂无数据</template>
-        </a-table>
         <AppCollapse
           ref="appCollapse"
           :parent-app="app"
           :app-list="app.subAppList"
           :com-list="app.subComList"
-          @refresh="(version) => refreshChildren(version)"></AppCollapse>
+          @refresh="refresh(data.currentKey)"></AppCollapse>
       </a-collapse-panel>
     </a-collapse>
-    <AddAppModal
-      ref="addAppModal"
-      @root="getProjectList()"
-      @notroot="refreshParent(data.currentApp.version)"></AddAppModal>
-    <AddDepModal ref="addDepModal" @success="refreshParent(data.currentApp.version)"></AddDepModal>
-    <UpgradeAppModal ref="upgradeAppModal" @success="refreshParent()"></UpgradeAppModal>
+    <AddAppModal ref="addAppModal" @root="getProjectList()" @notroot="refresh(data.currentKey)"></AddAppModal>
+    <UpgradeAppModal ref="upgradeAppModal" @success="refresh(data.currentKey, true)"></UpgradeAppModal>
     <DeleteAppModal ref="deleteAppModal" @success="refreshParent()"></DeleteAppModal>
+    <Drawer ref="drawer" @refresh="refreshDrawer()"></Drawer>
   </div>
 </template>
 
@@ -132,6 +74,7 @@ import {
   RedoOutlined,
   FileTextOutlined,
   FileAddOutlined,
+  FileSearchOutlined,
   FolderOutlined,
   DeleteOutlined,
   SyncOutlined,
@@ -148,9 +91,10 @@ import { message } from 'ant-design-vue'
 import { reactive, ref, defineEmits, defineProps, defineExpose } from 'vue'
 import AppCollapse from '@/views/application/components/AppCollapse.vue'
 import AddAppModal from './AddAppModal.vue'
-import AddDepModal from './AddDepModal.vue'
 import UpgradeAppModal from './UpgradeAppModal.vue'
 import DeleteAppModal from './DeleteAppModal.vue'
+import Drawer from './Drawer.vue'
+import { useRouter } from 'vue-router'
 
 const emit = defineEmits(['refresh'])
 
@@ -171,12 +115,15 @@ const props = defineProps({
 
 const appCollapse = ref()
 const addAppModal = ref()
-const addDepModal = ref()
 const upgradeAppModal = ref()
 const deleteAppModal = ref()
+const drawer = ref()
+const router = useRouter()
 
 const data = reactive({
-  activeKey: '',
+  preKey: [],
+  activeKey: [],
+  currentKey: '',
   currentApp: {
     index: -1,
     version: ''
@@ -205,6 +152,40 @@ const table = reactive({
   }
 })
 
+const changeCollapse = async (index) => {
+  if (index === undefined) return
+  data.currentKey = data.activeKey.filter((key) => !data.preKey.includes(key))[0]
+  data.preKey = data.activeKey
+  if (data.currentKey === undefined) return
+  data.currentApp = props.appList[data.currentKey]
+  await findSubProject(data.currentApp)
+}
+
+const changeVersion = async (app, version) => {
+  if (version === undefined) {
+    await getVersionList(app, app.groupId, app.artifactId)
+    if (!app.versions || app.versions.length === 0) return
+    version = app.versions[0]
+  }
+  await GetVersionInfo({ groupId: app.groupId, artifactId: app.artifactId, version })
+    .then((res) => {
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      // console.log('GetVersionInfo', res)
+      Object.assign(app, res.data)
+    })
+    .catch((err) => {
+      console.error(err)
+    })
+  data.currentApp = app
+  await findSubProject(app)
+  const index = data.activeKey.indexOf(String(data.currentKey))
+  // console.log(appCollapse.value, index)
+  appCollapse.value[index]?.close()
+}
+
 const getVersionList = async (app, groupId, artifactId) => {
   await GetVersionList({ groupId, artifactId })
     .then((res) => {
@@ -225,41 +206,11 @@ const getVersionList = async (app, groupId, artifactId) => {
     })
 }
 
-const changeVersion = async (index, version) => {
-  if (!index && index !== 0) return
-  const app = props.appList[index]
-  if (!app) return
-  await GetVersionInfo({ groupId: app.groupId, artifactId: app.artifactId, version })
-    .then((res) => {
-      if (res.code !== 200) {
-        message.error(res.message)
-        return
-      }
-      console.log('GetVersionInfo', res)
-      Object.assign(app, res.data)
-      // app.childProject = res.data.childProject
-      // app.childComponent = res.data.childComponent
-      console.log(app)
-    })
-    .catch((err) => {
-      console.error(err)
-    })
-  await findSubProject(index, version)
-  appCollapse.value[data.currentApp.index].close()
-}
-
-const findSubProject = async (index, version) => {
-  if (!index && index !== 0) return
-  const app = props.appList[index]
-  if (!app) return
-  app.operation = true
+const findSubProject = async (app) => {
   app.selection = {}
   await getVersionList(app, app.groupId, app.artifactId)
-  if (version) app.selection.current = version
-  else app.selection.current = app.version
-  data.currentApp.index = index
-  data.currentApp.version = app.selection.current
-  await GetSubProject({ groupId: app.groupId, artifactId: app.artifactId, version: app.selection.current })
+  app.selection.current = app.version
+  await GetSubProject({ groupId: app.groupId, artifactId: app.artifactId, version: app.version })
     .then((res) => {
       if (res.code !== 200) {
         message.error(res.message)
@@ -272,61 +223,48 @@ const findSubProject = async (index, version) => {
     .catch((err) => {
       console.error(err)
     })
+  data.currentApp = app
 }
 
-const refreshParent = (version) => {
-  emit('refresh', version)
+const refreshParent = () => {
+  emit('refresh')
 }
 
-const refresh = async (version) => {
-  if (data.currentApp.index >= 0) {
-    await findSubProject(data.currentApp.index, version)
-    appCollapse.value[data.currentApp.index]?.close()
-  }
+const refresh = async (index, versionChange = false) => {
+  data.currentKey = index
+  const app = props.appList[index]
+  if (versionChange) await changeVersion(app)
+  else await changeVersion(app, app.version)
 }
 
-const refreshChildren = async (version) => {
-  if (data.currentApp.index >= 0) {
-    await findSubProject(data.currentApp.index, data.currentApp.version)
-    appCollapse.value[data.currentApp.index]?.refresh(version)
-  }
+const refreshDrawer = async () => {
+  refresh(data.currentKey)
+  drawer.value.open(data.currentApp, true)
 }
 
 const addProject = (app, index) => {
-  data.currentApp.index = index
-  data.currentApp.version = app.selection.current
+  data.currentKey = index
   addAppModal.value.open(app.id, null)
 }
 
 const upgradeProject = (app, index) => {
-  data.currentApp.index = index
-  data.currentApp.version = app.selection.current
+  data.currentKey = index
   upgradeAppModal.value.open(app, props.parentApp)
 }
 
-const addDependency = (app, index) => {
-  data.currentApp.index = index
-  data.currentApp.version = app.selection.current
-  addDepModal.value.open(app, true)
-}
-
-const updateDependency = (app, index) => {
-  data.currentApp.index = index
-  data.currentApp.version = app.selection.current
-  addDepModal.value.open(app, false)
-}
-
-const retry = (record, index) => {
-  record.popconfirm = false
-  updateDependency(record, index)
-}
-
-const deleteVersion = (app) => {
+const deleteVersion = (app, index) => {
+  data.currentKey = index
   deleteAppModal.value.open(app, props.parentApp)
 }
 
+const showAppDetail = (app, isProject, index) => {
+  data.currentKey = index
+  drawer.value.open(app, isProject)
+}
+
 const close = () => {
-  data.activeKey = ''
+  data.activeKey = []
+  data.preKey = []
 }
 
 defineExpose({ refresh, close })
@@ -356,7 +294,7 @@ defineExpose({ refresh, close })
   content: '';
 }
 :deep(.ant-collapse .ant-collapse-content > .ant-collapse-content-box) {
-  padding: 16px 0px 16px 16px;
+  padding: 0px 0px 0px 16px;
 }
 :deep(.ant-collapse > .ant-collapse-item:last-child),
 :deep(.ant-collapse > .ant-collapse-item:last-child > .ant-collapse-header),
