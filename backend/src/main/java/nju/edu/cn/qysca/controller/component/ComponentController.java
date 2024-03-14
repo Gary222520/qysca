@@ -2,6 +2,7 @@ package nju.edu.cn.qysca.controller.component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import nju.edu.cn.qysca.auth.Authorized;
 import nju.edu.cn.qysca.controller.ResponseMsg;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.*;
@@ -28,6 +29,7 @@ public class ComponentController {
 
     @ApiOperation("新增闭源组件")
     @PostMapping("/saveCloseComponent")
+    @Authorized(roles = {"App Leader", "App Member"})
     public ResponseMsg<Boolean> saveCloseComponent(@RequestBody SaveCloseComponentDTO dto) {
         componentService.saveCloseComponent(dto);
         return new ResponseMsg<>(Boolean.TRUE);

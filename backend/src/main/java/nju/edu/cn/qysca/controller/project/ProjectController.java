@@ -3,6 +3,7 @@ package nju.edu.cn.qysca.controller.project;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import nju.edu.cn.qysca.auth.Authorized;
 import nju.edu.cn.qysca.controller.ResponseMsg;
 import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
@@ -59,6 +60,7 @@ public class ProjectController {
 
     @ApiOperation("新增/更新项目")
     @PostMapping("/saveProject")
+    @Authorized(roles = {"BU PO"})
     public ResponseMsg<Boolean> saveProject(@RequestBody SaveProjectDTO saveProjectDTO) {
         Boolean result = projectService.saveProject(saveProjectDTO);
         return new ResponseMsg<>(result);
@@ -66,6 +68,7 @@ public class ProjectController {
 
     @ApiOperation("向项目中增加组件")
     @PostMapping("/saveProjectComponent")
+    @Authorized(roles = {"APP Leader","APP Member"})
     public ResponseMsg<Boolean> saveProjectComponent(@RequestBody ProjectComponentDTO projectComponentDTO) {
         Boolean result = projectService.saveProjectComponent(projectComponentDTO);
         return new ResponseMsg<>(result);
@@ -73,6 +76,7 @@ public class ProjectController {
 
     @ApiOperation("向项目中增加已有子项目")
     @PostMapping("/addSubProject")
+    @Authorized(roles = {"BU PO"})
     public ResponseMsg<Boolean> addSubProject(@RequestBody AddSubProjectDTO addSubProjectDTO) {
         Boolean result = projectService.addSubProject(addSubProjectDTO);
         return new ResponseMsg<>(result);
@@ -81,6 +85,7 @@ public class ProjectController {
 
     @ApiOperation("删除项目中的组件")
     @PostMapping("/deleteProjectComponent")
+    @Authorized(roles = {"BU Rep"})
     public ResponseMsg<Boolean> deleteProjectComponent(@RequestBody ProjectComponentDTO projectComponentDTO) {
         Boolean result = projectService.deleteProjectComponent(projectComponentDTO);
         return new ResponseMsg<>(result);
@@ -88,6 +93,7 @@ public class ProjectController {
 
     @ApiOperation("新增/更新项目依赖信息")
     @PostMapping("/saveProjectDependency")
+    @Authorized(roles = {"App Leader", "App Member"})
     public ResponseMsg<Void> saveProjectDependency(@RequestBody SaveProjectDependencyDTO saveProjectDependencyDTO) {
         projectService.changeProjectState(saveProjectDependencyDTO.getGroupId(), saveProjectDependencyDTO.getArtifactId(), saveProjectDependencyDTO.getVersion());
         projectService.saveProjectDependency(saveProjectDependencyDTO);
@@ -97,6 +103,7 @@ public class ProjectController {
 
     @ApiOperation("升级项目")
     @PostMapping("/upgradeProject")
+    @Authorized(roles= {"BU PO"})
     public ResponseMsg<Boolean> upgradeProject(@RequestBody UpgradeProjectDTO upgradeProjectDTO) {
         Boolean result = projectService.upgradeProject(upgradeProjectDTO);
         return new ResponseMsg<>(result);
@@ -104,6 +111,7 @@ public class ProjectController {
 
     @ApiOperation("删除项目某个版本")
     @PostMapping("/deleteProjectVersion")
+    @Authorized(roles = {"BU Rep"})
     public ResponseMsg<Boolean> deleteProjectVersion(@RequestBody DeleteProjectDTO deleteProjectDTO) {
         return new ResponseMsg<>(projectService.deleteProjectVersion(deleteProjectDTO));
     }
@@ -168,6 +176,7 @@ public class ProjectController {
 
     @ApiOperation("改变项目锁定状态")
     @PostMapping("/changeLockState")
+    @Authorized(roles = {"Bu Rep"})
     public ResponseMsg<Void> changeLockState(@ApiParam(value = "组织Id", required = true) @RequestParam String groupId, @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId, @ApiParam(value = "版本号", required = true) @RequestParam String version) {
         projectService.changeLockState(groupId, artifactId, version);
         return new ResponseMsg<>(null);
@@ -175,6 +184,7 @@ public class ProjectController {
 
     @ApiOperation("改变项目发布状态")
     @PostMapping("/changeReleaseState")
+    @Authorized(roles = {"Bu Rep"})
     public ResponseMsg<Void> changeReleaseState(@ApiParam(value = "组织Id", required = true) @RequestParam String groupId, @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId, @ApiParam(value = "版本号", required = true) @RequestParam String version) {
         projectService.changeReleaseState(groupId, artifactId, version);
         return new ResponseMsg<>(null);
