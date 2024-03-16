@@ -73,7 +73,7 @@ public class UserServiceImpl implements UserService {
         UserDO userDO = UserDO.builder()
                 .uid(claims.get("uid").as(String.class))
                 .name(claims.get("name").as(String.class))
-                .role(claims.get("role").as(String.class))
+/*                .role(claims.get("role").as(String.class))*/
                 .email(claims.get("email").as(String.class))
                 .phone(claims.get("phone").as(String.class))
                 .build();

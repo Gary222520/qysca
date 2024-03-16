@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.project.dtos;
+package nju.edu.cn.qysca.domain.application.dtos;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -9,16 +9,16 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel(description = "增加/删除项目组件信息接口")
-public class ProjectComponentDTO {
+@ApiModel(description = "增加/删除应用组件信息接口")
+public class ApplicationComponentDTO {
 
-    @ApiModelProperty(value = "父项目组织Id", example = "nju.edu.cn")
+    @ApiModelProperty(value = "父应用组织Id", example = "nju.edu.cn")
     private String parentGroupId;
 
-    @ApiModelProperty(value = "父项目工件Id", example = "qysca")
+    @ApiModelProperty(value = "父应用工件Id", example = "qysca")
     private String parentArtifactId;
 
-    @ApiModelProperty(value = "父项目版本号", example = "1.0.0")
+    @ApiModelProperty(value = "父应用版本号", example = "1.0.0")
     private String parentVersion;
 
     @ApiModelProperty(value = "组织Id", example = "nju.edu.cn")

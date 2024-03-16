@@ -54,7 +54,7 @@ public class JwtConfig {
                 .withClaim("name", userDO.getName())
                 .withClaim("email",userDO.getEmail())
                 .withClaim("phone",userDO.getPhone())
-                .withClaim("role", userDO.getRole())
+/*                .withClaim("role", userDO.getRole())*/
                 //超时设置,设置过期的日期
                 .withExpiresAt(expireDate)
                 //签发时间

@@ -37,6 +37,6 @@ public class FileChunkDO {
     @ApiModelProperty(value = "文件名", example = "pom.xml")
     private String filename;
 
-    @ApiModelProperty(value = "相对路径", example = "poms/project1/1.8.7")
+    @ApiModelProperty(value = "相对路径", example = "poms/application1/1.8.7")
     private String relativePath;
 }

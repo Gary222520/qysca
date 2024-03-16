@@ -50,16 +50,16 @@ public class ComponentDO {
     @ApiModelProperty(value = "语言", example = "java")
     private String language;
 
-    @Column(name="opensource",nullable = false)
-    @ApiModelProperty(value = "是否开源",example = "true")
-    private Boolean opensource;
+    @Column(name="type",nullable = false)
+    @ApiModelProperty(value = "组件类型",example = "opensource")
+    private String type;
 
     @Column(name = "description")
     @ApiModelProperty(value = "组件描述", example = "Core starter, including auto-configuration support, logging and YAML")
     private String description;
 
     @Column(name = "url")
-    @ApiModelProperty(value = "组件主页地址", example = "https://spring.io/projects/spring-boot")
+    @ApiModelProperty(value = "组件主页地址", example = "https://spring.io/applications/spring-boot")
     private String url;
 
     @Column(name = "download_url")
@@ -67,7 +67,7 @@ public class ComponentDO {
     private String downloadUrl;
 
     @Column(name = "source_url")
-    @ApiModelProperty(value = "源码地址", example = "https://github.com/spring-projects/spring-boot")
+    @ApiModelProperty(value = "源码地址", example = "https://github.com/spring-applications/spring-boot")
     private String sourceUrl;
 
     @Column(name = "p_url")
@@ -88,4 +88,8 @@ public class ComponentDO {
     @ApiModelProperty(value = "哈希值列表")
     @Type(type="jsonb")
     private List<HashDO> hashes=new ArrayList<>();
+
+    @Column(name = "creator")
+    @ApiModelProperty(value = "创建者", example = "000000000")
+    private String creator;
 }

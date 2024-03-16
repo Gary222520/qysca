@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.project.dtos;
+package nju.edu.cn.qysca.domain.application.dtos;
 
 
 import io.swagger.annotations.ApiModel;
@@ -10,22 +10,22 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ApiModel(description = "新增/更新项目依赖信息")
-public class SaveProjectDependencyDTO {
+@ApiModel(description = "新增/更新应用依赖信息")
+public class SaveApplicationDependencyDTO {
 
-    @ApiModelProperty(value = "项目组织Id", example = "nju.edu,cn")
+    @ApiModelProperty(value = "应用组织Id", example = "nju.edu,cn")
     private String groupId;
 
-    @ApiModelProperty(value = "项目工件Id", example = "qysca")
+    @ApiModelProperty(value = "应用工件Id", example = "qysca")
     private String artifactId;
 
-    @ApiModelProperty(value = "项目版本", example = "1.0.0")
+    @ApiModelProperty(value = "应用版本", example = "1.0.0")
     private String version;
 
     @ApiModelProperty(value = "Pom文件路径", example = "/pom.xml")
     private String filePath;
 
-    @ApiModelProperty(value = "项目语言", example = "java")
+    @ApiModelProperty(value = "应用语言", example = "java")
     private String language;
 
     @ApiModelProperty(value = "构建工具",example = "maven")

@@ -1,11 +1,11 @@
 package nju.edu.cn.qysca.domain.user.dos;
 
-import io.netty.channel.unix.PeerCredentials;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nju.edu.cn.qysca.domain.bu.dos.BuDO;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -15,7 +15,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "user_role")
+@Table(name= "employee")
 public class UserDO {
     @Id
     @Column(name="id",nullable = false)
@@ -44,7 +44,7 @@ public class UserDO {
     @ApiModelProperty(value = "用户手机", example = "18930298746")
     private String phone;
 
-    @Column(name = "role",nullable = false)
-    @ApiModelProperty(value = "用户角色", example = "Bu Rep, App Leader, App Member, Bu PO, Admin")
-    private String role;
+    @ManyToOne
+    @JoinColumn(name = "bu_id", nullable = false)
+    private BuDO bu;
 }

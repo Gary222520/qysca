@@ -44,7 +44,7 @@ public class AuthAspect {
             UserDO user = userService.auth(token);
 
             // 判断切面方法是否包含当前token对应的角色
-            if (!Arrays.stream(authorized.roles()).collect(Collectors.toList()).contains(user.getRole())) {
+/*            if (!Arrays.stream(authorized.roles()).collect(Collectors.toList()).contains(user.getRole())) {
                 throw new PlatformException(403, "访问未授权");
             } else {
                 // 将token的对象赋值给切面方法的user参数
@@ -55,7 +55,7 @@ public class AuthAspect {
                         break;
                     }
                 }
-            }
+            }*/
         }catch (PlatformException e) {
             throw new PlatformException(403, "认证失败");
         }

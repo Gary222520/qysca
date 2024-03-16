@@ -40,7 +40,7 @@ public class MavenServiceImpl implements MavenService {
      * @param filePath
      */
     @Override
-    public ComponentDependencyTreeDO projectDependencyAnalysis(String filePath, String builder, int flag) throws Exception {
+    public ComponentDependencyTreeDO applicationDependencyAnalysis(String filePath, String builder, int flag) throws Exception {
         Node node = mavenDependencyTreeAnalyzer(filePath, builder, flag);
         ComponentDependencyTreeDO componentDependencyTreeDO = convertNode(node, 0);
         return componentDependencyTreeDO;
@@ -49,7 +49,7 @@ public class MavenServiceImpl implements MavenService {
     /**
      * @param filePath 文件路径
      * @param builder  构造工具
-     * @param flag     0 项目 1 闭源组件
+     * @param flag     0 应用 1 闭源组件
      * @return Node 封装好的依赖信息树
      * @throws Exception
      */
@@ -135,14 +135,14 @@ public class MavenServiceImpl implements MavenService {
                 componentDO = spiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 if (componentDO != null) {
                     componentDao.save(componentDO);
-                    componentDependencyTreeDO.setOpensource(true);
+                    componentDependencyTreeDO.setType("opensource");
                 } else {
-                    componentDependencyTreeDO.setOpensource(false);
+                    componentDependencyTreeDO.setType("opensource");
                     //如果爬虫没有爬到则扫描错误 通过抛出异常处理
                     throw new PlatformException(500, "存在未识别的组件");
                 }
             } else {
-                componentDependencyTreeDO.setOpensource(componentDO.getOpensource());
+                componentDependencyTreeDO.setType(componentDO.getType());
             }
         }
         componentDependencyTreeDO.setDepth(depth);

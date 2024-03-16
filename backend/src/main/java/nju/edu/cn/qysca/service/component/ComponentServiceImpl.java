@@ -54,7 +54,7 @@ public class ComponentServiceImpl implements ComponentService {
     public Page<ComponentDO> findComponentsPage(ComponentSearchDTO searchComponentDTO) {
         // 设置查询条件
         ComponentDO searcher = new ComponentDO();
-        searcher.setOpensource(searchComponentDTO.getOpensource());
+        searcher.setType(searchComponentDTO.getType());
         searcher.setGroupId(searchComponentDTO.getGroupId().equals("") ? null : searchComponentDTO.getGroupId());
         searcher.setArtifactId(searchComponentDTO.getArtifactId().equals("") ? null : searchComponentDTO.getArtifactId());
         searcher.setVersion(searchComponentDTO.getArtifactId().equals("") ? null : searchComponentDTO.getVersion());
@@ -145,8 +145,8 @@ public class ComponentServiceImpl implements ComponentService {
                 fileWriter.write(xml);
                 fileWriter.flush();
                 fileWriter.close();
-                ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(tempPath, "maven", 0);
-                componentDependencyTreeDO.setOpensource(true);
+                ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.applicationDependencyAnalysis(tempPath, "maven", 0);
+                componentDependencyTreeDO.setType("opensource");
                 dependencyTreeDO = new DependencyTreeDO();
                 dependencyTreeDO.setGroupId(componentGavDTO.getGroupId());
                 dependencyTreeDO.setArtifactId(componentGavDTO.getArtifactId());
@@ -262,7 +262,8 @@ public class ComponentServiceImpl implements ComponentService {
         javaCloseComponentDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
         javaCloseComponentDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
         javaCloseComponentDO.setVersion(model.getVersion() == null ? "-" : model.getVersion());
-        javaCloseComponentDO.setOpensource(false);
+        //TODO: 直接创建闭源组件
+        javaCloseComponentDO.setType("");
         javaCloseComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
         javaCloseComponentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
         javaCloseComponentDO.setDownloadUrl(model.getDistributionManagement() == null ? "-" : model.getDistributionManagement().getDownloadUrl());
@@ -289,8 +290,9 @@ public class ComponentServiceImpl implements ComponentService {
         javaCloseDependencyTreeDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
         javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
         javaCloseDependencyTreeDO.setVersion(model.getVersion() == null ? "-" : model.getVersion());
-        ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(filePath, builder, 1);
-        componentDependencyTreeDO.setOpensource(false);
+        ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.applicationDependencyAnalysis(filePath, builder, 1);
+        //TODO: 直接创建闭源组件
+        componentDependencyTreeDO.setType("");
         javaCloseDependencyTreeDO.setTree(componentDependencyTreeDO);
         return javaCloseDependencyTreeDO;
     }
@@ -319,7 +321,7 @@ public class ComponentServiceImpl implements ComponentService {
             dependencyTableDO.setScope(componentDependencyTreeDO.getScope());
             dependencyTableDO.setDepth(componentDependencyTree.getDepth());
             dependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
-            dependencyTableDO.setOpensource(componentDependencyTree.getOpensource());
+            dependencyTableDO.setType(componentDependencyTree.getType());
             queue.addAll(componentDependencyTree.getDependencies());
             closeDependencyTableDOList.add(dependencyTableDO);
         }
@@ -387,7 +389,7 @@ public class ComponentServiceImpl implements ComponentService {
             dependencyTableDO.setScope(componentDependencyTreeDO.getScope());
             dependencyTableDO.setDepth(componentDependencyTreeDO.getDepth());
             dependencyTableDO.setDirect(dependencyTableDO.getDepth() == 1);
-            dependencyTableDO.setOpensource(componentDependencyTreeDO.getOpensource());
+            dependencyTableDO.setType(componentDependencyTreeDO.getType());
             result.add(dependencyTableDO);
             queue.addAll(componentDependencyTreeDO.getDependencies());
         }

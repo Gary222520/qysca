@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.project.dtos;
+package nju.edu.cn.qysca.domain.application.dtos;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -10,7 +10,7 @@ import nju.edu.cn.qysca.utils.excel.ExcelExport;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel("项目依赖平铺信息（详细）Excel表DTO")
+@ApiModel("应用依赖平铺信息（详细）Excel表DTO")
 public class TableExcelDetailDTO {
     @ApiModelProperty(value = "组件名称", example = "spring-boot-starter")
     @ExcelExport(value = "组件名称")
@@ -44,15 +44,15 @@ public class TableExcelDetailDTO {
     @ExcelExport(value = "依赖范围")
     private String scope;
 
-    @ApiModelProperty(value = "是否开源", example = "true")
-    @ExcelExport(value = "是否开源", kv = "true-开源;false-闭源")
-    private Boolean opensource;
+    @ApiModelProperty(value = "类型", example = "opensource")
+    @ExcelExport(value = "类型")
+    private String type;
 
     @ApiModelProperty(value = "组件描述", example = "Core starter, including auto-configuration support, logging and YAML")
     @ExcelExport(value = "组件描述")
     private String description;
 
-    @ApiModelProperty(value = "组件主页地址", example = "https://spring.io/projects/spring-boot")
+    @ApiModelProperty(value = "组件主页地址", example = "https://spring.io/applications/spring-boot")
     @ExcelExport(value = "主页地址")
     private String url;
 
@@ -60,7 +60,7 @@ public class TableExcelDetailDTO {
     @ExcelExport(value = "下载地址")
     private String downloadUrl;
 
-    @ApiModelProperty(value = "源码地址", example = "https://github.com/spring-projects/spring-boot")
+    @ApiModelProperty(value = "源码地址", example = "https://github.com/spring-applications/spring-boot")
     @ExcelExport(value = "源码地址")
     private String sourceUrl;
 

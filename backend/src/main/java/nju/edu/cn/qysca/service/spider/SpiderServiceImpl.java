@@ -198,8 +198,8 @@ public class SpiderServiceImpl implements SpiderService {
         componentDO.setVersion(version);
 
         componentDO.setName(model.getName() == null ? "-" : model.getName());
-        componentDO.setLanguage("Java");
-        componentDO.setOpensource(true);
+        componentDO.setLanguage("java");
+        componentDO.setType("opensource");
         componentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
 
         componentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());

@@ -20,10 +20,10 @@ public interface ComponentDao extends JpaRepository<ComponentDO, String> {
     ComponentDO findByGroupIdAndArtifactIdAndVersion(String groupId, String artifactId, String version);
 
     /**
-     * 根据项目Id查询子组件
-     * @param projectId 项目Id
+     * 根据应用Id查询子组件
+     * @param applicationId 应用Id
      * @return List<ComponentDO> 子组件列表
      */
-    @Query(value = "select * from component where id = any (select unnest(child_component) from project where id = :projectId) order by name desc", nativeQuery = true)
-    List<ComponentDO> findSubComponent(String projectId);
+    @Query(value = "select * from component where id = any (select unnest(child_component) from application where id = :applicationId) order by name desc", nativeQuery = true)
+    List<ComponentDO> findSubComponent(String applicationId);
 }

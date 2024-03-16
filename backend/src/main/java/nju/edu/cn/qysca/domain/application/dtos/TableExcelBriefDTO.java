@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.project.dtos;
+package nju.edu.cn.qysca.domain.application.dtos;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -10,7 +10,7 @@ import nju.edu.cn.qysca.utils.excel.ExcelExport;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel("项目依赖平铺信息（简明）Excel表DTO")
+@ApiModel("应用依赖平铺信息（简明）Excel表DTO")
 public class TableExcelBriefDTO {
 
     @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
@@ -41,7 +41,7 @@ public class TableExcelBriefDTO {
     @ExcelExport(value = "依赖范围")
     private String scope;
 
-    @ApiModelProperty(value = "是否开源", example = "true")
-    @ExcelExport(value = "是否开源", kv = "true-开源;false-闭源")
-    private Boolean opensource;
+    @ApiModelProperty(value = "类型", example = "类型")
+    @ExcelExport(value = "类型")
+    private String type;
 }

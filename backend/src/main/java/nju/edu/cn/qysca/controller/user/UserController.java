@@ -39,7 +39,7 @@ public class UserController {
     @Authorized(roles= {"App Leader","Bu PO","Admin"})
     public ResponseMsg userRegister(UserDO current,@RequestBody UserDO userDO) {
         // 权限控制
-        if(current==null || current.getRole()==null){
+/*        if(current==null || current.getRole()==null){
             throw new PlatformException(403,"未经授权");
         }
         switch (current.getRole()) {
@@ -58,7 +58,7 @@ public class UserController {
                     throw new PlatformException(500, "创建权限不足");
                 }
                 break;
-        }
+        }*/
         userService.register(userDO);
         return new ResponseMsg();
     }

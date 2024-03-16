@@ -1,10 +1,11 @@
-package nju.edu.cn.qysca.domain.project.dos;
+package nju.edu.cn.qysca.domain.application.dos;
 
 import com.vladmihalcea.hibernate.type.array.StringArrayType;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nju.edu.cn.qysca.domain.bu.dos.BuDO;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -16,11 +17,11 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "project", uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id", "artifact_id", "version"})})
+@Table(name = "application", uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id", "artifact_id", "version"})})
 @TypeDefs({
         @TypeDef(name = "string-array", typeClass = StringArrayType.class)
 })
-public class ProjectDO {
+public class ApplicationDO {
     @Id
     @Column(name = "id", nullable = false)
     @GenericGenerator(name = "jpa-uuid", strategy = "uuid")
@@ -41,15 +42,15 @@ public class ProjectDO {
     private String version;
 
     @Column(name = "name")
-    @ApiModelProperty(value = "项目名称", example = "backend")
+    @ApiModelProperty(value = "应用名称", example = "backend")
     private String name;
 
     @Column(name = "description")
-    @ApiModelProperty(value = "项目描述", example = "backend of sca system")
+    @ApiModelProperty(value = "应用描述", example = "backend of sca system")
     private String description;
 
     @Column(name = "language", nullable = false)
-    @ApiModelProperty(value = "项目语言", example = "java")
+    @ApiModelProperty(value = "应用语言", example = "java")
     private String language;
 
     @Column(name = "type", nullable = false)
@@ -73,28 +74,32 @@ public class ProjectDO {
     private String time;
 
     @Column(name = "lock", nullable = false)
-    @ApiModelProperty(value = "项目是否被锁住", example = "true")
+    @ApiModelProperty(value = "应用是否被锁住", example = "true")
     private Boolean lock;
 
     @Column(name = "release", nullable = false)
-    @ApiModelProperty(value = "项目是否被发布", example = "true")
+    @ApiModelProperty(value = "应用是否被发布", example = "true")
     private Boolean release;
 
     @Column(name = "root", nullable = false)
-    @ApiModelProperty(value = "项目是否是根目录", example = "true")
+    @ApiModelProperty(value = "应用是否是根目录", example = "true")
     private Boolean root;
 
     @Column(name = "creator", nullable = false)
     @ApiModelProperty(value = "创建人", example = "000000000")
     private String creator;
 
-    @Column(name = "childProject")
-    @ApiModelProperty(value = "子项目", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
+    @Column(name = "childApplication")
+    @ApiModelProperty(value = "子应用", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
     @Type(type = "string-array")
-    private String[] childProject = {};
+    private String[] childApplication = {};
 
     @Column(name = "childComponent")
     @ApiModelProperty(value = "子组件", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
     @Type(type = "string-array")
     private  String[] childComponent = {};
+
+    @ManyToOne
+    @JoinColumn(name = "bu_id", nullable = false)
+    private BuDO bu;
 }

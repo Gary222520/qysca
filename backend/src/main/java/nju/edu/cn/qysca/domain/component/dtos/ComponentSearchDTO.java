@@ -26,8 +26,8 @@ public class ComponentSearchDTO {
     @ApiModelProperty(value = "语言", example = "java")
     private String language;
 
-    @ApiModelProperty(value = "是否开源", example = "true")
-    private Boolean opensource;
+    @ApiModelProperty(value = "类型", example = "opensource")
+    private String type;
 
     @ApiModelProperty(value = "页码", example = "1")
     private Integer number;
