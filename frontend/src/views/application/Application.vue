@@ -59,29 +59,32 @@
                     <template #icon><EyeOutlined /></template>已发布
                   </a-tag>
                 </div>
-                <!-- <FileSearchOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
-                <PlusOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
-                <RocketOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
-                <DeleteOutlined :style="{ fontSize: '24px', color: '#ff4d4f', marginRight: '10px' }" /> -->
               </div>
               <div style="display: flex; align-items: center">
-                <FileSearchOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
-                <PlusOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
-                <RocketOutlined :style="{ fontSize: '24px', color: '#6f005f', marginRight: '10px' }" />
-                <DeleteOutlined :style="{ fontSize: '24px', color: '#ff4d4f', marginRight: '10px' }" />
-
-                <!-- <a-button type="primary" @click.stop="showAppDetail(app, true, index)" style="margin-right: 10px">
-                  <FileSearchOutlined />查看详情
-                </a-button>
-                <a-button type="primary" @click.stop="addProject(app, index)" style="margin-right: 10px">
-                  <PlusOutlined />添加应用
-                </a-button>
-                <a-button type="primary" @click.stop="upgradeProject(app, index)" style="margin-right: 10px">
-                  <RocketOutlined />应用升级
-                </a-button>
-                <a-button type="primary" danger @click.stop="deleteVersion(app, index)" style="margin-right: 10px">
-                  <DeleteOutlined />删除该版本
-                </a-button> -->
+                <a-tooltip>
+                  <template #title>查看详情</template>
+                  <FileSearchOutlined
+                    @click.stop="showAppDetail(app, true, index)"
+                    :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                </a-tooltip>
+                <a-tooltip>
+                  <template #title>添加应用</template>
+                  <PlusOutlined
+                    @click.stop="addProject(app, index)"
+                    :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                </a-tooltip>
+                <a-tooltip>
+                  <template #title>应用升级</template>
+                  <RocketOutlined
+                    @click.stop="upgradeProject(app, index)"
+                    :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                </a-tooltip>
+                <a-tooltip>
+                  <template #title>删除该版本</template>
+                  <DeleteOutlined
+                    @click.stop="deleteVersion(app, index)"
+                    :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                </a-tooltip>
               </div>
             </div>
           </template>
@@ -382,7 +385,7 @@ const showAppDetail = (app, isProject, index) => {
   border-radius: 0;
 }
 .collapse_header {
-  height: 36px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -47,7 +47,7 @@ const drawer = ref()
 const data = reactive({
   visible: true,
   treeData: [],
-  expandedKeys: [],
+  expandedKeys: ['0-0'],
   selectedKeys: []
 })
 const show = (groupId, artifactId, toVersion, fromVersion) => {

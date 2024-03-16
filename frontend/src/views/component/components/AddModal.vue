@@ -123,6 +123,14 @@
               <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
             </div>
           </div>
+          <div style="margin-left: 40px">
+            选择组件类型：
+            <a-select v-model:value="projectInfo.type">
+              <a-select-option value="opensource">开源</a-select-option>
+              <a-select-option value="business">商用</a-select-option>
+              <a-select-option value="internal">内部</a-select-option>
+            </a-select>
+          </div>
         </div>
       </div>
       <div class="button">
@@ -151,7 +159,8 @@ const data = reactive({
 const projectInfo = reactive({
   language: 'java',
   builder: 'maven',
-  filePath: ''
+  filePath: '',
+  type: 'opensource'
 })
 const open = () => {
   data.open = true
@@ -277,3 +286,4 @@ defineExpose({ open })
 <style scoped src="@/atdv/steps.css"></style>
 <style scoped src="@/atdv/input.css"></style>
 <style scoped src="@/atdv/spin.css"></style>
+<style scoped src="@/atdv/select.css"></style>
