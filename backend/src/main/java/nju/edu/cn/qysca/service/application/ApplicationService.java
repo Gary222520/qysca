@@ -102,13 +102,6 @@ public interface ApplicationService {
     Boolean deleteApplicationComponent(ApplicationComponentDTO applicationComponentDTO);
 
     /**
-     * 向应用中添加已有应用
-     * @param addSubApplicationDTO 添加已有应用接口信息
-     * @return 添加已有应用是否成功
-     */
-    Boolean addSubApplication(AddSubApplicationDTO addSubApplicationDTO);
-
-    /**
      * 分页获取指定应用的版本信息
      *
      * @param groupId 组织Id
@@ -195,9 +188,7 @@ public interface ApplicationService {
 
     /**
      * 改变应用发布状态
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
-     * @param version 版本号
+     * @param changeReleaseStateDTO 应用发布状态
      */
-    void changeReleaseState(String groupId, String artifactId, String version);
+    void changeReleaseState(ChangeReleaseStateDTO changeReleaseStateDTO);
 }

@@ -93,10 +93,10 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public SubApplicationDTO findSubApplication(String groupId, String artifactId, String version) {
         ApplicationDO applicationDO =  applicationDao.findByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
-        List<ApplicationDO> subapplication = applicationDao.findSubApplication(applicationDO.getId());
+        List<ApplicationDO> subApplication = applicationDao.findSubApplication(applicationDO.getId());
         List<ComponentDO> subComponent = componentDao.findSubComponent(applicationDO.getId());
         SubApplicationDTO subApplicationDTO = new SubApplicationDTO();
-        subApplicationDTO.setSubapplication(subapplication);
+        subApplicationDTO.setSubapplication(subApplication);
         subApplicationDTO.setSubComponent(subComponent);
         return subApplicationDTO;
     }
@@ -162,24 +162,19 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Transactional
     public void saveApplicationDependency(SaveApplicationDependencyDTO saveApplicationDependencyDTO) {
         try {
-            ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.applicationDependencyAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), 0);
+            DependencyTreeDO analyzedDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "", 0);
+            if(!analyzedDependencyTreeDO.getGroupId().equals(saveApplicationDependencyDTO.getGroupId()) || !analyzedDependencyTreeDO.getArtifactId().equals(saveApplicationDependencyDTO.getArtifactId()) || !analyzedDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
+                throw new PlatformException(500, "上传pom文件非本项目");
+            }
             DependencyTreeDO applicationDependencyTreeDO = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(saveApplicationDependencyDTO.getGroupId(), saveApplicationDependencyDTO.getArtifactId(), saveApplicationDependencyDTO.getVersion());
             if(applicationDependencyTreeDO == null){
                 applicationDependencyTreeDO = new DependencyTreeDO();
-                applicationDependencyTreeDO.setGroupId(saveApplicationDependencyDTO.getGroupId());
-                applicationDependencyTreeDO.setArtifactId(saveApplicationDependencyDTO.getArtifactId());
-                applicationDependencyTreeDO.setVersion(saveApplicationDependencyDTO.getVersion());
-                applicationDependencyTreeDO.setTree(componentDependencyTreeDO);
-            }else{
-                applicationDependencyTreeDO = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(saveApplicationDependencyDTO.getGroupId(), saveApplicationDependencyDTO.getArtifactId(), saveApplicationDependencyDTO.getVersion());
-                applicationDependencyTreeDO.setTree(componentDependencyTreeDO);
             }
+            BeanUtils.copyProperties(analyzedDependencyTreeDO, applicationDependencyTreeDO);
             dependencyTreeDao.save(applicationDependencyTreeDO);
             // 批量更新依赖平铺表
-            List<DependencyTableDO> applicationDependencyTableDOS = createapplicationDependencyTable(applicationDependencyTreeDO);
-            for (DependencyTableDO dependencyTableDO : applicationDependencyTableDOS) {
-                dependencyTableDO.setLanguage(saveApplicationDependencyDTO.getLanguage());
-            }
+            dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(saveApplicationDependencyDTO.getGroupId(), saveApplicationDependencyDTO.getArtifactId(), saveApplicationDependencyDTO.getVersion());
+            List<DependencyTableDO> applicationDependencyTableDOS = mavenService.dependencyTableAnalysis(applicationDependencyTreeDO);
             dependencyTableDao.saveAll(applicationDependencyTableDOS);
             // 更改状态为SUCCESS
             ApplicationDO applicationDO = applicationDao.findByGroupIdAndArtifactIdAndVersion(saveApplicationDependencyDTO.getGroupId(), saveApplicationDependencyDTO.getArtifactId(), saveApplicationDependencyDTO.getVersion());
@@ -259,10 +254,10 @@ public class ApplicationServiceImpl implements ApplicationService {
             return Boolean.TRUE;
         }
         // 递归删除子应用 若子应用在其他应用中引用则只删除关系，否则删除应用
-        deleteapplicationRecursively(applicationDO.getId());
+        deleteApplicationRecursively(applicationDO.getId());
         return Boolean.TRUE;
     }
-    private void deleteapplicationRecursively(String applicationId) {
+    private void deleteApplicationRecursively(String applicationId) {
         ApplicationDO applicationDO = applicationDao.findApplicationDOById(applicationId);
         if(applicationDO != null){
             deleteChildrenRecursively(applicationDO.getChildApplication());
@@ -279,7 +274,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         for(String child : children){
             List<ApplicationDO> parentapplication = applicationDao.findParentApplication(child);
             if(parentapplication.size() <= 1){
-                deleteapplicationRecursively(child);
+                deleteApplicationRecursively(child);
             }
         }
     }
@@ -318,19 +313,6 @@ public class ApplicationServiceImpl implements ApplicationService {
         applicationDao.save(applicationDO);
         return Boolean.TRUE;
     }
-
-    @Override
-    @Transactional
-    public Boolean addSubApplication(AddSubApplicationDTO addSubApplicationDTO) {
-        ApplicationDO parentApplicationDO = applicationDao.findByGroupIdAndArtifactIdAndVersion(addSubApplicationDTO.getParentGroupId(), addSubApplicationDTO.getParentArtifactId(), addSubApplicationDTO.getParentVersion());
-        ApplicationDO subApplicationDO = applicationDao.findByGroupIdAndArtifactIdAndVersion(addSubApplicationDTO.getGroupId(), addSubApplicationDTO.getArtifactId(), addSubApplicationDTO.getVersion());
-        ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentApplicationDO.getChildComponent()));
-        temp.add(subApplicationDO.getId());
-        parentApplicationDO.setChildComponent(temp.toArray(new String[temp.size()]));
-        applicationDao.save(parentApplicationDO);
-        return Boolean.TRUE;
-    }
-
     /**
      * 改变应用的锁定状态
      * @param groupId 组织Id
@@ -350,17 +332,21 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     /**
      * 改变应用的发布状态
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
-     * @param version 版本号
+     * @param changeReleaseStateDTO 应用发布状态DTO
      */
     @Override
-    public void changeReleaseState(String groupId, String artifactId, String version) {
-        ApplicationDO applicationDO = applicationDao.findByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
+    public void changeReleaseState(ChangeReleaseStateDTO changeReleaseStateDTO) {
+        ApplicationDO applicationDO = applicationDao.findByGroupIdAndArtifactIdAndVersion(changeReleaseStateDTO.getGroupId(), changeReleaseStateDTO.getArtifactId(), changeReleaseStateDTO.getVersion());
         if(applicationDO.getRelease()) {
             applicationDO.setRelease(false);
         } else {
+            // 发布应用成组件
             applicationDO.setRelease(true);
+            ComponentDO componentDO = new ComponentDO();
+            BeanUtils.copyProperties(applicationDO, componentDO);
+            componentDO.setType(changeReleaseStateDTO.getType());
+            //TODO: 通过应用发布的组件没有license等信息
+            componentDao.save(componentDO);
         }
         applicationDao.save(applicationDO);
     }
@@ -633,35 +619,6 @@ public class ApplicationServiceImpl implements ApplicationService {
             }
         }
         return root;
-    }
-
-    /**
-     * 保存应用依赖平铺表
-     *
-     * @param applicationDependencyTreeDO 应用依赖信息树状
-     */
-    private List<DependencyTableDO> createapplicationDependencyTable(DependencyTreeDO applicationDependencyTreeDO) {
-        // 先删除已有记录
-        dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(applicationDependencyTreeDO.getGroupId(), applicationDependencyTreeDO.getArtifactId(), applicationDependencyTreeDO.getVersion());
-        List<DependencyTableDO> result = new ArrayList<>();
-        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(applicationDependencyTreeDO.getTree().getDependencies());
-        while (!queue.isEmpty()) {
-            DependencyTableDO applicationDependencyTableDO = new DependencyTableDO();
-            applicationDependencyTableDO.setGroupId(applicationDependencyTreeDO.getGroupId());
-            applicationDependencyTableDO.setArtifactId(applicationDependencyTreeDO.getArtifactId());
-            applicationDependencyTableDO.setVersion(applicationDependencyTreeDO.getVersion());
-            ComponentDependencyTreeDO componentDependencyTreeDO = Objects.requireNonNull(queue.poll());
-            applicationDependencyTableDO.setCGroupId(componentDependencyTreeDO.getGroupId());
-            applicationDependencyTableDO.setCArtifactId(componentDependencyTreeDO.getArtifactId());
-            applicationDependencyTableDO.setCVersion(componentDependencyTreeDO.getVersion());
-            applicationDependencyTableDO.setScope(componentDependencyTreeDO.getScope());
-            applicationDependencyTableDO.setDepth(componentDependencyTreeDO.getDepth());
-            applicationDependencyTableDO.setDirect(applicationDependencyTableDO.getDepth() == 1);
-            applicationDependencyTableDO.setType(componentDependencyTreeDO.getType());
-            result.add(applicationDependencyTableDO);
-            queue.addAll(componentDependencyTreeDO.getDependencies());
-        }
-        return result;
     }
 
     /**

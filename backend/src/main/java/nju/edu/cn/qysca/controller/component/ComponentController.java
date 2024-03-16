@@ -31,7 +31,11 @@ public class ComponentController {
     @PostMapping("/saveCloseComponent")
     @Authorized(roles = {"App Leader", "App Member"})
     public ResponseMsg<Boolean> saveCloseComponent(@RequestBody SaveCloseComponentDTO dto) {
-        componentService.saveCloseComponent(dto);
+        try {
+            componentService.saveCloseComponent(dto);
+        }catch (Exception e){
+
+        }
         return new ResponseMsg<>(Boolean.TRUE);
     }
 

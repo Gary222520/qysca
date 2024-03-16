@@ -177,8 +177,8 @@ public class ApplicationController {
     @ApiOperation("改变应用发布状态")
     @PostMapping("/changeReleaseState")
     @Authorized(roles = {"Bu Rep"})
-    public ResponseMsg<Void> changeReleaseState(@ApiParam(value = "组织Id", required = true) @RequestParam String groupId, @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId, @ApiParam(value = "版本号", required = true) @RequestParam String version) {
-        applicationService.changeReleaseState(groupId, artifactId, version);
+    public ResponseMsg<Void> changeReleaseState(@RequestBody ChangeReleaseStateDTO changeReleaseStateDTO) {
+        applicationService.changeReleaseState(changeReleaseStateDTO);
         return new ResponseMsg<>(null);
     }
 }
