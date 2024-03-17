@@ -66,14 +66,14 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
 
 
     /**
-     * 分页获取根应用 并返回根应用的最新版本
+     * 分页获取应用 并返回应用的最新版本
      * @param pageable 分页信息
      * @return Page<ApplicationDO> 应用分页信息
      */
-    @Query(value = "select distinct on (a.group_id, a.artifact_id, a.name) a.* from application a where a.root = true",
-            countQuery = "select count(*) from (select distinct a.group_id, a.artifact_id, a.name from  application a where a.root = true) as unique_combinations",
+    @Query(value = "select distinct on (a.group_id, a.artifact_id, a.name) a.* from application a",
+            countQuery = "select count(*) from (select distinct a.group_id, a.artifact_id, a.name from  application a) as unique_combinations",
             nativeQuery = true)
-    Page<ApplicationDO> findRootPage(Pageable pageable);
+    Page<ApplicationDO> findApplicationPage(Pageable pageable);
 
     /**
      * 模糊查询应用名称

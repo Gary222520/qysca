@@ -9,7 +9,7 @@ import java.util.List;
 public interface MavenService {
 
     ComponentDO componentAnalysis(String filePath, String builder, String type);
-    DependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String type, int flag);
+    DependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String type);
 
     List<DependencyTableDO> dependencyTableAnalysis(DependencyTreeDO dependencyTreeDO);
 }

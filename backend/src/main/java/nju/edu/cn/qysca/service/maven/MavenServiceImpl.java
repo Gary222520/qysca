@@ -78,15 +78,14 @@ public class MavenServiceImpl implements MavenService {
      * @return DependencyTreeDO 依赖树信息
      */
     @Override
-    public DependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String type, int flag) {
+    public DependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String type) {
         String pomFilePath = analyzePomPath(filePath, builder);
         Model model = pomToModel(pomFilePath);
         DependencyTreeDO javaCloseDependencyTreeDO = new DependencyTreeDO();
         javaCloseDependencyTreeDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
         javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
         javaCloseDependencyTreeDO.setVersion(model.getVersion() == null ? "-" : model.getVersion());
-        // TODO: 讨论pom文件信息需要保存
-        Node node = mavenDependencyTreeAnalyzer(filePath, builder, flag);
+        Node node = mavenDependencyTreeAnalyzer(filePath, builder);
         ComponentDependencyTreeDO componentDependencyTreeDO = convertNode(node, 0);
         componentDependencyTreeDO.setType(type);
         javaCloseDependencyTreeDO.setTree(componentDependencyTreeDO);
@@ -125,11 +124,10 @@ public class MavenServiceImpl implements MavenService {
     /**
      * @param filePath 文件路径
      * @param builder  构造工具
-     * @param flag     0 应用 1 闭源组件
      * @return Node 封装好的依赖信息树
      * @throws Exception
      */
-    public Node mavenDependencyTreeAnalyzer(String filePath, String builder, int flag) {
+    public Node mavenDependencyTreeAnalyzer(String filePath, String builder) {
         try {
             Invoker invoker = new DefaultInvoker();
             invoker.setMavenHome(new File(System.getenv("MAVEN_HOME")));
@@ -142,10 +140,6 @@ public class MavenServiceImpl implements MavenService {
             resultPath = tempFile.getParent() + FILE_SEPARATOR + "result";
             request.setGoals(Collections.singletonList("dependency:tree -DoutputFile=result -DoutputType=text"));
             invoker.execute(request);
-            if (flag == 1) {
-                request.setGoals(Collections.singletonList("install"));
-                invoker.execute(request);
-            }
             // 获得result结果的路径
             FileInputStream fis = new FileInputStream(new File(resultPath));
             Reader reader = new BufferedReader(new InputStreamReader(fis));

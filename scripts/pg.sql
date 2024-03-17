@@ -32,7 +32,6 @@ CREATE TABLE application(
 	time VARCHAR(255) NOT NULL,
     lock Boolean NOT NULL,
 	release Boolean NOT NULL,
-    root Boolean NOT NULL,
     creator VARCHAR(32) NOT NULL,
     bu_id VARCHAR(32) NOT NULL,
     child_application text[],
@@ -97,3 +96,6 @@ CREATE TABLE dependency_table(
 	type VARCHAR(255) NOT NULL,
 	language VARCHAR(255) NOT NULL
 );
+
+
+

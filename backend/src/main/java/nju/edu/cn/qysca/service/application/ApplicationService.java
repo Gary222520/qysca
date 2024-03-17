@@ -4,6 +4,8 @@ import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.*;
+import nju.edu.cn.qysca.domain.user.dos.UserDO;
+import org.apache.catalina.User;
 import org.springframework.data.domain.Page;
 
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +21,7 @@ public interface ApplicationService {
      * @param size   页大小
      * @return Page<ApplicationDO> 根应用信息分页结果
      */
-    Page<ApplicationDO> findRootPage(int number, int size);
+    Page<ApplicationDO> findApplicationPage(int number, int size);
 
     /**
      * 模糊查询应用名称
@@ -48,11 +50,11 @@ public interface ApplicationService {
 
     /**
      * 新增/更新应用信息
-     *
+     * @param userDO 用户信息
      * @param saveApplicationDTO 保存应用接口信息
      * @return Boolean 应用是否保存成功
      */
-    Boolean saveApplication(SaveApplicationDTO saveApplicationDTO);
+    Boolean saveApplication(UserDO userDO, SaveApplicationDTO saveApplicationDTO);
 
 
     /**
@@ -85,7 +87,7 @@ public interface ApplicationService {
      * @param deleteApplicationDTO 删除应用接口信息
      * @return 删除应用的某个版本是否成功
      */
-    Boolean deleteApplicationVersion(DeleteApplicationDTO deleteApplicationDTO);
+    List<ApplicationDO> deleteApplicationVersion(DeleteApplicationDTO deleteApplicationDTO);
 
     /**
      * 向应用中添加组件

@@ -9,6 +9,7 @@ import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.*;
+import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.service.application.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,12 +28,12 @@ public class ApplicationController {
     private ApplicationService applicationService;
 
 
-    @ApiOperation("分页获取根应用信息")
-    @GetMapping("/findRootPage")
-    public ResponseMsg<Page<ApplicationDO>> findRootPage(
+    @ApiOperation("分页获取应用信息")
+    @GetMapping("/findApplicationPage")
+    public ResponseMsg<Page<ApplicationDO>> findApplicationPage(
             @ApiParam(value = "页码", required = true) @RequestParam int number,
             @ApiParam(value = "页大小", required = true) @RequestParam int size) {
-        return new ResponseMsg<>(applicationService.findRootPage(number, size));
+        return new ResponseMsg<>(applicationService.findApplicationPage(number, size));
     }
 
 
@@ -61,8 +62,8 @@ public class ApplicationController {
     @ApiOperation("新增/更新应用")
     @PostMapping("/saveApplication")
     @Authorized(roles = {"BU PO"})
-    public ResponseMsg<Boolean> saveApplication(@RequestBody SaveApplicationDTO saveApplicationDTO) {
-        Boolean result = applicationService.saveApplication(saveApplicationDTO);
+    public ResponseMsg<Boolean> saveApplication(UserDO userDO, @RequestBody SaveApplicationDTO saveApplicationDTO) {
+        Boolean result = applicationService.saveApplication(userDO, saveApplicationDTO);
         return new ResponseMsg<>(result);
     }
 
@@ -104,7 +105,7 @@ public class ApplicationController {
     @ApiOperation("删除应用某个版本")
     @PostMapping("/deleteApplicationVersion")
     @Authorized(roles = {"BU Rep"})
-    public ResponseMsg<Boolean> deleteApplicationVersion(@RequestBody DeleteApplicationDTO deleteApplicationDTO) {
+    public ResponseMsg<List<ApplicationDO>> deleteApplicationVersion(@RequestBody DeleteApplicationDTO deleteApplicationDTO) {
         return new ResponseMsg<>(applicationService.deleteApplicationVersion(deleteApplicationDTO));
     }
 

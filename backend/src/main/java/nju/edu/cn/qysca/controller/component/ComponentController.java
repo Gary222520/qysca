@@ -4,15 +4,16 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import nju.edu.cn.qysca.auth.Authorized;
 import nju.edu.cn.qysca.controller.ResponseMsg;
+import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.*;
+import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.service.component.ComponentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Api(tags = "组件管理")
 @RestController
@@ -27,16 +28,31 @@ public class ComponentController {
         return new ResponseMsg<>(componentService.findComponentsPage(dto));
     }
 
+    @ApiOperation("模糊查询组件名称")
+    @GetMapping("/searchComponentName")
+    public ResponseMsg<List<String>>  searchComponentName(@RequestParam String name) {
+        return new ResponseMsg<>(componentService.searchComponentName(name));
+    }
+
     @ApiOperation("新增闭源组件")
     @PostMapping("/saveCloseComponent")
     @Authorized(roles = {"App Leader", "App Member"})
-    public ResponseMsg<Boolean> saveCloseComponent(@RequestBody SaveCloseComponentDTO dto) {
-        try {
-            componentService.saveCloseComponent(dto);
-        }catch (Exception e){
-
-        }
+    public ResponseMsg<Boolean> saveCloseComponent(UserDO current, @RequestBody SaveCloseComponentDTO dto) {
+        componentService.saveCloseComponent(current, dto);
         return new ResponseMsg<>(Boolean.TRUE);
+    }
+
+    @ApiOperation("修改闭源组件")
+    @PostMapping("/updateCloseComponent")
+    public ResponseMsg<Boolean> updateCloseComponent(UserDO current, @RequestBody UpdateCloseComponentDTO dto) {
+        componentService.updateCloseComponent(current, dto);
+        return new ResponseMsg<>(Boolean.TRUE);
+    }
+
+    @ApiOperation("删除闭源组件")
+    @PostMapping("/deleteCloseComponent")
+    public ResponseMsg<List<ApplicationDO>> deleteCloseComponent(@RequestBody DeleteCloseComponentDTO deleteCloseComponentDTO) {
+        return new ResponseMsg<>(componentService.deleteCloseComponent(deleteCloseComponentDTO));
     }
 
     @ApiOperation("查询组件依赖树信息")

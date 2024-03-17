@@ -12,17 +12,8 @@ import lombok.NoArgsConstructor;
 @ApiModel("保存应用信息DTO")
 public class SaveApplicationDTO {
 
-    @ApiModelProperty(value = "父应用Id", example = "123e456-e74-b37-4d7a-9421d59bf3b")
-    private String parentId;
-
     @ApiModelProperty(value = "应用Id", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private String id;
-
-    @ApiModelProperty(value = "组织Id", example = "nju.edu.cn")
-    private String groupId;
-
-    @ApiModelProperty(value = "工件Id", example = "backend")
-    private String artifactId;
 
     @ApiModelProperty(value = "版本号", example = "1.0.0")
     private String version;
@@ -35,7 +26,4 @@ public class SaveApplicationDTO {
 
     @ApiModelProperty(value = "类型",example = "UI")
     private String type;
-
-    @ApiModelProperty(value = "创建者", example = "000000000")
-    private String creator;
 }

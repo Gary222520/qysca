@@ -81,10 +81,6 @@ public class ApplicationDO {
     @ApiModelProperty(value = "应用是否被发布", example = "true")
     private Boolean release;
 
-    @Column(name = "root", nullable = false)
-    @ApiModelProperty(value = "应用是否是根目录", example = "true")
-    private Boolean root;
-
     @Column(name = "creator", nullable = false)
     @ApiModelProperty(value = "创建人", example = "000000000")
     private String creator;
