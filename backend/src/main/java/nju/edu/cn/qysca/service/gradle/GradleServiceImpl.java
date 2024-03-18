@@ -8,7 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -32,9 +35,29 @@ public class GradleServiceImpl implements GradleService{
      */
     @Override
     public ComponentDependencyTreeDO projectDependencyAnalysis(String filePath) {
-        // todo 使用命令行工具在filePath下运行./gradle dependency ...命令，结果存入result文件
+        List<String> lines = new ArrayList<>();
+        try{
+            File file = new File(filePath);
+            // 创建命令 ./gradlew dependency > dependency.txt
+            List<String> command = List.of("./gradlew", "dependency", ">", "dependency.txt");
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            processBuilder.directory(file);
+            // 启动命令
+            Process process = processBuilder.start();
+            // 保存命令执行结果在lines中
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+            // 等待命令执行完毕
+            int exitCode = process.waitFor();
+        } catch (IOException | InterruptedException e){
+            e.printStackTrace();
+        }
         String resultPath = "";
-        List<ComponentDependencyTreeDO> trees = gradleDependencyTreeAnalyze(resultPath);
+        List<ComponentDependencyTreeDO> trees = gradleDependencyTreeAnalyze(lines);
         ComponentDependencyTreeDO root = new ComponentDependencyTreeDO();
         // todo root的信息设置（应该存项目的信息）
         root.setDependencies(trees);
@@ -43,18 +66,18 @@ public class GradleServiceImpl implements GradleService{
 
     /**
      * 解析gradle依赖树文件
-     * @param resultPath 生成的依赖树文件地址
+     * @param lines 带解析内容 List<String>
      * @return List<ComponentDependencyTreeDO>
      */
-    public List<ComponentDependencyTreeDO> gradleDependencyTreeAnalyze(String resultPath){
+    public List<ComponentDependencyTreeDO> gradleDependencyTreeAnalyze(List<String> lines){
 
-        List<String> lines = readLinesFromFile(resultPath);
         // 用以记录直接依赖
         Set<String> visited = new HashSet<>();
         List<ComponentDependencyTreeDO> trees = new ArrayList<>();
         int begin = 0;
         // 扫描文件，找出依赖树形式的文本块进行解析
         while(begin < lines.size()){
+            // 通过begin和end两个指针来确定依赖树文本块的位置
             while (begin < lines.size() && !(lines.get(begin).startsWith("+---") || lines.get(begin).startsWith("\\---"))){
                 begin++;
             }
@@ -80,7 +103,7 @@ public class GradleServiceImpl implements GradleService{
         List<ComponentDependencyTreeDO> trees = new ArrayList<>();
         int begin = 0;
         while (begin < lines.size()){
-            // 从依赖树文本块中分割出单个组件依赖树
+            // 通过begin和end两个指针，从依赖树文本块中分割出单个组件依赖树
             int end = begin + 1;
             while (end < lines.size() && !(lines.get(end).startsWith("+---") || lines.get(end).startsWith("\\---"))){
                 end++;
