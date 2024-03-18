@@ -102,7 +102,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         List<ApplicationDO> subApplication = applicationDao.findSubApplication(applicationDO.getId());
         List<ComponentDO> subComponent = componentDao.findSubComponent(applicationDO.getId());
         SubApplicationDTO subApplicationDTO = new SubApplicationDTO();
-        subApplicationDTO.setSubapplication(subApplication);
+        subApplicationDTO.setSubApplication(subApplication);
         subApplicationDTO.setSubComponent(subComponent);
         return subApplicationDTO;
     }
