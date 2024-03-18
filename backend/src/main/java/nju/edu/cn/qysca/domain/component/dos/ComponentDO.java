@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "component",uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id","artifact_id","version"})})
+@Table(name= "plt_component",uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id","artifact_id","version"})})
 @TypeDefs({
         @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
 })

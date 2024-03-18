@@ -5,7 +5,6 @@ import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.*;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
-import org.apache.catalina.User;
 import org.springframework.data.domain.Page;
 
 import javax.servlet.http.HttpServletResponse;

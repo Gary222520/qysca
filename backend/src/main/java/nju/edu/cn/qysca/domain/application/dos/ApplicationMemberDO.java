@@ -15,7 +15,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Entity
 @Builder
-@Table(name = "application_member")
+@Table(name = "plt_application_member")
 public class ApplicationMemberDO {
 
     @Id

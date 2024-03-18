@@ -12,7 +12,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "dependency_table")
+@Table(name= "plt_dependency_table")
 public class DependencyTableDO {
     @Id
     @Column(name="id",nullable = false)

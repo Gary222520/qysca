@@ -70,8 +70,8 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      * @param pageable 分页信息
      * @return Page<ApplicationDO> 应用分页信息
      */
-    @Query(value = "select distinct on (a.group_id, a.artifact_id, a.name) a.* from application a",
-            countQuery = "select count(*) from (select distinct a.group_id, a.artifact_id, a.name from  application a) as unique_combinations",
+    @Query(value = "select distinct on (a.group_id, a.artifact_id, a.name) a.* from plt_application a",
+            countQuery = "select count(*) from (select distinct a.group_id, a.artifact_id, a.name from plt_application a) as unique_combinations",
             nativeQuery = true)
     Page<ApplicationDO> findApplicationPage(Pageable pageable);
 
@@ -88,7 +88,7 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      * @param name 应用名称
      * @return ApplicationDO 应用信息
      */
-    @Query(value = "select * from application where name = :name order by version desc limit 1", nativeQuery = true)
+    @Query(value = "select * from plt_application where name = :name order by version desc limit 1", nativeQuery = true)
     ApplicationDO findApplication(String name);
 
     /**
@@ -96,7 +96,7 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      * @param applicationId 应用Id
      * @return List<ApplicationDO> 子应用列表
      */
-    @Query(value = "select a.* from application a where a.id = ANY (select unnest(child_application) from application where id = :applicationId) order by name desc", nativeQuery = true)
+    @Query(value = "select a.* from plt_application a where a.id = ANY (select unnest(child_application) from application where id = :applicationId) order by name desc", nativeQuery = true)
     List<ApplicationDO> findSubApplication(String applicationId);
 
     /**
@@ -111,6 +111,6 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      * @param id 应用Id
      * @return List<ApplicationDO> 父应用列表
      */
-    @Query(value = "select * from application where :id = any(child_application)", nativeQuery = true)
+    @Query(value = "select * from plt_application where :id = any(child_application)", nativeQuery = true)
     List<ApplicationDO> findParentApplication(String id);
 }

@@ -3,7 +3,6 @@ package nju.edu.cn.qysca.controller.application;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import nju.edu.cn.qysca.auth.Authorized;
 import nju.edu.cn.qysca.controller.ResponseMsg;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
@@ -13,6 +12,7 @@ import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.service.application.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -46,6 +46,7 @@ public class ApplicationController {
 
     @ApiOperation("根据名称查询应用 并返回应用的最新版本")
     @GetMapping("/findApplication")
+    @PreAuthorize("@my.checkAuth(#name)")
     public ResponseMsg<ApplicationDO> findApplication(@ApiParam(value = "应用名称", required = true) @RequestParam String name) {
         return new ResponseMsg<>(applicationService.findApplication(name));
     }
@@ -61,7 +62,6 @@ public class ApplicationController {
 
     @ApiOperation("新增/更新应用")
     @PostMapping("/saveApplication")
-    @Authorized(roles = {"BU PO"})
     public ResponseMsg<Boolean> saveApplication(UserDO userDO, @RequestBody SaveApplicationDTO saveApplicationDTO) {
         Boolean result = applicationService.saveApplication(userDO, saveApplicationDTO);
         return new ResponseMsg<>(result);
@@ -69,7 +69,6 @@ public class ApplicationController {
 
     @ApiOperation("向应用中增加组件")
     @PostMapping("/saveApplicationComponent")
-    @Authorized(roles = {"APP Leader","APP Member"})
     public ResponseMsg<Boolean> saveApplicationComponent(@RequestBody ApplicationComponentDTO applicationComponentDTO) {
         Boolean result = applicationService.saveApplicationComponent(applicationComponentDTO);
         return new ResponseMsg<>(result);
@@ -78,7 +77,6 @@ public class ApplicationController {
 
     @ApiOperation("删除应用中的组件")
     @PostMapping("/deleteApplicationComponent")
-    @Authorized(roles = {"BU Rep"})
     public ResponseMsg<Boolean> deleteApplicationComponent(@RequestBody ApplicationComponentDTO applicationComponentDTO) {
         Boolean result = applicationService.deleteApplicationComponent(applicationComponentDTO);
         return new ResponseMsg<>(result);
@@ -86,7 +84,6 @@ public class ApplicationController {
 
     @ApiOperation("新增/更新应用依赖信息")
     @PostMapping("/saveApplicationDependency")
-    @Authorized(roles = {"App Leader", "App Member"})
     public ResponseMsg<Void> saveApplicationDependency(@RequestBody SaveApplicationDependencyDTO saveApplicationDependencyDTO) {
         applicationService.changeApplicationState(saveApplicationDependencyDTO.getGroupId(), saveApplicationDependencyDTO.getArtifactId(), saveApplicationDependencyDTO.getVersion());
         applicationService.saveApplicationDependency(saveApplicationDependencyDTO);
@@ -96,7 +93,6 @@ public class ApplicationController {
 
     @ApiOperation("升级应用")
     @PostMapping("/upgradeApplication")
-    @Authorized(roles= {"BU PO"})
     public ResponseMsg<Boolean> upgradeApplication(@RequestBody UpgradeApplicationDTO upgradeApplicationDTO) {
         Boolean result = applicationService.upgradeApplication(upgradeApplicationDTO);
         return new ResponseMsg<>(result);
@@ -104,7 +100,6 @@ public class ApplicationController {
 
     @ApiOperation("删除应用某个版本")
     @PostMapping("/deleteApplicationVersion")
-    @Authorized(roles = {"BU Rep"})
     public ResponseMsg<List<ApplicationDO>> deleteApplicationVersion(@RequestBody DeleteApplicationDTO deleteApplicationDTO) {
         return new ResponseMsg<>(applicationService.deleteApplicationVersion(deleteApplicationDTO));
     }
@@ -169,7 +164,6 @@ public class ApplicationController {
 
     @ApiOperation("改变应用锁定状态")
     @PostMapping("/changeLockState")
-    @Authorized(roles = {"Bu Rep"})
     public ResponseMsg<Void> changeLockState(@ApiParam(value = "组织Id", required = true) @RequestParam String groupId, @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId, @ApiParam(value = "版本号", required = true) @RequestParam String version) {
         applicationService.changeLockState(groupId, artifactId, version);
         return new ResponseMsg<>(null);
@@ -177,7 +171,6 @@ public class ApplicationController {
 
     @ApiOperation("改变应用发布状态")
     @PostMapping("/changeReleaseState")
-    @Authorized(roles = {"Bu Rep"})
     public ResponseMsg<Void> changeReleaseState(@RequestBody ChangeReleaseStateDTO changeReleaseStateDTO) {
         applicationService.changeReleaseState(changeReleaseStateDTO);
         return new ResponseMsg<>(null);

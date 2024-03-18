@@ -1,23 +1,54 @@
-DROP TABLE IF EXISTS bu;
-CREATE TABLE bu (
+DROP TABLE IF EXISTS plt_bu;
+CREATE TABLE plt_bu (
 	id VARCHAR(32) PRIMARY KEY,
     name VARCHAR(255) NOT NULL
 );
 
-DROP TABLE IF EXISTS employee;
-CREATE TABLE employee(
+DROP TABLE IF EXISTS plt_user;
+CREATE TABLE plt_user(
 	id VARCHAR(32) PRIMARY KEY,
 	uid VARCHAR(255) UNIQUE NOT NULL,
 	name VARCHAR(255) NOT NULL,
 	password VARCHAR(255) NOT NULL,
 	email VARCHAR(255) NOT NULL,
 	phone VARCHAR(255) NOT NULL,
-    bu_id VARCHAR(32) NOT NULL,
-    foreign key (bu_id) references bu(id)
+	login BOOLEAN NOT NULL,
+    bu_id VARCHAR(32) NOT NULL
 );
 
-DROP TABLE IF EXISTS application;
-CREATE TABLE application(
+DROP TABLE IF EXISTS plt_user_role;
+CREATE TABLE plt_user_role(
+	id VARCHAR(32) PRIMARY KEY,
+	user_id VARCHAR(32) NOT NULL,
+	role_id VARCHAR(32) NOT NULL,
+	bu_id VARCHAR(32) NOT NULL,
+	app_id VARCHAR(32) NOT NULL,
+	UNIQUE(user_id,role_id,bu_id,app_id)
+);
+
+DROP TABLE IF EXISTS plt_role;
+CREATE TABLE plt_role(
+	id VARCHAR(32) PRIMARY KEY,
+	name VARCHAR(255) UNIQUE NOT NULL
+);
+
+DROP TABLE IF EXISTS plt_role_permission;
+CREATE TABLE plt_role_permission(
+	id VARCHAR(32) PRIMARY KEY,
+	role_id VARCHAR(32) NOT NULL,
+	per_id VARCHAR(32) NOT NULL,
+	UNIQUE(role_id,per_id)
+);
+
+DROP TABLE IF EXISTS plt_permission;
+CREATE TABLE plt_permission(
+	id VARCHAR(32) PRIMARY KEY,
+	name VARCHAR(255) UNIQUE NOT NULL,
+	url VARCHAR(255) UNIQUE NOT NULL
+);
+
+DROP TABLE IF EXISTS plt_application;
+CREATE TABLE plt_application(
 	id VARCHAR(32) PRIMARY KEY,
 	group_id VARCHAR(255) NOT NULL,
 	artifact_id VARCHAR(255) NOT NULL,
@@ -36,22 +67,19 @@ CREATE TABLE application(
     bu_id VARCHAR(32) NOT NULL,
     child_application text[],
     child_component text[],
-	UNIQUE(group_id,artifact_id,version),
-    foreign key (bu_id) references bu(id)
+	UNIQUE(group_id,artifact_id,version)
 );
 
-DROP TABLE IF EXISTS application_member;
-create table application_member(
+DROP TABLE IF EXISTS plt_application_member;
+create table plt_application_member(
 	id VARCHAR(32) PRIMARY KEY,
     application_id VARCHAR(32) NOT NULL,
     employee_id VARCHAR(32) NOT NULL,
-    role VARCHAR(255) NOT NULL,
-    foreign key (application_id) references application(id),
-    foreign key (employee_id) references employee(uid)
+    role VARCHAR(255) NOT NULL
 );
 
-DROP TABLE IF EXISTS component;
-CREATE TABLE component(
+DROP TABLE IF EXISTS plt_component;
+CREATE TABLE plt_component(
 	id VARCHAR(32) PRIMARY KEY,
 	group_id VARCHAR(255) NOT NULL,
 	artifact_id VARCHAR(255) NOT NULL,
@@ -71,8 +99,8 @@ CREATE TABLE component(
 	UNIQUE(group_id,artifact_id,version)
 );
 
-DROP TABLE IF EXISTS dependency_tree;
-CREATE TABLE dependency_tree(
+DROP TABLE IF EXISTS plt_dependency_tree;
+CREATE TABLE plt_dependency_tree(
 	id VARCHAR(32) PRIMARY KEY,
 	group_id VARCHAR(255) NOT NULL,
 	artifact_id VARCHAR(255) NOT NULL,
@@ -81,8 +109,8 @@ CREATE TABLE dependency_tree(
 	UNIQUE(group_id,artifact_id,version)
 );
 
-DROP TABLE IF EXISTS dependency_table;
-CREATE TABLE dependency_table(
+DROP TABLE IF EXISTS plt_dependency_table;
+CREATE TABLE plt_dependency_table(
 	id VARCHAR(32) PRIMARY KEY,
 	group_id VARCHAR(255) NOT NULL,
 	artifact_id VARCHAR(255) NOT NULL,
@@ -96,6 +124,8 @@ CREATE TABLE dependency_table(
 	type VARCHAR(255) NOT NULL,
 	language VARCHAR(255) NOT NULL
 );
+
+
 
 
 

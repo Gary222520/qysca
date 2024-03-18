@@ -17,7 +17,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "application", uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id", "artifact_id", "version"})})
+@Table(name = "plt_application", uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id", "artifact_id", "version"})})
 @TypeDefs({
         @TypeDef(name = "string-array", typeClass = StringArrayType.class)
 })
