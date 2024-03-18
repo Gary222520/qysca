@@ -86,7 +86,7 @@ public class ComponentServiceImpl implements ComponentService {
      * @return List<String> 模糊查询组件名称结果
      */
     @Override
-    public List<String> searchComponentName(String name) {
+    public List<ComponentSearchNameDTO> searchComponentName(String name) {
         return componentDao.searchComponentName(name);
     }
 

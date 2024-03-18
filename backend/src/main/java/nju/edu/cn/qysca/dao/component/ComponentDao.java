@@ -1,6 +1,7 @@
 package nju.edu.cn.qysca.dao.component;
 
 import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
+import nju.edu.cn.qysca.domain.component.dtos.ComponentSearchNameDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -47,6 +48,6 @@ public interface ComponentDao extends JpaRepository<ComponentDO, String> {
      * @param name 组件名称
      * @return List<String> 组件名称模糊查询列表
      */
-    @Query("select name from ComponentDO where name like %:name%")
-    List<String> searchComponentName(String name);
+    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentSearchNameDTO(c.groupId, c.artifactId, c.version, c.name) from ComponentDO c where c.name like %:name%")
+    List<ComponentSearchNameDTO> searchComponentName(String name);
 }

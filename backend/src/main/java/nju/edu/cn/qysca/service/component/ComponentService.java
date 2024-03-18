@@ -72,5 +72,5 @@ public interface ComponentService {
      * 模糊查询组件名称
      * @param name 组件名称
      */
-    List<String> searchComponentName(String name);
+    List<ComponentSearchNameDTO> searchComponentName(String name);
 }

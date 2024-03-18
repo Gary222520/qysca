@@ -18,7 +18,7 @@ import java.util.List;
 public class SubApplicationDTO {
 
     @ApiModelProperty(value = "子应用信息", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
-    private List<ApplicationDO> subapplication;
+    private List<ApplicationDO> subApplication;
 
     @ApiModelProperty(value = "子组件信息",example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
     private List<ComponentDO> subComponent;

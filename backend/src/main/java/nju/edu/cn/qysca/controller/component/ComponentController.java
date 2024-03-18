@@ -30,7 +30,7 @@ public class ComponentController {
 
     @ApiOperation("模糊查询组件名称")
     @GetMapping("/searchComponentName")
-    public ResponseMsg<List<String>>  searchComponentName(@RequestParam String name) {
+    public ResponseMsg<List<ComponentSearchNameDTO>>  searchComponentName(@RequestParam String name) {
         return new ResponseMsg<>(componentService.searchComponentName(name));
     }
 
