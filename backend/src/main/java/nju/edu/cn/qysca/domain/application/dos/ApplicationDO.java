@@ -17,7 +17,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "application", uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id", "artifact_id", "version"})})
+@Table(name = "plt_application", uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "version"})})
 @TypeDefs({
         @TypeDef(name = "string-array", typeClass = StringArrayType.class)
 })
@@ -29,21 +29,13 @@ public class ApplicationDO {
     @ApiModelProperty(value = "uuid", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private String id;
 
-    @Column(name = "group_id", nullable = false)
-    @ApiModelProperty(value = "组织id", example = "nju.edu.cn")
-    private String groupId;
-
-    @Column(name = "artifact_id", nullable = false)
-    @ApiModelProperty(value = "工件id", example = "backend")
-    private String artifactId;
+    @Column(name = "name")
+    @ApiModelProperty(value = "应用名称", example = "backend")
+    private String name;
 
     @Column(name = "version", nullable = false)
     @ApiModelProperty(value = "版本号", example = "2.0.1")
     private String version;
-
-    @Column(name = "name")
-    @ApiModelProperty(value = "应用名称", example = "backend")
-    private String name;
 
     @Column(name = "description")
     @ApiModelProperty(value = "应用描述", example = "backend of sca system")
@@ -66,7 +58,7 @@ public class ApplicationDO {
     private String scanner;
 
     @Column(name = "state", nullable = false)
-    @ApiModelProperty(value = "扫描状态", example = "SUCCESS,FAILED,RUNNING")
+    @ApiModelProperty(value = "扫描状态", example = "SUCCESS,FAILED,RUNNING,CREATED")
     private String state;
 
     @Column(name = "time", nullable = false)
@@ -93,9 +85,6 @@ public class ApplicationDO {
     @Column(name = "childComponent")
     @ApiModelProperty(value = "子组件", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
     @Type(type = "string-array")
-    private  String[] childComponent = {};
+    private String[] childComponent = {};
 
-    @ManyToOne
-    @JoinColumn(name = "bu_id", nullable = false)
-    private BuDO bu;
 }

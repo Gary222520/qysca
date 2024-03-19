@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "component",uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id","artifact_id","version"})})
+@Table(name= "plt_component",uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id","artifact_id","version"})})
 @TypeDefs({
         @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
 })
@@ -92,4 +92,8 @@ public class ComponentDO {
     @Column(name = "creator")
     @ApiModelProperty(value = "创建者", example = "000000000")
     private String creator;
+
+    @Column(name = "state", nullable = false)
+    @ApiModelProperty(value = "扫描状态", example = "SUCCESS,FAILED,RUNNING,CREATED")
+    private String state;
 }

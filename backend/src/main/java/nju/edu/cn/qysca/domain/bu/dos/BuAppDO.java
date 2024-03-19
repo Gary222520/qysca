@@ -1,11 +1,10 @@
-package nju.edu.cn.qysca.domain.application.dos;
+package nju.edu.cn.qysca.domain.bu.dos;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -13,11 +12,10 @@ import javax.persistence.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
 @Builder
-@Table(name = "application_member")
-public class ApplicationMemberDO {
-
+@Entity
+@Table(name = "plt_bu_app")
+public class BuAppDO {
     @Id
     @Column(name="id",nullable = false)
     @GenericGenerator(name = "jpa-uuid", strategy = "uuid")
@@ -25,15 +23,11 @@ public class ApplicationMemberDO {
     @ApiModelProperty(value = "uuid", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "application_id", nullable = false)
-    private ApplicationDO applicationDO;
+    @Column(name="bid",nullable = false)
+    @ApiModelProperty(value = "部门编号", example = "001")
+    private String bid;
 
-    @ManyToOne
-    @JoinColumn(name = "employee_id", nullable = false)
-    private UserDO userDO;
-
-    @Column(name = "role", nullable = false)
-    @ApiModelProperty(value = "角色", example = "App Member")
-    private String role;
+    @Column(name="aid",nullable = false)
+    @ApiModelProperty(value = "应用id", example = "123e456-e74-b37-4d7a-9421d59bf3b")
+    private String aid;
 }

@@ -25,7 +25,7 @@ public interface ComponentDao extends JpaRepository<ComponentDO, String> {
      * @param applicationId 应用Id
      * @return List<ComponentDO> 子组件列表
      */
-    @Query(value = "select * from component where id = any (select unnest(child_component) from application where id = :applicationId) order by name desc", nativeQuery = true)
+    @Query(value = "select * from plt_component where id = any (select unnest(child_component) from application where id = :applicationId) order by name desc", nativeQuery = true)
     List<ComponentDO> findSubComponent(String applicationId);
 
     /**

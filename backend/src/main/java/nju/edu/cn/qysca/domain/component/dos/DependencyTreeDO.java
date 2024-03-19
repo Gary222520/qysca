@@ -16,7 +16,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "dependency_tree",uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id","artifact_id","version"})})
+@Table(name= "plt_dependency_tree",uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id","artifact_id","version"})})
 @TypeDefs({
         @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
 })

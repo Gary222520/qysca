@@ -15,13 +15,13 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "employee")
+@Table(name= "plt_user")
 public class UserDO {
     @Id
     @Column(name="id",nullable = false)
     @GenericGenerator(name = "jpa-uuid", strategy = "uuid")
     @GeneratedValue(generator = "jpa-uuid")
-    @ApiModelProperty(value = "uuid", example = "123e456-e74-b37-4d7a-9421d59bf3b")
+    @ApiModelProperty(value = "uuid", example = "402851818e4af0ab018e4af0bbc80000")
     private String id;
 
     @Column(name="uid",nullable = false,unique = true)
@@ -44,7 +44,8 @@ public class UserDO {
     @ApiModelProperty(value = "用户手机", example = "18930298746")
     private String phone;
 
-    @ManyToOne
-    @JoinColumn(name = "bu_id", nullable = false)
-    private BuDO bu;
+    @Column(name="login",nullable = false)
+    @ApiModelProperty(value = "是否登录", example = "true")
+    private Boolean login;
+
 }
