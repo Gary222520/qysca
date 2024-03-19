@@ -5,18 +5,14 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel(description = "增加/删除应用组件信息接口")
 public class ApplicationComponentDTO {
 
-    @ApiModelProperty(value = "父应用组织Id", example = "nju.edu.cn")
-    private String parentGroupId;
-
-    @ApiModelProperty(value = "父应用工件Id", example = "qysca")
-    private String parentArtifactId;
+    @ApiModelProperty(value = "父应用名称")
+    private String parentName;
 
     @ApiModelProperty(value = "父应用版本号", example = "1.0.0")
     private String parentVersion;

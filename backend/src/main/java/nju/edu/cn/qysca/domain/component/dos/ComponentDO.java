@@ -96,4 +96,5 @@ public class ComponentDO {
     @Column(name = "state", nullable = false)
     @ApiModelProperty(value = "扫描状态", example = "SUCCESS,FAILED,RUNNING,CREATED")
     private String state;
+
 }

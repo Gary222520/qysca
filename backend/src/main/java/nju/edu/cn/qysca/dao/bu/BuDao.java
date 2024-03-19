@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface BuDao extends JpaRepository<BuDO, String> {
 
     BuDO findBuDOByName(String name);
+
+    BuDO findByBid(String bid);
 }

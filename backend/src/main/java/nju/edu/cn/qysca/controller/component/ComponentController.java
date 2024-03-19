@@ -35,15 +35,15 @@ public class ComponentController {
 
     @ApiOperation("新增闭源组件")
     @PostMapping("/saveCloseComponent")
-    public ResponseMsg<Boolean> saveCloseComponent(UserDO current, @RequestBody SaveCloseComponentDTO dto) {
-        componentService.saveCloseComponent(current, dto);
+    public ResponseMsg<Boolean> saveCloseComponent(@RequestBody SaveCloseComponentDTO dto) {
+        componentService.saveCloseComponent(dto);
         return new ResponseMsg<>(Boolean.TRUE);
     }
 
     @ApiOperation("修改闭源组件")
     @PostMapping("/updateCloseComponent")
-    public ResponseMsg<Boolean> updateCloseComponent(UserDO current, @RequestBody UpdateCloseComponentDTO dto) {
-        componentService.updateCloseComponent(current, dto);
+    public ResponseMsg<Boolean> updateCloseComponent(@RequestBody UpdateCloseComponentDTO dto) {
+        componentService.updateCloseComponent(dto);
         return new ResponseMsg<>(Boolean.TRUE);
     }
 

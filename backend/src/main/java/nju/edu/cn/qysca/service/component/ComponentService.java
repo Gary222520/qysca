@@ -20,19 +20,17 @@ public interface ComponentService {
 
     /**
      * 保存闭源组件信息
-     * @param current 当前用户信息
      * @param saveCloseComponentDTO 保存闭源组件接口信息
      * @return 返回保存闭源组件是否成功
      */
-    Boolean saveCloseComponent(UserDO current, SaveCloseComponentDTO saveCloseComponentDTO);
+    Boolean saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO);
 
     /**
      * 更新闭源组件信息
-     * @param current 当前用户信息
      * @param updateCloseComponentDTO 更新闭源组件接口信息
      * @return 更新闭源组件是否成功
      */
-    Boolean updateCloseComponent(UserDO current, UpdateCloseComponentDTO updateCloseComponentDTO);
+    Boolean updateCloseComponent(UpdateCloseComponentDTO updateCloseComponentDTO);
 
     /**
      * 删除闭源组件

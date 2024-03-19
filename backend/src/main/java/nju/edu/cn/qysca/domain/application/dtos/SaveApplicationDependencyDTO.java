@@ -13,11 +13,8 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "新增/更新应用依赖信息")
 public class SaveApplicationDependencyDTO {
 
-    @ApiModelProperty(value = "应用组织Id", example = "nju.edu,cn")
-    private String groupId;
-
-    @ApiModelProperty(value = "应用工件Id", example = "qysca")
-    private String artifactId;
+    @ApiModelProperty(value = "应用名称", example = "my-app")
+    private String name;
 
     @ApiModelProperty(value = "应用版本", example = "1.0.0")
     private String version;

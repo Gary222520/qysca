@@ -8,7 +8,6 @@ import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.*;
-import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.service.application.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -54,17 +53,16 @@ public class ApplicationController {
 
     @ApiOperation("查询子应用和子组件")
     @GetMapping("/findSubApplication")
-    public ResponseMsg<SubApplicationDTO> findSubApplication(@ApiParam(value = "应用组织Id", required = true) @RequestParam String groupId,
-                                                         @ApiParam(value = "应用工件Id", required = true) @RequestParam String artifactId,
+    public ResponseMsg<SubApplicationDTO> findSubApplication(@ApiParam(value = "应用名称", required = true) @RequestParam String name,
                                                          @ApiParam(value = "应用版本", required = true) @RequestParam String version) {
-        return new ResponseMsg<>(applicationService.findSubApplication(groupId, artifactId, version));
+        return new ResponseMsg<>(applicationService.findSubApplication(name, version));
     }
 
 
     @ApiOperation("新增/更新应用")
     @PostMapping("/saveApplication")
-    public ResponseMsg<Boolean> saveApplication(UserDO userDO, @RequestBody SaveApplicationDTO saveApplicationDTO) {
-        Boolean result = applicationService.saveApplication(userDO, saveApplicationDTO);
+    public ResponseMsg<Boolean> saveApplication(@RequestBody SaveApplicationDTO saveApplicationDTO) {
+        Boolean result = applicationService.saveApplication(saveApplicationDTO);
         return new ResponseMsg<>(result);
     }
 
@@ -86,7 +84,7 @@ public class ApplicationController {
     @ApiOperation("新增/更新应用依赖信息")
     @PostMapping("/saveApplicationDependency")
     public ResponseMsg<Void> saveApplicationDependency(@RequestBody SaveApplicationDependencyDTO saveApplicationDependencyDTO) {
-        applicationService.changeApplicationState(saveApplicationDependencyDTO.getGroupId(), saveApplicationDependencyDTO.getArtifactId(), saveApplicationDependencyDTO.getVersion());
+        applicationService.changeApplicationState(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
         applicationService.saveApplicationDependency(saveApplicationDependencyDTO);
         return new ResponseMsg<>();
     }
@@ -106,25 +104,24 @@ public class ApplicationController {
     }
 
 
-    @ApiOperation("分页获取指定应用的版本信息")
+/*    @ApiOperation("分页获取指定应用的版本信息")
     @GetMapping("/findApplicationVersionPage")
-    public ResponseMsg<Page<ApplicationDO>> findApplicationVersionPage(@ApiParam(value = "组件Id", required = true) @RequestParam String groupId,
-                                                                   @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId,
+    public ResponseMsg<Page<ApplicationDO>> findApplicationVersionPage(@ApiParam(value = "应用名称", required = true) @RequestParam String name,
                                                                    @ApiParam(value = "页码", required = true) @RequestParam int number,
                                                                    @ApiParam(value = "页大小", required = true) @RequestParam int size) {
-        return new ResponseMsg<>(applicationService.findApplicationVersionPage(groupId, artifactId, number, size));
+        return new ResponseMsg<>(applicationService.findApplicationVersionPage(name, number, size));
     }
 
     @ApiOperation("检查指定应用扫描中组件的个数")
     @GetMapping("/checkRunningApplication")
     public ResponseMsg<Integer> checkRunningApplication(@ApiParam(value = "应用名称", required = true) @RequestParam String groupId, @RequestParam String artifactId) {
         return new ResponseMsg<>(applicationService.checkRunningApplication(groupId, artifactId));
-    }
+    }*/
 
     @ApiOperation("获取指定应用的所有版本列表")
     @GetMapping("/getVersionsList")
-    public ResponseMsg<List<String>> getVersionsList(@ApiParam(value = "组织Id", required = true) @RequestParam String groupId, @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId) {
-        return new ResponseMsg<>(applicationService.getVersionsList(groupId, artifactId));
+    public ResponseMsg<List<String>> getVersionsList(@ApiParam(value = "应用名称", required = true) @RequestParam String name) {
+        return new ResponseMsg<>(applicationService.getVersionsList(name));
     }
 
     @ApiOperation("获取指定应用指定版本的详细信息")
@@ -159,14 +156,14 @@ public class ApplicationController {
 
     @ApiOperation("生成应用版本对比树")
     @PostMapping("/getApplicationVersionCompareTree")
-    public ResponseMsg<VersionCompareTreeDTO> getapplicationVersionCompareTree(@RequestBody VersionCompareReqDTO dto) {
+    public ResponseMsg<VersionCompareTreeDTO> getApplicationVersionCompareTree(@RequestBody VersionCompareReqDTO dto) {
         return new ResponseMsg<>(applicationService.getApplicationVersionCompareTree(dto));
     }
 
     @ApiOperation("改变应用锁定状态")
     @PostMapping("/changeLockState")
-    public ResponseMsg<Void> changeLockState(@ApiParam(value = "组织Id", required = true) @RequestParam String groupId, @ApiParam(value = "工件Id", required = true) @RequestParam String artifactId, @ApiParam(value = "版本号", required = true) @RequestParam String version) {
-        applicationService.changeLockState(groupId, artifactId, version);
+    public ResponseMsg<Void> changeLockState(@ApiParam(value = "应用名称", required = true) @RequestParam String name, @ApiParam(value = "版本号", required = true) @RequestParam String version) {
+        applicationService.changeLockState(name, version);
         return new ResponseMsg<>(null);
     }
 

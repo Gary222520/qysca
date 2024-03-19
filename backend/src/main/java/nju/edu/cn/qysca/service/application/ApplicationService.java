@@ -40,29 +40,26 @@ public interface ApplicationService {
 
     /**
      * 根据应用Id查询子应用信息
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
+     * @param name 名称
      * @param version 应用版本
      * @return SubApplicationDTO 子应用信息
      */
-    SubApplicationDTO findSubApplication(String groupId, String artifactId, String version);
+    SubApplicationDTO findSubApplication(String name, String version);
 
     /**
      * 新增/更新应用信息
-     * @param userDO 用户信息
      * @param saveApplicationDTO 保存应用接口信息
      * @return Boolean 应用是否保存成功
      */
-    Boolean saveApplication(UserDO userDO, SaveApplicationDTO saveApplicationDTO);
+    Boolean saveApplication(SaveApplicationDTO saveApplicationDTO);
 
 
     /**
      * 在保存应用依赖时将应用状态变为RUNNING
-     * @param groupId 应用组织Id
-     * @param artifactId 应用工件Id
+     * @param name 应用名称
      * @param version 应用版本
      */
-    void changeApplicationState(String groupId, String artifactId, String version);
+    void changeApplicationState(String name, String version);
 
     /**
      * 新增/更新应用依赖信息
@@ -105,13 +102,12 @@ public interface ApplicationService {
     /**
      * 分页获取指定应用的版本信息
      *
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
+     * @param name  应用名称
      * @param number  页码
      * @param size    页大小
      * @return Page<ApplicationDO> 应用版本信息分页结果
      */
-    Page<ApplicationDO> findApplicationVersionPage(String groupId, String artifactId, int number, int size);
+    //Page<ApplicationDO> findApplicationVersionPage(String name, int number, int size);
 
     /**
      * 检查指定应用扫描中组件的个数
@@ -120,16 +116,15 @@ public interface ApplicationService {
      * @param artifactId 工件Id
      * @return Integer 扫描中组件的个数
      */
-    Integer checkRunningApplication(String groupId, String artifactId);
+    //Integer checkRunningApplication(String groupId, String artifactId);
 
     /**
      * 获取指定应用的所有版本列表
      *
-     * @param groupId    组织Id
-     * @param artifactId 工件Id
+     * @param name 应用名称
      * @return List<String> 版本列表
      */
-    List<String> getVersionsList(String groupId, String artifactId);
+    List<String> getVersionsList(String name);
 
     /**
      * 获取指定应用指定版本的详细信息
@@ -181,11 +176,10 @@ public interface ApplicationService {
 
     /**
      * 改变应用锁定状态
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
+     * @param name 名称
      * @param version 版本号
      */
-    void changeLockState(String groupId, String artifactId, String version);
+    void changeLockState(String name, String version);
 
     /**
      * 改变应用发布状态

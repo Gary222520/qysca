@@ -11,11 +11,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @ApiModel(description = "带分页应用版本信息搜索DTO")
 public class ApplicationSearchPageDTO {
-    @ApiModelProperty(value = "组织Id", example = "nju.edu.cn")
-    private String groupId;
-
-    @ApiModelProperty(value = "工件Id", example = "com.example:example-application")
-    private String artifactId;
+    @ApiModelProperty(value = "应用名称", example = "nju.edu.cn")
+    private String name;
 
     @ApiModelProperty(value = "版本号", example = "1.0.0")
     private String version;

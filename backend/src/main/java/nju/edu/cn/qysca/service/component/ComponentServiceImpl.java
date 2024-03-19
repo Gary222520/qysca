@@ -1,9 +1,12 @@
 package nju.edu.cn.qysca.service.component;
 
 
+import nju.edu.cn.qysca.auth.ContextUtil;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
+import nju.edu.cn.qysca.dao.bu.BuAppDao;
 import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.bu.dos.BuAppDO;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
@@ -29,6 +32,11 @@ public class ComponentServiceImpl implements ComponentService {
 
     @Autowired
     private ApplicationDao applicationDao;
+
+    @Autowired
+    private BuAppDao buAppDao;
+
+
 
     @Autowired
     private DependencyTreeDao dependencyTreeDao;
@@ -98,12 +106,13 @@ public class ComponentServiceImpl implements ComponentService {
      */
     @Transactional
     @Override
-    public Boolean saveCloseComponent(UserDO current, SaveCloseComponentDTO saveCloseComponentDTO) {
+    public Boolean saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO) {
+        UserDO userDO = ContextUtil.getUserDO();
         //接口获得详细信息
         if (saveCloseComponentDTO.getLanguage().equals("java")) {
             ComponentDO componentDO = mavenService.componentAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
             //存储闭源组件详细信息
-            componentDO.setCreator(current.getUid());
+            componentDO.setCreator(userDO.getUid());
             componentDao.save(componentDO);
             //存储闭源组件树状依赖信息
             DependencyTreeDO closeDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
@@ -120,21 +129,21 @@ public class ComponentServiceImpl implements ComponentService {
     /**
      * 更新闭源组件信息
      *
-     * @param current                 当前用户信息
      * @param updateCloseComponentDTO 更新闭源组件接口信息
      * @return 更新闭源组件是否成功
      */
     @Override
-    public Boolean updateCloseComponent(UserDO current, UpdateCloseComponentDTO updateCloseComponentDTO) {
+    public Boolean updateCloseComponent(UpdateCloseComponentDTO updateCloseComponentDTO) {
         //更新基础信息
+        UserDO userDO = ContextUtil.getUserDO();
         ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
-        if (!current.getUid().equals(componentDO.getCreator())) {
+        if (!userDO.getUid().equals(componentDO.getCreator())) {
             throw new PlatformException(500, "您没有权限修改该组件信息");
         }
         if (updateCloseComponentDTO.getFilePath() == null) {
             componentDO.setType(updateCloseComponentDTO.getType());
         } else {
-            ApplicationDO applicationDO = applicationDao.findByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
+            ApplicationDO applicationDO = applicationDao.findByNameAndVersion(updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
             if (applicationDO != null && (applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().length > 0)) {
                 throw new PlatformException(500, "该组件不可更新依赖信息");
             }
@@ -168,7 +177,7 @@ public class ComponentServiceImpl implements ComponentService {
     @Override
     public List<ApplicationDO> deleteCloseComponent(DeleteCloseComponentDTO deleteCloseComponentDTO) {
         //确定是否是闭源组件
-        ApplicationDO applicationDO = applicationDao.findByGroupIdAndArtifactIdAndVersion(deleteCloseComponentDTO.getGroupId(), deleteCloseComponentDTO.getArtifactId(), deleteCloseComponentDTO.getVersion());
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(deleteCloseComponentDTO.getArtifactId(), deleteCloseComponentDTO.getVersion());
         if (applicationDO == null) {
             throw new PlatformException(500, "该组件不可删除");
         }

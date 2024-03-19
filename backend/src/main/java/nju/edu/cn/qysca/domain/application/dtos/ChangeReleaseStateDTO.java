@@ -13,10 +13,7 @@ import lombok.NoArgsConstructor;
 public class ChangeReleaseStateDTO {
 
     @ApiModelProperty(value = "组织Id", example = "nju.edu.cn")
-    private String groupId;
-
-    @ApiModelProperty(value = "工件Id", example = "qysca")
-    private String artifactId;
+    private String name;
 
     @ApiModelProperty(value = "版本", example = "1.0.0")
     private String version;

@@ -12,11 +12,8 @@ import lombok.NoArgsConstructor;
 @ApiModel("应用版本对比DTO")
 public class VersionCompareReqDTO {
 
-    @ApiModelProperty(value = "组织Id", example = "nju.edu.cn")
-    private String groupId;
-
-    @ApiModelProperty(value = "工件Id", example = "qysca")
-    private String artifactId;
+    @ApiModelProperty(value = "项目名称")
+    private String name;
 
     @ApiModelProperty(value = "被对比的版本号", example = "1.0.0")
     private String fromVersion;

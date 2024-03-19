@@ -15,11 +15,14 @@ public class SaveApplicationDTO {
     @ApiModelProperty(value = "应用Id", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private String id;
 
-    @ApiModelProperty(value = "版本号", example = "1.0.0")
-    private String version;
+    @ApiModelProperty(value = "部门名称",example = "Software Development Department")
+    private String buName;
 
     @ApiModelProperty(value = "名称", example = "backend")
     private String name;
+
+    @ApiModelProperty(value = "版本号", example = "1.0.0")
+    private String version;
 
     @ApiModelProperty(value = "描述", example = "backend of sca system")
     private String description;
