@@ -30,6 +30,7 @@ public class ApplicationController {
 
     @ApiOperation("分页获取应用信息")
     @GetMapping("/findApplicationPage")
+    @PreAuthorize("@my.checkAuthRoute(#name,'/qysca/application/findApplicationPage')")
     public ResponseMsg<Page<ApplicationDO>> findApplicationPage(
             @ApiParam(value = "页码", required = true) @RequestParam int number,
             @ApiParam(value = "页大小", required = true) @RequestParam int size) {

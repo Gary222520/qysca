@@ -48,8 +48,4 @@ public class UserDO {
     @ApiModelProperty(value = "是否登录", example = "true")
     private Boolean login;
 
-    @ManyToOne
-    @JoinColumn(name = "bu_id", nullable = false)
-    private BuDO bu;
-
 }

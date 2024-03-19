@@ -14,7 +14,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "plt_role_permission")
+@Table(name= "plt_role_permission", uniqueConstraints = {@UniqueConstraint(columnNames = {"rid","pid"})})
 public class RolePermissionDO {
     @Id
     @Column(name="id",nullable = false)
@@ -23,11 +23,11 @@ public class RolePermissionDO {
     @ApiModelProperty(value = "uuid", example = "402851818e4af0ab018e4af0bbc80000")
     private String id;
 
-    @Column(name="role_id",nullable = false)
+    @Column(name="rid",nullable = false)
     @ApiModelProperty(value = "角色id", example = "402851818e4af0ab018e4af0bbc80000")
-    private String roleId;
+    private String rid;
 
-    @Column(name="per_id",nullable = false)
+    @Column(name="pid",nullable = false)
     @ApiModelProperty(value = "权限id", example = "402851818e4af0ab018e4af0bbc80000")
-    private String perId;
+    private String pid;
 }

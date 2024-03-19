@@ -9,4 +9,9 @@ public class MyExpressionRoot {
         UserDO userDO=ContextUtil.getUserDO();
         return uid.equals(userDO.getUid());
     }
+
+    public boolean checkAuthRoute(String uid,String route){
+        UserDO userDO=ContextUtil.getUserDO();
+        return uid.equals(userDO.getUid());
+    }
 }

@@ -25,7 +25,11 @@ public class BuDO {
     @ApiModelProperty(value = "uuid", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private String id;
 
-    @Column(name="name",nullable = false)
+    @Column(name="bid",nullable = false,unique = true)
+    @ApiModelProperty(value = "部门编号", example = "001")
+    private String bid;
+
+    @Column(name="name",nullable = false,unique = true)
     @ApiModelProperty(value = "名称", example = "技术部")
     private String name;
 }

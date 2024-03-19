@@ -23,11 +23,7 @@ public class PermissionDO {
     @ApiModelProperty(value = "uuid", example = "402851818e4af0ab018e4af0bbc80000")
     private String id;
 
-    @Column(name="name",unique = true,nullable = false)
-    @ApiModelProperty(value = "权限名称", example = "CREATE")
-    private String name;
-
     @Column(name="url",unique = true,nullable = false)
-    @ApiModelProperty(value = "权限路由", example = "/component/create")
+    @ApiModelProperty(value = "权限路由", example = "/qysca/component/create")
     private String url;
 }

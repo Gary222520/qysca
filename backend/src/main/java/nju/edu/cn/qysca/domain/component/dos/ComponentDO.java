@@ -92,4 +92,8 @@ public class ComponentDO {
     @Column(name = "creator")
     @ApiModelProperty(value = "创建者", example = "000000000")
     private String creator;
+
+    @Column(name = "state", nullable = false)
+    @ApiModelProperty(value = "扫描状态", example = "SUCCESS,FAILED,RUNNING,CREATED")
+    private String state;
 }
