@@ -10,4 +10,10 @@ public interface UserRoleDao extends JpaRepository<UserRoleDO, String> {
 
     @Query("select bid from UserRoleDO where uid = ?1")
     List<String> findBidsByUid(String uid);
+
+
+    void deleteAllByAid(String aid);
+
+
+    void deleteByUidAndRidAndBidAndAid(String uid, String rid, String bid, String aid);
 }

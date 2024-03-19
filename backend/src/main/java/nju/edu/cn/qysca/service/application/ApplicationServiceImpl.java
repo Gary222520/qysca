@@ -158,9 +158,11 @@ public class ApplicationServiceImpl implements ApplicationService {
         applicationDO.setTime(timeStamp);
         applicationDao.save(applicationDO);
         //在部门应用表中增加信息
-        BuAppDO buAppDO = new BuAppDO();
-        buAppDO.setBid(buDO.getId());
-        buAppDO.setAid(applicationDO.getId());
+        BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
+        if(buAppDO == null) {
+            buAppDO.setBid(buDO.getId());
+            buAppDO.setAid(applicationDO.getId());
+        }
         return true;
     }
 
@@ -255,6 +257,11 @@ public class ApplicationServiceImpl implements ApplicationService {
         String timeStamp = dateFormat.format(now);
         newApplicationDO.setTime(timeStamp);
         applicationDao.save(newApplicationDO);
+        BuAppDO newBuAppDO = new BuAppDO();
+        BuAppDO oldBuAppDO = buAppDao.findByAid(oldApplicationDO.getId());
+        newBuAppDO.setBid(oldBuAppDO.getBid());
+        newBuAppDO.setAid(newApplicationDO.getId());
+        buAppDao.save(newBuAppDO);
         //新增新应用关系 删除旧应用关系
         if (!StringUtils.isEmpty(upgradeApplicationDTO.getParentName()) && !StringUtils.isEmpty(upgradeApplicationDTO.getParentVersion())) {
             ApplicationDO parentApplicationDO = applicationDao.findByNameAndVersion(upgradeApplicationDTO.getParentName(), upgradeApplicationDTO.getParentVersion());
@@ -293,6 +300,10 @@ public class ApplicationServiceImpl implements ApplicationService {
                 componentDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
                 dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
                 dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+                //删除BuApp中信息
+                buAppDao.delete(buAppDO);
+                //删除UserRole中信息
+                userRoleDao.deleteAllByAid(applicationDO.getId());
             }
             return applicationDOList;
         }

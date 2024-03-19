@@ -1,10 +1,14 @@
 package nju.edu.cn.qysca.service.sbom;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import nju.edu.cn.qysca.dao.bu.BuAppDao;
+import nju.edu.cn.qysca.dao.bu.BuDao;
 import nju.edu.cn.qysca.dao.component.ComponentDao;
 import nju.edu.cn.qysca.dao.component.DependencyTableDao;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.bu.dos.BuAppDO;
+import nju.edu.cn.qysca.domain.bu.dos.BuDO;
 import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.sbom.SbomComponentDTO;
@@ -34,6 +38,12 @@ public class SBOMServiceImpl implements SBOMService {
     private ApplicationDao applicationDao;
 
     @Autowired
+    private BuAppDao buAppDao;
+
+    @Autowired
+    private BuDao buDao;
+
+    @Autowired
     private ComponentDao componentDao;
 
 
@@ -56,7 +66,9 @@ public class SBOMServiceImpl implements SBOMService {
 
         for (ApplicationDO applicationDO : applicationDOList){
             // 找到application所有的直接依赖组件
-            List<ComponentTableDTO> componentTableDTOS = dependencyTableDao.findDirectDependenciesByGroupIdAndArtifactIdAndVersion(applicationDO.getGroupId(), applicationDO.getArtifactId(), applicationDO.getVersion());
+            BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
+            BuDO buDO = buDao.findByBid(buAppDO.getBid());
+            List<ComponentTableDTO> componentTableDTOS = dependencyTableDao.findDirectDependenciesByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
 
             List<SbomComponentDTO> sbomComponentDTOs = new ArrayList<>();
             for (ComponentTableDTO componentTableDTO : componentTableDTOS){
@@ -79,8 +91,8 @@ public class SBOMServiceImpl implements SBOMService {
 
             // 封装为SbomapplicationDTO
             SbomApplicationDTO sbomApplicationDTO = new SbomApplicationDTO();
-            sbomApplicationDTO.setGroupId(applicationDO.getGroupId());
-            sbomApplicationDTO.setArtifactId(applicationDO.getArtifactId());
+            sbomApplicationDTO.setGroupId(buDO.getName());
+            sbomApplicationDTO.setArtifactId(applicationDO.getName());
             sbomApplicationDTO.setVersion(applicationDO.getVersion());
             sbomApplicationDTO.setComponents(sbomComponentDTOs);
 
@@ -98,7 +110,7 @@ public class SBOMServiceImpl implements SBOMService {
                 }
 
                 // 将 SBOM JSON 写入临时文件
-                String fileName = "sbom-" + applicationDO.getArtifactId() + ".json";
+                String fileName = "sbom-" + applicationDO.getName() + ".json";
                 File sbomFile = new File(typeFolder, fileName);
                 FileWriter writer = new FileWriter(sbomFile);
                 writer.write(json);

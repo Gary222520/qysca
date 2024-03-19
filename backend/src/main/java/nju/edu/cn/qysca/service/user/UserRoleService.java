@@ -1,6 +1,8 @@
 package nju.edu.cn.qysca.service.user;
 
+import nju.edu.cn.qysca.domain.bu.dtos.BuMemberDTO;
 import nju.edu.cn.qysca.domain.user.dtos.ApplicationMemberDTO;
+import nju.edu.cn.qysca.domain.bu.dtos.BuRepDTO;
 
 public interface UserRoleService {
 
@@ -17,38 +19,20 @@ public interface UserRoleService {
     void deleteMember(ApplicationMemberDTO applicationMemberDTO);
 
     /**
-     * 在应用添加APP Leader
-     * @param applicationMemberDTO 应用成员信息
-     */
-    void addLeader(ApplicationMemberDTO applicationMemberDTO);
-
-    /**
-     * 在应用删除APP Leader
-     * @param applicationMemberDTO 应用成员信息
-     */
-    void deleteLeader(ApplicationMemberDTO applicationMemberDTO);
-
-    /**
-     * 在应用添加BU PO
-     * @param applicationMemberDTO 应用成员信息
-     */
-    void addBuPO(ApplicationMemberDTO applicationMemberDTO);
-
-    /**
-     * 在应用删除BU PO
-     * @param applicationMemberDTO 应用成员信息
-     */
-    void deleteBuPO(ApplicationMemberDTO applicationMemberDTO);
-
-    /**
      * 在应用添加BU Rep
-     * @param applicationMemberDTO 应用成员信息
+     * @param buRepDTO 部门代表信息
      */
-    void addBuRep(ApplicationMemberDTO applicationMemberDTO);
+    void addBuRep(BuRepDTO buRepDTO);
 
     /**
      * 在应用删除BU Rep
-     * @param applicationMemberDTO 应用成员信息
+     * @param buRepDTO 部门代表信息
      */
-    void deleteBuRep(ApplicationMemberDTO applicationMemberDTO);
+    void deleteBuRep(BuRepDTO buRepDTO);
+
+    /**
+     * 在部门中增加成员
+     * @param buMemberDTO
+     */
+    void addBuMember(BuMemberDTO buMemberDTO);
 }

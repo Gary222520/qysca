@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface BuAppDao extends JpaRepository<BuAppDO, String> {
 
     BuAppDO findByAid(String aid);
+
 }
