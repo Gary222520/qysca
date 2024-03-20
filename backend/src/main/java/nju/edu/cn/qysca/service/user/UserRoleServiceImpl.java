@@ -111,7 +111,12 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Transactional
     public void addBuMember(BuMemberDTO buMemberDTO) {
         BuDO buDO = buDao.findBuDOByName(buMemberDTO.getBuName());
-        userRoleDao.deleteByUidAndRidAndBidAndAid(buMemberDTO.getUid(), "-", buDO.getBid(), "-");
+        UserRoleDO userRoleDO = new UserRoleDO();
+        userRoleDO.setUid(buMemberDTO.getUid());
+        userRoleDO.setBid(buDO.getBid());
+        userRoleDO.setRid("-");
+        userRoleDO.setAid("-");
+        userRoleDao.save(userRoleDO);
     }
 
     /**
