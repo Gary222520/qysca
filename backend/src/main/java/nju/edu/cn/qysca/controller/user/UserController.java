@@ -6,6 +6,7 @@ import nju.edu.cn.qysca.auth.JwtUtil;
 import nju.edu.cn.qysca.controller.ResponseMsg;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.domain.user.dtos.UserDTO;
+import nju.edu.cn.qysca.domain.user.dtos.UserDetailDTO;
 import nju.edu.cn.qysca.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
@@ -37,7 +38,7 @@ public class UserController {
 
     @ApiOperation("获取用户信息")
     @GetMapping("/getUserInfo")
-    public ResponseMsg<UserDO> getUserInfo() {
+    public ResponseMsg<UserDetailDTO> getUserInfo() {
         return new ResponseMsg<>(userService.getUserInfo());
     }
 

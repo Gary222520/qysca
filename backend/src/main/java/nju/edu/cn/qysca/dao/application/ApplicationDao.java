@@ -8,9 +8,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
+
+    @Query(value = "select * from plt_application where id = ?0 limit 1",nativeQuery = true)
+    ApplicationDO findOneById(String id);
+
     /**
      * 根据name, version查找应用
      * @param name 名称

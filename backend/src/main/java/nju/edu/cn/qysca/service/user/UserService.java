@@ -2,6 +2,7 @@ package nju.edu.cn.qysca.service.user;
 
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.domain.user.dtos.UserDTO;
+import nju.edu.cn.qysca.domain.user.dtos.UserDetailDTO;
 
 public interface UserService {
     /**
@@ -27,7 +28,7 @@ public interface UserService {
      * 获取用户信息
      * @return 用户信息
      */
-    UserDO getUserInfo();
+    UserDetailDTO getUserInfo();
 
 
 }
