@@ -468,6 +468,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             addDepth(temp);
             componentDependencyTreeDOS.add(temp);
         }
+        componentDependencyTreeDO.setDependencies(componentDependencyTreeDOS);
+        dependencyTreeDO.setTree(componentDependencyTreeDO);
         return dependencyTreeDO;
     }
 

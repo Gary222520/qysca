@@ -210,6 +210,9 @@ public class SpiderServiceImpl implements SpiderService {
         componentDO.setDevelopers(getDevelopers(model));
         componentDO.setLicenses(getLicense(model));
 
+        componentDO.setCreator(null);
+        componentDO.setState("SUCCESS");
+
         return componentDO;
     }
 
