@@ -121,8 +121,3 @@ CREATE TABLE plt_dependency_table(
 	type VARCHAR(255) NOT NULL,
 	language VARCHAR(255) NOT NULL
 );
-
-
-
-
-

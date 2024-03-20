@@ -14,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * 用户登录
@@ -72,6 +76,7 @@ public class UserServiceImpl implements UserService {
             throw new PlatformException(500, "用户编号已存在");
         }
         user.setLogin(false);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userDao.save(userDO);
     }
 

@@ -44,7 +44,7 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      * @param state 状态
      * @return Integer 版本数量
      */
-    Integer countByGroupIdAndArtifactIdAndState(String groupId, String artifactId, String state);
+    //Integer countByGroupIdAndArtifactIdAndState(String groupId, String artifactId, String state);
 
     /**
      * 查询指定应用的版本信息
@@ -61,7 +61,7 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      * @param pageable 分页信息
      * @return Page<ApplicationDO> 应用分页信息
      */
-    @Query(value = "select distinct on (a.name) a.* from plt_application a where a.id in (select aid from plt_bu_app where bid in :bids) order by name desc",
+    @Query(value = "select distinct on (a.name) a.* from plt_application a where a.id = any (select aid from plt_bu_app where bid in :bids) order by name desc",
             countQuery = "select count(*) from (select distinct a.name from plt_application a where a.id in (select aid from plt_bu_app where bid in :bids) order by name desc) as unique_combinations",
             nativeQuery = true)
     Page<ApplicationDO> findApplicationPage(List<String> bids, Pageable pageable);
@@ -72,7 +72,7 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      * @param name 应用名称
      * @return List<String> 模糊查询应用名称
      */
-    @Query(value = "select a.name from plt_application a where a.id in (select aid from plt_bu_app where bid in :bids) and a.name like %?1%", nativeQuery = true)
+    @Query(value = "select a.name from plt_application a where a.name like %?1%", nativeQuery = true)
     List<String> searchApplicationName(List<String> bids, String name);
 
     /**
@@ -80,7 +80,7 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      * @param name 应用名称
      * @return ApplicationDO 应用信息
      */
-    @Query(value = "select * from plt_application where id in (select aid from plt_bu_app where bid in :bids) and name = :name order by version desc limit 1", nativeQuery = true)
+    @Query(value = "select * from plt_application where id = any (select aid from plt_bu_app where bid in :bids) and name = :name order by version desc limit 1", nativeQuery = true)
     ApplicationDO findApplication(List<String> bids, String name);
 
     /**
