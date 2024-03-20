@@ -128,9 +128,7 @@ public class SBOMServiceImpl implements SBOMService {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            ZipUtil.deleteDirectory(sbomFile);
+            throw new PlatformException(500, "SBOM导出失败");
         }
     }
 }
