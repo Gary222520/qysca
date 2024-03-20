@@ -7,10 +7,11 @@ import java.util.List;
 public interface BuService {
     /**
      * 创建BU
+     * @param bid 部门编号
      * @param buName 名称
      * @return 返回创建Bu是否成功
      */
-    Boolean createBu(String buName);
+    Boolean createBu(String bid, String buName);
 
     /**
      *  查找BU

@@ -16,8 +16,9 @@ public class BuServiceImpl implements BuService{
 
     @Override
     @Transactional
-    public Boolean createBu(String buName) {
+    public Boolean createBu(String bid, String buName) {
         BuDO buDO = new BuDO();
+        buDO.setBid(bid);
         buDO.setName(buName);
         buDao.save(buDO);
         return Boolean.TRUE;

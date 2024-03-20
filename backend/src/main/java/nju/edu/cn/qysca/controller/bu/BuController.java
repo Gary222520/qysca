@@ -21,8 +21,8 @@ public class BuController {
     @ApiOperation("新增部门")
     @GetMapping("/addBu")
     @PreAuthorize("@my.checkAuth('/qysca/bu/addBu')")
-    public ResponseMsg addBu(@RequestParam String name) {
-        buService.createBu(name);
+    public ResponseMsg addBu(@RequestParam String bid, @RequestParam String name) {
+        buService.createBu(bid, name);
         return new ResponseMsg<>();
     }
 
