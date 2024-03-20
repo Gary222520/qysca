@@ -20,6 +20,10 @@ import nju.edu.cn.qysca.domain.user.dtos.UserDetailDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -101,8 +105,8 @@ public class UserServiceImpl implements UserService {
         if (user != null) {
             throw new PlatformException(500, "用户编号已存在");
         }
-        user.setLogin(false);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userDO.setLogin(false);
+        userDO.setPassword(passwordEncoder.encode(userDO.getPassword()));
         userDao.save(userDO);
     }
 
@@ -171,4 +175,19 @@ public class UserServiceImpl implements UserService {
         BeanUtils.copyProperties(userDO, oldUserDO);
         userDao.save(oldUserDO);
     }
+
+    /**
+     * 分页获取所有用户信息
+     *
+     * @param number 页号
+     * @param size   页大小
+     * @return 用户信息分页结果
+     */
+    @Override
+    public Page<UserDO> listAllUser(int number, int size) {
+        Pageable pageable= PageRequest.of(number-1, size, Sort.by(Sort.Order.asc("uid").nullsLast()));
+        return userDao.findAll(pageable);
+    }
+
+
 }

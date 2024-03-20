@@ -3,6 +3,9 @@ package nju.edu.cn.qysca.service.user;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.domain.user.dtos.UserDTO;
 import nju.edu.cn.qysca.domain.user.dtos.UserDetailDTO;
+import org.springframework.data.domain.Page;
+
+import java.util.List;
 
 public interface UserService {
     /**
@@ -42,4 +45,11 @@ public interface UserService {
      */
     void updateUser(UserDO userDO);
 
+    /**
+     * 分页获取所有用户信息
+     * @param number 页号
+     * @param size 页大小
+     * @return 用户信息分页结果
+     */
+    Page<UserDO> listAllUser(int number, int size);
 }

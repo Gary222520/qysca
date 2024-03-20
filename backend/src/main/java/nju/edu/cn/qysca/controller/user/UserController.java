@@ -2,6 +2,7 @@ package nju.edu.cn.qysca.controller.user;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import nju.edu.cn.qysca.auth.JwtUtil;
 import nju.edu.cn.qysca.controller.ResponseMsg;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
@@ -9,8 +10,11 @@ import nju.edu.cn.qysca.domain.user.dtos.UserDTO;
 import nju.edu.cn.qysca.domain.user.dtos.UserDetailDTO;
 import nju.edu.cn.qysca.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Api(tags = "用户管理")
 @RestController
@@ -63,5 +67,13 @@ public class UserController {
     public ResponseMsg updateUser(@RequestBody UserDO userDO) {
         userService.updateUser(userDO);
         return new ResponseMsg<>();
+    }
+
+    @ApiOperation("查看所有用户信息")
+    @GetMapping("/listAllUser")
+    @PreAuthorize("@my.checkAuth('/qysca/user/listAllUser')")
+    public ResponseMsg<Page<UserDO>> listAllUser(@ApiParam(value = "页码", required = true) @RequestParam int number,
+                                                 @ApiParam(value = "页大小", required = true) @RequestParam int size) {
+        return new ResponseMsg<>(userService.listAllUser(number,size));
     }
 }
