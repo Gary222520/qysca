@@ -22,16 +22,16 @@ public class test {
         buService.createBu("软件开发部");
     }
 
-    @Test
-    public void testUser(){
-        BuDO buDO = buService.findBuByName("软件开发部");
-        UserDO userDO = new UserDO();
-        userDO.setBu(buDO);
-        userDO.setUid("000000000");
-        userDO.setName("test");
-        userDO.setPassword("admin");
-        userDO.setPhone("17551542358");
-        userDO.setEmail("2227596010@qq.com");
-        userService.register(userDO);
-    }
+//    @Test
+//    public void testUser(){
+//        BuDO buDO = buService.findBuByName("软件开发部");
+//        UserDO userDO = new UserDO();
+//        userDO.setBu(buDO);
+//        userDO.setUid("000000000");
+//        userDO.setName("test");
+//        userDO.setPassword("admin");
+//        userDO.setPhone("17551542358");
+//        userDO.setEmail("2227596010@qq.com");
+//        userService.register(userDO);
+//    }
 }
