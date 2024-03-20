@@ -83,10 +83,10 @@ public class UserRoleServiceImpl implements UserRoleService {
         BuDO buDO = buDao.findBuDOByName(buRepDTO.getBuName());
         UserRoleDO userRoleDO = new UserRoleDO();
         userRoleDO.setUid(buRepDTO.getUid());
-        RoleDO roleDO = roleDao.findByName("BU Rep");
+        RoleDO roleDO = roleDao.findByName("Bu Rep");
         userRoleDO.setRid(roleDO.getId());
         userRoleDO.setBid(buDO.getBid());
-        userRoleDO.setUid("-");
+        userRoleDO.setAid("-");
         userRoleDao.save(userRoleDO);
     }
 
