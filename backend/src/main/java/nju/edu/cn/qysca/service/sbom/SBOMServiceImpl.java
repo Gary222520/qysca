@@ -60,7 +60,7 @@ public class SBOMServiceImpl implements SBOMService {
      * @param response HttpServletResponse
      * @param appId 应用id
      */
-    public void exportSBOM(HttpServletResponse response, String appId) {
+    public void exportSBOM(String appId, HttpServletResponse response) {
         ApplicationDO applicationDO = applicationDao.findApplicationDOById(appId);
         if (applicationDO == null) {
             throw new PlatformException(500, "应用不存在: id=" + appId);
