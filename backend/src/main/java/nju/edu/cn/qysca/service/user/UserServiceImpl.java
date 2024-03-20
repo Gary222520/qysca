@@ -3,10 +3,20 @@ package nju.edu.cn.qysca.service.user;
 import com.auth0.jwt.interfaces.Claim;
 import nju.edu.cn.qysca.auth.ContextUtil;
 import nju.edu.cn.qysca.auth.JwtUtil;
+import nju.edu.cn.qysca.dao.application.ApplicationDao;
+import nju.edu.cn.qysca.dao.bu.BuDao;
+import nju.edu.cn.qysca.dao.user.RoleDao;
 import nju.edu.cn.qysca.dao.user.UserDao;
+import nju.edu.cn.qysca.dao.user.UserRoleDao;
+import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.bu.dos.BuDO;
+import nju.edu.cn.qysca.domain.user.dos.RoleDO;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
+import nju.edu.cn.qysca.domain.user.dos.UserRoleDO;
 import nju.edu.cn.qysca.domain.user.dtos.LoginUserDTO;
+import nju.edu.cn.qysca.domain.user.dtos.UserBuAppRoleDTO;
 import nju.edu.cn.qysca.domain.user.dtos.UserDTO;
+import nju.edu.cn.qysca.domain.user.dtos.UserDetailDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,6 +28,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 
@@ -32,6 +44,19 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserRoleDao userRoleDao;
+
+    @Autowired
+    private BuDao buDao;
+
+
+    @Autowired
+    private ApplicationDao applicationDao;
+
+    @Autowired
+    private RoleDao roleDao;
 
     /**
      * 用户登录
@@ -85,10 +110,39 @@ public class UserServiceImpl implements UserService {
      * @return 用户信息
      */
     @Override
-    public UserDO getUserInfo(){
-        UserDO ans=ContextUtil.getUserDO();
-        if(null==ans){
+    public UserDetailDTO getUserInfo(){
+        UserDetailDTO ans=new UserDetailDTO();
+        UserDO user=ContextUtil.getUserDO();
+        if(null==user){
             throw new PlatformException(500,"用户信息获取失败");
+        }
+        ans.setUser(user);
+        ans.setUserBuAppRoles(new ArrayList<>());
+        // 获取用户部门应用角色信息
+        List<UserRoleDO> userRoleDOList=userRoleDao.findByUid(user.getUid());
+        if(null==userRoleDOList||userRoleDOList.isEmpty()){
+            return ans;
+        }
+        for (UserRoleDO userRoleDO:userRoleDOList){
+            UserBuAppRoleDTO userBuAppRoleDTO=new UserBuAppRoleDTO();
+            userBuAppRoleDTO.setBuName("-");
+            userBuAppRoleDTO.setAppName("-");
+            userBuAppRoleDTO.setAppVersion("-");
+            userBuAppRoleDTO.setRole("-");
+            if(!userRoleDO.getBid().equals("-")){
+                BuDO buDO=buDao.findByBid(userRoleDO.getBid());
+                userBuAppRoleDTO.setBuName(buDO.getName());
+            }
+            if(!userRoleDO.getAid().equals("-")){
+                ApplicationDO applicationDO=applicationDao.findOneById(userRoleDO.getAid());
+                userBuAppRoleDTO.setAppName(applicationDO.getName());
+                userBuAppRoleDTO.setAppVersion(applicationDO.getVersion());
+            }
+            if(!userRoleDO.getRid().equals("-")){
+                String name=roleDao.findNameById(userRoleDO.getRid());
+                userBuAppRoleDTO.setRole(name);
+            }
+            ans.getUserBuAppRoles().add(userBuAppRoleDTO);
         }
         return ans;
     }
