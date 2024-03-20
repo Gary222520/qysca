@@ -3,6 +3,9 @@ package nju.edu.cn.qysca.service.user;
 import nju.edu.cn.qysca.domain.bu.dtos.BuMemberDTO;
 import nju.edu.cn.qysca.domain.user.dtos.ApplicationMemberDTO;
 import nju.edu.cn.qysca.domain.bu.dtos.BuRepDTO;
+import nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO;
+
+import java.util.List;
 
 public interface UserRoleService {
 
@@ -35,4 +38,18 @@ public interface UserRoleService {
      * @param buMemberDTO
      */
     void addBuMember(BuMemberDTO buMemberDTO);
+
+    /**
+     * 列出部门的所有成员
+     * @param name 部门名称
+     * @return List<UserBriefDTO> 成员信息列表
+     */
+    List<UserBriefDTO> listBuMember(String name);
+
+    /**
+     * 删除部门成员
+     * @param name 部门名称
+     * @param uid 成员编号
+     */
+    void deleteBuMember(String name, String uid);
 }

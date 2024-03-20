@@ -30,5 +30,16 @@ public interface UserService {
      */
     UserDetailDTO getUserInfo();
 
+    /**
+     * 删除用户
+     * @param uid 用户编号
+     */
+    void deleteUser(String uid);
+
+    /**
+     * 更新用户信息
+     * @param userDO 用户信息
+     */
+    void updateUser(UserDO userDO);
 
 }

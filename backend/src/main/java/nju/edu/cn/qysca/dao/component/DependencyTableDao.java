@@ -55,6 +55,13 @@ public interface DependencyTableDao extends JpaRepository<DependencyTableDO, Str
     @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.type, d.language, d.direct) from DependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version and d.direct = true")
     List<ComponentTableDTO> findDirectDependenciesByGroupIdAndArtifactIdAndVersion(@Param("groupId")String groupId, @Param("artifactId") String artifactId, @Param("version") String version);
 
+    /**
+     *  根据gav查询组件所有依赖平铺信息
+     * @param groupId 组织Id
+     * @param artifactId 工件Id
+     * @param version 应用版本
+     * @return List<TableExcelBriefDTO> 依赖平铺信息
+     */
     @Query("SELECT new nju.edu.cn.qysca.domain.application.dtos.TableExcelBriefDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.language, d.direct, d.depth, d.scope, d.type) FROM DependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
     List<TableExcelBriefDTO>  findTableListByGroupIdAndArtifactIdAndVersion(String groupId, String artifactId, String version);
 }

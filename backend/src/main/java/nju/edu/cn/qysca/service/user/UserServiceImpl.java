@@ -18,6 +18,7 @@ import nju.edu.cn.qysca.domain.user.dtos.UserBuAppRoleDTO;
 import nju.edu.cn.qysca.domain.user.dtos.UserDTO;
 import nju.edu.cn.qysca.domain.user.dtos.UserDetailDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -147,4 +148,27 @@ public class UserServiceImpl implements UserService {
         return ans;
     }
 
+    /**
+     * 删除用户
+     * @param uid 用户编号
+     */
+    @Override
+    @Transactional
+    public void deleteUser(String uid) {
+        userDao.deleteUserDOByUid(uid);
+        //删除其在角色表中的所有信息
+        userRoleDao.deleteAllByUid(uid);
+    }
+
+    /**
+     * 更新用户信息
+     * @param userDO 用户信息
+     */
+    @Override
+    @Transactional
+    public void updateUser(UserDO userDO) {
+        UserDO oldUserDO=userDao.findByUid(userDO.getUid());
+        BeanUtils.copyProperties(userDO, oldUserDO);
+        userDao.save(oldUserDO);
+    }
 }

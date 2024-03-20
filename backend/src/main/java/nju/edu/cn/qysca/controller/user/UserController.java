@@ -9,7 +9,6 @@ import nju.edu.cn.qysca.domain.user.dtos.UserDTO;
 import nju.edu.cn.qysca.domain.user.dtos.UserDetailDTO;
 import nju.edu.cn.qysca.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,7 +32,7 @@ public class UserController {
     @GetMapping("/logout")
     public ResponseMsg logout() {
         userService.logout();
-        return new ResponseMsg();
+        return new ResponseMsg<>();
     }
 
     @ApiOperation("获取用户信息")
@@ -47,22 +46,22 @@ public class UserController {
     @PreAuthorize("@my.checkAuth('/qysca/user/register')")
     public ResponseMsg register(@RequestBody UserDO userDO) {
         userService.register(userDO);
-        return new ResponseMsg();
+        return new ResponseMsg<>();
     }
 
     @ApiOperation("删除用户")
     @PostMapping("/deleteUser")
     @PreAuthorize("@my.checkAuth('/qysca/user/deleteUser')")
     public ResponseMsg deleteUser(@RequestParam String uid) {
-        // TODO: 删除用户
-        return new ResponseMsg();
+        userService.deleteUser(uid);
+        return new ResponseMsg<>();
     }
 
     @ApiOperation("更新用户信息")
     @PostMapping("/updateUser")
     @PreAuthorize("@my.checkAuth('/qysca/user/updateUser')")
     public ResponseMsg updateUser(@RequestBody UserDO userDO) {
-        // TODO: 更新用户信息
-        return new ResponseMsg();
+        userService.updateUser(userDO);
+        return new ResponseMsg<>();
     }
 }

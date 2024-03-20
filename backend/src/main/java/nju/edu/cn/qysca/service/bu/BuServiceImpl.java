@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class BuServiceImpl implements BuService{
 
@@ -24,5 +26,16 @@ public class BuServiceImpl implements BuService{
     @Override
     public BuDO findBuByName(String buName) {
         return buDao.findBuDOByName(buName);
+    }
+
+    @Override
+    @Transactional
+    public void deleteBu(String name) {
+        buDao.deleteBuDOByName(name);
+    }
+
+    @Override
+    public List<String> listAllBu() {
+        return buDao.listAllBu();
     }
 }

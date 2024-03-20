@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
@@ -62,31 +61,31 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
 
     /**
      * 分页获取应用
-     * @param bids 部门编号
+     * @param bid 部门编号
      * @param pageable 分页信息
      * @return Page<ApplicationDO> 应用分页信息
      */
-    @Query(value = "select distinct on (a.name) a.* from plt_application a where a.id = any (select aid from plt_bu_app where bid in :bids) order by name desc",
+    @Query(value = "select distinct on (a.name) a.* from plt_application a where a.id = any (select aid from plt_bu_app where bid = :bid) order by name desc",
             countQuery = "select count(*) from (select distinct a.name from plt_application a where a.id in (select aid from plt_bu_app where bid in :bids) order by name desc) as unique_combinations",
             nativeQuery = true)
-    Page<ApplicationDO> findApplicationPage(List<String> bids, Pageable pageable);
+    Page<ApplicationDO> findApplicationPage(String bid, Pageable pageable);
 
     /**
      * 模糊查询应用名称
-     * @param bids 部门编号
+     * @param bid 部门编号
      * @param name 应用名称
      * @return List<String> 模糊查询应用名称
      */
-    @Query(value = "select a.name from plt_application a where a.name like %?1%", nativeQuery = true)
-    List<String> searchApplicationName(List<String> bids, String name);
+    @Query(value = "select a.name from plt_application a where a.id = any(select aid from plt_bu_app where bid = :bid) and a.name like %:name%", nativeQuery = true)
+    List<String> searchApplicationName(String bid, String name);
 
     /**
      * 根据名称查询应用 并返回应用的最新版本
      * @param name 应用名称
      * @return ApplicationDO 应用信息
      */
-    @Query(value = "select * from plt_application where id = any (select aid from plt_bu_app where bid in :bids) and name = :name order by version desc limit 1", nativeQuery = true)
-    ApplicationDO findApplication(List<String> bids, String name);
+    @Query(value = "select * from plt_application where id = any (select aid from plt_bu_app where bid = :bid) and name = :name order by version desc limit 1", nativeQuery = true)
+    ApplicationDO findApplication(String bid, String name);
 
     /**
      * 根据应用Id查询子应用

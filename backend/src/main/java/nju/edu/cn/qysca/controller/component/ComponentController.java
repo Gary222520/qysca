@@ -6,7 +6,6 @@ import nju.edu.cn.qysca.controller.ResponseMsg;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.*;
-import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.service.component.ComponentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

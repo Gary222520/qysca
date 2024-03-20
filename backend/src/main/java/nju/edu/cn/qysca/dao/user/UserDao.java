@@ -31,4 +31,10 @@ public interface UserDao extends JpaRepository<UserDO, String> {
     @Modifying
     @Query("update UserDO set login=:login where uid=:uid")
     void updateLogin(String uid,Boolean login);
+
+    /**
+     * 删除用户
+     * @param uid 用户编号
+     */
+    void deleteUserDOByUid(String uid);
 }
