@@ -124,8 +124,8 @@ const data = reactive({
   columns: [
     { title: '组件名称', dataIndex: 'name', key: 'name' },
     { title: '版本', dataIndex: 'version', key: 'version' },
-    { title: 'groupId', dataIndex: 'groupId', key: 'groupId' },
-    { title: 'artifactId', dataIndex: 'artifactId', key: 'artifactId' },
+    { title: '组织ID', dataIndex: 'groupId', key: 'groupId' },
+    { title: '工件ID', dataIndex: 'artifactId', key: 'artifactId' },
     { title: '语言', dataIndex: 'language', key: 'language', width: 120 },
     { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
   ]

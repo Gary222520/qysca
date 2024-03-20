@@ -153,6 +153,9 @@
           <div v-if="projectInfo.builder === 'zip'">
             <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
           </div>
+          <div v-if="projectInfo.builder === 'jar'">
+            <Upload ref="uploadRef" :accept="'.jar'" :upload-text="'jar包'" @success="handleUpload"></Upload>
+          </div>
         </div>
       </div>
     </div>
@@ -215,7 +218,7 @@ const selectLanguage = (language) => {
   next()
 }
 const selectTool = (builder) => {
-  if (builder === 'gradle' || builder === 'jar') {
+  if (builder === 'gradle') {
     message.info('暂未支持该方式')
     return
   }

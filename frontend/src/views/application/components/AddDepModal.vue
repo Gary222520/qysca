@@ -1,11 +1,65 @@
 <template>
   <a-modal v-model:open="data.open" width="800px" :footer="null">
     <template #title>
-      <div style="font-size: 20px">项目版本升级</div>
+      <div style="font-size: 20px">{{ data.add ? '添加项目依赖信息' : '更新项目依赖信息' }}</div>
     </template>
-    <div style="display: flex; margin: 20px 0">
+    <div style="display: flex; margin-top: 20px">
       <a-steps class="steps" direction="vertical" :current="data.currentStep" :items="data.steps"></a-steps>
       <div v-if="data.currentStep === 0">
+        <div class="content">
+          <a-card class="card" hoverable @click="selectLanguage('java')">
+            <div class="card_title">
+              <img class="img" src="@/assets/java.png" />
+              <div class="name">Java</div>
+            </div>
+            <div class="card_text">
+              <ul style="margin-bottom: 0">
+                <li class="list_item">Java语言开发的软件</li>
+                <li class="list_item">maven或gradle管理的项目</li>
+              </ul>
+            </div>
+          </a-card>
+          <a-card class="card" hoverable @click="selectLanguage('python')">
+            <div class="card_title">
+              <img class="img" src="@/assets/python.png" />
+              <div class="name">Python</div>
+            </div>
+            <div class="card_text">
+              <ul>
+                <li class="list_item">Python语言开发的软件</li>
+                <li class="list_item">pip工具管理的项目</li>
+              </ul>
+            </div>
+          </a-card>
+        </div>
+        <div class="content" style="margin-top: 10px">
+          <a-card class="card" hoverable @click="selectLanguage('go')">
+            <div class="card_title">
+              <img class="img" src="@/assets/go.png" />
+              <div class="name">Go</div>
+            </div>
+            <div class="card_text">
+              <ul style="margin-bottom: 0">
+                <li class="list_item">Go语言开发的软件</li>
+                <li class="list_item">Go.mod工具管理的项目</li>
+              </ul>
+            </div>
+          </a-card>
+          <a-card class="card" hoverable @click="selectLanguage('javascript')">
+            <div class="card_title">
+              <img class="img" src="@/assets/javascript.png" />
+              <div class="name">JavaScript</div>
+            </div>
+            <div class="card_text">
+              <ul style="margin-bottom: 0">
+                <li class="list_item">JavaScript语言开发的软件</li>
+                <li class="list_item">npm工具管理的NodeJS项目</li>
+              </ul>
+            </div>
+          </a-card>
+        </div>
+      </div>
+      <div v-if="data.currentStep === 1">
         <div class="content">
           <a-card class="card" hoverable @click="selectTool('maven')">
             <div class="card_title">
@@ -59,28 +113,6 @@
           </a-card>
         </div>
       </div>
-      <div v-if="data.currentStep === 1">
-        <a-form :model="formState" ref="formRef" name="project" :label-col="{ span: 8 }">
-          <a-form-item label="组织ID" name="groupId">
-            <a-input v-model:value="formState.groupId" style="width: 300px" disabled />
-          </a-form-item>
-          <a-form-item label="工件ID" name="artifactId">
-            <a-input v-model:value="formState.artifactId" style="width: 300px" disabled />
-          </a-form-item>
-          <a-form-item label="项目名称" name="name">
-            <a-input v-model:value="formState.name" style="width: 300px" disabled />
-          </a-form-item>
-          <a-form-item
-            label="版本编号"
-            name="version"
-            :rules="[{ required: true, validator: validateVersion, trigger: 'change' }]">
-            <a-input v-model:value="formState.version" :placeholder="data.versionPlaceholder" style="width: 300px" />
-          </a-form-item>
-          <a-form-item label="备注信息" name="description">
-            <a-input v-model:value="formState.description" style="width: 300px" />
-          </a-form-item>
-        </a-form>
-      </div>
       <div v-if="data.currentStep === 2">
         <div class="upload">
           <div v-if="projectInfo.builder === 'maven'">
@@ -89,12 +121,14 @@
           <div v-if="projectInfo.builder === 'zip'">
             <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
           </div>
+          <div v-if="projectInfo.builder === 'jar'">
+            <Upload ref="uploadRef" :accept="'.jar'" :upload-text="'jar包'" @success="handleUpload"></Upload>
+          </div>
         </div>
       </div>
     </div>
     <div class="button">
       <a-button class="cancel-btn" @click="close">取消</a-button>
-      <a-button class="btn" v-if="data.currentStep === 1" @click="validateForm">下一步</a-button>
       <a-button class="btn" v-if="data.currentStep === 2" @click="submit">提交</a-button>
       <a-button class="btn" v-if="data.currentStep > 0" @click="back">上一步</a-button>
     </div>
@@ -103,55 +137,34 @@
 
 <script setup>
 import { reactive, ref, defineExpose, defineEmits } from 'vue'
-import { AppUpgradeProject } from '@/api/frontend'
-import Upload from '@/views/project/components/Upload.vue'
+import { AddDependency } from '@/api/frontend'
+import Upload from '@/components/Upload.vue'
 import { message } from 'ant-design-vue'
-import { useStore } from 'vuex'
 
 const emit = defineEmits(['success'])
 const uploadRef = ref()
-const store = useStore()
-
 const data = reactive({
   open: false,
-  project: {},
-  versionPlaceholder: '',
+  add: true,
   currentStep: 0,
-  steps: [{ title: '选择工具' }, { title: '项目信息' }, { title: '上传文件' }]
-})
-const formRef = ref()
-const formState = reactive({
-  groupId: '',
-  artifactId: '',
-  name: '',
-  version: '',
-  type: '',
-  description: ''
+  steps: [{ title: '选择语言' }, { title: '选择工具' }, { title: '上传文件' }]
 })
 const projectInfo = reactive({
-  oldVersion: '',
+  id: '',
+  groupId: '',
+  artifactId: '',
+  version: '',
   language: '',
   builder: '',
   scanner: '',
   filePath: ''
 })
-const applicationInfo = reactive({
-  appGroupId: '',
-  appArtifactId: '',
-  appVersion: ''
-})
-const open = (project) => {
-  data.project = project
-  data.versionPlaceholder = `当前版本为${project.version}`
-  formState.groupId = project.groupId
-  formState.artifactId = project.artifactId
-  formState.name = project.name
-  formState.type = project.type
-  projectInfo.oldVersion = project.version
-  projectInfo.language = project.language
-  applicationInfo.appGroupId = store.getters.currentApp.groupId
-  applicationInfo.appArtifactId = store.getters.currentApp.artifactId
-  applicationInfo.appVersion = store.getters.currentApp.version
+const open = (app, add) => {
+  projectInfo.id = app.id
+  projectInfo.groupId = app.groupId
+  projectInfo.artifactId = app.artifactId
+  projectInfo.version = app.version
+  data.add = add
   data.open = true
 }
 const close = () => {
@@ -159,13 +172,18 @@ const close = () => {
 }
 const clear = () => {
   data.currentStep = 0
-  formState.name = ''
-  formState.version = '1.0.0'
-  formState.description = ''
   uploadRef.value.clear()
 }
+const selectLanguage = (language) => {
+  if (language === 'python' || language === 'go' || language === 'javascript') {
+    message.info('暂未支持该语言')
+    return
+  }
+  projectInfo.language = language
+  next()
+}
 const selectTool = (builder) => {
-  if (builder === 'gradle' || builder === 'jar') {
+  if (builder === 'gradle') {
     message.info('暂未支持该方式')
     return
   }
@@ -176,24 +194,6 @@ const handleUpload = (uploadInfo) => {
   projectInfo.filePath = uploadInfo.filePath
   projectInfo.scanner = uploadInfo.scanner
 }
-const validateVersion = async (_rule, value) => {
-  const reg = /^[1-9]\d?(\.([1-9]?\d)){2}$/
-  if (value === '') {
-    return Promise.reject(new Error('请输入版本编号'))
-  } else if (!reg.test(value)) {
-    return Promise.reject(new Error('版本编号格式为x.x.x（1-99.0-99.0-99）'))
-  } else {
-    return Promise.resolve()
-  }
-}
-const validateForm = () => {
-  formRef.value
-    .validate()
-    .then(() => {
-      next()
-    })
-    .catch(() => {})
-}
 const back = () => {
   data.currentStep -= 1
 }
@@ -202,21 +202,21 @@ const next = () => {
 }
 const submit = () => {
   const params = {
-    ...formState,
-    ...projectInfo,
-    ...applicationInfo
+    ...projectInfo
   }
-  AppUpgradeProject(params)
+  AddDependency(params)
     .then((res) => {
-      // console.log('AppUpgradeProject', res)
+      // console.log('AddDependency', res)
       if (res.code !== 200) {
         message.error(res.message)
         return
       }
-      message.success('版本升级成功')
-      emit('success', data.project)
-      close()
-      clear()
+      message.success(data.add ? '添加成功' : '更新成功')
+      data.open = false
+      emit('success')
+      setTimeout(() => {
+        clear()
+      }, 500)
     })
     .catch((e) => {
       message.error(e)
@@ -264,6 +264,7 @@ defineExpose({ open })
 .button {
   display: flex;
   justify-content: right;
+  margin-top: 10px;
   margin-right: 10px;
 }
 .btn {
@@ -289,3 +290,4 @@ defineExpose({ open })
 </style>
 <style scoped src="@/atdv/steps.css"></style>
 <style scoped src="@/atdv/input.css"></style>
+<style scoped src="@/atdv/select.css"></style>
