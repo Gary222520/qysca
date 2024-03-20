@@ -12,7 +12,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "dependency_table")
+@Table(name= "plt_dependency_table")
 public class DependencyTableDO {
     @Id
     @Column(name="id",nullable = false)
@@ -57,9 +57,9 @@ public class DependencyTableDO {
     @ApiModelProperty(value = "是否直接依赖", example = "true")
     private Boolean direct;
 
-    @Column(name="opensource",nullable = false)
-    @ApiModelProperty(value = "是否开源",example = "true")
-    private Boolean opensource;
+    @Column(name="type",nullable = false)
+    @ApiModelProperty(value = "类型",example = "opensource")
+    private String type;
 
     @Column(name="language",nullable = false)
     @ApiModelProperty(value = "语言", example = "java")

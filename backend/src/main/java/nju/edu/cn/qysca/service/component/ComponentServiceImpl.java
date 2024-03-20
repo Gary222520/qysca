@@ -1,12 +1,16 @@
 package nju.edu.cn.qysca.service.component;
 
+
+import nju.edu.cn.qysca.auth.ContextUtil;
+import nju.edu.cn.qysca.dao.application.ApplicationDao;
+import nju.edu.cn.qysca.dao.bu.BuAppDao;
 import nju.edu.cn.qysca.dao.component.*;
+import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.bu.dos.BuAppDO;
+import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.service.spider.SpiderService;
-import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.springframework.beans.BeanUtils;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.*;
@@ -17,18 +21,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 @Service
 public class ComponentServiceImpl implements ComponentService {
 
     @Autowired
     private ComponentDao componentDao;
+
+    @Autowired
+    private ApplicationDao applicationDao;
+
+    @Autowired
+    private BuAppDao buAppDao;
+
+
 
     @Autowired
     private DependencyTreeDao dependencyTreeDao;
@@ -55,7 +63,7 @@ public class ComponentServiceImpl implements ComponentService {
     public Page<ComponentDO> findComponentsPage(ComponentSearchDTO searchComponentDTO) {
         // 设置查询条件
         ComponentDO searcher = new ComponentDO();
-        searcher.setOpensource(searchComponentDTO.getOpensource());
+        searcher.setType(searchComponentDTO.getType());
         searcher.setGroupId(searchComponentDTO.getGroupId().equals("") ? null : searchComponentDTO.getGroupId());
         searcher.setArtifactId(searchComponentDTO.getArtifactId().equals("") ? null : searchComponentDTO.getArtifactId());
         searcher.setVersion(searchComponentDTO.getArtifactId().equals("") ? null : searchComponentDTO.getVersion());
@@ -78,6 +86,18 @@ public class ComponentServiceImpl implements ComponentService {
         return componentDao.findAll(example, pageable);
     }
 
+
+    /**
+     * 模糊查询组件名称
+     *
+     * @param name 组件名称
+     * @return List<String> 模糊查询组件名称结果
+     */
+    @Override
+    public List<ComponentSearchNameDTO> searchComponentName(String name) {
+        return componentDao.searchComponentName(name);
+    }
+
     /**
      * 存储闭源组件信息
      *
@@ -87,36 +107,90 @@ public class ComponentServiceImpl implements ComponentService {
     @Transactional
     @Override
     public Boolean saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO) {
-        // 接口获得详细信息
-        try {
-            Model model = null;
-            MavenXpp3Reader reader = new MavenXpp3Reader();
-            if (saveCloseComponentDTO.getBuilder().equals("zip")) {
-                unzip(saveCloseComponentDTO.getFilePath());
-                File file = new File(saveCloseComponentDTO.getFilePath());
-                model = reader.read(new FileReader(file.getParent() + "/pom.xml"));
-            } else if (saveCloseComponentDTO.getBuilder().equals("maven")) {
-                model = reader.read(new FileReader(saveCloseComponentDTO.getFilePath()));
-            }
-            ComponentDO javaCloseComponentDO = createJavaCloseComponentDO(model, saveCloseComponentDTO.getLanguage());
-            // 存储闭源组件详细信息
-            componentDao.save(javaCloseComponentDO);
+        UserDO userDO = ContextUtil.getUserDO();
+        //接口获得详细信息
+        if (saveCloseComponentDTO.getLanguage().equals("java")) {
+            ComponentDO componentDO = mavenService.componentAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
+            //存储闭源组件详细信息
+            componentDO.setCreator(userDO.getUid());
+            componentDao.save(componentDO);
             //存储闭源组件树状依赖信息
-            DependencyTreeDO javaCloseDependencyTreeDO = createJavaCloseDependencyTreeDO(model, saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder());
-            dependencyTreeDao.save(javaCloseDependencyTreeDO);
+            DependencyTreeDO closeDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
+            dependencyTreeDao.save(closeDependencyTreeDO);
             //存储闭源组件平铺依赖信息
-            List<DependencyTableDO> dependencyTableDOList = createCloseDependencyTableDO(javaCloseDependencyTreeDO.getTree(), model.getGroupId(), model.getArtifactId(), model.getVersion());
-            //为了扩展性 将语言属性抽离出来
-            for(DependencyTableDO dependencyTableDO : dependencyTableDOList){
-                dependencyTableDO.setLanguage("java");
-            }
+            List<DependencyTableDO> dependencyTableDOList = mavenService.dependencyTableAnalysis(closeDependencyTreeDO);
             dependencyTableDao.saveAll(dependencyTableDOList);
-        } catch (Exception e) {
-            throw new PlatformException("存储闭源组件信息失败", e);
+            File file = new File(saveCloseComponentDTO.getFilePath());
+            deleteFolder(file.getParent());
         }
         return true;
     }
 
+    /**
+     * 更新闭源组件信息
+     *
+     * @param updateCloseComponentDTO 更新闭源组件接口信息
+     * @return 更新闭源组件是否成功
+     */
+    @Override
+    public Boolean updateCloseComponent(UpdateCloseComponentDTO updateCloseComponentDTO) {
+        //更新基础信息
+        UserDO userDO = ContextUtil.getUserDO();
+        ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
+        if (!userDO.getUid().equals(componentDO.getCreator())) {
+            throw new PlatformException(500, "您没有权限修改该组件信息");
+        }
+        if (updateCloseComponentDTO.getFilePath() == null) {
+            componentDO.setType(updateCloseComponentDTO.getType());
+        } else {
+            ApplicationDO applicationDO = applicationDao.findByNameAndVersion(updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
+            if (applicationDO != null && (applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().length > 0)) {
+                throw new PlatformException(500, "该组件不可更新依赖信息");
+            }
+            if (updateCloseComponentDTO.getLanguage().equals("java")) {
+                ComponentDO temp = mavenService.componentAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
+                if (!temp.getGroupId().equals(updateCloseComponentDTO.getGroupId()) || !temp.getArtifactId().equals(updateCloseComponentDTO.getArtifactId()) || !temp.getVersion().equals(updateCloseComponentDTO.getVersion())) {
+                    throw new PlatformException(500, "更新失败，组件信息不匹配");
+                }
+                componentDao.deleteByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
+                componentDao.save(temp);
+                dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
+                DependencyTreeDO closeDependencyTreeDO = mavenService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
+                dependencyTreeDao.save(closeDependencyTreeDO);
+                //存储闭源组件平铺依赖信息
+                dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
+                List<DependencyTableDO> dependencyTableDOList = mavenService.dependencyTableAnalysis(closeDependencyTreeDO);
+                dependencyTableDao.saveAll(dependencyTableDOList);
+            }
+            File file = new File(updateCloseComponentDTO.getFilePath());
+            deleteFolder(file.getParent());
+        }
+        return null;
+    }
+
+    /**
+     * 删除闭源组件
+     *
+     * @param deleteCloseComponentDTO 删除闭源组件信息接口
+     * @return List<ApplicationDO> 被依赖的应用
+     */
+    @Override
+    public List<ApplicationDO> deleteCloseComponent(DeleteCloseComponentDTO deleteCloseComponentDTO) {
+        //确定是否是闭源组件
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(deleteCloseComponentDTO.getArtifactId(), deleteCloseComponentDTO.getVersion());
+        if (applicationDO == null) {
+            throw new PlatformException(500, "该组件不可删除");
+        }
+        List<ApplicationDO> parentApplicationDOList = applicationDao.findParentApplication(applicationDO.getId());
+        if (parentApplicationDOList.size() == 0) {
+            componentDao.deleteByGroupIdAndArtifactIdAndVersion(deleteCloseComponentDTO.getGroupId(), deleteCloseComponentDTO.getArtifactId(), deleteCloseComponentDTO.getVersion());
+            dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(deleteCloseComponentDTO.getGroupId(), deleteCloseComponentDTO.getArtifactId(), deleteCloseComponentDTO.getVersion());
+            dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(deleteCloseComponentDTO.getGroupId(), deleteCloseComponentDTO.getArtifactId(), deleteCloseComponentDTO.getVersion());
+        } else {
+            return parentApplicationDOList;
+        }
+        return null;
+    }
 
     /**
      * 查询组件依赖树信息
@@ -146,20 +220,10 @@ public class ComponentServiceImpl implements ComponentService {
                 fileWriter.write(xml);
                 fileWriter.flush();
                 fileWriter.close();
-                ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(tempPath, "maven", 0);
-                componentDependencyTreeDO.setOpensource(true);
-                dependencyTreeDO.setId(UUIDGenerator.getUUID());
-                dependencyTreeDO.setGroupId(componentGavDTO.getGroupId());
-                dependencyTreeDO.setArtifactId(componentGavDTO.getArtifactId());
-                dependencyTreeDO.setVersion(componentDependencyTreeDO.getVersion());
-                dependencyTreeDO.setTree(componentDependencyTreeDO);
+                dependencyTreeDO = mavenService.dependencyTreeAnalysis(tempPath, "maven", "opensource");
                 dependencyTreeDao.save(dependencyTreeDO);
-                // 考虑扩展性 将language属性抽离出来
-                List<DependencyTableDO> temp = creatDependencyTable(dependencyTreeDO);
-                for(DependencyTableDO dependencyTableDO : temp) {
-                    dependencyTableDO.setLanguage("java");
-                }
-                dependencyTableDao.saveAll(temp);
+                List<DependencyTableDO> dependencyTableDOList = mavenService.dependencyTableAnalysis(dependencyTreeDO);
+                dependencyTableDao.saveAll(dependencyTableDOList);
                 deleteFolder(tempPomFolder);
             } catch (Exception e) {
                 deleteFolder(tempPomFolder);
@@ -209,194 +273,6 @@ public class ComponentServiceImpl implements ComponentService {
                 componentGavDTO.getVersion());
         BeanUtils.copyProperties(componentDO, componentDetailDTO);
         return componentDetailDTO;
-    }
-
-
-    /**
-     * 获得Model中的Developer信息
-     *
-     * @param model pom文件
-     * @return List<DeveloperDO> Developer信息
-     */
-    private List<DeveloperDO> getDevelopers(Model model) {
-        List<org.apache.maven.model.Developer> mavenDevelopers = model.getDevelopers();
-        return mavenDevelopers.stream()
-                .map(mavenDeveloper -> {
-                    DeveloperDO developer = new DeveloperDO();
-                    developer.setId(mavenDeveloper.getId() == null ? "-" : mavenDeveloper.getId());
-                    developer.setName(mavenDeveloper.getName() == null ? "-" : mavenDeveloper.getName());
-                    developer.setEmail(mavenDeveloper.getEmail() == null ? "-" : mavenDeveloper.getEmail());
-                    return developer;
-                })
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 获得Model中的License信息
-     *
-     * @param model pom文件
-     * @return List<LicenseDO> 许可证信息
-     */
-    private List<LicenseDO> getLicense(Model model) {
-        List<org.apache.maven.model.License> mavenLicenses = model.getLicenses();
-        return mavenLicenses.stream()
-                .map(mavenLicense -> {
-                    LicenseDO license = new LicenseDO();
-                    license.setName(mavenLicense.getName() == null ? "-" : mavenLicense.getName());
-                    license.setUrl(mavenLicense.getUrl() == null ? "-" : mavenLicense.getUrl());
-                    return license;
-                })
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 根据pom文件生成闭源组件详细信息
-     *
-     * @param model    pom文件信息
-     * @param language 组件语言
-     * @return ComponentDO 闭源组件详细信息
-     */
-    private ComponentDO createJavaCloseComponentDO(Model model, String language) {
-        ComponentDO javaCloseComponentDO = new ComponentDO();
-        javaCloseComponentDO.setId(UUIDGenerator.getUUID());
-        javaCloseComponentDO.setLanguage(language);
-        javaCloseComponentDO.setName(model.getName() == null ? "-" : model.getName());
-        javaCloseComponentDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
-        javaCloseComponentDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
-        javaCloseComponentDO.setVersion(model.getVersion() == null ? "-" : model.getVersion());
-        javaCloseComponentDO.setOpensource(false);
-        javaCloseComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
-        javaCloseComponentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
-        javaCloseComponentDO.setDownloadUrl(model.getDistributionManagement() == null ? "-" : model.getDistributionManagement().getDownloadUrl());
-        javaCloseComponentDO.setSourceUrl(model.getScm() == null ? "-" : model.getScm().getUrl());
-        javaCloseComponentDO.setPUrl("");
-        javaCloseComponentDO.setLicenses(getLicense(model));
-        javaCloseComponentDO.setDevelopers(getDevelopers(model));
-        //TODO: hash信息解析
-        //javaCloseComponentDO.setHashes(getHashes(model));
-        return javaCloseComponentDO;
-    }
-
-    /**
-     * 根据pom文件生成依赖树信息
-     *
-     * @param model    pom文件
-     * @param filePath pom文件路径
-     * @param builder  构建工具
-     * @return DependencyTreeDO 闭源组件依赖树信息
-     * @throws Exception
-     */
-    private DependencyTreeDO createJavaCloseDependencyTreeDO(Model model, String filePath, String builder) throws Exception {
-        DependencyTreeDO javaCloseDependencyTreeDO = new DependencyTreeDO();
-        javaCloseDependencyTreeDO.setId(UUIDGenerator.getUUID());
-        javaCloseDependencyTreeDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
-        javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
-        javaCloseDependencyTreeDO.setVersion(model.getVersion() == null ? "-" : model.getVersion());
-        ComponentDependencyTreeDO componentDependencyTreeDO = mavenService.projectDependencyAnalysis(filePath, builder, 1);
-        componentDependencyTreeDO.setOpensource(false);
-        javaCloseDependencyTreeDO.setTree(componentDependencyTreeDO);
-        return javaCloseDependencyTreeDO;
-    }
-
-    /**
-     * 根据组件依赖树信息获得平铺组件信息
-     *
-     * @param componentDependencyTreeDO 组件依赖树信息
-     * @param groupId                   父级组件groupId
-     * @param artifactId                父级组件artifactId
-     * @param version                   父级组件version
-     * @return List<DependencyTableDO> 组件平铺依赖列表
-     */
-    private List<DependencyTableDO> createCloseDependencyTableDO(ComponentDependencyTreeDO componentDependencyTreeDO, String groupId, String artifactId, String version) {
-        List<DependencyTableDO> closeDependencyTableDOList = new ArrayList<>();
-        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(componentDependencyTreeDO.getDependencies());
-        while (!queue.isEmpty()) {
-            DependencyTableDO dependencyTableDO = new DependencyTableDO();
-            dependencyTableDO.setId(UUIDGenerator.getUUID());
-            dependencyTableDO.setGroupId(groupId);
-            dependencyTableDO.setArtifactId(artifactId);
-            dependencyTableDO.setVersion(version);
-            ComponentDependencyTreeDO componentDependencyTree = queue.poll();
-            dependencyTableDO.setCGroupId(componentDependencyTree.getGroupId());
-            dependencyTableDO.setCArtifactId(componentDependencyTree.getArtifactId());
-            dependencyTableDO.setCVersion(componentDependencyTree.getVersion());
-            dependencyTableDO.setScope(componentDependencyTreeDO.getScope());
-            dependencyTableDO.setDepth(componentDependencyTree.getDepth());
-            dependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
-            dependencyTableDO.setOpensource(componentDependencyTree.getOpensource());
-            queue.addAll(componentDependencyTree.getDependencies());
-            closeDependencyTableDOList.add(dependencyTableDO);
-        }
-        return closeDependencyTableDOList;
-    }
-
-    /**
-     * 文件解压
-     *
-     * @param filePath zip文件路径
-     * @throws Exception
-     */
-    private void unzip(String filePath) throws Exception {
-        File file = new File(filePath);
-        File dir = new File(file.getParent());
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        ZipFile zipFile = new ZipFile(filePath, Charset.forName("GBK"));
-        Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
-        while (zipEntries.hasMoreElements()) {
-            ZipEntry zipEntry = zipEntries.nextElement();
-            String entryName = zipEntry.getName();
-            String fileDestPath = dir + "/" + entryName;
-            if (!zipEntry.isDirectory()) {
-                File destFile = new File(fileDestPath);
-                destFile.getParentFile().mkdirs();
-                InputStream inputStream = zipFile.getInputStream(zipEntry);
-                FileOutputStream outputStream = new FileOutputStream(destFile);
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) > 0) {
-                    outputStream.write(buffer, 0, bytesRead);
-                }
-                outputStream.close();
-                inputStream.close();
-            } else {
-                File dirToCreate = new File(fileDestPath);
-                dirToCreate.mkdirs();
-            }
-        }
-        zipFile.close();
-    }
-
-    /**
-     * 根据组件依赖树信息生成平铺信息
-     *
-     * @param dependencyTreeDO 组件依赖树信息
-     * @return List<DependencyTableDO> 组件平铺信息
-     */
-    private List<DependencyTableDO> creatDependencyTable(DependencyTreeDO dependencyTreeDO) {
-        // 先删除已有记录
-        dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(dependencyTreeDO.getGroupId(), dependencyTreeDO.getArtifactId(), dependencyTreeDO.getVersion());
-        List<DependencyTableDO> result = new ArrayList<>();
-        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(dependencyTreeDO.getTree().getDependencies());
-        while (!queue.isEmpty()) {
-            DependencyTableDO dependencyTableDO = new DependencyTableDO();
-            dependencyTableDO.setId(UUIDGenerator.getUUID());
-            dependencyTableDO.setGroupId(dependencyTreeDO.getGroupId());
-            dependencyTableDO.setArtifactId(dependencyTreeDO.getArtifactId());
-            dependencyTableDO.setVersion(dependencyTreeDO.getVersion());
-            ComponentDependencyTreeDO componentDependencyTreeDO = Objects.requireNonNull(queue.poll());
-            dependencyTableDO.setCGroupId(componentDependencyTreeDO.getGroupId());
-            dependencyTableDO.setCArtifactId(componentDependencyTreeDO.getArtifactId());
-            dependencyTableDO.setCVersion(componentDependencyTreeDO.getVersion());
-            dependencyTableDO.setScope(componentDependencyTreeDO.getScope());
-            dependencyTableDO.setDepth(componentDependencyTreeDO.getDepth());
-            dependencyTableDO.setDirect(dependencyTableDO.getDepth() == 1);
-            dependencyTableDO.setOpensource(componentDependencyTreeDO.getOpensource());
-            result.add(dependencyTableDO);
-            queue.addAll(componentDependencyTreeDO.getDependencies());
-        }
-        return result;
     }
 
     /**

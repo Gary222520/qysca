@@ -12,46 +12,97 @@ import java.util.List;
 @Repository
 public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
     /**
-     *  根据groupId、artifactId和version删除应用
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
-     * @param version 版本号
+     * 根据name, version查找应用
+     * @param name 名称
+     * @param version 版本
+     * @return ApplicationDO 应用信息
      */
-    void deleteByGroupIdAndArtifactIdAndVersion(String groupId, String artifactId, String version);
+    ApplicationDO findByNameAndVersion(String name, String version);
 
     /**
-     * 列出所有项目的最新版本
+     * 根据name查找应用
+     * @param name 名称
      * @param pageable 分页信息
-     * @return Page<ApplicationDO> 所有项目的最新版本
+     * @return Page<ApplicationDO> 应用信息列表
      */
-    @Query(value = "select a.* from (select *, ROW_NUMBER() OVER (PARTITION BY group_id, artifact_id ORDER BY version DESC) AS rn from application) a where a.rn = 1", countQuery = "select count(distinct group_id, artifact_id) from application", nativeQuery = true)
-    Page<ApplicationDO> findLatestVersionOfAllProjects(Pageable pageable);
+    Page<ApplicationDO> findAllByName(String name, Pageable pageable);
 
 
     /**
-     *  根据groupId、artifactId和version查询应用
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
-     * @param version 版本号
-     * @return ApplicationDO 应用
+     * 根据name, version删除应用
+     * @param name 名称
+     * @param version 版本
      */
+    void deleteByNameAndVersion(String name, String version);
 
-    ApplicationDO findByGroupIdAndArtifactIdAndVersion(String groupId, String artifactId, String version);
 
     /**
-     * 根据groupId和artifactId查询应用的版本号
+     * 查询指定应用指定状态的版本数量
+     *
      * @param groupId 组织Id
      * @param artifactId 工件Id
-     * @return List<String> 版本号列表
+     * @param state 状态
+     * @return Integer 版本数量
      */
-    @Query("select version from ApplicationDO where groupId = ?1 and artifactId = ?2 order by version desc")
-    List<String> findVersionsByGroupIdAndArtifactId(String groupId, String artifactId);
+    Integer countByGroupIdAndArtifactIdAndState(String groupId, String artifactId, String state);
 
     /**
-     * 根据groupId和artifactId查询应用
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
-     * @return List<ApplicationDO> 应用列表
+     * 查询指定应用的版本信息
+     * @param name 应用名称
+     * @return List<String> 指定应用的版本信息
      */
-    List<ApplicationDO> findAllByGroupIdAndArtifactId(String groupId, String artifactId);
+    @Query("select version from ApplicationDO where name = :name order by version desc")
+    List<String> findVersionsByName(String name);
+
+
+    /**
+     * 分页获取应用
+     * @param bids 部门编号
+     * @param pageable 分页信息
+     * @return Page<ApplicationDO> 应用分页信息
+     */
+    @Query(value = "select distinct on (a.name) a.* from plt_application a where a.id in (select aid from plt_bu_app where bid in :bids) order by name desc",
+            countQuery = "select count(*) from (select distinct a.name from plt_application a where a.id in (select aid from plt_bu_app where bid in :bids) order by name desc) as unique_combinations",
+            nativeQuery = true)
+    Page<ApplicationDO> findApplicationPage(List<String> bids, Pageable pageable);
+
+    /**
+     * 模糊查询应用名称
+     * @param bids 部门编号
+     * @param name 应用名称
+     * @return List<String> 模糊查询应用名称
+     */
+    @Query(value = "select a.name from plt_application a where a.id in (select aid from plt_bu_app where bid in :bids) and a.name like %?1%", nativeQuery = true)
+    List<String> searchApplicationName(List<String> bids, String name);
+
+    /**
+     * 根据名称查询应用 并返回应用的最新版本
+     * @param name 应用名称
+     * @return ApplicationDO 应用信息
+     */
+    @Query(value = "select * from plt_application where id in (select aid from plt_bu_app where bid in :bids) and name = :name order by version desc limit 1", nativeQuery = true)
+    ApplicationDO findApplication(List<String> bids, String name);
+
+    /**
+     * 根据应用Id查询子应用
+     * @param applicationId 应用Id
+     * @return List<ApplicationDO> 子应用列表
+     */
+    @Query(value = "select a.* from plt_application a where a.id = ANY (select unnest(child_application) from application where id = :applicationId) order by name desc", nativeQuery = true)
+    List<ApplicationDO> findSubApplication(String applicationId);
+
+    /**
+     * 根据Id查找应用
+     * @param id 应用Id
+     */
+    ApplicationDO findApplicationDOById(String id);
+
+
+    /**
+     * 根据Id查找其父应用
+     * @param id 应用Id
+     * @return List<ApplicationDO> 父应用列表
+     */
+    @Query(value = "select * from plt_application where :id = any(child_application)", nativeQuery = true)
+    List<ApplicationDO> findParentApplication(String id);
 }

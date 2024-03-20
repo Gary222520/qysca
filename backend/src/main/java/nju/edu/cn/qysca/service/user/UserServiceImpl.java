@@ -1,37 +1,33 @@
 package nju.edu.cn.qysca.service.user;
 
 import com.auth0.jwt.interfaces.Claim;
-import nju.edu.cn.qysca.config.JwtConfig;
+import nju.edu.cn.qysca.auth.ContextUtil;
+import nju.edu.cn.qysca.auth.JwtUtil;
 import nju.edu.cn.qysca.dao.user.UserDao;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
+import nju.edu.cn.qysca.domain.user.dtos.LoginUserDTO;
 import nju.edu.cn.qysca.domain.user.dtos.UserDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.Id;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    // 用户身份认证管理Service层实现
-
-    private final UserDao userDao;
-
-    private final JwtConfig jwtConfig;
-
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    public UserServiceImpl(UserDao userDao, JwtConfig jwtConfig) {
-        this.userDao = userDao;
-        this.jwtConfig = jwtConfig;
-    }
-
+    private UserDao userDao;
 
     /**
      * 用户登录
@@ -39,13 +35,30 @@ public class UserServiceImpl implements UserService {
      * @return token
      */
     @Override
+    @Transactional
     public String login(UserDTO userDTO) {
-        UserDO userDO = userDao.findByUidAndPassword(userDTO.getUid(), userDTO.getPassword());
-        if (null == userDO ) {
-            throw new PlatformException(500, "用户名或密码错误");
+        // authenticationManager负责验证用户信息
+        UsernamePasswordAuthenticationToken authenticationToken=new UsernamePasswordAuthenticationToken(userDTO.getUid(), userDTO.getPassword());
+        Authentication authentication=authenticationManager.authenticate(authenticationToken);
+        if(null == authentication){
+            throw new PlatformException(403, "用户名或密码错误");
         }
-        String token = jwtConfig.createJWT(userDO);
+        userDao.updateLogin(userDTO.getUid(),true); // 更新用户状态为已登录
+        LoginUserDTO loginUserDTO=(LoginUserDTO) authentication.getPrincipal();
+        String token = JwtUtil.createJWT(loginUserDTO.getUserDO().getUid());
         return token;
+    }
+
+    /**
+     * 用户登出
+     */
+    @Override
+    @Transactional
+    public void logout() {
+        Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+        LoginUserDTO loginUserDTO=(LoginUserDTO) authentication.getPrincipal();
+        String uid=loginUserDTO.getUserDO().getUid();
+        userDao.updateLogin(uid,false); // 更新用户状态为未登录
     }
 
     /**
@@ -58,26 +71,21 @@ public class UserServiceImpl implements UserService {
         if (user != null) {
             throw new PlatformException(500, "用户编号已存在");
         }
+        user.setLogin(false);
         userDao.save(userDO);
     }
 
     /**
-     * 用户认证
-     * @param token 用户身份
+     * 获取用户信息
      * @return 用户信息
      */
     @Override
-    public UserDO auth(String token) {
-
-        Map<String, Claim> claims = jwtConfig.parseJwt(token);
-        UserDO userDO = UserDO.builder()
-                .uid(claims.get("uid").as(String.class))
-                .name(claims.get("name").as(String.class))
-                .role(claims.get("role").as(String.class))
-                .email(claims.get("email").as(String.class))
-                .phone(claims.get("phone").as(String.class))
-                .build();
-        return userDO;
+    public UserDO getUserInfo(){
+        UserDO ans=ContextUtil.getUserDO();
+        if(null==ans){
+            throw new PlatformException(500,"用户信息获取失败");
+        }
+        return ans;
     }
 
 }
