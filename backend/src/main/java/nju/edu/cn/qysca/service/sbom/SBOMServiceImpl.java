@@ -8,6 +8,7 @@ import nju.edu.cn.qysca.dao.component.DependencyTableDao;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.component.DependencyTreeDao;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.application.dtos.ApplicationSearchDTO;
 import nju.edu.cn.qysca.domain.bu.dos.BuAppDO;
 import nju.edu.cn.qysca.domain.bu.dos.BuDO;
 import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
@@ -62,14 +63,14 @@ public class SBOMServiceImpl implements SBOMService {
     /**
      * 导出app的SBOM
      * @param response HttpServletResponse
-     * @param appId 应用id
+     * @param applicationSearchDTO ApplicationSearchDTO
      */
-    public void exportSBOM(String appId, HttpServletResponse response) {
-        ApplicationDO applicationDO = applicationDao.findApplicationDOById(appId);
+    public void exportSBOM(ApplicationSearchDTO applicationSearchDTO, HttpServletResponse response) {
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
         if (applicationDO == null) {
-            throw new PlatformException(500, "应用不存在: id=" + appId);
+            throw new PlatformException(500, "应用不存在: name= " + applicationSearchDTO.getName() + " ;version= " + applicationSearchDTO.getVersion());
         }
-        BuAppDO buAppDO = buAppDao.findByAid(appId);
+        BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
         BuDO buDO = buDao.findByBid(buAppDO.getBid());
 
         DependencyTreeDO dependencyTreeDO = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
@@ -78,7 +79,8 @@ public class SBOMServiceImpl implements SBOMService {
             // 如果应用没有生成依赖树
             // 先调用ApplicationService里的generateDependencyTree方法，
             dependencyTreeDO = applicationService.generateDependencyTree(applicationDO, applicationDO.getType());
-            if (applicationDO.getLanguage().equals("java")){
+            // todo 多语言应用
+            //if (applicationDO.getLanguage().equals("java")){
                 // 根据依赖树生成依赖表
                 List<DependencyTableDO> dependencyTableDOs = mavenService.dependencyTableAnalysis(dependencyTreeDO);
                 for (DependencyTableDO dependencyTableDO : dependencyTableDOs){
@@ -98,7 +100,7 @@ public class SBOMServiceImpl implements SBOMService {
                     );
                     sbomComponentDTOs.add(sbomComponentDTO);
                 }
-            }
+            //}
         } else {
             // 如果应用已生成了依赖树
             List<ComponentTableDTO> componentTableDTOS = dependencyTableDao.findDependenciesByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());

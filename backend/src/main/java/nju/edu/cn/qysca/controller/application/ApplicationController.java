@@ -196,7 +196,7 @@ public class ApplicationController {
 
     @ApiOperation("导出应用SBOM")
     @PostMapping("/exportSBOM")
-    public void exportSBOM(@RequestParam String appId, HttpServletResponse response){
-        sbomService.exportSBOM(appId, response);
+    public void exportSBOM(@RequestBody ApplicationSearchDTO dto, HttpServletResponse response){
+        sbomService.exportSBOM(dto, response);
     }
 }
