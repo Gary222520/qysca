@@ -445,8 +445,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             componentDO.setDownloadUrl("-");
             componentDO.setPUrl("-");
             componentDao.save(componentDO);
-            //根据结构生成依赖信息并保存
             DependencyTreeDO temp = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+            //根据结构生成依赖信息并保存
             if(temp == null) {
                 DependencyTreeDO dependencyTreeDO = generateDependencyTree(applicationDO, changeReleaseStateDTO.getType());
                 dependencyTreeDao.save(dependencyTreeDO);

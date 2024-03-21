@@ -129,6 +129,9 @@ public class ComponentServiceImpl implements ComponentService {
         //存储闭源组件平铺依赖信息
         List<DependencyTableDO> dependencyTableDOList = mavenService.dependencyTableAnalysis(closeDependencyTreeDO);
         dependencyTableDao.saveAll(dependencyTableDOList);
+        ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(closeDependencyTreeDO.getGroupId(), closeDependencyTreeDO.getArtifactId(), closeDependencyTreeDO.getVersion());
+        componentDO.setState("SUCCESS");
+        componentDao.save(componentDO);
         File file = new File(saveCloseComponentDTO.getFilePath());
         deleteFolder(file.getParent());
         return true;
@@ -171,6 +174,7 @@ public class ComponentServiceImpl implements ComponentService {
         }
         if (updateCloseComponentDTO.getFilePath() == null) {
             componentDO.setType(updateCloseComponentDTO.getType());
+            componentDao.save(componentDO);
         } else {
             ApplicationDO applicationDO = applicationDao.findByNameAndVersion(updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
             if (applicationDO != null && (applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().length > 0)) {
@@ -182,6 +186,9 @@ public class ComponentServiceImpl implements ComponentService {
                     throw new PlatformException(500, "更新失败，组件信息不匹配");
                 }
                 componentDao.deleteByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
+                temp.setState("SUCCESS");
+                temp.setLanguage(updateCloseComponentDTO.getLanguage());
+                temp.setCreator(userDO.getUid());
                 componentDao.save(temp);
                 dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
                 DependencyTreeDO closeDependencyTreeDO = mavenService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
