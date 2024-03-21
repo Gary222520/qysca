@@ -5,12 +5,6 @@
     </template>
     <div style="display: flex; margin-top: 20px">
       <a-form :model="formState" ref="formRef" name="application" :label-col="{ span: 8 }">
-        <a-form-item label="组织ID" name="groupId" :rules="[{ required: true, message: '请输入应用组织ID' }]">
-          <a-input v-model:value="formState.groupId" style="width: 300px" />
-        </a-form-item>
-        <a-form-item label="工件ID" name="artifactId" :rules="[{ required: true, message: '请输入应用工件ID' }]">
-          <a-input v-model:value="formState.artifactId" style="width: 300px" />
-        </a-form-item>
         <a-form-item label="应用名称" name="name" :rules="[{ required: true, message: '请输入应用名称' }]">
           <a-input v-model:value="formState.name" :placeholder="formState.artifactId" style="width: 300px" />
         </a-form-item>
@@ -37,7 +31,8 @@
     </div>
     <div class="button">
       <a-button class="cancel-btn" @click="close">取消</a-button>
-      <a-button class="btn" @click="submit">新建</a-button>
+      <a-button class="btn" @click="submit(false)">新建</a-button>
+      <a-button class="btn" @click="submit(true)">新建并添加依赖信息</a-button>
     </div>
   </a-modal>
 </template>
@@ -48,7 +43,7 @@ import { AddProject } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 import { useStore } from 'vuex'
 
-const emit = defineEmits(['root', 'notroot'])
+const emit = defineEmits(['success'])
 const store = useStore()
 
 const data = reactive({
@@ -56,8 +51,6 @@ const data = reactive({
 })
 const formRef = ref()
 const formState = reactive({
-  groupId: '',
-  artifactId: '',
   version: '1.0.0',
   name: '',
   type: 'agent',
@@ -86,14 +79,13 @@ const validateVersion = async (_rule, value) => {
     return Promise.resolve()
   }
 }
-const submit = () => {
+const submit = (dep) => {
   if (formState.name === '') formState.name = formState.artifactId
   formRef.value
     .validate()
     .then(() => {
       const params = {
-        ...formState,
-        creator: JSON.parse(sessionStorage.getItem('user')).uid
+        ...formState
       }
       AddProject(params)
         .then((res) => {
@@ -104,8 +96,7 @@ const submit = () => {
           }
           message.success('新增应用成功')
           data.open = false
-          if (formState.parentId) emit('notroot')
-          else emit('root')
+          emit('success', dep)
           setTimeout(() => {
             clear()
           }, 500)
@@ -123,10 +114,9 @@ defineExpose({ open })
 .button {
   display: flex;
   justify-content: right;
-  margin-right: 10px;
 }
 .btn {
-  width: 80px;
+  min-width: 80px;
   margin-left: 10px;
   border: #6f005f;
   background-color: #6f005f;

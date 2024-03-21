@@ -25,9 +25,6 @@
                 </a-input-group>
               </div>
               <div style="margin-left: 20px; margin-right: 20px">
-                <a-tag color="purple">
-                  <template #icon><FolderOutlined /></template>应用
-                </a-tag>
                 <a-tag v-if="app.lock" color="warning">
                   <template #icon><LockOutlined /></template>已上锁
                 </a-tag>
@@ -44,9 +41,9 @@
                   :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
               </a-tooltip>
               <a-tooltip>
-                <template #title>添加应用</template>
+                <template #title>添加组件</template>
                 <PlusOutlined
-                  @click.stop="addProject(app, index)"
+                  @click.stop="addComponent(app, index)"
                   :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
               </a-tooltip>
               <a-tooltip>
@@ -72,7 +69,8 @@
           @refresh="refresh(data.currentKey)"></AppCollapse>
       </a-collapse-panel>
     </a-collapse>
-    <AddAppModal ref="addAppModal" @root="getProjectList()" @notroot="refresh(data.currentKey)"></AddAppModal>
+    <AddAppModal ref="addAppModal" @success="refresh(data.currentKey)"></AddAppModal>
+    <AddComModal ref="addComModal" @success="refresh(data.currentKey)"></AddComModal>
     <UpgradeAppModal ref="upgradeAppModal" @success="refresh(data.currentKey, true)"></UpgradeAppModal>
     <DeleteAppModal ref="deleteAppModal" @success="refreshParent()"></DeleteAppModal>
     <Drawer ref="drawer" @refresh="refreshDrawer()"></Drawer>
@@ -103,6 +101,7 @@ import { message } from 'ant-design-vue'
 import { reactive, ref, defineEmits, defineProps, defineExpose } from 'vue'
 import AppCollapse from '@/views/application/components/AppCollapse.vue'
 import AddAppModal from './AddAppModal.vue'
+import AddComModal from './AddComModal.vue'
 import UpgradeAppModal from './UpgradeAppModal.vue'
 import DeleteAppModal from './DeleteAppModal.vue'
 import Drawer from './Drawer.vue'
@@ -127,6 +126,7 @@ const props = defineProps({
 
 const appCollapse = ref()
 const addAppModal = ref()
+const addComModal = ref()
 const upgradeAppModal = ref()
 const deleteAppModal = ref()
 const drawer = ref()
@@ -254,9 +254,9 @@ const refreshDrawer = async () => {
   drawer.value.open(data.currentApp, true)
 }
 
-const addProject = (app, index) => {
+const addComponent = (app, index) => {
   data.currentKey = index
-  addAppModal.value.open(app.id, null)
+  addComModal.value.open(app)
 }
 
 const upgradeProject = (app, index) => {

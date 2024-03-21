@@ -10,6 +10,8 @@ const Compare = () => import('@/views/project/Compare.vue')
 const Component = () => import('@/views/component/Component.vue')
 const Dependency = () => import('@/views/component/Dependency.vue')
 
+const BuManage = () => import('@/views/bu/BuManage.vue')
+
 const UserManage = () => import('@/views/user/UserManage.vue')
 
 const routes = [
@@ -68,6 +70,12 @@ const routes = [
         name: 'dependency',
         meta: { menu: 'component', title: '组件依赖' },
         component: Dependency
+      },
+      {
+        path: 'buManage',
+        name: 'buManage',
+        meta: { menu: 'buManage', title: '部门管理' },
+        component: BuManage
       },
       {
         path: 'userManage',

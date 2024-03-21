@@ -7,7 +7,7 @@ const instance = axios.create({})
 instance.interceptors.request.use(
   (config) => {
     const token = sessionStorage.getItem('token')
-    if (token) config.headers = { ...config.headers, Authorization: token }
+    if (token) Object.assign(config.headers, { token })
     return config
   },
   (error) => {

@@ -49,9 +49,6 @@
                   </a-input-group>
                 </div>
                 <div style="margin-left: 20px; margin-right: 20px">
-                  <a-tag color="purple">
-                    <template #icon><FolderOutlined /></template>应用
-                  </a-tag>
                   <a-tag v-if="app.lock" color="warning">
                     <template #icon><LockOutlined /></template>已上锁
                   </a-tag>
@@ -68,9 +65,9 @@
                     :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
                 </a-tooltip>
                 <a-tooltip>
-                  <template #title>添加应用</template>
+                  <template #title>添加组件</template>
                   <PlusOutlined
-                    @click.stop="addProject(app, index)"
+                    @click.stop="addComponent(app, index)"
                     :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
                 </a-tooltip>
                 <a-tooltip>
@@ -107,7 +104,9 @@
           @change="init" />
       </div>
     </a-card>
-    <AddAppModal ref="addAppModal" @root="getProjectList()" @notroot="refresh(data.currentKey)"></AddAppModal>
+    <AddAppModal ref="addAppModal" @success="(dep) => addAppComplete(dep)"></AddAppModal>
+    <AddDepModal ref="addDepModal" @success="refresh(data.currentKey)"></AddDepModal>
+    <AddComModal ref="addComModal" @success="refresh(data.currentKey)"></AddComModal>
     <UpgradeAppModal ref="upgradeAppModal" @success="refresh(data.currentKey, true)"></UpgradeAppModal>
     <DeleteAppModal ref="deleteAppModal" @success="refresh(data.currentKey, true)"></DeleteAppModal>
     <Drawer ref="drawer" @refresh="refreshDrawer()"></Drawer>
@@ -134,6 +133,8 @@ import { message } from 'ant-design-vue'
 import { reactive, ref, onMounted } from 'vue'
 import { GetProjectList, GetNameList, GetProject, GetSubProject, GetVersionList, GetVersionInfo } from '@/api/frontend'
 import AddAppModal from './components/AddAppModal.vue'
+import AddDepModal from './components/AddDepModal.vue'
+import AddComModal from './components/AddComModal.vue'
 import UpgradeAppModal from './components/UpgradeAppModal.vue'
 import DeleteAppModal from './components/DeleteAppModal.vue'
 import Drawer from './components/Drawer.vue'
@@ -146,6 +147,8 @@ onMounted(async () => {
 })
 
 const addAppModal = ref()
+const addDepModal = ref()
+const addComModal = ref()
 const upgradeAppModal = ref()
 const deleteAppModal = ref()
 const drawer = ref()
@@ -339,9 +342,14 @@ const addApplication = () => {
   addAppModal.value.open()
 }
 
-const addProject = (app, index) => {
+const addAppComplete = async (dep) => {
+  await getProjectList()
+  if (dep) addDepModal.value.open(data.currentApp, true)
+}
+
+const addComponent = (app, index) => {
   data.currentKey = index
-  addAppModal.value.open(app.id, null)
+  AddComModal.value.open(app)
 }
 
 const upgradeProject = (app, index) => {
