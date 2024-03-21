@@ -161,8 +161,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         //在部门应用表中增加信息
         BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
         if(buAppDO == null) {
+            buAppDO = new BuAppDO();
             buAppDO.setBid(buDO.getId());
             buAppDO.setAid(applicationDO.getId());
+            buAppDao.save(buAppDO);
         }
         return true;
     }
