@@ -12,6 +12,7 @@
           <template v-if="column.key === 'name'">
             {{ record.name }}
             <span v-if="record.role === 'Bu Rep'"><a-tag>Bu Rep</a-tag></span>
+            <span v-if="record.role === 'Bu PO'"><a-tag>Bu PO</a-tag></span>
           </template>
           <template v-if="column.key === 'action'">
             <a-tooltip v-if="!hasBuRep() && record.role !== 'Bu PO'">
@@ -198,6 +199,10 @@ defineExpose({ open })
 .table {
   width: 500px;
   margin-top: 10px;
+}
+.cancel_btn:hover {
+  border-color: #6f005f;
+  color: #6f005f;
 }
 </style>
 <style scoped src="@/atdv/primary-btn.css"></style>

@@ -65,11 +65,12 @@ import TiledList from './components/TiledList.vue'
 import { message } from 'ant-design-vue'
 
 onMounted(async () => {
-  data.groupId = route.query.groupId
-  data.artifactId = route.query.artifactId
+  // data.groupId = route.query.groupId
+  // data.artifactId = route.query.artifactId
+  data.name = route.query.name
   data.currentVersion = route.query.currentVersion || ''
   data.compareVersion = route.query.compareVersion || ''
-  await getVersions(data.groupId, data.artifactId)
+  await getVersions(data.name)
   compare()
 })
 
@@ -90,8 +91,8 @@ const data = reactive({
 const back = () => {
   router.back()
 }
-const getVersions = async (groupId, artifactId) => {
-  await GetVersionList({ groupId, artifactId })
+const getVersions = async (name) => {
+  await GetVersionList({ name })
     .then((res) => {
       // console.log('GetVersionList', res)
       if (res.code !== 200) {
@@ -117,7 +118,7 @@ const changeVersion = (value) => {
   compare()
 }
 const compare = () => {
-  compareTree.value.show(data.groupId, data.artifactId, data.currentVersion, data.compareVersion)
+  compareTree.value.show(data.name, data.currentVersion, data.compareVersion)
 }
 const filterOption = (input, option) => {
   return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0

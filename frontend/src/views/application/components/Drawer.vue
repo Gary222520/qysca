@@ -9,18 +9,13 @@
         <template #title>刷新</template>
         <RedoOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click.stop="refresh()" />
       </a-tooltip>
-      <a-tag v-if="data.isProject" color="purple" style="margin-left: 20px">
-        <template #icon><FolderOutlined /></template>应用
-      </a-tag>
     </div>
     <div class="relative">
       <div class="drawer_title" style="margin-bottom: 20px">基本信息</div>
     </div>
     <a-descriptions>
-      <a-descriptions-item label="组织ID">{{ data.detail?.groupId }}</a-descriptions-item>
-      <a-descriptions-item label="工件ID">{{ data.detail?.artifactId }}</a-descriptions-item>
       <a-descriptions-item label="应用类型">{{ data.detail?.type }}</a-descriptions-item>
-      <a-descriptions-item label="应用描述" span="3">{{ data.detail?.description }}</a-descriptions-item>
+      <a-descriptions-item label="应用描述">{{ data.detail?.description }}</a-descriptions-item>
     </a-descriptions>
 
     <div class="relative">
@@ -34,24 +29,44 @@
     </a-descriptions>
 
     <div class="relative">
+      <div class="drawer_title">成员信息</div>
+    </div>
+    <div style="margin-bottom: 10px">
+      <a-button type="primary" @click="addAppMember()"><PlusOutlined />添加成员</a-button>
+    </div>
+    <div style="margin-bottom: 20px">
+      <a-table :data-source="table.datasource" :columns="table.columns" bordered :pagination="false">
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'action'">
+            <a-tooltip>
+              <template #title>删除</template>
+              <a-popconfirm v-model:open="record.popconfirm" title="确定删除该成员吗？">
+                <template #cancelButton>
+                  <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
+                </template>
+                <template #okButton>
+                  <a-button danger type="primary" size="small" @click="deleteMember(record)">删除</a-button>
+                </template>
+                <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+              </a-popconfirm>
+            </a-tooltip>
+          </template>
+        </template>
+        <template #emptyText>暂无成员</template>
+      </a-table>
+    </div>
+
+    <div class="relative">
       <div class="drawer_title">
         应用状态
         <a-tag v-if="data.detail.state === 'CREATED'" color="processing" :bordered="false" class="label">
           暂未扫描
         </a-tag>
-        <a-tag v-if="data.detail.state === 'RUNNING'" color="warning">扫描中</a-tag>
+        <a-tag v-if="data.detail.state === 'RUNNING'" color="warning" :bordered="false" class="label">扫描中</a-tag>
         <a-tag v-if="data.detail.state === 'SUCCESS'" color="success" :bordered="false" class="label">扫描成功</a-tag>
-        <a-tag v-if="data.detail.state === 'FAILED'" color="error">扫描失败</a-tag>
+        <a-tag v-if="data.detail.state === 'FAILED'" color="error" :bordered="false" class="label">扫描失败</a-tag>
       </div>
     </div>
-    <!-- <a-descriptions>
-      <a-descriptions-item>
-        <template #label>
-          <div v-if="data.detail.state === 'CREATED'" class="label">暂未扫描</div>
-          <div v-if="data.detail.state === 'RUNNING'" class="label">扫描中</div>
-          <div v-if="data.detail.state === 'SUCCESS'" class="label">扫描成功</div>
-          <div v-if="data.detail.state === 'FAILED'" class="label">扫描失败</div>
-        </template> -->
     <div style="margin-top: 10px">
       <div style="display: flex" v-if="data.detail.state === 'CREATED'">
         <a-button class="btn" type="primary" @click="addDependency()"> <FileAddOutlined />添加依赖信息</a-button>
@@ -75,14 +90,15 @@
         </a-popconfirm>
       </div>
     </div>
-    <!-- </a-descriptions-item>
-    </a-descriptions> -->
     <AddDepModal ref="addDepModal" @success="refresh()"></AddDepModal>
+    <AddMember ref="addMember" @success="getAppMember()"></AddMember>
   </a-drawer>
 </template>
 
 <script setup>
 import {
+  PlusOutlined,
+  DeleteOutlined,
   RedoOutlined,
   FolderOutlined,
   FileTextOutlined,
@@ -93,12 +109,14 @@ import {
 } from '@ant-design/icons-vue'
 import { reactive, ref, defineExpose, defineEmits } from 'vue'
 import { useRouter } from 'vue-router'
-import { GetComponentInfo } from '@/api/frontend'
+import { GetComponentInfo, GetVersionInfo, DeleteAppMember } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 import AddDepModal from './AddDepModal.vue'
+import AddMember from './AddMember.vue'
 
 const router = useRouter()
 const addDepModal = ref()
+const addMember = ref()
 const emit = defineEmits(['refresh'])
 
 const data = reactive({
@@ -118,13 +136,65 @@ const data = reactive({
     { title: '开发者邮箱', dataIndex: 'developerEmail', key: 'developerEmail' }
   ]
 })
+const table = reactive({
+  datasource: [],
+  columns: [
+    { title: '成员编号', dataIndex: 'uid', key: 'uid', width: 150 },
+    { title: '成员名称', dataIndex: 'name', key: 'name', width: 200 },
+    { title: '角色', dataIndex: 'role', key: 'role', width: 150 },
+    { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
+  ]
+})
+
 const open = (detail, isProject) => {
   data.open = true
   data.detail = detail
   data.isProject = isProject
+  getAppMember()
 }
 const close = () => {
   data.open = false
+}
+
+const getAppMember = async () => {
+  await GetVersionInfo({ name: data.detail.name, version: data.detail.version })
+    .then((res) => {
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      // console.log('GetVersionInfo', res)
+      table.datasource = res.data.users
+    })
+    .catch((err) => {
+      console.error(err)
+    })
+}
+
+const addAppMember = () => {
+  addMember.value.open(data.detail)
+}
+
+const deleteMember = (record) => {
+  const params = {
+    name: data.detail.name,
+    version: data.detail.version,
+    uid: record.uid,
+    role: record.role
+  }
+  DeleteAppMember(params)
+    .then((res) => {
+      // console.log('DeleteAppMember', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      message.success('删除应用成员成功')
+      getAppMember()
+    })
+    .catch((e) => {
+      message.error(e)
+    })
 }
 
 const addDependency = () => {
@@ -148,8 +218,9 @@ const showDetail = () => {
   router.push({
     path: '/home/appDetail',
     query: {
-      groupId: data.detail.groupId,
-      artifactId: data.detail.artifactId,
+      // groupId: data.detail.groupId,
+      // artifactId: data.detail.artifactId,
+      name: data.detail.name,
       version: data.detail.version
     }
   })
@@ -189,6 +260,10 @@ defineExpose({ open })
 }
 .btn {
   margin-left: 10px;
+}
+.cancel_btn:hover {
+  border-color: #6f005f;
+  color: #6f005f;
 }
 </style>
 <style scoped src="@/atdv/pagination.css"></style>

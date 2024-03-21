@@ -6,11 +6,12 @@
           <div class="collapse_header">
             <div style="display: flex; align-items: center">
               <div style="margin-right: 20px; font-size: 18px; font-weight: bold">{{ app.name }}</div>
-              <a-tooltip v-if="app.selection">
+              <a-tag>{{ app.version }}</a-tag>
+              <!-- <a-tooltip v-if="app.selection">
                 <template #title>刷新</template>
                 <RedoOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click.stop="refresh(index)" />
-              </a-tooltip>
-              <div v-if="app.selection" style="font-size: 18px; margin-left: 20px">
+              </a-tooltip> -->
+              <!-- <div v-if="app.selection" style="font-size: 18px; margin-left: 20px">
                 <a-input-group compact>
                   <a-input
                     value="版本选择"
@@ -23,40 +24,40 @@
                     @change="() => changeVersion(app, app.selection.current)">
                   </a-select>
                 </a-input-group>
-              </div>
-              <div style="margin-left: 20px; margin-right: 20px">
+              </div> -->
+              <!-- <div style="margin-left: 20px; margin-right: 20px">
                 <a-tag v-if="app.lock" color="warning">
                   <template #icon><LockOutlined /></template>已上锁
                 </a-tag>
                 <a-tag v-if="app.release" color="success">
                   <template #icon><EyeOutlined /></template>已发布
                 </a-tag>
-              </div>
+              </div> -->
             </div>
             <div style="display: flex; align-items: center">
               <a-tooltip>
                 <template #title>查看详情</template>
                 <FileSearchOutlined
-                  @click.stop="showAppDetail(app, true, index)"
+                  @click.stop="showAppDetail(app, false, index)"
                   :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
               </a-tooltip>
-              <a-tooltip>
+              <!-- <a-tooltip>
                 <template #title>添加组件</template>
                 <PlusOutlined
                   @click.stop="addComponent(app, index)"
                   :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
-              </a-tooltip>
-              <a-tooltip>
+              </a-tooltip> -->
+              <!-- <a-tooltip>
                 <template #title>应用升级</template>
                 <RocketOutlined
                   @click.stop="upgradeProject(app, index)"
                   :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
-              </a-tooltip>
-              <a-tooltip>
-                <template #title>删除该版本</template>
+              </a-tooltip> -->
+              <a-tooltip v-if="!props.parentApp.groupId">
+                <template #title>删除组件</template>
                 <DeleteOutlined
-                  @click.stop="deleteVersion(app, index)"
-                  :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                  @click.stop="deleteComponent(app, index)"
+                  :style="{ fontSize: '20px', color: '#ff4d4f', marginRight: '10px' }" />
               </a-tooltip>
             </div>
           </div>
@@ -68,12 +69,38 @@
           :com-list="app.subComList"
           @refresh="refresh(data.currentKey)"></AppCollapse>
       </a-collapse-panel>
+      <a-collapse-panel :showArrow="false" v-for="(com, index) in props.comList" :key="props.appList.length + index">
+        <template #header>
+          <div class="collapse_header">
+            <div style="display: flex; align-items: center">
+              <div style="margin: 0 20px; font-size: 18px; font-weight: bold">{{ com.name }}</div>
+              <a-tag>{{ com.version }}</a-tag>
+            </div>
+            <div style="display: flex; align-items: center">
+              <a-tooltip>
+                <template #title>查看详情</template>
+                <FileSearchOutlined
+                  @click.stop="showComDetail(com)"
+                  :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+              </a-tooltip>
+              <a-tooltip v-if="!props.parentApp.groupId">
+                <template #title>删除组件</template>
+                <DeleteOutlined
+                  @click.stop="deleteComponent(com)"
+                  :style="{ fontSize: '20px', color: '#ff4d4f', marginRight: '10px' }" />
+              </a-tooltip>
+            </div>
+          </div>
+        </template>
+      </a-collapse-panel>
     </a-collapse>
     <AddAppModal ref="addAppModal" @success="refresh(data.currentKey)"></AddAppModal>
     <AddComModal ref="addComModal" @success="refresh(data.currentKey)"></AddComModal>
     <UpgradeAppModal ref="upgradeAppModal" @success="refresh(data.currentKey, true)"></UpgradeAppModal>
     <DeleteAppModal ref="deleteAppModal" @success="refreshParent()"></DeleteAppModal>
+    <DeleteComModal ref="deleteComModal" @success="refreshParent()"></DeleteComModal>
     <Drawer ref="drawer" @refresh="refreshDrawer()"></Drawer>
+    <ComDrawer ref="comDrawer"></ComDrawer>
   </div>
 </template>
 
@@ -104,7 +131,9 @@ import AddAppModal from './AddAppModal.vue'
 import AddComModal from './AddComModal.vue'
 import UpgradeAppModal from './UpgradeAppModal.vue'
 import DeleteAppModal from './DeleteAppModal.vue'
+import DeleteComModal from './DeleteComModal.vue'
 import Drawer from './Drawer.vue'
+import ComDrawer from '@/views/project/components/Drawer.vue'
 import { useRouter } from 'vue-router'
 
 const emit = defineEmits(['refresh'])
@@ -129,7 +158,9 @@ const addAppModal = ref()
 const addComModal = ref()
 const upgradeAppModal = ref()
 const deleteAppModal = ref()
+const deleteComModal = ref()
 const drawer = ref()
+const comDrawer = ref()
 const router = useRouter()
 
 const data = reactive({
@@ -165,6 +196,7 @@ const table = reactive({
 })
 
 const changeCollapse = async (index) => {
+  if (index >= props.appList.length) return
   if (index === undefined) return
   data.currentKey = data.activeKey.filter((key) => !data.preKey.includes(key))[0]
   data.preKey = data.activeKey
@@ -175,18 +207,19 @@ const changeCollapse = async (index) => {
 
 const changeVersion = async (app, version) => {
   if (version === undefined) {
-    await getVersionList(app, app.groupId, app.artifactId)
+    app.selection = {}
+    await getVersionList(app, app.name)
     if (!app.versions || app.versions.length === 0) return
     version = app.versions[0]
   }
-  await GetVersionInfo({ groupId: app.groupId, artifactId: app.artifactId, version })
+  await GetVersionInfo({ name: app.name, version })
     .then((res) => {
       if (res.code !== 200) {
         message.error(res.message)
         return
       }
       // console.log('GetVersionInfo', res)
-      Object.assign(app, res.data)
+      Object.assign(app, res.data.applicationDO)
     })
     .catch((err) => {
       console.error(err)
@@ -194,12 +227,13 @@ const changeVersion = async (app, version) => {
   data.currentApp = app
   await findSubProject(app)
   const index = data.activeKey.indexOf(String(data.currentKey))
+  if (index < 0) return
   // console.log(appCollapse.value, index)
   appCollapse.value[index]?.close()
 }
 
-const getVersionList = async (app, groupId, artifactId) => {
-  await GetVersionList({ groupId, artifactId })
+const getVersionList = async (app, name) => {
+  await GetVersionList({ name })
     .then((res) => {
       if (res.code !== 200) {
         message.error(res.message)
@@ -220,9 +254,9 @@ const getVersionList = async (app, groupId, artifactId) => {
 
 const findSubProject = async (app) => {
   app.selection = {}
-  await getVersionList(app, app.groupId, app.artifactId)
+  await getVersionList(app, app.name)
   app.selection.current = app.version
-  await GetSubProject({ groupId: app.groupId, artifactId: app.artifactId, version: app.version })
+  await GetSubProject({ name: app.name, version: app.version })
     .then((res) => {
       if (res.code !== 200) {
         message.error(res.message)
@@ -272,6 +306,14 @@ const deleteVersion = (app, index) => {
 const showAppDetail = (app, isProject, index) => {
   data.currentKey = index
   drawer.value.open(app, isProject)
+}
+
+const showComDetail = (com) => {
+  comDrawer.value.open(com, true)
+}
+
+const deleteComponent = (com) => {
+  deleteComModal.value.open(com, props.parentApp)
 }
 
 const close = () => {

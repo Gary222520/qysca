@@ -3,9 +3,10 @@
     <div class="title">组件管理</div>
     <a-card class="content_card">
       <div class="operations">
-        <a-radio-group v-model:value="data.opensource" @change="(e) => getComponents()">
-          <a-radio-button :value="false" style="width: 70px">闭源</a-radio-button>
-          <a-radio-button :value="true" style="width: 70px">开源</a-radio-button>
+        <a-radio-group v-model:value="data.type" @change="(e) => getComponents()">
+          <a-radio-button value="opensource" style="width: 70px">开源</a-radio-button>
+          <a-radio-button value="business" style="width: 70px">商用</a-radio-button>
+          <a-radio-button value="internal" style="width: 100px">内部使用</a-radio-button>
         </a-radio-group>
         <div>
           <a-input
@@ -50,7 +51,7 @@
           <a-button type="primary" v-if="data.accurate" @click="changeMode(false)"><RollbackOutlined />返回</a-button>
         </div>
       </div>
-      <a-button v-if="!data.opensource" type="primary" @click="addComponent" style="margin-bottom: 20px">
+      <a-button v-if="data.type !== 'opensource'" type="primary" @click="addComponent" style="margin-bottom: 20px">
         <PlusOutlined />添加组件
       </a-button>
       <a-table :data-source="data.datasource" :columns="data.columns" bordered :pagination="pagination">
@@ -66,13 +67,13 @@
                   <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showInfo(record)" />
                 </a-tooltip>
               </div>
-              <div class="action_icon" v-if="!data.opensource">
+              <div class="action_icon" v-if="data.type !== 'opensource'">
                 <a-tooltip>
                   <template #title>更新</template>
                   <SyncOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="updateComponent(record)" />
                 </a-tooltip>
               </div>
-              <div class="action_icon" v-if="!data.opensource">
+              <div class="action_icon" v-if="data.type !== 'opensource'">
                 <a-tooltip>
                   <template #title>删除</template>
                   <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个组件吗？">
@@ -112,7 +113,7 @@ const drawer = ref()
 const addModal = ref()
 const data = reactive({
   accurate: false,
-  opensource: false,
+  type: 'opensource',
   search: {
     name: '',
     groupId: '',
@@ -147,7 +148,7 @@ const getComponents = (number = 1, size = 10) => {
   if (!data.accurate && data.search.language === '' && data.search.name === '') return
   const params = {
     ...data.search,
-    opensource: data.opensource,
+    type: data.type,
     number,
     size
   }
@@ -182,7 +183,7 @@ const addComponent = () => {
   addModal.value.open()
 }
 const showInfo = (record) => {
-  drawer.value.open({ ...record, opensource: data.opensource }, true)
+  drawer.value.open(record, true)
 }
 const updateComponent = (record) => {}
 const deleteComponent = (record) => {}

@@ -8,8 +8,10 @@
         <template v-if="column.key === 'direct'">
           <div>{{ record.direct ? '直接依赖' : '间接依赖' }}</div>
         </template>
-        <template v-if="column.key === 'opensource'">
-          <div>{{ record.opensource ? '开源' : '闭源' }}</div>
+        <template v-if="column.key === 'type'">
+          <div v-if="record.type === 'opensource'">开源</div>
+          <div v-if="record.type === 'business'">商用</div>
+          <div v-if="record.type === 'internal'">内部使用</div>
         </template>
       </template>
       <template #emptyText>暂无数据</template>
@@ -37,7 +39,7 @@ const data = reactive({
     { title: '依赖方式', dataIndex: 'direct', key: 'direct', width: 90 },
     { title: '依赖层级', dataIndex: 'depth', key: 'depth', width: 90 },
     { title: '依赖范围', dataIndex: 'scope', key: 'scope', width: 90 },
-    { title: '是否开源', dataIndex: 'opensource', key: 'opensource', width: 90 }
+    { title: '组件类型', dataIndex: 'type', key: 'type', width: 90 }
   ]
 })
 const pagination = reactive({
@@ -47,19 +49,20 @@ const pagination = reactive({
   showSizeChanger: false,
   onChange: (page, size) => {
     pagination.current = page
-    getProjectTiled(data.projectInfo.groupId, data.projectInfo.artifactId, data.projectInfo.version, page, size)
+    getProjectTiled(data.projectInfo.name, data.projectInfo.version, page, size)
   },
   hideOnSinglePage: true
 })
-const show = (groupId, artifactId, version) => {
+const show = (name, version) => {
   data.visible = true
-  data.projectInfo.groupId = groupId
-  data.projectInfo.artifactId = artifactId
+  // data.projectInfo.groupId = groupId
+  // data.projectInfo.artifactId = artifactId
+  data.projectInfo.name = name
   data.projectInfo.version = version
-  getProjectTiled(groupId, artifactId, version)
+  getProjectTiled(name, version)
 }
-const getProjectTiled = (groupId, artifactId, version, number = 1, size = 10) => {
-  GetProjectTiled({ groupId, artifactId, version, number, size })
+const getProjectTiled = (name, version, number = 1, size = 10) => {
+  GetProjectTiled({ name, version, number, size })
     .then((res) => {
       // console.log('GetProjectTiled', res)
       if (res.code !== 200) {

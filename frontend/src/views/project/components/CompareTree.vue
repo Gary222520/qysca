@@ -50,13 +50,13 @@ const data = reactive({
   expandedKeys: ['0-0'],
   selectedKeys: []
 })
-const show = (groupId, artifactId, toVersion, fromVersion) => {
+const show = (name, toVersion, fromVersion) => {
   if (fromVersion === toVersion) {
     message.info('两个版本不能相同')
     return
   }
   data.visible = true
-  GetCompareTree({ groupId, artifactId, toVersion, fromVersion })
+  GetCompareTree({ name, toVersion, fromVersion })
     .then((res) => {
       // console.log('GetCompareTree', res)
       if (res.code !== 200) {

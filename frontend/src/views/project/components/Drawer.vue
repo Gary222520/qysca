@@ -4,7 +4,9 @@
     <div>
       <span style="font-size: 20px; font-weight: bold">{{ data.detail?.name }}</span>
       <a-tag style="margin-left: 10px">{{ data.detail?.version }}</a-tag>
-      <a-tag>{{ data.component?.opensource ? '开源' : '闭源' }}</a-tag>
+      <a-tag v-if="data.component?.type === 'opensource'">开源</a-tag>
+      <a-tag v-if="data.component?.type === 'business'">商用</a-tag>
+      <a-tag v-if="data.component?.type === 'internal'">内部</a-tag>
       <a-button v-if="data.dependency" type="primary" style="margin-left: 30px" @click="showDependency">
         查看依赖信息
       </a-button>
@@ -52,8 +54,8 @@ const data = reactive({
   component: {},
   detail: {},
   licenseColumns: [
-    { title: '许可证名称', dataIndex: 'licenseName', key: 'licenseName' },
-    { title: '许可证地址', dataIndex: 'licenseUrl', key: 'licenseUrl' }
+    { title: '许可证名称', dataIndex: 'name', key: 'name' },
+    { title: '许可证地址', dataIndex: 'url', key: 'url' }
   ],
   developerColumns: [
     { title: '开发者ID', dataIndex: 'developerId', key: 'developerId' },
@@ -74,8 +76,7 @@ const getComponentInfo = () => {
   const params = {
     groupId: data.component.groupId,
     artifactId: data.component.artifactId,
-    version: data.component.version,
-    opensource: data.component.opensource
+    version: data.component.version
   }
   // console.log('params', params)
   GetComponentInfo(params)
@@ -98,8 +99,7 @@ const showDependency = () => {
       name: data.component.name,
       groupId: data.component.groupId,
       artifactId: data.component.artifactId,
-      version: data.component.version,
-      opensource: data.component.opensource
+      version: data.component.version
     }
   })
 }
