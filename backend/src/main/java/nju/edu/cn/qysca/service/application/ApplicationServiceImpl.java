@@ -162,7 +162,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
         if(buAppDO == null) {
             buAppDO = new BuAppDO();
-            buAppDO.setBid(buDO.getId());
+            buAppDO.setBid(buDO.getBid());
             buAppDO.setAid(applicationDO.getId());
             buAppDao.save(buAppDO);
         }
