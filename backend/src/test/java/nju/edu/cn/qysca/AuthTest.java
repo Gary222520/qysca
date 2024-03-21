@@ -6,13 +6,11 @@ import nju.edu.cn.qysca.dao.user.RolePermissionDao;
 import nju.edu.cn.qysca.domain.user.dos.PermissionDO;
 import nju.edu.cn.qysca.domain.user.dos.RoleDO;
 import nju.edu.cn.qysca.domain.user.dos.RolePermissionDO;
-import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import javax.management.relation.Role;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,7 +73,7 @@ public class AuthTest {
     }
 
     @Test
-    public void test4(){
+    public void generate_plt_permission(){
         List<String> auths=new ArrayList<>();
         auths.add("/qysca/application/findApplicationPage");
         auths.add("/qysca/application/searchApplicationName");
@@ -115,6 +113,7 @@ public class AuthTest {
         auths.add("/qysca/user/register");
         auths.add("/qysca/user/deleteUser");
         auths.add("/qysca/user/updateUser");
+        auths.add("/qysca/user/listAllUser");
 
         auths.add("/qysca/role/addAppMember");
         auths.add("/qysca/role/deleteAppMember");
@@ -136,104 +135,186 @@ public class AuthTest {
     }
 
     @Test
-    public void test5(){
+    public void generate_plt_role_permisssion(){
         String r0="Admin",r1="Bu Rep",r2="Bu PO",r3="App Leader",r4="App Member";
 
         String p1="/qysca/application/findApplicationPage";
-        test5inter(r1,p1);test5inter(r2,p1);test5inter(r3,p1);test5inter(r4,p1);
+        gprp_inter(r1,p1);
+        gprp_inter(r2,p1);
+        gprp_inter(r3,p1);
+        gprp_inter(r4,p1);
         String p2="/qysca/application/searchApplicationName";
-        test5inter(r1,p2);test5inter(r2,p2);test5inter(r3,p2);test5inter(r4,p2);
+        gprp_inter(r1,p2);
+        gprp_inter(r2,p2);
+        gprp_inter(r3,p2);
+        gprp_inter(r4,p2);
         String p3="/qysca/application/findApplication";
-        test5inter(r1,p3);test5inter(r2,p3);test5inter(r3,p3);test5inter(r4,p3);
+        gprp_inter(r1,p3);
+        gprp_inter(r2,p3);
+        gprp_inter(r3,p3);
+        gprp_inter(r4,p3);
         String p4="/qysca/application/findSubApplication";
-        test5inter(r1,p4);test5inter(r2,p4);test5inter(r3,p4);test5inter(r4,p4);
+        gprp_inter(r1,p4);
+        gprp_inter(r2,p4);
+        gprp_inter(r3,p4);
+        gprp_inter(r4,p4);
         String p5="/qysca/application/saveApplication";
-        test5inter(r1,p5);test5inter(r2,p5);
+        gprp_inter(r1,p5);
+        gprp_inter(r2,p5);
         String p6="/qysca/application/saveApplicationComponent";
-        test5inter(r1,p6);test5inter(r2,p6);test5inter(r3,p6);test5inter(r4,p6);
+        gprp_inter(r1,p6);
+        gprp_inter(r2,p6);
+        gprp_inter(r3,p6);
+        gprp_inter(r4,p6);
         String p7="/qysca/application/deleteApplicationComponent";
-        test5inter(r1,p7);test5inter(r2,p7);test5inter(r3,p7);test5inter(r4,p7);
+        gprp_inter(r1,p7);
+        gprp_inter(r2,p7);
+        gprp_inter(r3,p7);
+        gprp_inter(r4,p7);
         String p8="/qysca/application/saveApplicationDependency";
-        test5inter(r1,p8);test5inter(r2,p8);
+        gprp_inter(r1,p8);
+        gprp_inter(r2,p8);
         String p9="/qysca/application/upgradeApplication";
-        test5inter(r1,p9);test5inter(r2,p9);
+        gprp_inter(r1,p9);
+        gprp_inter(r2,p9);
         String p10="/qysca/application/deleteApplicationVersion";
-        test5inter(r1,p10);
+        gprp_inter(r1,p10);
         String p11="/qysca/application/getVersionsList";
-        test5inter(r1,p11);test5inter(r2,p11);test5inter(r3,p11);test5inter(r4,p11);
+        gprp_inter(r1,p11);
+        gprp_inter(r2,p11);
+        gprp_inter(r3,p11);
+        gprp_inter(r4,p11);
         String p12="/qysca/application/findApplicationVersionInfo";
-        test5inter(r1,p12);test5inter(r2,p12);test5inter(r3,p12);test5inter(r4,p12);
+        gprp_inter(r1,p12);
+        gprp_inter(r2,p12);
+        gprp_inter(r3,p12);
+        gprp_inter(r4,p12);
         String p13="/qysca/application/findApplicationDependencyTree";
-        test5inter(r1,p13);test5inter(r2,p13);test5inter(r3,p13);test5inter(r4,p13);
+        gprp_inter(r1,p13);
+        gprp_inter(r2,p13);
+        gprp_inter(r3,p13);
+        gprp_inter(r4,p13);
         String p14="/qysca/application/findApplicationDependencyTable";
-        test5inter(r1,p14);test5inter(r2,p14);test5inter(r3,p14);test5inter(r4,p14);
+        gprp_inter(r1,p14);
+        gprp_inter(r2,p14);
+        gprp_inter(r3,p14);
+        gprp_inter(r4,p14);
         String p15="/qysca/application/exportTableExcelBrief";
-        test5inter(r1,p15);test5inter(r2,p15);test5inter(r3,p15);test5inter(r4,p15);
+        gprp_inter(r1,p15);
+        gprp_inter(r2,p15);
+        gprp_inter(r3,p15);
+        gprp_inter(r4,p15);
         String p16="/qysca/application/exportTableExcelDetail";
-        test5inter(r1,p16);test5inter(r2,p16);test5inter(r3,p16);test5inter(r4,p16);
+        gprp_inter(r1,p16);
+        gprp_inter(r2,p16);
+        gprp_inter(r3,p16);
+        gprp_inter(r4,p16);
         String p17="/qysca/application/getApplicationVersionCompareTree";
-        test5inter(r1,p17);test5inter(r2,p17);test5inter(r3,p17);test5inter(r4,p17);
+        gprp_inter(r1,p17);
+        gprp_inter(r2,p17);
+        gprp_inter(r3,p17);
+        gprp_inter(r4,p17);
         String p18="/qysca/application/changeLockState";
-        test5inter(r1,p18);
+        gprp_inter(r1,p18);
         String p19="/qysca/application/changeReleaseState";
-        test5inter(r2,p19);test5inter(r3,p19);test5inter(r4,p19);
+        gprp_inter(r2,p19);
+        gprp_inter(r3,p19);
+        gprp_inter(r4,p19);
 
         String p20="/qysca/bu/addBu";
-        test5inter(r0,p20);
+        gprp_inter(r0,p20);
         String p21="/qysca/bu/deleteBu";
-        test5inter(r0,p21);
+        gprp_inter(r0,p21);
         String p22="/qysca/bu/listAllBu";
-        test5inter(r0,p22);
+        gprp_inter(r0,p22);
 
         String p23="/qysca/component/findComponentsPage";
-        test5inter(r1,p23);test5inter(r2,p23);test5inter(r3,p23);test5inter(r4,p23);
+        gprp_inter(r1,p23);
+        gprp_inter(r2,p23);
+        gprp_inter(r3,p23);
+        gprp_inter(r4,p23);
         String p24="/qysca/component/searchComponentName";
-        test5inter(r1,p24);test5inter(r2,p24);test5inter(r3,p24);test5inter(r4,p24);
+        gprp_inter(r1,p24);
+        gprp_inter(r2,p24);
+        gprp_inter(r3,p24);
+        gprp_inter(r4,p24);
         String p25="/qysca/component/saveCloseComponent";
-        test5inter(r1,p25);test5inter(r2,p25);
+        gprp_inter(r1,p25);
+        gprp_inter(r2,p25);
         String p26="/qysca/component/updateCloseComponent";
-        test5inter(r1,p26);test5inter(r2,p26);
+        gprp_inter(r1,p26);
+        gprp_inter(r2,p26);
         String p27="/qysca/component/deleteCloseComponent";
-        test5inter(r1,p27);test5inter(r2,p27);
+        gprp_inter(r1,p27);
+        gprp_inter(r2,p27);
         String p28="/qysca/component/findComponentDependencyTree";
-        test5inter(r1,p28);test5inter(r2,p28);test5inter(r3,p28);test5inter(r4,p28);
+        gprp_inter(r1,p28);
+        gprp_inter(r2,p28);
+        gprp_inter(r3,p28);
+        gprp_inter(r4,p28);
         String p29="/qysca/component/findComponentDependencyTable";
-        test5inter(r1,p29);test5inter(r2,p29);test5inter(r3,p29);test5inter(r4,p29);
+        gprp_inter(r1,p29);
+        gprp_inter(r2,p29);
+        gprp_inter(r3,p29);
+        gprp_inter(r4,p29);
         String p30="/qysca/component/findComponentDetail";
-        test5inter(r1,p30);test5inter(r2,p30);test5inter(r3,p30);test5inter(r4,p30);
+        gprp_inter(r1,p30);
+        gprp_inter(r2,p30);
+        gprp_inter(r3,p30);
+        gprp_inter(r4,p30);
 
         String p31="/qysca/file/chunk";
-        test5inter(r1,p31);test5inter(r2,p31);
+        gprp_inter(r1,p31);
+        gprp_inter(r2,p31);
         String p32="/qysca/file/merge";
-        test5inter(r1,p32);test5inter(r2,p32);
+        gprp_inter(r1,p32);
+        gprp_inter(r2,p32);
 
         String p33="/qysca/user/login";
         String p34="/qysca/user/logout";
         String p35="/qysca/user/getUserInfo";
         String p36="/qysca/user/register";
-        test5inter(r0,p36);
+        gprp_inter(r0,p36);
         String p37="/qysca/user/deleteUser";
-        test5inter(r0,p37);
+        gprp_inter(r0,p37);
         String p38="/qysca/user/updateUser";
-        test5inter(r0,p38);
+        gprp_inter(r0,p38);
+        String p900="/qysca/user/listAllUser";
+        gprp_inter(r0,p900);
+        gprp_inter(r1,p900);
+        gprp_inter(r2,p900);
+        gprp_inter(r3,p900);
+        gprp_inter(r4,p900);
 
         String p39="/qysca/role/addAppMember";
-        test5inter(r0,p39);test5inter(r1,p39);test5inter(r2,p39);test5inter(r3,p39);
+        gprp_inter(r0,p39);
+        gprp_inter(r1,p39);
+        gprp_inter(r2,p39);
+        gprp_inter(r3,p39);
         String p40="/qysca/role/deleteAppMember";
-        test5inter(r0,p40);test5inter(r1,p40);
+        gprp_inter(r0,p40);
+        gprp_inter(r1,p40);
         String p41="/qysca/role/addBuRep";
-        test5inter(r0,p41);test5inter(r2,p41);
+        gprp_inter(r0,p41);
+        gprp_inter(r2,p41);
         String p42="/qysca/role/deleteBuRep";
-        test5inter(r0,p42);test5inter(r2,p42);
+        gprp_inter(r0,p42);
+        gprp_inter(r2,p42);
         String p43="/qysca/role/addBuMember";
-        test5inter(r0,p43);test5inter(r1,p43);
+        gprp_inter(r0,p43);
+        gprp_inter(r1,p43);
         String p44="/qysca/role/listBuMember";
-        test5inter(r0,p44);test5inter(r1,p44);test5inter(r2,p44);test5inter(r3,p44);test5inter(r4,p44);
+        gprp_inter(r0,p44);
+        gprp_inter(r1,p44);
+        gprp_inter(r2,p44);
+        gprp_inter(r3,p44);
+        gprp_inter(r4,p44);
         String p45="/qysca/role/deleteBuMember";
-        test5inter(r0,p45);test5inter(r1,p45);
+        gprp_inter(r0,p45);
+        gprp_inter(r1,p45);
     }
 
-    private void test5inter(String role,String permission){
+    private void gprp_inter(String role, String permission){
         RoleDO roleDO=roleDao.findByName(role);
         PermissionDO permissionDO=permissionDao.findByUrl(permission);
         RolePermissionDO rolePermissionDO=new RolePermissionDO();

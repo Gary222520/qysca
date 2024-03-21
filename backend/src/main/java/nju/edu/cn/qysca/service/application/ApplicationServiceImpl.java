@@ -17,6 +17,7 @@ import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dos.*;
 import nju.edu.cn.qysca.domain.application.dtos.*;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
+import nju.edu.cn.qysca.domain.user.dos.UserRoleDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.utils.excel.ExcelUtils;
@@ -74,9 +75,9 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public Page<ApplicationDO> findApplicationPage(int number, int size) {
         UserDO user = ContextUtil.getUserDO();
-        List<String> bids =  userRoleDao.findBidsByUid(user.getUid());
         Pageable pageable = PageRequest.of(number - 1, size);
-        return applicationDao.findApplicationPage(bids, pageable);
+        String bid = userRoleDao.findUserBu(user.getUid());
+        return applicationDao.findApplicationPage(bid, pageable);
     }
 
 
@@ -89,8 +90,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public List<String> searchApplicationName(String name) {
         UserDO user = ContextUtil.getUserDO();
-        List<String> bids  = userRoleDao.findBidsByUid(user.getUid());
-        return applicationDao.searchApplicationName(bids, name);
+        String bid = userRoleDao.findUserBu(user.getUid());
+        return applicationDao.searchApplicationName(bid, name);
     }
 
     /**
@@ -102,8 +103,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public ApplicationDO findApplication(String name) {
         UserDO user = ContextUtil.getUserDO();
-        List<String> bids  = userRoleDao.findBidsByUid(user.getUid());
-        return applicationDao.findApplication(bids, name);
+        String bid = userRoleDao.findUserBu(user.getUid());
+        return applicationDao.findApplication(bid, name);
     }
 
 
@@ -262,6 +263,16 @@ public class ApplicationServiceImpl implements ApplicationService {
         newBuAppDO.setBid(oldBuAppDO.getBid());
         newBuAppDO.setAid(newApplicationDO.getId());
         buAppDao.save(newBuAppDO);
+        //copy 角色表
+        List<UserRoleDO> userRoleDOS = userRoleDao.findAllByAid(oldApplicationDO.getId());
+        List<UserRoleDO> newUserRoleDOS = new ArrayList<>();
+        for(UserRoleDO userRoleDO : userRoleDOS) {
+            UserRoleDO newUserRoleDO = new UserRoleDO();
+            BeanUtils.copyProperties(userRoleDO, newUserRoleDO);
+            newUserRoleDO.setId(null);
+            newUserRoleDO.setAid(newApplicationDO.getId());
+        }
+        userRoleDao.saveAll(newUserRoleDOS);
         //新增新应用关系 删除旧应用关系
         if (!StringUtils.isEmpty(upgradeApplicationDTO.getParentName()) && !StringUtils.isEmpty(upgradeApplicationDTO.getParentVersion())) {
             ApplicationDO parentApplicationDO = applicationDao.findByNameAndVersion(upgradeApplicationDTO.getParentName(), upgradeApplicationDTO.getParentVersion());

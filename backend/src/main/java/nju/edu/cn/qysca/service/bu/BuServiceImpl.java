@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class BuServiceImpl implements BuService{
 
@@ -14,8 +16,9 @@ public class BuServiceImpl implements BuService{
 
     @Override
     @Transactional
-    public Boolean createBu(String buName) {
+    public Boolean createBu(String bid, String buName) {
         BuDO buDO = new BuDO();
+        buDO.setBid(bid);
         buDO.setName(buName);
         buDao.save(buDO);
         return Boolean.TRUE;
@@ -24,5 +27,16 @@ public class BuServiceImpl implements BuService{
     @Override
     public BuDO findBuByName(String buName) {
         return buDao.findBuDOByName(buName);
+    }
+
+    @Override
+    @Transactional
+    public void deleteBu(String name) {
+        buDao.deleteBuDOByName(name);
+    }
+
+    @Override
+    public List<String> listAllBu() {
+        return buDao.listAllBu();
     }
 }

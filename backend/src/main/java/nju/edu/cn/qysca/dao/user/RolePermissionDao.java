@@ -9,6 +9,11 @@ import java.util.List;
 
 @Repository
 public interface RolePermissionDao extends JpaRepository<RolePermissionDO,String> {
+    /**
+     * 根据权限查询角色
+     * @param pid 权限Id
+     * @return List<String> 角色信息
+     */
     @Query("select rid from RolePermissionDO where pid = ?1")
     List<String> findRidsByPid(String pid);
 }
