@@ -178,6 +178,7 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @param version    版本
      */
     @Override
+    @Transactional
     public void changeApplicationState(String name, String version) {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
         applicationDO.setState("RUNNING");
@@ -400,6 +401,7 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @param version    版本号
      */
     @Override
+    @Transactional
     public void changeLockState(String name, String version) {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
         if (applicationDO.getLock()) {
@@ -416,6 +418,7 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @param changeReleaseStateDTO 应用发布状态DTO
      */
     @Override
+    @Transactional
     public void changeReleaseState(ChangeReleaseStateDTO changeReleaseStateDTO) {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
         BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());

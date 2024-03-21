@@ -133,6 +133,7 @@ public class ComponentServiceImpl implements ComponentService {
      * @return 更新闭源组件是否成功
      */
     @Override
+    @Transactional
     public Boolean updateCloseComponent(UpdateCloseComponentDTO updateCloseComponentDTO) {
         //更新基础信息
         UserDO userDO = ContextUtil.getUserDO();
@@ -175,6 +176,7 @@ public class ComponentServiceImpl implements ComponentService {
      * @return List<ApplicationDO> 被依赖的应用
      */
     @Override
+    @Transactional
     public List<ApplicationDO> deleteCloseComponent(DeleteCloseComponentDTO deleteCloseComponentDTO) {
         //确定是否是闭源组件
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(deleteCloseComponentDTO.getArtifactId(), deleteCloseComponentDTO.getVersion());
