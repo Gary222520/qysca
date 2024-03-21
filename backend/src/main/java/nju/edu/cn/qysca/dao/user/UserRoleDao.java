@@ -77,6 +77,6 @@ public interface UserRoleDao extends JpaRepository<UserRoleDO, String> {
     /**
      * 查看部门的Bu Rep
      */
-    @Query("select uid from UserRoleDO where bid = ?1 and rid = '-' and aid = '-'")
-    String findBuRep(String bid);
+    @Query("select uid from UserRoleDO where bid = ?1 and rid = ?2 and aid = '-'")
+    String findBuRep(String bid, String rid);
 }

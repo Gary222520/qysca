@@ -83,13 +83,13 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Transactional
     public void addBuRep(BuRepDTO buRepDTO) {
         BuDO buDO = buDao.findBuDOByName(buRepDTO.getBuName());
-        String uid = userRoleDao.findBuRep(buDO.getBid());
+        RoleDO roleDO =  roleDao.findByName("Bu Rep");
+        String uid = userRoleDao.findBuRep(buDO.getBid(), roleDO.getId());
         if(uid != null) {
             throw new PlatformException(500, "Bu Rep already exists");
         }
         UserRoleDO userRoleDO = new UserRoleDO();
         userRoleDO.setUid(buRepDTO.getUid());
-        RoleDO roleDO = roleDao.findByName("Bu Rep");
         userRoleDO.setRid(roleDO.getId());
         userRoleDO.setBid(buDO.getBid());
         userRoleDO.setAid("-");
@@ -134,7 +134,8 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Override
     public List<UserBriefDTO> listBuMember(String name) {
         BuDO buDO = buDao.findBuDOByName(name);
-        String uid = userRoleDao.findBuRep(buDO.getBid());
+        RoleDO roleDO = roleDao.findByName("BU Rep");
+        String uid = userRoleDao.findBuRep(buDO.getBid(), roleDO.getId());
         List<UserBriefDTO> userBriefDTOS = userRoleDao.listBuMember(buDO.getBid());
         for(UserBriefDTO userBriefDTO : userBriefDTOS){
             if(userBriefDTO.getUid().equals(uid)) {
