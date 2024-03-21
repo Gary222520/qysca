@@ -1,7 +1,7 @@
 <template>
   <a-modal v-model:open="data.open" :footer="null">
     <template #title>
-      <div style="font-size: 20px">创建用户</div>
+      <div style="font-size: 20px">更新用户信息</div>
     </template>
     <div style="display: flex; margin-top: 20px">
       <a-form :model="formState" ref="formRef" name="application" :label-col="{ span: 8 }">
@@ -36,14 +36,14 @@
     </div>
     <div class="button">
       <a-button class="cancel-btn" @click="close">取消</a-button>
-      <a-button class="btn" @click="submit">创建</a-button>
+      <a-button class="btn" @click="submit">更新</a-button>
     </div>
   </a-modal>
 </template>
 
 <script setup>
 import { reactive, ref, defineExpose, defineEmits, onMounted } from 'vue'
-import { Register } from '@/api/frontend'
+import { UpdateUser } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 import { useStore } from 'vuex'
 
@@ -51,25 +51,8 @@ const emit = defineEmits(['success'])
 const store = useStore()
 
 const data = reactive({
-  open: false
-})
-const selection = reactive({
-  Admin: [
-    { label: 'Bu Rep', value: 'Bu Rep' },
-    { label: 'Bu PO', value: 'Bu PO' }
-  ],
-  'Bu PO': [{ label: 'App Leader', value: 'App Leader' }],
-  'App Leader': [
-    { label: 'App Leader', value: 'App Leader' },
-    { label: 'App Member', value: 'App Member' }
-  ],
-  options: [
-    { label: 'Bu Rep', value: 'Bu Rep' },
-    { label: 'Bu PO', value: 'Bu PO' },
-    { label: 'App Leader', value: 'App Leader' },
-    { label: 'App Member', value: 'App Member' },
-    { label: 'Admin', value: 'Admin' }
-  ]
+  open: false,
+  record: {}
 })
 const formRef = ref()
 const formState = reactive({
@@ -80,8 +63,15 @@ const formState = reactive({
   email: '',
   phone: ''
 })
-const open = () => {
+const open = (record) => {
   data.open = true
+  data.record = record
+  formState.uid = record.uid
+  formState.name = record.name
+  formState.password = ''
+  formState.confirmPass = ''
+  formState.email = record.email
+  formState.phone = record.phone
 }
 const close = () => {
   data.open = false
@@ -109,10 +99,11 @@ const submit = () => {
     .validate()
     .then(() => {
       const params = {
-        ...formState
+        ...formState,
+        id: data.record.id
       }
       delete params.confirmPass
-      Register(params)
+      UpdateUser(params)
         .then((res) => {
           // console.log('Register', res)
           if (res.code !== 200) {
