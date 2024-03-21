@@ -29,11 +29,4 @@ public interface BuDao extends JpaRepository<BuDO, String> {
      * @param name 部门名称
      */
     void deleteBuDOByName(String name);
-
-    /**
-     * 列出所有部门信息
-     * @return List<String> 所有部门信息
-     */
-    @Query("SELECT name from BuDO")
-    List<String> listAllBu();
 }
