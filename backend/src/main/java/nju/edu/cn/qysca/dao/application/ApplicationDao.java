@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
 
-    @Query(value = "select * from plt_application where id = ?0 limit 1",nativeQuery = true)
+
     ApplicationDO findOneById(String id);
 
     /**
