@@ -69,11 +69,11 @@
     </div>
     <div style="margin-top: 10px">
       <div style="display: flex" v-if="data.detail.state === 'CREATED'">
-        <a-button class="btn" type="primary" @click="addDependency()"> <FileAddOutlined />添加依赖信息</a-button>
+        <a-button class="btn" type="primary" @click="addDependency()"><FileAddOutlined />添加依赖信息</a-button>
       </div>
       <div style="display: flex" v-if="data.detail.state === 'SUCCESS'">
-        <a-button class="btn" type="primary" @click="showDetail()"> <FileTextOutlined />查看依赖信息</a-button>
-        <a-button class="btn" type="primary" @click="updateDependency()"> <SyncOutlined />更新依赖信息</a-button>
+        <a-button class="btn" type="primary" @click="showDetail()"><FileTextOutlined />查看依赖信息</a-button>
+        <a-button class="btn" type="primary" @click="updateDependency()"><SyncOutlined />更新依赖信息</a-button>
       </div>
       <div style="display: flex; align-items: center; height: 32px" v-if="data.detail.state === 'RUNNING'">
         <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />

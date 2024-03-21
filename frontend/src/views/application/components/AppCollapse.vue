@@ -313,6 +313,7 @@ const showComDetail = (com) => {
 }
 
 const deleteComponent = (com) => {
+  console.log(com)
   deleteComModal.value.open(com, props.parentApp)
 }
 
