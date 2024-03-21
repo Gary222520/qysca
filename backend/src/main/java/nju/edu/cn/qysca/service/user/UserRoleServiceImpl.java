@@ -137,9 +137,14 @@ public class UserRoleServiceImpl implements UserRoleService {
         RoleDO roleDO = roleDao.findByName("Bu Rep");
         String uid = userRoleDao.findBuRep(buDO.getBid(), roleDO.getId());
         List<UserBriefDTO> userBriefDTOS = userRoleDao.listBuMember(buDO.getBid());
+        roleDO = roleDao.findByName("Bu PO");
+        List<String> BuPOs = userRoleDao.findBuPO(buDO.getBid(), roleDO.getId());
         for(UserBriefDTO userBriefDTO : userBriefDTOS){
             if(userBriefDTO.getUid().equals(uid)) {
                 userBriefDTO.setRole("Bu Rep");
+            }
+            if(BuPOs.contains(userBriefDTO.getUid())) {
+                userBriefDTO.setRole("Bu PO");
             }
         }
         return userBriefDTOS;
