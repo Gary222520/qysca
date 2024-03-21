@@ -18,6 +18,7 @@ import nju.edu.cn.qysca.domain.application.dos.*;
 import nju.edu.cn.qysca.domain.application.dtos.*;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.domain.user.dos.UserRoleDO;
+import nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.utils.excel.ExcelUtils;
@@ -542,10 +543,13 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @return ApplicationDO 应用版本的详细信息
      */
     @Override
-    public ApplicationDO findApplicationVersionInfo(ApplicationSearchDTO applicationSearchDTO) {
-        return applicationDao.findByNameAndVersion(
-                applicationSearchDTO.getName(),
-                applicationSearchDTO.getVersion());
+    public ApplicationDetailDTO findApplicationVersionInfo(ApplicationSearchDTO applicationSearchDTO) {
+        ApplicationDetailDTO applicationDetailDTO = new ApplicationDetailDTO();
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
+        applicationDetailDTO.setApplicationDO(applicationDO);
+        List<UserBriefDTO> userBriefDTOS = userRoleDao.listAppMember(applicationDO.getId());
+        applicationDetailDTO.setUsers(userBriefDTOS);
+        return  applicationDetailDTO;
     }
 
     /**

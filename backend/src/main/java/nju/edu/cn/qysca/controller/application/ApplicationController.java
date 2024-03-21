@@ -139,7 +139,7 @@ public class ApplicationController {
     @ApiOperation("获取指定应用指定版本的详细信息")
     @PostMapping("/findApplicationVersionInfo")
     @PreAuthorize("@my.checkAuth('/qysca/application/findApplicationVersionInfo')")
-    public ResponseMsg<ApplicationDO> findApplicationVersionInfo(@RequestBody ApplicationSearchDTO dto) {
+    public ResponseMsg<ApplicationDetailDTO> findApplicationVersionInfo(@RequestBody ApplicationSearchDTO dto) {
         return new ResponseMsg<>(applicationService.findApplicationVersionInfo(dto));
     }
 
