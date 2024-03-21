@@ -145,7 +145,7 @@
 <script setup>
 import { reactive, ref, defineExpose, defineEmits } from 'vue'
 import { AddComponent } from '@/api/frontend'
-import Upload from '@/views/project/components/Upload.vue'
+import Upload from '@/components/Upload.vue'
 import { message } from 'ant-design-vue'
 
 const emit = defineEmits(['success'])

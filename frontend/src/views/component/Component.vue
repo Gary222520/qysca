@@ -51,29 +51,27 @@
           <a-button type="primary" v-if="data.accurate" @click="changeMode(false)"><RollbackOutlined />返回</a-button>
         </div>
       </div>
-      <a-button v-if="data.type !== 'opensource'" type="primary" @click="addComponent" style="margin-bottom: 20px">
-        <PlusOutlined />添加组件
-      </a-button>
+      <a-button type="primary" @click="addComponent" style="margin-bottom: 20px"><PlusOutlined />添加组件</a-button>
       <a-table :data-source="data.datasource" :columns="data.columns" bordered :pagination="pagination">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">
             <div class="column_name" @click="showInfo(record)">{{ record.name }}</div>
           </template>
           <template v-if="column.key === 'action'">
-            <div style="display: flex">
+            <div v-if="record.state === 'SUCCESS'" style="display: flex; align-items: center">
               <div class="action_icon">
                 <a-tooltip>
                   <template #title>详情</template>
                   <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showInfo(record)" />
                 </a-tooltip>
               </div>
-              <div class="action_icon" v-if="data.type !== 'opensource'">
+              <div class="action_icon">
                 <a-tooltip>
                   <template #title>更新</template>
                   <SyncOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="updateComponent(record)" />
                 </a-tooltip>
               </div>
-              <div class="action_icon" v-if="data.type !== 'opensource'">
+              <div class="action_icon">
                 <a-tooltip>
                   <template #title>删除</template>
                   <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个组件吗？">
@@ -88,6 +86,20 @@
                 </a-tooltip>
               </div>
             </div>
+            <div v-if="record.state === 'RUNNING'" style="display: flex; align-items: center">
+              <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
+              <div style="margin-left: 10px">扫描分析中...</div>
+            </div>
+            <div v-if="record.state === 'FAILED'" style="display: flex; align-items: center">
+              <a-popconfirm v-model:open="record.popconfirm" title="扫描出错，请重试">
+                <template #cancelButton>
+                  <a-button class="cancel_btn" size="small" @click="retry(record)">重试</a-button>
+                </template>
+                <template #okButton></template>
+                <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+                <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
+              </a-popconfirm>
+            </div>
           </template>
         </template>
         <template #emptyText>暂无数据</template>
@@ -101,7 +113,15 @@
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
-import { PlusOutlined, FileTextOutlined, SyncOutlined, DeleteOutlined, RollbackOutlined } from '@ant-design/icons-vue'
+import {
+  PlusOutlined,
+  FileTextOutlined,
+  SyncOutlined,
+  DeleteOutlined,
+  RollbackOutlined,
+  LoadingOutlined,
+  ExclamationCircleOutlined
+} from '@ant-design/icons-vue'
 import { GetComponents, DeleteComponent } from '@/api/frontend'
 import Drawer from '@/views/project/components/Drawer.vue'
 import AddModal from './components/AddModal.vue'
@@ -190,6 +210,10 @@ const showInfo = (record) => {
 }
 const updateComponent = (record) => {
   updateModal.value.open(record)
+}
+const retry = (record) => {
+  record.popconfirm = false
+  updateComponent(record)
 }
 const deleteComponent = (record) => {
   DeleteComponent({ groupId: record.groupId, artifactId: record.artifactId, version: record.version })

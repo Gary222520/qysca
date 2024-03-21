@@ -31,8 +31,8 @@ const data = reactive({
 })
 const open = (com, parentApp) => {
   data.open = true
-  data.com.groupId = com.groupId
-  data.com.artifactId = com.artifactId
+  data.com.groupId = com.groupId || ''
+  data.com.artifactId = com.artifactId || com.name
   data.com.version = com.version
   if (parentApp) {
     data.parentApp.parentName = parentApp.name
