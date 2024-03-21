@@ -132,7 +132,7 @@ public interface ApplicationService {
      * @param applicationSearchDTO 应用版本搜索信息
      * @return ApplicationDO 应用版本的详细信息
      */
-    ApplicationDO findApplicationVersionInfo(ApplicationSearchDTO applicationSearchDTO);
+    ApplicationDetailDTO findApplicationVersionInfo(ApplicationSearchDTO applicationSearchDTO);
 
     /**
      * 查询应用依赖树信息

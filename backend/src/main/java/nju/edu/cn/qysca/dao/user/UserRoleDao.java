@@ -79,4 +79,8 @@ public interface UserRoleDao extends JpaRepository<UserRoleDO, String> {
      */
     @Query("select uid from UserRoleDO where bid = ?1 and rid = ?2 and aid = '-'")
     String findBuRep(String bid, String rid);
+
+    @Query("select new nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO(u.uid, u.name, r.name) from UserDO u, UserRoleDO ur, RoleDO r where ur.aid = ?1 and u.uid = ur.uid and ur.rid = r.id")
+    List<UserBriefDTO> listAppMember(String aid);
+
 }
