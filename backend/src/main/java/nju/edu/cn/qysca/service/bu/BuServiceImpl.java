@@ -36,7 +36,7 @@ public class BuServiceImpl implements BuService{
     }
 
     @Override
-    public List<String> listAllBu() {
-        return buDao.listAllBu();
+    public List<BuDO> listAllBu() {
+        return buDao.findAll();
     }
 }

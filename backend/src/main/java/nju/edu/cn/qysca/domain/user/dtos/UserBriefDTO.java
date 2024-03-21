@@ -17,4 +17,7 @@ public class UserBriefDTO {
 
     @ApiModelProperty(value = "用户名称", example = "张三")
     private String name;
+
+    @ApiModelProperty(value = "角色",example = "Bu Rep")
+    private String role;
 }

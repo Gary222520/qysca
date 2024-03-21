@@ -14,6 +14,8 @@ import nju.edu.cn.qysca.domain.user.dos.UserRoleDO;
 import nju.edu.cn.qysca.domain.user.dtos.ApplicationMemberDTO;
 import nju.edu.cn.qysca.domain.bu.dtos.BuRepDTO;
 import nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO;
+import nju.edu.cn.qysca.exception.PlatformException;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,6 +83,10 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Transactional
     public void addBuRep(BuRepDTO buRepDTO) {
         BuDO buDO = buDao.findBuDOByName(buRepDTO.getBuName());
+        String uid = userRoleDao.findBuRep(buDO.getBid());
+        if(uid != null) {
+            throw new PlatformException(500, "Bu Rep already exists");
+        }
         UserRoleDO userRoleDO = new UserRoleDO();
         userRoleDO.setUid(buRepDTO.getUid());
         RoleDO roleDO = roleDao.findByName("Bu Rep");
@@ -128,7 +134,14 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Override
     public List<UserBriefDTO> listBuMember(String name) {
         BuDO buDO = buDao.findBuDOByName(name);
-        return userRoleDao.listBuMember(buDO.getBid());
+        String uid = userRoleDao.findBuRep(buDO.getBid());
+        List<UserBriefDTO> userBriefDTOS = userRoleDao.listBuMember(buDO.getBid());
+        for(UserBriefDTO userBriefDTO : userBriefDTOS){
+            if(userBriefDTO.getUid().equals(uid)) {
+                userBriefDTO.setRole("BU Rep");
+            }
+        }
+        return userBriefDTOS;
     }
 
     /**

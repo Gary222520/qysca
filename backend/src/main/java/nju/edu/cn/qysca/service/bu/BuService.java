@@ -30,5 +30,5 @@ public interface BuService {
      * 列出所有Bu名称
      * @return List<String> Bu名称列表
      */
-    List<String> listAllBu();
+    List<BuDO> listAllBu();
 }

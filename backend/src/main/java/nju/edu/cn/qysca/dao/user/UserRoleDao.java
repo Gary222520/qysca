@@ -63,7 +63,7 @@ public interface UserRoleDao extends JpaRepository<UserRoleDO, String> {
      * @param bid 部门编号
      * @return List<UserBriefDTO> 成员列表
      */
-    @Query("select new nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO(u.uid, u.name) from UserDO u, UserRoleDO r where r.bid = ?1 and r.rid = '-' and r.aid = '-' and u.uid = r.uid")
+    @Query("select new nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO(u.uid, u.name, '') from UserDO u, UserRoleDO r where r.bid = ?1 and r.rid = '-' and r.aid = '-' and u.uid = r.uid")
     List<UserBriefDTO> listBuMember(String bid);
 
     /**
@@ -72,4 +72,11 @@ public interface UserRoleDao extends JpaRepository<UserRoleDO, String> {
      * @return List<UserRoleDO> 角色信息
      */
     List<UserRoleDO> findAllByAid(String aid);
+
+
+    /**
+     * 查看部门的Bu Rep
+     */
+    @Query("select uid from UserRoleDO where bid = ?1 and rid = '-' and aid = '-'")
+    String findBuRep(String bid);
 }

@@ -38,7 +38,7 @@ public class BuController {
     @ApiOperation("查询部门列表")
     @GetMapping("/listAllBu")
     @PreAuthorize("@my.checkAuth('/qysca/bu/listAllBu')")
-    public ResponseMsg<List<String>> listAllBu() {
+    public ResponseMsg<List<BuDO>> listAllBu() {
         return new ResponseMsg<>(buService.listAllBu());
     }
 }

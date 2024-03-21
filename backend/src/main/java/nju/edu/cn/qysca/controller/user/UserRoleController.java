@@ -41,7 +41,7 @@ public class UserRoleController {
     }
 
 
-    @ApiOperation("在应用中增加Bu Rep")
+    @ApiOperation("增加Bu Rep")
     @PostMapping("/addBuRep")
     @PreAuthorize("@my.checkAuth('/qysca/role/addBuRep')")
     public ResponseMsg<Void> addBuRep(@RequestBody BuRepDTO buRepDTO) {
@@ -49,7 +49,7 @@ public class UserRoleController {
         return new ResponseMsg<>();
     }
 
-    @ApiOperation("在应用中删除BU Rep")
+    @ApiOperation("删除BU Rep")
     @PostMapping("/deleteBuRep")
     @PreAuthorize("@my.checkAuth('/qysca/role/deleteBuRep')")
     public ResponseMsg<Void> deleteBuRep(@RequestBody BuRepDTO buRepDTO) {
