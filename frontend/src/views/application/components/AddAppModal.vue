@@ -85,7 +85,8 @@ const submit = (dep) => {
     .validate()
     .then(() => {
       const params = {
-        ...formState
+        ...formState,
+        buName: JSON.parse(sessionStorage.getItem('user')).userBuAppRoles[0].buName
       }
       AddProject(params)
         .then((res) => {

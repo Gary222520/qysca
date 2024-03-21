@@ -58,6 +58,7 @@ const data = reactive({})
 const table = reactive({
   datasource: [],
   columns: [
+    { title: '部门编号', dataIndex: 'bid', key: 'bid', width: 150 },
     { title: '部门名称', dataIndex: 'name', key: 'name', width: 150 },
     { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
   ]
@@ -71,9 +72,7 @@ const getBuList = () => {
         return
       }
       // console.log('GetBuList', res)
-      table.datasource = res.data.map((item) => {
-        return { name: item }
-      })
+      table.datasource = res.data
     })
     .catch((err) => {
       console.error(err)
@@ -126,7 +125,7 @@ const deleteBu = (record) => {
   justify-content: space-between;
 }
 .table {
-  width: 300px;
+  width: 450px;
   margin-top: 20px;
 }
 .cancel_btn:hover {

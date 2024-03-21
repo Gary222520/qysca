@@ -1,25 +1,28 @@
 <template>
   <a-modal v-model:open="data.open" :footer="null">
     <template #title>
-      <div style="font-size: 20px">添加部门成员</div>
+      <div style="font-size: 20px">撤销Bu PO</div>
     </template>
     <div style="display: flex; margin-top: 20px">
       <a-form :model="formState" ref="formRef" name="application" :label-col="{ span: 8 }">
-        <a-form-item label="用户编号" name="uid" :rules="[{ required: true, message: '请输入用户编号' }]">
-          <a-input v-model:value="formState.uid" style="width: 300px" />
+        <a-form-item label="应用名称" name="name" :rules="[{ required: true, message: '请输入应用名称' }]">
+          <a-input v-model:value="formState.name" style="width: 300px" />
+        </a-form-item>
+        <a-form-item label="应用版本" name="version" :rules="[{ required: true, message: '请输入应用版本' }]">
+          <a-input v-model:value="formState.version" style="width: 300px" />
         </a-form-item>
       </a-form>
     </div>
     <div class="button">
       <a-button class="cancel-btn" @click="close">取消</a-button>
-      <a-button class="btn" @click="submit">添加</a-button>
+      <a-button class="btn" @click="submit">撤销</a-button>
     </div>
   </a-modal>
 </template>
 
 <script setup>
 import { reactive, ref, defineExpose, defineEmits, onMounted } from 'vue'
-import { AddBuMember } from '@/api/frontend'
+import { DeleteAppMember } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 import { useStore } from 'vuex'
 
@@ -28,38 +31,41 @@ const store = useStore()
 
 const data = reactive({
   open: false,
-  bu: {}
+  record: {}
 })
 const formRef = ref()
 const formState = reactive({
-  uid: ''
+  name: '',
+  version: ''
 })
 const open = (record) => {
   data.open = true
-  data.bu = record
+  data.record = record
 }
 const close = () => {
   data.open = false
 }
 const clear = () => {
-  formState.uid = ''
+  formState.name = ''
+  formState.version = ''
 }
 const submit = () => {
   formRef.value
     .validate()
     .then(() => {
       const params = {
-        uid: formState.uid,
-        buName: data.bu.name
+        ...formState,
+        uid: data.record.uid,
+        role: 'Bu PO'
       }
-      AddBuMember(params)
+      DeleteAppMember(params)
         .then((res) => {
-          // console.log('AddBuMember', res)
+          // console.log('DeleteAppMember', res)
           if (res.code !== 200) {
             message.error(res.message)
             return
           }
-          message.success('添加部门成员成功')
+          message.success('撤销Bu PO成功')
           data.open = false
           emit('success')
           setTimeout(() => {

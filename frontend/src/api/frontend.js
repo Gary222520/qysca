@@ -84,9 +84,9 @@ export const GetBuList = (params) => request('get', API.GET_BU_LIST, { params })
 export const AddAppMember = (data) => request('post', API.ADD_APP_MEMBER, { data })
 // 在应用中删除成员
 export const DeleteAppMember = (data) => request('post', API.DELETE_APP_MEMBER, { data })
-// 在应用中增加Bu Rep
+// 在部门中增加Bu Rep
 export const AddBuRep = (data) => request('post', API.ADD_BU_REP, { data })
-// 在应用中删除BU Rep
+// 在部门中删除BU Rep
 export const DeleteBuRep = (data) => request('post', API.DELETE_BU_REP, { data })
 // 向部门中添加成员
 export const AddBuMember = (data) => request('post', API.ADD_BU_MEMBER, { data })

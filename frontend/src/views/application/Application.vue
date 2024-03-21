@@ -199,7 +199,7 @@ const pagination = reactive({
 })
 
 const getProjectList = async () => {
-  await GetProjectList({ number: 1, size: 5 })
+  await GetProjectList({ number: 1, size: 10 })
     .then((res) => {
       if (res.code !== 200) {
         message.error(res.message)

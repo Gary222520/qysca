@@ -103,7 +103,7 @@ const getTitle = (key) => {
   return homeRoutes.children.find((item) => item.name === key)?.meta.title
 }
 const permit = (menu) => {
-  const permission = store.getters.permission
+  const permission = JSON.parse(sessionStorage.getItem('user')).userBuAppRoles
   let res = true
   switch (menu) {
     case 'application':
