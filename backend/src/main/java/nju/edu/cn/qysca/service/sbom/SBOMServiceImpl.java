@@ -18,7 +18,8 @@ import nju.edu.cn.qysca.domain.sbom.SbomExternalReferenceDTO;
 import nju.edu.cn.qysca.domain.sbom.SbomApplicationDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.application.ApplicationService;
-import nju.edu.cn.qysca.utils.ZipUtil;
+import nju.edu.cn.qysca.domain.component.dos.DependencyTableDO;
+import nju.edu.cn.qysca.service.maven.MavenService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,9 @@ public class SBOMServiceImpl implements SBOMService {
 
     @Autowired
     private ApplicationService applicationService;
+
+    @Autowired
+    private MavenService mavenService;
 
     @Autowired
     private DependencyTableDao dependencyTableDao;
@@ -72,10 +76,29 @@ public class SBOMServiceImpl implements SBOMService {
         List<SbomComponentDTO> sbomComponentDTOs = new ArrayList<>();
         if (dependencyTreeDO == null) {
             // 如果应用没有生成依赖树
-            // todo 先调用ApplicationService里的generateDependencyTree方法
-            // dependencyTreeDO = applicationService.generateDependencyTree(applicationDO, applicationDO.getType());
-
-
+            // 先调用ApplicationService里的generateDependencyTree方法，
+            dependencyTreeDO = applicationService.generateDependencyTree(applicationDO, applicationDO.getType());
+            if (applicationDO.getLanguage().equals("java")){
+                // 根据依赖树生成依赖表
+                List<DependencyTableDO> dependencyTableDOs = mavenService.dependencyTableAnalysis(dependencyTreeDO);
+                for (DependencyTableDO dependencyTableDO : dependencyTableDOs){
+                    // 查找依赖树中的每个组件
+                    ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(dependencyTableDO.getCGroupId(), dependencyTableDO.getCArtifactId(), dependencyTableDO.getCVersion());
+                    // 将componentDO转换为sbomComponentDTO
+                    SbomComponentDTO sbomComponentDTO = new SbomComponentDTO();
+                    BeanUtils.copyProperties(componentDO, sbomComponentDTO);
+                    sbomComponentDTO.setExternalReferences(
+                            Stream.of(
+                                            new SbomExternalReferenceDTO("website", componentDO.getUrl()),
+                                            new SbomExternalReferenceDTO("distribution", componentDO.getDownloadUrl()),
+                                            new SbomExternalReferenceDTO("sourceUrl", componentDO.getSourceUrl())
+                                    )
+                                    .filter(dto -> dto.getUrl() != null) // 过滤掉为空的外部链接
+                                    .collect(Collectors.toList())
+                    );
+                    sbomComponentDTOs.add(sbomComponentDTO);
+                }
+            }
         } else {
             // 如果应用已生成了依赖树
             List<ComponentTableDTO> componentTableDTOS = dependencyTableDao.findDependenciesByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());

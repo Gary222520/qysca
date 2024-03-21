@@ -456,7 +456,7 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @param type          组件类型
      * @return DependencyTreeDO 依赖树信息
      */
-    private DependencyTreeDO generateDependencyTree(ApplicationDO applicationDO, String type) {
+    public DependencyTreeDO generateDependencyTree(ApplicationDO applicationDO, String type) {
         DependencyTreeDO dependencyTreeDO = new DependencyTreeDO();
         BeanUtils.copyProperties(applicationDO, dependencyTreeDO);
         ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();

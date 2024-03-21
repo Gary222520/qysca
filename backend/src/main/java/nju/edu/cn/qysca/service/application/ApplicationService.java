@@ -186,4 +186,13 @@ public interface ApplicationService {
      * @param changeReleaseStateDTO 应用发布状态
      */
     void changeReleaseState(ChangeReleaseStateDTO changeReleaseStateDTO);
+
+    /**
+     * 根据结构生成依赖信息
+     *
+     * @param applicationDO 项目信息
+     * @param type          组件类型
+     * @return DependencyTreeDO 依赖树信息
+     */
+    DependencyTreeDO generateDependencyTree(ApplicationDO applicationDO, String type);
 }
