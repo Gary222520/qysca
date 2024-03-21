@@ -143,7 +143,11 @@ public class ComponentServiceImpl implements ComponentService {
     @Override
     @Transactional
     public Boolean changeCloseComponentState(UpdateCloseComponentDTO updateCloseComponentDTO) {
+        UserDO userDO = ContextUtil.getUserDO();
         ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
+        if (!userDO.getUid().equals(componentDO.getCreator())) {
+            throw new PlatformException(500, "您没有权限修改该组件信息");
+        }
         componentDO.setState("RUNNING");
         componentDao.save(componentDO);
         return true;

@@ -308,21 +308,19 @@ public class ApplicationServiceImpl implements ApplicationService {
         //如果该项目已被发布则会返回依赖该项目的列表 如果列表为空则删除
         if (applicationDO.getRelease()) {
             List<ApplicationDO> applicationDOList = applicationDao.findParentApplication(applicationDO.getId());
-            if (applicationDOList.size() == 0) {
-                applicationDao.delete(applicationDO);
-                //删除组件库中信息 否则没有层次信息
-                BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
-                BuDO buDO = buDao.findByBid(buAppDO.getBid());
-                componentDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
-                dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
-                dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
-                //删除BuApp中信息
-                buAppDao.delete(buAppDO);
-                //删除UserRole中信息
-                userRoleDao.deleteAllByAid(applicationDO.getId());
+            if (applicationDOList.size() != 0) {
+                return applicationDOList;
             }
-            return applicationDOList;
         }
+        BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
+        BuDO buDO = buDao.findByBid(buAppDO.getBid());
+        componentDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+        dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+        dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+        //删除BuApp中信息
+        buAppDao.delete(buAppDO);
+        //删除UserRole中信息
+        userRoleDao.deleteAllByAid(applicationDO.getId());
         applicationDao.delete(applicationDO);
         return null;
     }
