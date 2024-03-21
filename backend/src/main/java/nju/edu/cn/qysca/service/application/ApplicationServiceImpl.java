@@ -426,8 +426,11 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (applicationDO.getRelease()) {
             applicationDO.setRelease(false);
             componentDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
-            dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
-            dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+            //如果是上传pom文件的不删除依赖信息
+            if(applicationDO.getChildApplication().length > 0 && applicationDO.getChildComponent().length > 0) {
+                dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+                dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+            }
         } else {
             //发布应用成组件
             applicationDO.setRelease(true);
@@ -436,7 +439,9 @@ public class ApplicationServiceImpl implements ApplicationService {
             componentDO.setGroupId(buDO.getName());
             componentDO.setArtifactId(applicationDO.getName());
             componentDO.setType(changeReleaseStateDTO.getType());
+
             //TODO: 通过应用发布的组件没有license等信息
+            componentDO.setLanguage("java");
             componentDO.setUrl("-");
             componentDO.setDownloadUrl("-");
             componentDO.setPUrl("-");
@@ -446,10 +451,9 @@ public class ApplicationServiceImpl implements ApplicationService {
             if(temp == null) {
                 DependencyTreeDO dependencyTreeDO = generateDependencyTree(applicationDO, changeReleaseStateDTO.getType());
                 dependencyTreeDao.save(dependencyTreeDO);
-                if (applicationDO.getLanguage().equals("java")) {
-                    List<DependencyTableDO> dependencyTableDOS = mavenService.dependencyTableAnalysis(dependencyTreeDO);
-                    dependencyTableDao.saveAll(dependencyTableDOS);
-                }
+                // 对语言进行判断
+                List<DependencyTableDO> dependencyTableDOS = mavenService.dependencyTableAnalysis(dependencyTreeDO);
+                dependencyTableDao.saveAll(dependencyTableDOS);
             }
         }
         applicationDao.save(applicationDO);
@@ -464,17 +468,21 @@ public class ApplicationServiceImpl implements ApplicationService {
      */
     private DependencyTreeDO generateDependencyTree(ApplicationDO applicationDO, String type) {
         DependencyTreeDO dependencyTreeDO = new DependencyTreeDO();
-        BeanUtils.copyProperties(applicationDO, dependencyTreeDO);
+        BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
+        BuDO buDO = buDao.findByBid(buAppDO.getBid());
+        dependencyTreeDO.setGroupId(buDO.getName());
+        dependencyTreeDO.setArtifactId(applicationDO.getName());
+        dependencyTreeDO.setVersion(applicationDO.getVersion());
         ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        BeanUtils.copyProperties(applicationDO, componentDependencyTreeDO);
+        BeanUtils.copyProperties(dependencyTreeDO, componentDependencyTreeDO);
         componentDependencyTreeDO.setType(type);
         componentDependencyTreeDO.setScope("-");
         componentDependencyTreeDO.setDepth(0);
         List<ComponentDependencyTreeDO> componentDependencyTreeDOS = new ArrayList<>();
         for (String id : applicationDO.getChildApplication()) {
             ApplicationDO tempApplicationDO = applicationDao.findApplicationDOById(id);
-            BuAppDO buAppDO = buAppDao.findByAid(tempApplicationDO.getId());
-            BuDO buDO = buDao.findByBid(buAppDO.getBid());
+            buAppDO = buAppDao.findByAid(tempApplicationDO.getId());
+            buDO = buDao.findByBid(buAppDO.getBid());
             ComponentDependencyTreeDO temp = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), tempApplicationDO.getName(), tempApplicationDO.getVersion()).getTree();
             addDepth(temp);
             componentDependencyTreeDOS.add(temp);
