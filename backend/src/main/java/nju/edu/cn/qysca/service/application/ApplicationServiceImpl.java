@@ -275,6 +275,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             BeanUtils.copyProperties(userRoleDO, newUserRoleDO);
             newUserRoleDO.setId(null);
             newUserRoleDO.setAid(newApplicationDO.getId());
+            newUserRoleDOS.add(newUserRoleDO);
         }
         userRoleDao.saveAll(newUserRoleDOS);
         //新增新应用关系 删除旧应用关系
