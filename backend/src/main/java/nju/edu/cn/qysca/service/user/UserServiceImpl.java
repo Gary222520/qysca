@@ -173,6 +173,8 @@ public class UserServiceImpl implements UserService {
     public void updateUser(UserDO userDO) {
         UserDO oldUserDO=userDao.findByUid(userDO.getUid());
         BeanUtils.copyProperties(userDO, oldUserDO);
+        oldUserDO.setLogin(false);
+        oldUserDO.setPassword(passwordEncoder.encode(oldUserDO.getPassword()));
         userDao.save(oldUserDO);
     }
 
