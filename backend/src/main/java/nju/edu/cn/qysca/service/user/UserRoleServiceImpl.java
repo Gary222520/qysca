@@ -104,7 +104,7 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Override
     public void deleteBuRep(BuRepDTO buRepDTO) {
         BuDO buDO = buDao.findBuDOByName(buRepDTO.getBuName());
-        RoleDO roleDO = roleDao.findByName("BU Rep");
+        RoleDO roleDO = roleDao.findByName("Bu Rep");
         userRoleDao.deleteByUidAndRidAndBidAndAid(buRepDTO.getUid(), roleDO.getId(), buDO.getBid(), "-");
     }
 
@@ -134,12 +134,12 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Override
     public List<UserBriefDTO> listBuMember(String name) {
         BuDO buDO = buDao.findBuDOByName(name);
-        RoleDO roleDO = roleDao.findByName("BU Rep");
+        RoleDO roleDO = roleDao.findByName("Bu Rep");
         String uid = userRoleDao.findBuRep(buDO.getBid(), roleDO.getId());
         List<UserBriefDTO> userBriefDTOS = userRoleDao.listBuMember(buDO.getBid());
         for(UserBriefDTO userBriefDTO : userBriefDTOS){
             if(userBriefDTO.getUid().equals(uid)) {
-                userBriefDTO.setRole("BU Rep");
+                userBriefDTO.setRole("Bu Rep");
             }
         }
         return userBriefDTOS;
