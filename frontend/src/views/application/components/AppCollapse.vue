@@ -263,7 +263,7 @@ const findSubProject = async (app) => {
         return
       }
       // console.log('GetSubProject', res)
-      app.subAppList = res.data.subProject
+      app.subAppList = res.data.subApplication
       app.subComList = res.data.subComponent
     })
     .catch((err) => {

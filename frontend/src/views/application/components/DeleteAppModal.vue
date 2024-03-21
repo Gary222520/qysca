@@ -52,7 +52,14 @@ const deleteProject = () => {
         message.error(res.message)
         return
       }
-      message.success('删除版本成功')
+      if (res.data.length === 0) message.success('删除版本成功')
+      else {
+        let text = '无法删除！有以下应用依赖该版本：'
+        res.data.forEach((item) => {
+          text += item.name + '-' + item.version + ';'
+        })
+        message.error(text)
+      }
       data.open = false
       emit('success')
     })

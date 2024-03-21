@@ -94,6 +94,7 @@
       </a-table>
       <Drawer ref="drawer"></Drawer>
       <AddModal ref="addModal" @success="getComponents"></AddModal>
+      <UpdateModal ref="updateModal" @success="getComponents"></UpdateModal>
     </a-card>
   </div>
 </template>
@@ -101,9 +102,10 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import { PlusOutlined, FileTextOutlined, SyncOutlined, DeleteOutlined, RollbackOutlined } from '@ant-design/icons-vue'
-import { GetComponents } from '@/api/frontend'
+import { GetComponents, DeleteComponent } from '@/api/frontend'
 import Drawer from '@/views/project/components/Drawer.vue'
 import AddModal from './components/AddModal.vue'
+import UpdateModal from './components/UpdateModal.vue'
 import { message } from 'ant-design-vue'
 
 onMounted(() => {
@@ -111,6 +113,7 @@ onMounted(() => {
 })
 const drawer = ref()
 const addModal = ref()
+const updateModal = ref()
 const data = reactive({
   accurate: false,
   type: 'opensource',
@@ -185,8 +188,31 @@ const addComponent = () => {
 const showInfo = (record) => {
   drawer.value.open(record, true)
 }
-const updateComponent = (record) => {}
-const deleteComponent = (record) => {}
+const updateComponent = (record) => {
+  updateModal.value.open(record)
+}
+const deleteComponent = (record) => {
+  DeleteComponent({ groupId: record.groupId, artifactId: record.artifactId, version: record.version })
+    .then((res) => {
+      // console.log('DeleteComponent', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      if (res.data.length === 0) message.success('删除组件成功')
+      else {
+        let text = '无法删除！有以下应用依赖该组件：'
+        res.data.forEach((item) => {
+          text += item.name + '-' + item.version + ';'
+        })
+        message.error(text)
+      }
+      getComponents()
+    })
+    .catch((err) => {
+      message(err)
+    })
+}
 </script>
 
 <style scoped>

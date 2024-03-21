@@ -1,9 +1,9 @@
 <template>
   <a-modal v-model:open="data.open" width="800px" :footer="null">
     <template #title>
-      <div style="font-size: 20px">添加组件</div>
+      <div style="font-size: 20px">更新组件</div>
     </template>
-    <a-spin :spinning="data.spinning" tip="添加组件中，请稍等...">
+    <a-spin :spinning="data.spinning" tip="更新组件中，请稍等...">
       <div style="display: flex; margin: 20px 0">
         <a-steps class="steps" direction="vertical" :current="data.currentStep" :items="data.steps"></a-steps>
         <div v-if="data.currentStep === 0">
@@ -144,7 +144,7 @@
 
 <script setup>
 import { reactive, ref, defineExpose, defineEmits } from 'vue'
-import { AddComponent } from '@/api/frontend'
+import { UpdateComponent } from '@/api/frontend'
 import Upload from '@/views/project/components/Upload.vue'
 import { message } from 'ant-design-vue'
 
@@ -157,13 +157,19 @@ const data = reactive({
   spinning: false
 })
 const componentInfo = reactive({
+  groupId: '',
+  artifactId: '',
+  version: '',
   language: 'java',
   builder: 'maven',
   filePath: '',
   type: 'opensource'
 })
-const open = () => {
+const open = (component) => {
   data.open = true
+  componentInfo.groupId = component.groupId
+  componentInfo.artifactId = component.artifactId
+  componentInfo.version = component.version
 }
 const close = () => {
   data.open = false
@@ -198,15 +204,15 @@ const submit = () => {
     ...componentInfo
   }
   data.spinning = true
-  AddComponent(params)
+  UpdateComponent(params)
     .then((res) => {
-      // console.log('AddComponent', res)
+      // console.log('UpdateComponent', res)
       data.spinning = false
       if (res.code !== 200) {
         message.error(res.message)
         return
       }
-      message.success('添加组件成功')
+      message.success('更新组件成功')
       data.open = false
       emit('success')
       setTimeout(() => {
