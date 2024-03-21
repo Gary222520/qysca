@@ -90,7 +90,7 @@ public class MyExpressionRoot {
         // 判断用户有无创建应用成员角色的权限
         switch (applicationMemberDTO.getRole()) {
             case "Bu PO":
-                if (!roles.contains("Bu Rep")) {
+                if (!roles.contains("Admin")) {
                     return false;
                 }
                 break;
