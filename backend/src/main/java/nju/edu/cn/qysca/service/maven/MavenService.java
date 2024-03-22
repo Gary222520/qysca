@@ -12,4 +12,6 @@ public interface MavenService {
     DependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String type);
 
     List<DependencyTableDO> dependencyTableAnalysis(DependencyTreeDO dependencyTreeDO);
+
+    DependencyTreeDO spiderDependency(String groupId, String artifactId, String version);
 }
