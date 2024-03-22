@@ -17,7 +17,7 @@ import java.io.PrintWriter;
 public class AccessDeniedHandlerImpl implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        ResponseMsg responseMsg=new ResponseMsg<>(403,"登录认证失败");
+        ResponseMsg responseMsg=new ResponseMsg<>(403,"权限不足");
         String json= JSON.toJSONString(responseMsg);
         response.setContentType("application/json;charset=UTF-8");
         PrintWriter out=response.getWriter();
