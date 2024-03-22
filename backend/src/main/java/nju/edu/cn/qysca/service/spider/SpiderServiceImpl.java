@@ -60,6 +60,7 @@ public class SpiderServiceImpl implements SpiderService {
      * @return ComponentDO
      */
     private ComponentDO crawl(String url) {
+        System.out.println("crawling :" + url);
         // 爬取pom文件中的组件信息
         String pomUrl = findPomUrlInDirectory(url);
         if (pomUrl == null) {
@@ -210,6 +211,7 @@ public class SpiderServiceImpl implements SpiderService {
         componentDO.setDevelopers(getDevelopers(model));
         componentDO.setLicenses(getLicense(model));
 
+        componentDO.setCreator(null);
         componentDO.setState("SUCCESS");
         return componentDO;
     }

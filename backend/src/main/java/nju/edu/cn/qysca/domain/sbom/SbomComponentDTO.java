@@ -25,11 +25,14 @@ public class SbomComponentDTO {
     @ApiModelProperty(value = "版本号", example = "1.0.0")
     private String version;
 
+    @ApiModelProperty(value = "组件类型", example = "opensource")
+    private String type;
+
     @ApiModelProperty(value = "组件描述", example = "Core starter, including auto-configuration support, logging and YAML")
     private String description;
 
     @ApiModelProperty(value = "包获取地址",example = "pkg:maven/io.grpc/grpc-protobuf@1.44.1?type=jar")
-    private String purl;
+    private String pUrl;
 
     @ApiModelProperty(value = "许可证列表")
     private List<LicenseDO> licenses = new ArrayList<>();
