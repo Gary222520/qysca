@@ -67,7 +67,7 @@
                       <template #icon><EyeOutlined /></template>已发布
                     </a-tag>
                   </a-tooltip>
-                  <a-tooltip v-else>
+                  <a-tooltip v-if="!app.release && !app.releasing">
                     <template #title>点击发布</template>
                     <a-popconfirm v-model:open="app.popconfirm" title="选择发布类型">
                       <template #cancelButton></template>
@@ -79,6 +79,10 @@
                       <CloudUploadOutlined :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
                     </a-popconfirm>
                   </a-tooltip>
+                  <div v-if="app.releasing">
+                    <LoadingOutlined :style="{ fontSize: '20px', color: '#6f005f' }" />
+                    <div style="margin-left: 10px">发布中...</div>
+                  </div>
                 </div>
               </div>
               <div style="display: flex; align-items: center">
@@ -422,6 +426,7 @@ const lock = async (app, index) => {
 
 const release = async (app, index, type) => {
   data.currentKey = index
+  app.releasing = true
   ChangeRelease({ name: app.name, version: app.version, type })
     .then((res) => {
       if (res.code !== 200) {
