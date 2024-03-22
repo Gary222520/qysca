@@ -1,5 +1,5 @@
 <template>
-  <div style="margin: 16px 0">
+  <div>
     <a-collapse v-model:activeKey="data.activeKey" collapsible="icon" @change="(index) => changeCollapse(index)">
       <a-collapse-panel v-for="(app, index) in props.appList" :key="index">
         <template #header>
@@ -349,7 +349,7 @@ defineExpose({ refresh, close })
   content: '';
 }
 :deep(.ant-collapse .ant-collapse-content > .ant-collapse-content-box) {
-  padding: 0px 0px 0px 32px;
+  padding: 16px 0px 16px 32px;
 }
 :deep(.ant-collapse > .ant-collapse-item:last-child),
 :deep(.ant-collapse > .ant-collapse-item:last-child > .ant-collapse-header),

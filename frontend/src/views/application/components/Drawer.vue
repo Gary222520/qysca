@@ -9,6 +9,7 @@
         <template #title>刷新</template>
         <RedoOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click.stop="refresh()" />
       </a-tooltip>
+      <a-button type="primary" style="margin-left: 30px" @click="exportSBOM">导出SBOM</a-button>
     </div>
     <div class="relative">
       <div class="drawer_title" style="margin-bottom: 20px">基本信息</div>
@@ -109,7 +110,7 @@ import {
 } from '@ant-design/icons-vue'
 import { reactive, ref, defineExpose, defineEmits } from 'vue'
 import { useRouter } from 'vue-router'
-import { GetComponentInfo, GetVersionInfo, DeleteAppMember } from '@/api/frontend'
+import { GetComponentInfo, GetVersionInfo, DeleteAppMember, ExportSBOM } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 import AddDepModal from './AddDepModal.vue'
 import AddMember from './AddMember.vue'
@@ -212,6 +213,26 @@ const retry = () => {
 
 const refresh = () => {
   emit('refresh')
+}
+
+const exportSBOM = () => {
+  ExportSBOM({ name: data.detail.name, version: data.detail.version })
+    .then((res) => {
+      downloadSBOM(res.data, `${data.detail.name}-${data.detail.version}-SBOM`)
+    })
+    .catch((e) => {
+      message.error(e)
+    })
+}
+const downloadSBOM = (data, fileName) => {
+  console.log(data)
+  const blob = new Blob([data])
+  const a = document.createElement('a')
+  a.style.display = 'none'
+  a.href = URL.createObjectURL(blob)
+  a.download = `${fileName}.json`
+  a.click()
+  a.remove()
 }
 
 const showDetail = () => {

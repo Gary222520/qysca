@@ -72,6 +72,8 @@ export const API = {
   EXPORT_BRIEF: '/qysca/application/exportTableExcelBrief',
   // 导出项目详细依赖信息
   EXPORT_DETAIL: '/qysca/application/exportTableExcelDetail',
+  // 导出SBOM
+  EXPORT_SBOM: '/qysca/application/exportSBOM',
 
   // 新增部门
   CREATE_BU: '/qysca/bu/addBu',

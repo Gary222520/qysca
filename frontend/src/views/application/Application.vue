@@ -483,7 +483,7 @@ const release = async (app, index, type) => {
   border-top: 0;
 }
 :deep(.ant-collapse .ant-collapse-content > .ant-collapse-content-box) {
-  padding: 0px 0px 0px 32px;
+  padding: 16px 0px 16px 32px;
 }
 :deep(.ant-collapse > .ant-collapse-item:last-child),
 :deep(.ant-collapse > .ant-collapse-item:last-child > .ant-collapse-header),
