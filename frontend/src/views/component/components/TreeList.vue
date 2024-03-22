@@ -14,10 +14,12 @@
         <template #icon>
           <ExperimentOutlined :style="{ fontSize: '16px' }" />
         </template>
-        <template #title="{ title, version, opensource }">
+        <template #title="{ title, version, type }">
           <span style="font-weight: bold; margin-right: 10px">{{ title }}</span>
           <a-tag>{{ version }}</a-tag>
-          <a-tag>{{ opensource ? '开源' : '闭源' }}</a-tag>
+          <a-tag v-if="type === 'opensource'">开源</a-tag>
+          <a-tag v-if="type === 'business'">商用</a-tag>
+          <a-tag v-if="type === 'internal'">内部</a-tag>
         </template>
       </a-tree>
     </a-spin>
@@ -36,7 +38,7 @@ const drawer = ref()
 const data = reactive({
   visible: true,
   treeData: [],
-  expandedKeys: [],
+  expandedKeys: ['0-0'],
   selectedKeys: [],
   spinning: false
 })
@@ -45,8 +47,7 @@ const show = (component) => {
   const params = {
     groupId: component.groupId,
     artifactId: component.artifactId,
-    version: component.version,
-    opensource: component.opensource
+    version: component.version
   }
   data.spinning = true
   GetComponentTree(params)

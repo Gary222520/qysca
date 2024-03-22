@@ -70,10 +70,11 @@ import TiledList from './components/TiledList.vue'
 import { message } from 'ant-design-vue'
 
 onMounted(async () => {
-  const groupId = route.query.groupId
-  const artifactId = route.query.artifactId
+  // const groupId = route.query.groupId
+  // const artifactId = route.query.artifactId
+  const name = route.query.name
   const version = route.query.version
-  await getVersionInfo(groupId, artifactId, version)
+  await getVersionInfo(name, version)
 })
 
 const router = useRouter()
@@ -93,9 +94,9 @@ const data = reactive({
 const back = () => {
   router.back()
 }
-const getVersionInfo = async (groupId, artifactId, version) => {
+const getVersionInfo = async (name, version) => {
   data.selectedVersion = version
-  await GetVersionList({ groupId, artifactId })
+  await GetVersionList({ name })
     .then((res) => {
       // console.log('GetVersionList', res)
       if (res.code !== 200) {
@@ -105,14 +106,14 @@ const getVersionInfo = async (groupId, artifactId, version) => {
       data.versionOptions = res.data.map((option) => {
         return { label: option, value: option, key: option }
       })
-      GetVersionInfo({ groupId, artifactId, version })
+      GetVersionInfo({ name, version })
         .then((res) => {
-          // console.log('GetVersionInfo', res)
+          console.log('GetVersionInfo', res)
           if (res.code !== 200) {
             message.error(res.message)
             return
           }
-          data.versionInfo = res.data
+          data.versionInfo = res.data.applicationDO
           changeMode('tree')
         })
         .catch((err) => {
@@ -127,19 +128,21 @@ const changeVersion = (value) => {
   router.push({
     path: '/home/appDetail',
     query: {
-      groupId: data.versionInfo.groupId,
-      artifactId: data.versionInfo.artifactId,
+      // groupId: data.versionInfo.groupId,
+      // artifactId: data.versionInfo.artifactId,
+      name: data.versionInfo.name,
       version: value
     }
   })
-  getVersionInfo(data.versionInfo.groupId, data.versionInfo.artifactId, value)
+  getVersionInfo(data.versionInfo.name, value)
 }
 const compare = () => {
   router.push({
     path: '/home/compare',
     query: {
-      groupId: data.versionInfo.groupId,
-      artifactId: data.versionInfo.artifactId,
+      // groupId: data.versionInfo.groupId,
+      // artifactId: data.versionInfo.artifactId,
+      name: data.versionInfo.name,
       currentVersion: data.selectedVersion
     }
   })
@@ -147,12 +150,12 @@ const compare = () => {
 const changeMode = (mode) => {
   data.mode = mode
   if (mode === 'tree') {
-    treeList.value.show(data.versionInfo.groupId, data.versionInfo.artifactId, data.selectedVersion)
+    treeList.value.show(data.versionInfo.name, data.selectedVersion)
     tiledList.value.hide()
   }
   if (mode === 'tiled') {
     treeList.value.hide()
-    tiledList.value.show(data.versionInfo.groupId, data.versionInfo.artifactId, data.selectedVersion)
+    tiledList.value.show(data.versionInfo.name, data.selectedVersion)
   }
 }
 const filterOption = (input, option) => {
@@ -160,8 +163,9 @@ const filterOption = (input, option) => {
 }
 const exportExcel = () => {
   const params = {
-    groupId: data.versionInfo.groupId,
-    artifactId: data.versionInfo.artifactId,
+    // groupId: data.versionInfo.groupId,
+    // artifactId: data.versionInfo.artifactId,
+    name: data.versionInfo.name,
     version: data.versionInfo.version
   }
   if (!data.detail) {

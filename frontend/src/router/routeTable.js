@@ -1,6 +1,8 @@
 const Home = () => import('@/views/Home.vue')
+const Login = () => import('@/views/user/Login.vue')
 const Summary = () => import('@/views/summary/Summary.vue')
 const Scan = () => import('@/views/scan/Scan.vue')
+
 const Application = () => import('@/views/application/Application.vue')
 const Project = () => import('@/views/project/Project.vue')
 const AppDetail = () => import('@/views/project/AppDetail.vue')
@@ -8,8 +10,13 @@ const Compare = () => import('@/views/project/Compare.vue')
 const Component = () => import('@/views/component/Component.vue')
 const Dependency = () => import('@/views/component/Dependency.vue')
 
+const BuManage = () => import('@/views/bu/BuManage.vue')
+
+const UserManage = () => import('@/views/user/UserManage.vue')
+
 const routes = [
   { path: '/', name: '/', component: Home },
+  { path: '/login', name: 'login', component: Login },
   {
     path: '/home',
     name: 'home',
@@ -63,6 +70,18 @@ const routes = [
         name: 'dependency',
         meta: { menu: 'component', title: '组件依赖' },
         component: Dependency
+      },
+      {
+        path: 'buManage',
+        name: 'buManage',
+        meta: { menu: 'buManage', title: '部门管理' },
+        component: BuManage
+      },
+      {
+        path: 'userManage',
+        name: 'userManage',
+        meta: { menu: 'userManage', title: '用户管理' },
+        component: UserManage
       }
     ]
   }
