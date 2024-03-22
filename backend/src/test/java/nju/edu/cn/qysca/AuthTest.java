@@ -94,6 +94,7 @@ public class AuthTest {
         auths.add("/qysca/application/getApplicationVersionCompareTree");
         auths.add("/qysca/application/changeLockState");
         auths.add("/qysca/application/changeReleaseState");
+        auths.add("/qysca/application/exportSBOM");
 
         auths.add("/qysca/component/findComponentsPage");
         auths.add("/qysca/component/searchComponentName");
@@ -220,6 +221,11 @@ public class AuthTest {
         gprp_inter(r2,p19);
         gprp_inter(r3,p19);
         gprp_inter(r4,p19);
+        String p901="/qysca/application/exportSBOM";
+        gprp_inter(r1,p901);
+        gprp_inter(r2,p901);
+        gprp_inter(r3,p901);
+        gprp_inter(r4,p901);
 
         String p20="/qysca/bu/addBu";
         gprp_inter(r0,p20);
