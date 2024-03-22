@@ -7,14 +7,12 @@ import nju.edu.cn.qysca.dao.component.ComponentDao;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.spider.SpiderService;
-import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.Invoker;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +33,7 @@ public class MavenServiceImpl implements MavenService {
     @Autowired
     private SpiderService spiderService;
 
-    private String FILE_SEPARATOR = "/";
+    private final String FILE_SEPARATOR = "/";
 
 
     /**
@@ -51,21 +49,21 @@ public class MavenServiceImpl implements MavenService {
         String pomFilePath = analyzePomPath(filePath, builder);
         Model model = pomToModel(pomFilePath);
         ComponentDO componentDO = new ComponentDO();
+        componentDO.setGroupId(getGroupIdFromPomModel(model));
+        componentDO.setArtifactId(getArtifactIdFromPomModel(model));
+        componentDO.setVersion(getVersionFromPomModel(model));
         componentDO.setLanguage("java");
         componentDO.setName(model.getName() == null ? "-" : model.getName());
-        componentDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
-        componentDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
-        componentDO.setVersion(model.getVersion() == null ? "-" : model.getVersion());
         componentDO.setType(type);
         componentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
         componentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
         componentDO.setDownloadUrl(model.getDistributionManagement() == null ? "-" : model.getDistributionManagement().getDownloadUrl());
         componentDO.setSourceUrl(model.getScm() == null ? "-" : model.getScm().getUrl());
-        //TODO: pUrl解析
-        componentDO.setPUrl("");
+        componentDO.setPUrl(getMavenPUrl(componentDO.getGroupId(), model.getArtifactId(), model.getVersion(), model.getPackaging()));
         componentDO.setLicenses(getLicense(model));
         componentDO.setDevelopers(getDevelopers(model));
         //TODO: hash信息解析
+        // 上传jar包才可以生成hash信息
         //javaCloseComponentDO.setHashes(getHashes(model));
         return componentDO;
     }
@@ -81,15 +79,15 @@ public class MavenServiceImpl implements MavenService {
     public DependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String type) {
         String pomFilePath = analyzePomPath(filePath, builder);
         Model model = pomToModel(pomFilePath);
-        DependencyTreeDO javaCloseDependencyTreeDO = new DependencyTreeDO();
-        javaCloseDependencyTreeDO.setGroupId(model.getGroupId() == null ? "-" : model.getGroupId());
-        javaCloseDependencyTreeDO.setArtifactId(model.getArtifactId() == null ? "-" : model.getArtifactId());
-        javaCloseDependencyTreeDO.setVersion(model.getVersion() == null ? "-" : model.getVersion());
+        DependencyTreeDO dependencyTreeDO = new DependencyTreeDO();
+        dependencyTreeDO.setGroupId(getGroupIdFromPomModel(model));
+        dependencyTreeDO.setArtifactId(getArtifactIdFromPomModel(model));
+        dependencyTreeDO.setVersion(getVersionFromPomModel(model));
         Node node = mavenDependencyTreeAnalyzer(filePath, builder);
         ComponentDependencyTreeDO componentDependencyTreeDO = convertNode(node, 0);
         componentDependencyTreeDO.setType(type);
-        javaCloseDependencyTreeDO.setTree(componentDependencyTreeDO);
-        return javaCloseDependencyTreeDO;
+        dependencyTreeDO.setTree(componentDependencyTreeDO);
+        return dependencyTreeDO;
     }
 
     /**
@@ -122,7 +120,7 @@ public class MavenServiceImpl implements MavenService {
     }
 
     /**
-     * @param filePath 文件路径
+     * @param filePath pom文件路径
      * @param builder  构造工具
      * @return Node 封装好的依赖信息树
      * @throws Exception
@@ -252,6 +250,83 @@ public class MavenServiceImpl implements MavenService {
         } catch (Exception e) {
             throw new PlatformException(500, "解析pom文件失败");
         }
+    }
+
+    /**
+     * 从pom Model中获取groupId
+     * @param model pom Model
+     * @return groupId
+     */
+    private String getGroupIdFromPomModel(Model model){
+        // ${xxx}形式的，在<property>中找
+        if (model.getGroupId() != null){
+            if (model.getGroupId().startsWith("${") && model.getGroupId().endsWith("}")){
+                String propertyValue = model.getGroupId().substring(2,model.getGroupId().length()-1);
+                return model.getProperties().getProperty(propertyValue);
+            } else{
+                return model.getGroupId();
+            }
+        }
+        // 没写groupId的，默认为parent的groupId
+        if (model.getParent().getGroupId() != null)
+            return model.getParent().getGroupId();
+        return null;
+    }
+
+    /**
+     * 从pom Model中获取artifactId
+     * @param model pom Model
+     * @return artifactId
+     */
+    private String getArtifactIdFromPomModel(Model model){
+        // ${xxx}形式的，在<property>中找
+        if (model.getArtifactId() != null){
+            if (model.getArtifactId().startsWith("${") && model.getArtifactId().endsWith("}")){
+                String propertyValue = model.getArtifactId().substring(2,model.getArtifactId().length()-1);
+                return model.getProperties().getProperty(propertyValue);
+            } else{
+                return model.getArtifactId();
+            }
+        }
+        if (model.getParent().getArtifactId() != null)
+            return model.getParent().getArtifactId();
+        return null;
+    }
+
+    /**
+     * 从pom Model中获取version
+     * @param model pom Model
+     * @return version
+     */
+    private String getVersionFromPomModel(Model model){
+        // ${xxx}形式的，在<property>中找
+        if (model.getVersion() != null){
+            if (model.getVersion().startsWith("${") && model.getVersion().endsWith("}")){
+                String propertyValue = model.getVersion().substring(2,model.getVersion().length()-1);
+                return model.getProperties().getProperty(propertyValue);
+            } else{
+                return model.getVersion();
+            }
+        }
+        if (model.getParent().getVersion() != null)
+            return model.getParent().getVersion();
+        return null;
+    }
+
+    /**
+     * 生成PUrl（仅对maven组件）
+     * 例如：pkg:maven/commons-codec/commons-codec@1.15?type=jar
+     * @param groupId 组织Id
+     * @param artifactId 工件id
+     * @param version 版本号
+     * @param packaging 打包方式，如pom、jar
+     * @return PUrl
+     */
+    private static String getMavenPUrl(String groupId, String artifactId, String version, String packaging){
+        String pUrl = "pkg:maven/" + groupId + "/" + artifactId + "@" + version;
+        if (packaging.equals("jar"))
+            pUrl += "?type=jar";
+        return pUrl;
     }
 
     /**

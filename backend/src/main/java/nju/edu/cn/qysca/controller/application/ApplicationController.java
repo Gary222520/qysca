@@ -9,6 +9,7 @@ import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.*;
 import nju.edu.cn.qysca.service.application.ApplicationService;
+import nju.edu.cn.qysca.service.sbom.SBOMService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +26,9 @@ public class ApplicationController {
 
     @Autowired
     private ApplicationService applicationService;
+
+    @Autowired
+    private SBOMService sbomService;
 
 
     @ApiOperation("分页获取应用信息")
@@ -188,5 +192,11 @@ public class ApplicationController {
     public ResponseMsg<Void> changeReleaseState(@RequestBody ChangeReleaseStateDTO changeReleaseStateDTO) {
         applicationService.changeReleaseState(changeReleaseStateDTO);
         return new ResponseMsg<>(null);
+    }
+
+    @ApiOperation("导出应用SBOM")
+    @PostMapping("/exportSBOM")
+    public void exportSBOM(@RequestBody ApplicationSearchDTO dto, HttpServletResponse response){
+        sbomService.exportSBOM(dto, response);
     }
 }
