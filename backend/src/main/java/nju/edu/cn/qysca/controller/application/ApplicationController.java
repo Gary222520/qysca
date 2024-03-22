@@ -196,6 +196,7 @@ public class ApplicationController {
 
     @ApiOperation("导出应用SBOM")
     @PostMapping("/exportSBOM")
+    @PreAuthorize("@my.checkAuth('/qysca/application/exportSBOM')")
     public void exportSBOM(@RequestBody ApplicationSearchDTO dto, HttpServletResponse response){
         sbomService.exportSBOM(dto, response);
     }
