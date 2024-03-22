@@ -1,16 +1,19 @@
 package nju.edu.cn.qysca.service.sbom;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nju.edu.cn.qysca.dao.application.ApplicationProjectDao;
+import nju.edu.cn.qysca.dao.bu.BuAppDao;
+import nju.edu.cn.qysca.dao.bu.BuDao;
 import nju.edu.cn.qysca.dao.component.ComponentDao;
 import nju.edu.cn.qysca.dao.component.DependencyTableDao;
-import nju.edu.cn.qysca.dao.project.ProjectDao;
+import nju.edu.cn.qysca.dao.application.ApplicationDao;
+import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.bu.dos.BuAppDO;
+import nju.edu.cn.qysca.domain.bu.dos.BuDO;
 import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
-import nju.edu.cn.qysca.domain.project.dos.ProjectDO;
 import nju.edu.cn.qysca.domain.sbom.SbomComponentDTO;
 import nju.edu.cn.qysca.domain.sbom.SbomExternalReferenceDTO;
-import nju.edu.cn.qysca.domain.sbom.SbomProjectDTO;
+import nju.edu.cn.qysca.domain.sbom.SbomApplicationDTO;
 import nju.edu.cn.qysca.utils.ZipUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,14 +30,18 @@ import java.util.stream.Stream;
 public class SBOMServiceImpl implements SBOMService {
 
 
-    @Autowired
-    private ApplicationProjectDao applicationProjectDao;
 
     @Autowired
     private DependencyTableDao dependencyTableDao;
 
     @Autowired
-    private ProjectDao projectDao;
+    private ApplicationDao applicationDao;
+
+    @Autowired
+    private BuAppDao buAppDao;
+
+    @Autowired
+    private BuDao buDao;
 
     @Autowired
     private ComponentDao componentDao;
@@ -48,8 +55,8 @@ public class SBOMServiceImpl implements SBOMService {
      * @param applicationVersion 应用版本号
      */
     public void exportSBOM(HttpServletResponse response, String applicationGroupId, String applicationArtifactId, String applicationVersion){
-        // 找到application的所有project，一个project为一个json文件
-        List<ProjectDO> projectDOList = applicationProjectDao.findProjectByApplicationGAV(applicationGroupId, applicationArtifactId, applicationVersion);
+        // 找到application的所有application，一个application为一个json文件
+        List<ApplicationDO> applicationDOList = null;
 
         // 创建临时SBOM文件夹
         File sbomFolder = new File("SBOM");
@@ -57,9 +64,11 @@ public class SBOMServiceImpl implements SBOMService {
             sbomFolder.mkdirs();
         }
 
-        for (ProjectDO projectDO : projectDOList){
-            // 找到project所有的直接依赖组件
-            List<ComponentTableDTO> componentTableDTOS = dependencyTableDao.findDirectDependenciesByGroupIdAndArtifactIdAndVersion(projectDO.getGroupId(), projectDO.getArtifactId(), projectDO.getVersion());
+        for (ApplicationDO applicationDO : applicationDOList){
+            // 找到application所有的直接依赖组件
+            BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
+            BuDO buDO = buDao.findByBid(buAppDO.getBid());
+            List<ComponentTableDTO> componentTableDTOS = dependencyTableDao.findDirectDependenciesByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
 
             List<SbomComponentDTO> sbomComponentDTOs = new ArrayList<>();
             for (ComponentTableDTO componentTableDTO : componentTableDTOS){
@@ -80,28 +89,28 @@ public class SBOMServiceImpl implements SBOMService {
                 sbomComponentDTOs.add(sbomComponentDTO);
             }
 
-            // 封装为SbomProjectDTO
-            SbomProjectDTO sbomProjectDTO = new SbomProjectDTO();
-            sbomProjectDTO.setGroupId(projectDO.getGroupId());
-            sbomProjectDTO.setArtifactId(projectDO.getArtifactId());
-            sbomProjectDTO.setVersion(projectDO.getVersion());
-            sbomProjectDTO.setComponents(sbomComponentDTOs);
+            // 封装为SbomapplicationDTO
+            SbomApplicationDTO sbomApplicationDTO = new SbomApplicationDTO();
+            sbomApplicationDTO.setGroupId(buDO.getName());
+            sbomApplicationDTO.setArtifactId(applicationDO.getName());
+            sbomApplicationDTO.setVersion(applicationDO.getVersion());
+            sbomApplicationDTO.setComponents(sbomComponentDTOs);
 
             String json = null;
             ObjectMapper objectMapper = new ObjectMapper();
             try{
-                // 将sbomProjectDTO变为json
-                json = objectMapper.writeValueAsString(sbomProjectDTO);
+                // 将sbomapplicationDTO变为json
+                json = objectMapper.writeValueAsString(sbomApplicationDTO);
 
-                // 创建项目类型对应的子文件夹
-                String typeFolderName = projectDO.getType();
+                // 创建应用类型对应的子文件夹
+                String typeFolderName = applicationDO.getType();
                 File typeFolder = new File(sbomFolder, typeFolderName);
                 if (!typeFolder.exists()) {
                     typeFolder.mkdirs();
                 }
 
                 // 将 SBOM JSON 写入临时文件
-                String fileName = "sbom-" + projectDO.getArtifactId() + ".json";
+                String fileName = "sbom-" + applicationDO.getName() + ".json";
                 File sbomFile = new File(typeFolder, fileName);
                 FileWriter writer = new FileWriter(sbomFile);
                 writer.write(json);
