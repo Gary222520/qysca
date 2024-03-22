@@ -16,7 +16,13 @@ instance.interceptors.request.use(
 )
 instance.interceptors.response.use(
   (response) => {
-    if (response.config.url === API.EXPORT_BRIEF || response.config.url === API.EXPORT_DETAIL) return response
+    if (
+      response.config.url === API.EXPORT_BRIEF ||
+      response.config.url === API.EXPORT_DETAIL ||
+      response.config.url === API.EXPORT_SBOM
+    ) {
+      return response
+    }
     return response.data
   },
   (error) => {

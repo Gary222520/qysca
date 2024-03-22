@@ -151,6 +151,7 @@ public class SBOMServiceImpl implements SBOMService {
                 while ((bytesRead = inputStream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, bytesRead);
                 }
+	outputStream.flush();
             }
         } catch (IOException e) {
             throw new PlatformException(500, "SBOM导出失败");
