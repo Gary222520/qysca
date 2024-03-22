@@ -1,28 +1,15 @@
 <template>
   <a-modal v-model:open="data.open" :footer="null">
     <template #title>
-      <div style="font-size: 20px">新增应用</div>
+      <div style="font-size: 20px">应用升级</div>
     </template>
     <div style="display: flex; margin-top: 20px">
       <a-form :model="formState" ref="formRef" name="application" :label-col="{ span: 8 }">
-        <a-form-item label="应用名称" name="name" :rules="[{ required: true, message: '请输入应用名称' }]">
-          <a-input v-model:value="formState.name" :placeholder="formState.artifactId" style="width: 300px" />
-        </a-form-item>
         <a-form-item
           label="版本编号"
-          name="version"
+          name="newVersion"
           :rules="[{ required: true, validator: validateVersion, trigger: 'change' }]">
-          <a-input v-model:value="formState.version" style="width: 300px" />
-        </a-form-item>
-        <a-form-item label="应用类型" name="type" :rules="[{ required: true, message: '请选择应用类型' }]">
-          <a-select v-model:value="formState.type" style="width: 300px">
-            <a-select-option value="agent">agent</a-select-option>
-            <a-select-option value="backend">backend</a-select-option>
-            <a-select-option value="collector">collector</a-select-option>
-            <a-select-option value="filter">filter</a-select-option>
-            <a-select-option value="raw storage">raw storage</a-select-option>
-            <a-select-option value="web UI">web UI</a-select-option>
-          </a-select>
+          <a-input v-model:value="formState.newVersion" style="width: 300px" :placeholder="data.versionPlaceholder" />
         </a-form-item>
         <a-form-item label="应用描述" name="description">
           <a-input v-model:value="formState.description" style="width: 300px" />
@@ -31,15 +18,14 @@
     </div>
     <div class="button">
       <a-button class="cancel-btn" @click="close">取消</a-button>
-      <a-button class="btn" @click="submit(false)">新建</a-button>
-      <a-button class="btn" @click="submit(true)">新建并添加依赖信息</a-button>
+      <a-button class="btn" @click="submit">升级</a-button>
     </div>
   </a-modal>
 </template>
 
 <script setup>
 import { reactive, ref, defineExpose, defineEmits } from 'vue'
-import { AddProject } from '@/api/frontend'
+import { UpgradeProject } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 import { useStore } from 'vuex'
 
@@ -47,21 +33,28 @@ const emit = defineEmits(['success'])
 const store = useStore()
 
 const data = reactive({
-  open: false
+  open: false,
+  versionPlaceholder: ''
 })
 const formRef = ref()
 const formState = reactive({
-  version: '1.0.0',
   name: '',
-  type: 'agent',
+  oldVersion: '',
+  newVersion: '',
   description: ''
 })
-const open = (parentId, id) => {
+const open = (app, parentApp) => {
   data.open = true
-  if (parentId) formState.parentId = parentId
-  else delete formState.parentId
-  if (id) formState.id = id
-  else delete formState.id
+  formState.name = app.name
+  formState.oldVersion = app.version
+  data.versionPlaceholder = `当前版本为${app.version}`
+  if (parentApp) {
+    formState.parentName = parentApp.name
+    formState.parentVersion = parentApp.version
+  } else {
+    delete formState.parentName
+    delete formState.parentVersion
+  }
 }
 const close = () => {
   data.open = false
@@ -79,25 +72,24 @@ const validateVersion = async (_rule, value) => {
     return Promise.resolve()
   }
 }
-const submit = (dep) => {
-  if (formState.name === '') formState.name = formState.artifactId
+const submit = () => {
   formRef.value
     .validate()
     .then(() => {
       const params = {
         ...formState,
-        buName: JSON.parse(sessionStorage.getItem('user')).userBuAppRoles[0].buName
+        creator: JSON.parse(sessionStorage.getItem('user')).user.uid
       }
-      AddProject(params)
+      UpgradeProject(params)
         .then((res) => {
-          // console.log('AddProject', res)
+          // console.log('UpgradeProject', res)
           if (res.code !== 200) {
             message.error(res.message)
             return
           }
-          message.success('新增应用成功')
+          message.success('应用升级成功')
           data.open = false
-          emit('success', dep)
+          emit('success')
           setTimeout(() => {
             clear()
           }, 500)
@@ -115,9 +107,10 @@ defineExpose({ open })
 .button {
   display: flex;
   justify-content: right;
+  margin-right: 10px;
 }
 .btn {
-  min-width: 80px;
+  width: 80px;
   margin-left: 10px;
   border: #6f005f;
   background-color: #6f005f;

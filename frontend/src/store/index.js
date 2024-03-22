@@ -1,87 +1,39 @@
 import { createStore } from 'vuex'
 import { message } from 'ant-design-vue'
-import { GetApplicationList, GetApplicationInfo, GetApplicationVersions } from '@/api/frontend'
+import { Login, GetUserInfo } from '@/api/frontend'
 
 export default createStore({
-  state: {
-    applications: [],
-    selection: {},
-    currentApp: {}
-  },
+  state: {},
   getters: {
-    appList: (state) => {
-      return state.applications
+    user: (state) => {
+      return JSON.parse(sessionStorage.getItem('user')).user
     },
-    selection: (state) => {
-      return state.selection
-    },
-    currentApp: (state) => {
-      return state.currentApp
+    permission: (state) => {
+      return JSON.parse(sessionStorage.getItem('user')).userBuAppRoles
     }
   },
-  mutations: {
-    GET_APP_LIST: (state, applications) => {
-      state.applications = applications
-    },
-    GET_APP_VERSIONS: (state, selection) => {
-      state.selection = selection
-    },
-    SET_CURRENT_APP: (state, currentApp) => {
-      state.currentApp = currentApp
-    }
-  },
+  mutations: {},
   actions: {
-    getAppList: async (context, params) => {
+    login: async (context, data) => {
       return new Promise((resolve, reject) => {
-        GetApplicationList(params)
+        Login(data)
           .then((res) => {
             if (res.code !== 200) {
               message.error(res.message)
               return
             }
-            // console.log('GetApplicationList', res)
-            context.commit('GET_APP_LIST', res.data)
-            resolve(res.data)
-          })
-          .catch((err) => {
-            reject(new Error(err))
-          })
-      })
-    },
-    getAppVersions: async (context, params) => {
-      return new Promise((resolve, reject) => {
-        GetApplicationVersions(params)
-          .then((res) => {
-            if (res.code !== 200) {
-              message.error(res.message)
-              return
-            }
-            // console.log('GetApplicationVersions', res)
-            const selection = {}
-            selection.options = []
-            res.data.forEach((item) => {
-              const option = { label: item, value: item, key: item }
-              selection.options.push(option)
+            // console.log('Login', res)
+            const token = res.data
+            sessionStorage.setItem('token', token)
+            GetUserInfo().then((res) => {
+              if (res.code !== 200) {
+                message.error(res.message)
+                return
+              }
+              // console.log('GetUserInfo', res)
+              sessionStorage.setItem('user', JSON.stringify(res.data))
+              resolve(res.data)
             })
-            selection.current = selection.options[0]?.value
-            context.commit('GET_APP_VERSIONS', selection)
-            resolve(selection)
-          })
-          .catch((err) => {
-            reject(new Error(err))
-          })
-      })
-    },
-    getAppInfo: async (context, params) => {
-      return new Promise((resolve, reject) => {
-        GetApplicationInfo(params)
-          .then((res) => {
-            if (res.code !== 200) {
-              message.error(res.message)
-              return
-            }
-            // console.log('GetApplicationInfo', res)
-            resolve(res)
           })
           .catch((err) => {
             reject(new Error(err))

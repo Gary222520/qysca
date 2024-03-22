@@ -3,9 +3,10 @@
     <div class="title">组件管理</div>
     <a-card class="content_card">
       <div class="operations">
-        <a-radio-group v-model:value="data.opensource" @change="(e) => getComponents()">
-          <a-radio-button :value="false" style="width: 70px">闭源</a-radio-button>
-          <a-radio-button :value="true" style="width: 70px">开源</a-radio-button>
+        <a-radio-group v-model:value="data.type" @change="(e) => getComponents()">
+          <a-radio-button value="opensource" style="width: 70px">开源</a-radio-button>
+          <a-radio-button value="business" style="width: 70px">商用</a-radio-button>
+          <a-radio-button value="internal" style="width: 100px">内部使用</a-radio-button>
         </a-radio-group>
         <div>
           <a-input
@@ -50,29 +51,27 @@
           <a-button type="primary" v-if="data.accurate" @click="changeMode(false)"><RollbackOutlined />返回</a-button>
         </div>
       </div>
-      <a-button v-if="!data.opensource" type="primary" @click="addComponent" style="margin-bottom: 20px">
-        <PlusOutlined />添加组件
-      </a-button>
+      <a-button type="primary" @click="addComponent" style="margin-bottom: 20px"><PlusOutlined />添加组件</a-button>
       <a-table :data-source="data.datasource" :columns="data.columns" bordered :pagination="pagination">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">
             <div class="column_name" @click="showInfo(record)">{{ record.name }}</div>
           </template>
           <template v-if="column.key === 'action'">
-            <div style="display: flex">
+            <div v-if="record.state === 'SUCCESS'" style="display: flex; align-items: center">
               <div class="action_icon">
                 <a-tooltip>
                   <template #title>详情</template>
                   <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showInfo(record)" />
                 </a-tooltip>
               </div>
-              <div class="action_icon" v-if="!data.opensource">
+              <div class="action_icon">
                 <a-tooltip>
                   <template #title>更新</template>
                   <SyncOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="updateComponent(record)" />
                 </a-tooltip>
               </div>
-              <div class="action_icon" v-if="!data.opensource">
+              <div class="action_icon">
                 <a-tooltip>
                   <template #title>删除</template>
                   <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个组件吗？">
@@ -87,22 +86,46 @@
                 </a-tooltip>
               </div>
             </div>
+            <div v-if="record.state === 'RUNNING'" style="display: flex; align-items: center">
+              <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
+              <div style="margin-left: 10px">扫描分析中...</div>
+            </div>
+            <div v-if="record.state === 'FAILED'" style="display: flex; align-items: center">
+              <a-popconfirm v-model:open="record.popconfirm" title="扫描出错，请重试">
+                <template #cancelButton>
+                  <a-button class="cancel_btn" size="small" @click="retry(record)">重试</a-button>
+                </template>
+                <template #okButton></template>
+                <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+                <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
+              </a-popconfirm>
+            </div>
           </template>
         </template>
         <template #emptyText>暂无数据</template>
       </a-table>
       <Drawer ref="drawer"></Drawer>
       <AddModal ref="addModal" @success="getComponents"></AddModal>
+      <UpdateModal ref="updateModal" @success="getComponents"></UpdateModal>
     </a-card>
   </div>
 </template>
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
-import { PlusOutlined, FileTextOutlined, SyncOutlined, DeleteOutlined, RollbackOutlined } from '@ant-design/icons-vue'
-import { GetComponents } from '@/api/frontend'
+import {
+  PlusOutlined,
+  FileTextOutlined,
+  SyncOutlined,
+  DeleteOutlined,
+  RollbackOutlined,
+  LoadingOutlined,
+  ExclamationCircleOutlined
+} from '@ant-design/icons-vue'
+import { GetComponents, DeleteComponent } from '@/api/frontend'
 import Drawer from '@/views/project/components/Drawer.vue'
 import AddModal from './components/AddModal.vue'
+import UpdateModal from './components/UpdateModal.vue'
 import { message } from 'ant-design-vue'
 
 onMounted(() => {
@@ -110,9 +133,10 @@ onMounted(() => {
 })
 const drawer = ref()
 const addModal = ref()
+const updateModal = ref()
 const data = reactive({
   accurate: false,
-  opensource: false,
+  type: 'opensource',
   search: {
     name: '',
     groupId: '',
@@ -124,8 +148,8 @@ const data = reactive({
   columns: [
     { title: '组件名称', dataIndex: 'name', key: 'name' },
     { title: '版本', dataIndex: 'version', key: 'version' },
-    { title: 'groupId', dataIndex: 'groupId', key: 'groupId' },
-    { title: 'artifactId', dataIndex: 'artifactId', key: 'artifactId' },
+    { title: '组织ID', dataIndex: 'groupId', key: 'groupId' },
+    { title: '工件ID', dataIndex: 'artifactId', key: 'artifactId' },
     { title: '语言', dataIndex: 'language', key: 'language', width: 120 },
     { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
   ]
@@ -147,7 +171,7 @@ const getComponents = (number = 1, size = 10) => {
   if (!data.accurate && data.search.language === '' && data.search.name === '') return
   const params = {
     ...data.search,
-    opensource: data.opensource,
+    type: data.type,
     number,
     size
   }
@@ -182,10 +206,37 @@ const addComponent = () => {
   addModal.value.open()
 }
 const showInfo = (record) => {
-  drawer.value.open({ ...record, opensource: data.opensource }, true)
+  drawer.value.open(record, true)
 }
-const updateComponent = (record) => {}
-const deleteComponent = (record) => {}
+const updateComponent = (record) => {
+  updateModal.value.open(record)
+}
+const retry = (record) => {
+  record.popconfirm = false
+  updateComponent(record)
+}
+const deleteComponent = (record) => {
+  DeleteComponent({ groupId: record.groupId, artifactId: record.artifactId, version: record.version })
+    .then((res) => {
+      // console.log('DeleteComponent', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      if (res.data.length === 0) message.success('删除组件成功')
+      else {
+        let text = '无法删除！有以下应用依赖该组件：'
+        res.data.forEach((item) => {
+          text += item.name + '-' + item.version + ';'
+        })
+        message.error(text)
+      }
+      getComponents()
+    })
+    .catch((err) => {
+      message(err)
+    })
+}
 </script>
 
 <style scoped>
