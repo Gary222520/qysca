@@ -1,7 +1,7 @@
 <template>
   <a-modal v-model:open="data.open">
     <template #title>
-      <div style="font-size: 20px">删除项目版本</div>
+      <div style="font-size: 20px">删除组件</div>
     </template>
     <div class="content">
       <WarningOutlined :style="{ fontSize: '30px', color: '#ff4d4f' }" />
@@ -9,14 +9,14 @@
     </div>
     <template #footer>
       <a-button class="cancel_btn" @click="close">取消</a-button>
-      <a-button class="delete_btn" @click="deleteProject()">删除</a-button>
+      <a-button class="delete_btn" @click="deleteComponent()">删除</a-button>
     </template>
   </a-modal>
 </template>
 
 <script setup>
 import { reactive, defineExpose, defineEmits } from 'vue'
-import { DeleteProject } from '@/api/frontend'
+import { DeleteProjectComponent } from '@/api/frontend'
 import { WarningOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useStore } from 'vuex'
@@ -26,13 +26,14 @@ const store = useStore()
 
 const data = reactive({
   open: false,
-  app: {},
+  com: {},
   parentApp: {}
 })
-const open = (app, parentApp) => {
+const open = (com, parentApp) => {
   data.open = true
-  data.app.name = app.name
-  data.app.version = app.version
+  data.com.groupId = com.groupId || ''
+  data.com.artifactId = com.artifactId || com.name
+  data.com.version = com.version
   if (parentApp) {
     data.parentApp.parentName = parentApp.name
     data.parentApp.parentVersion = parentApp.version
@@ -41,25 +42,18 @@ const open = (app, parentApp) => {
 const close = () => {
   data.open = false
 }
-const deleteProject = () => {
-  DeleteProject({
-    ...data.app,
+const deleteComponent = () => {
+  DeleteProjectComponent({
+    ...data.com,
     ...data.parentApp
   })
     .then((res) => {
-      // console.log('DeleteProject', res)
+      // console.log('DeleteProjectComponent', res)
       if (res.code !== 200) {
         message.error(res.message)
         return
       }
-      if (res.data.length === 0) message.success('删除版本成功')
-      else {
-        let text = '无法删除！有以下应用依赖该版本：'
-        res.data.forEach((item) => {
-          text += item.name + '-' + item.version + ';'
-        })
-        message.error(text)
-      }
+      message.success('删除组件成功')
       data.open = false
       emit('success')
     })

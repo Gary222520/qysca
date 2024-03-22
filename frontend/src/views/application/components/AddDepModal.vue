@@ -150,9 +150,7 @@ const data = reactive({
   steps: [{ title: '选择语言' }, { title: '选择工具' }, { title: '上传文件' }]
 })
 const projectInfo = reactive({
-  id: '',
-  groupId: '',
-  artifactId: '',
+  name: '',
   version: '',
   language: '',
   builder: '',
@@ -160,9 +158,7 @@ const projectInfo = reactive({
   filePath: ''
 })
 const open = (app, add) => {
-  projectInfo.id = app.id
-  projectInfo.groupId = app.groupId
-  projectInfo.artifactId = app.artifactId
+  projectInfo.name = app.name
   projectInfo.version = app.version
   data.add = add
   data.open = true

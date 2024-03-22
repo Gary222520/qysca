@@ -47,21 +47,21 @@ export const API = {
   UPGRADE_VERSION: '/qysca/application/upgradeApplication',
 
   // 分页查询组件
-  COMPONENT_LIST: '/qysca/components/findComponentsPage',
+  COMPONENT_LIST: '/qysca/component/findComponentsPage',
   // 模糊查询组件名称
-  COMPONENT_NAME_LIST: '/qysca/components/searchComponentName',
+  COMPONENT_NAME_LIST: '/qysca/component/searchComponentName',
   // 查询组件详细信息
-  COMPONENT_INFO: '/qysca/components/findComponentDetail',
+  COMPONENT_INFO: '/qysca/component/findComponentDetail',
   // 查询组件树形依赖
-  COMPONENT_TREE: '/qysca/components/findComponentDependencyTree',
+  COMPONENT_TREE: '/qysca/component/findComponentDependencyTree',
   // 查询组件平铺依赖
-  COMPONENT_TILED: '/qysca/components/findComponentDependencyTable',
+  COMPONENT_TILED: '/qysca/component/findComponentDependencyTable',
   // 添加闭源组件
-  ADD_COMPONENT: '/qysca/components/saveCloseComponent',
+  ADD_COMPONENT: '/qysca/component/saveCloseComponent',
   // 修改闭源组件
-  UPDATE_COMPONENT: '/qysca/components/updateCloseComponent',
+  UPDATE_COMPONENT: '/qysca/component/updateCloseComponent',
   // 删除闭源组件
-  DELETE_COMPONENT: '/qysca/components/deleteCloseComponent',
+  DELETE_COMPONENT: '/qysca/component/deleteCloseComponent',
 
   // 文件上传
   FILE_UPLOAD: '/qysca/file/chunk',

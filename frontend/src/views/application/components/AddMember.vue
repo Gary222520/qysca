@@ -1,31 +1,31 @@
 <template>
   <a-modal v-model:open="data.open" :footer="null">
     <template #title>
-      <div style="font-size: 20px">应用升级</div>
+      <div style="font-size: 20px">添加应用成员</div>
     </template>
     <div style="display: flex; margin-top: 20px">
       <a-form :model="formState" ref="formRef" name="application" :label-col="{ span: 8 }">
-        <a-form-item
-          label="版本编号"
-          name="newVersion"
-          :rules="[{ required: true, validator: validateVersion, trigger: 'change' }]">
-          <a-input v-model:value="formState.newVersion" style="width: 300px" :placeholder="data.versionPlaceholder" />
+        <a-form-item label="用户编号" name="uid" :rules="[{ required: true, message: '请输入用户编号' }]">
+          <a-input v-model:value="formState.uid" style="width: 300px" />
         </a-form-item>
-        <a-form-item label="应用描述" name="description">
-          <a-input v-model:value="formState.description" style="width: 300px" />
+        <a-form-item label="角色" name="role" :rules="[{ required: true, message: '请选择用户编号' }]">
+          <a-select v-model:value="formState.role" style="width: 300px">
+            <a-select-option v-if="permit('App Leader')" value="App Leader">App Leader</a-select-option>
+            <a-select-option v-if="permit('App Member')" value="App Member">App Member</a-select-option>
+          </a-select>
         </a-form-item>
       </a-form>
     </div>
     <div class="button">
       <a-button class="cancel-btn" @click="close">取消</a-button>
-      <a-button class="btn" @click="submit">升级</a-button>
+      <a-button class="btn" @click="submit">添加</a-button>
     </div>
   </a-modal>
 </template>
 
 <script setup>
-import { reactive, ref, defineExpose, defineEmits } from 'vue'
-import { UpgradeProject } from '@/api/frontend'
+import { reactive, ref, defineExpose, defineEmits, onMounted } from 'vue'
+import { AddAppMember } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 import { useStore } from 'vuex'
 
@@ -34,60 +34,45 @@ const store = useStore()
 
 const data = reactive({
   open: false,
-  versionPlaceholder: ''
+  app: {}
 })
 const formRef = ref()
 const formState = reactive({
-  name: '',
-  oldVersion: '',
-  newVersion: '',
-  description: ''
+  uid: '',
+  role: ''
 })
-const open = (app, parentApp) => {
+const open = (app) => {
   data.open = true
-  formState.name = app.name
-  formState.oldVersion = app.version
-  data.versionPlaceholder = `当前版本为${app.version}`
-  if (parentApp) {
-    formState.parentName = parentApp.name
-    formState.parentVersion = parentApp.version
-  } else {
-    delete formState.parentName
-    delete formState.parentVersion
-  }
+  data.app = app
 }
 const close = () => {
   data.open = false
 }
 const clear = () => {
-  formRef.value.resetFields()
+  formState.uid = ''
 }
-const validateVersion = async (_rule, value) => {
-  const reg = /^[1-9]\d?(\.([1-9]?\d)){2}$/
-  if (value === '') {
-    return Promise.reject(new Error('请输入版本编号'))
-  } else if (!reg.test(value)) {
-    return Promise.reject(new Error('版本编号格式为x.x.x（1-99.0-99.0-99）'))
-  } else {
-    return Promise.resolve()
-  }
+const permit = (role) => {
+  const permission = JSON.parse(sessionStorage.getItem('user')).userBuAppRoles
+  if (role === 'App Member') return permission.some((item) => item.role === 'App Leader')
+  return true
 }
 const submit = () => {
   formRef.value
     .validate()
     .then(() => {
       const params = {
-        ...formState,
-        creator: JSON.parse(sessionStorage.getItem('user')).user.uid
+        name: data.app.name,
+        version: data.app.version,
+        ...formState
       }
-      UpgradeProject(params)
+      AddAppMember(params)
         .then((res) => {
-          // console.log('UpgradeProject', res)
+          // console.log('AddAppMember', res)
           if (res.code !== 200) {
             message.error(res.message)
             return
           }
-          message.success('应用升级成功')
+          message.success('添加应用成员成功')
           data.open = false
           emit('success')
           setTimeout(() => {

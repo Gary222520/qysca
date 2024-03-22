@@ -48,13 +48,37 @@
                     </a-select>
                   </a-input-group>
                 </div>
-                <div style="margin-left: 20px; margin-right: 20px">
-                  <a-tag v-if="app.lock" color="warning">
-                    <template #icon><LockOutlined /></template>已上锁
-                  </a-tag>
-                  <a-tag v-if="app.release" color="success">
-                    <template #icon><EyeOutlined /></template>已发布
-                  </a-tag>
+                <div v-if="app.selection" style="margin: 0 20px; display: flex; align-items: center">
+                  <a-tooltip v-if="app.lock">
+                    <template #title>点击解锁</template>
+                    <a-tag color="warning" @click="lock(app, index)" style="margin-right: 10px; cursor: pointer">
+                      <template #icon><LockOutlined /></template>已锁定
+                    </a-tag>
+                  </a-tooltip>
+                  <a-tooltip v-else>
+                    <template #title>点击锁定</template>
+                    <UnlockOutlined
+                      @click.stop="lock(app, index)"
+                      :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                  </a-tooltip>
+                  <a-tooltip v-if="app.release">
+                    <template #title>取消发布</template>
+                    <a-tag color="success" @click="release(app, index)" style="margin-right: 10px; cursor: pointer">
+                      <template #icon><EyeOutlined /></template>已发布
+                    </a-tag>
+                  </a-tooltip>
+                  <a-tooltip v-else>
+                    <template #title>点击发布</template>
+                    <a-popconfirm v-model:open="app.popconfirm" title="选择发布类型">
+                      <template #cancelButton></template>
+                      <template #okButton>
+                        <a-button class="btn" size="small" @click="release(app, index, 'opensource')">开源</a-button>
+                        <a-button class="btn" size="small" @click="release(app, index, 'business')">商用</a-button>
+                        <a-button class="btn" size="small" @click="release(app, index, 'internal')">内部</a-button>
+                      </template>
+                      <CloudUploadOutlined :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                    </a-popconfirm>
+                  </a-tooltip>
                 </div>
               </div>
               <div style="display: flex; align-items: center">
@@ -80,7 +104,7 @@
                   <template #title>删除该版本</template>
                   <DeleteOutlined
                     @click.stop="deleteVersion(app, index)"
-                    :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                    :style="{ fontSize: '20px', color: '#ff4d4f', marginRight: '10px' }" />
                 </a-tooltip>
               </div>
             </div>
@@ -127,11 +151,22 @@ import {
   ExclamationCircleOutlined,
   DeleteOutlined,
   LockOutlined,
-  EyeOutlined
+  UnlockOutlined,
+  EyeOutlined,
+  CloudUploadOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { reactive, ref, onMounted } from 'vue'
-import { GetProjectList, GetNameList, GetProject, GetSubProject, GetVersionList, GetVersionInfo } from '@/api/frontend'
+import {
+  GetProjectList,
+  GetNameList,
+  GetProject,
+  GetSubProject,
+  GetVersionList,
+  GetVersionInfo,
+  ChangeLock,
+  ChangeRelease
+} from '@/api/frontend'
 import AddAppModal from './components/AddAppModal.vue'
 import AddDepModal from './components/AddDepModal.vue'
 import AddComModal from './components/AddComModal.vue'
@@ -263,18 +298,19 @@ const changeCollapse = async (index) => {
 
 const changeVersion = async (app, version) => {
   if (version === undefined) {
-    await getVersionList(app, app.groupId, app.artifactId)
+    app.selection = {}
+    await getVersionList(app, app.name)
     if (app.versions.length === 0) return
     version = app.versions[0]
   }
-  await GetVersionInfo({ groupId: app.groupId, artifactId: app.artifactId, version })
+  await GetVersionInfo({ name: app.name, version })
     .then((res) => {
       if (res.code !== 200) {
         message.error(res.message)
         return
       }
       // console.log('GetVersionInfo', res)
-      Object.assign(app, res.data)
+      Object.assign(app, res.data.applicationDO)
     })
     .catch((err) => {
       console.error(err)
@@ -282,12 +318,13 @@ const changeVersion = async (app, version) => {
   data.currentApp = app
   await findSubProject(app)
   const index = data.activeKey.indexOf(String(data.currentKey))
+  if (index < 0) return
   // console.log(appCollapse.value, index)
   appCollapse.value[index]?.close()
 }
 
-const getVersionList = async (app, groupId, artifactId) => {
-  await GetVersionList({ groupId, artifactId })
+const getVersionList = async (app, name) => {
+  await GetVersionList({ name })
     .then((res) => {
       if (res.code !== 200) {
         message.error(res.message)
@@ -308,16 +345,16 @@ const getVersionList = async (app, groupId, artifactId) => {
 
 const findSubProject = async (app) => {
   app.selection = {}
-  await getVersionList(app, app.groupId, app.artifactId)
+  await getVersionList(app, app.name)
   app.selection.current = app.version
-  await GetSubProject({ groupId: app.groupId, artifactId: app.artifactId, version: app.version })
+  await GetSubProject({ name: app.name, version: app.version })
     .then((res) => {
       if (res.code !== 200) {
         message.error(res.message)
         return
       }
       // console.log('GetSubProject', res)
-      app.subAppList = res.data.subProject
+      app.subAppList = res.data.subApplication
       app.subComList = res.data.subComponent
     })
     .catch((err) => {
@@ -334,7 +371,7 @@ const refresh = async (index, versionChange = false) => {
 }
 
 const refreshDrawer = async () => {
-  refresh(data.currentKey)
+  await refresh(data.currentKey)
   drawer.value.open(data.currentApp, true)
 }
 
@@ -349,7 +386,7 @@ const addAppComplete = async (dep) => {
 
 const addComponent = (app, index) => {
   data.currentKey = index
-  AddComModal.value.open(app)
+  addComModal.value.open(app)
 }
 
 const upgradeProject = (app, index) => {
@@ -365,6 +402,38 @@ const deleteVersion = (app, index) => {
 const showAppDetail = (app, isProject, index) => {
   data.currentKey = index
   drawer.value.open(app, isProject)
+}
+
+const lock = async (app, index) => {
+  data.currentKey = index
+  ChangeLock({ name: app.name, version: app.version })
+    .then((res) => {
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      // console.log('ChangeLock', res)
+      refresh(index)
+    })
+    .catch((err) => {
+      console.error(err)
+    })
+}
+
+const release = async (app, index, type) => {
+  data.currentKey = index
+  ChangeRelease({ name: app.name, version: app.version, type })
+    .then((res) => {
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      // console.log('ChangeRelease', res)
+      refresh(index)
+    })
+    .catch((err) => {
+      console.error(err)
+    })
 }
 </script>
 
@@ -401,7 +470,7 @@ const showAppDetail = (app, isProject, index) => {
 .action_icon {
   margin-right: 10px;
 }
-.cancel_btn:hover {
+.btn:hover {
   border-color: #6f005f;
   color: #6f005f;
 }

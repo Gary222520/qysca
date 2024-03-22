@@ -76,7 +76,7 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      * @param name 应用名称
      * @return List<String> 模糊查询应用名称
      */
-    @Query(value = "select a.name from plt_application a where a.id = any(select aid from plt_bu_app where bid = :bid) and a.name like %:name%", nativeQuery = true)
+    @Query(value = "select DISTINCT a.name from plt_application a where a.id = any(select aid from plt_bu_app where bid = :bid) and a.name like %:name%", nativeQuery = true)
     List<String> searchApplicationName(String bid, String name);
 
     /**
@@ -92,7 +92,7 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      * @param applicationId 应用Id
      * @return List<ApplicationDO> 子应用列表
      */
-    @Query(value = "select a.* from plt_application a where a.id = ANY (select unnest(child_application) from application where id = :applicationId) order by name desc", nativeQuery = true)
+    @Query(value = "select a.* from plt_application a where a.id = ANY (select unnest(child_application) from plt_application where id = :applicationId) order by name desc", nativeQuery = true)
     List<ApplicationDO> findSubApplication(String applicationId);
 
     /**

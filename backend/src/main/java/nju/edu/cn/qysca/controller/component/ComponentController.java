@@ -40,6 +40,7 @@ public class ComponentController {
     @PreAuthorize("@my.checkAuth('/qysca/component/saveCloseComponent')")
     public ResponseMsg<Boolean> saveCloseComponent(@RequestBody SaveCloseComponentDTO dto) {
         componentService.saveCloseComponent(dto);
+        componentService.saveCloseComponentDependency(dto);
         return new ResponseMsg<>(Boolean.TRUE);
     }
 
@@ -47,6 +48,7 @@ public class ComponentController {
     @PostMapping("/updateCloseComponent")
     @PreAuthorize("@my.checkAuth('/qysca/component/updateCloseComponent')")
     public ResponseMsg<Boolean> updateCloseComponent(@RequestBody UpdateCloseComponentDTO dto) {
+        componentService.changeCloseComponentState(dto);
         componentService.updateCloseComponent(dto);
         return new ResponseMsg<>(Boolean.TRUE);
     }

@@ -9,8 +9,10 @@
           <template v-if="column.key === 'direct'">
             <div>{{ record.direct ? '直接依赖' : '间接依赖' }}</div>
           </template>
-          <template v-if="column.key === 'opensource'">
-            <div>{{ record.opensource ? '开源' : '闭源' }}</div>
+          <template v-if="column.key === 'type'">
+            <div v-if="record.type === 'opensource'">开源</div>
+            <div v-if="record.type === 'business'">商用</div>
+            <div v-if="record.type === 'internal'">内部使用</div>
           </template>
         </template>
         <template #emptyText>暂无数据</template>
@@ -40,7 +42,7 @@ const data = reactive({
     { title: '依赖方式', dataIndex: 'direct', key: 'direct', width: 90 },
     { title: '依赖层级', dataIndex: 'depth', key: 'depth', width: 90 },
     { title: '依赖范围', dataIndex: 'scope', key: 'scope', width: 90 },
-    { title: '是否开源', dataIndex: 'opensource', key: 'opensource', width: 90 }
+    { title: '组件类型', dataIndex: 'type', key: 'type', width: 90 }
   ]
 })
 const pagination = reactive({
@@ -64,7 +66,6 @@ const getComponentTiled = (component, number = 1, size = 10) => {
     groupId: component.groupId,
     artifactId: component.artifactId,
     version: component.version,
-    // opensource: component.opensource,
     number,
     size
   }

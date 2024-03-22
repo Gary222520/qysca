@@ -56,6 +56,8 @@ const props = defineProps({
 const options = {
   // 上传地址
   target: baseURL + API.FILE_UPLOAD,
+  // 请求头
+  headers: { token: sessionStorage.getItem('token') },
   // 单文件上传
   singleFile: true,
   // 是否开启服务器分片校验。默认为 true

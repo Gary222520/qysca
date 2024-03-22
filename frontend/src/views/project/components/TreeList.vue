@@ -13,10 +13,12 @@
       <template #icon>
         <ExperimentOutlined :style="{ fontSize: '16px' }" />
       </template>
-      <template #title="{ title, version, opensource }">
+      <template #title="{ title, version, type }">
         <span style="font-weight: bold; margin-right: 10px">{{ title }}</span>
         <a-tag>{{ version }}</a-tag>
-        <a-tag>{{ opensource ? '开源' : '闭源' }}</a-tag>
+        <a-tag v-if="type === 'opensource'">开源</a-tag>
+        <a-tag v-if="type === 'business'">商用</a-tag>
+        <a-tag v-if="type === 'internal'">内部</a-tag>
       </template>
     </a-tree>
     <Drawer ref="drawer"></Drawer>
@@ -37,9 +39,9 @@ const data = reactive({
   expandedKeys: ['0-0'],
   selectedKeys: []
 })
-const show = (groupId, artifactId, version) => {
+const show = (name, version) => {
   data.visible = true
-  GetProjectTree({ groupId, artifactId, version })
+  GetProjectTree({ name, version })
     .then((res) => {
       // console.log('GetProjectTree', res)
       if (res.code !== 200) {

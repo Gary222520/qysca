@@ -213,7 +213,6 @@ public class SpiderServiceImpl implements SpiderService {
 
         componentDO.setCreator(null);
         componentDO.setState("SUCCESS");
-
         return componentDO;
     }
 

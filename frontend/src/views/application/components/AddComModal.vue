@@ -58,8 +58,7 @@ const formState = reactive({
   version: ''
 })
 const parentInfo = reactive({
-  parentGroupId: '',
-  parentArtifactId: '',
+  parentName: '',
   parentVersion: ''
 })
 const componentInfo = reactive({
@@ -69,9 +68,8 @@ const componentInfo = reactive({
 })
 const open = (parent) => {
   data.open = true
-  parentInfo.parentGroupId = parent.groupId
-  parentInfo.parentArtifactId = parent.artifactId
-  parentInfo.version = parent.version
+  parentInfo.parentName = parent.name
+  parentInfo.parentVersion = parent.version
 }
 const close = () => {
   data.open = false
@@ -95,7 +93,14 @@ const getNameList = async () => {
             exsist = true
           }
         })
-        if (!exsist) pre.push({ groupId: curr.groupId, artifactId: curr.artifactId, name: curr.name, versions: [] })
+        if (!exsist) {
+          pre.push({
+            groupId: curr.groupId,
+            artifactId: curr.artifactId,
+            name: curr.name,
+            versions: [{ label: curr.version, value: curr.version }]
+          })
+        }
         return pre
       }, [])
     })
@@ -104,6 +109,7 @@ const getNameList = async () => {
     })
 }
 const chooseName = (item) => {
+  console.log('chooseName', item)
   formState.name = item.name
   componentInfo.groupId = item.groupId
   componentInfo.artifactId = item.artifactId
