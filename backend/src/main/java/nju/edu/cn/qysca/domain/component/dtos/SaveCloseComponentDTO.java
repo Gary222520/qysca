@@ -20,4 +20,7 @@ public class SaveCloseComponentDTO {
 
     @ApiModelProperty(value = "构建工具", example = "maven")
     private String builder;
+
+    @ApiModelProperty(value = "类型", example = "opensource")
+    private String type;
 }

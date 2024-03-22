@@ -26,8 +26,8 @@ public class ComponentTableDTO {
     @ApiModelProperty(value = "依赖层级", example = "1")
     private Integer depth;
 
-    @ApiModelProperty(value = "是否开源", example = "true")
-    private Boolean opensource;
+    @ApiModelProperty(value = "类型", example = "opensource")
+    private String type;
 
     @ApiModelProperty(value = "语言", example = "java")
     private String language;

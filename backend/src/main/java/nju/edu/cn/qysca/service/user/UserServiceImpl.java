@@ -1,17 +1,39 @@
 package nju.edu.cn.qysca.service.user;
 
 import com.auth0.jwt.interfaces.Claim;
-import nju.edu.cn.qysca.config.JwtConfig;
+import nju.edu.cn.qysca.auth.ContextUtil;
+import nju.edu.cn.qysca.auth.JwtUtil;
+import nju.edu.cn.qysca.dao.application.ApplicationDao;
+import nju.edu.cn.qysca.dao.bu.BuDao;
+import nju.edu.cn.qysca.dao.user.RoleDao;
 import nju.edu.cn.qysca.dao.user.UserDao;
+import nju.edu.cn.qysca.dao.user.UserRoleDao;
+import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.bu.dos.BuDO;
+import nju.edu.cn.qysca.domain.user.dos.RoleDO;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
+import nju.edu.cn.qysca.domain.user.dos.UserRoleDO;
+import nju.edu.cn.qysca.domain.user.dtos.LoginUserDTO;
+import nju.edu.cn.qysca.domain.user.dtos.UserBuAppRoleDTO;
 import nju.edu.cn.qysca.domain.user.dtos.UserDTO;
+import nju.edu.cn.qysca.domain.user.dtos.UserDetailDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.Id;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,19 +41,27 @@ import java.util.Map;
 @Service
 public class UserServiceImpl implements UserService {
 
-    // 用户身份认证管理Service层实现
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
-    private final UserDao userDao;
+    @Autowired
+    private UserDao userDao;
 
-    private final JwtConfig jwtConfig;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserRoleDao userRoleDao;
+
+    @Autowired
+    private BuDao buDao;
 
 
     @Autowired
-    public UserServiceImpl(UserDao userDao, JwtConfig jwtConfig) {
-        this.userDao = userDao;
-        this.jwtConfig = jwtConfig;
-    }
+    private ApplicationDao applicationDao;
 
+    @Autowired
+    private RoleDao roleDao;
 
     /**
      * 用户登录
@@ -39,13 +69,30 @@ public class UserServiceImpl implements UserService {
      * @return token
      */
     @Override
+    @Transactional
     public String login(UserDTO userDTO) {
-        UserDO userDO = userDao.findByUidAndPassword(userDTO.getUid(), userDTO.getPassword());
-        if (null == userDO ) {
-            throw new PlatformException(500, "用户名或密码错误");
+        // authenticationManager负责验证用户信息
+        UsernamePasswordAuthenticationToken authenticationToken=new UsernamePasswordAuthenticationToken(userDTO.getUid(), userDTO.getPassword());
+        Authentication authentication=authenticationManager.authenticate(authenticationToken);
+        if(null == authentication){
+            throw new PlatformException(403, "用户名或密码错误");
         }
-        String token = jwtConfig.createJWT(userDO);
+        userDao.updateLogin(userDTO.getUid(),true); // 更新用户状态为已登录
+        LoginUserDTO loginUserDTO=(LoginUserDTO) authentication.getPrincipal();
+        String token = JwtUtil.createJWT(loginUserDTO.getUserDO().getUid());
         return token;
+    }
+
+    /**
+     * 用户登出
+     */
+    @Override
+    @Transactional
+    public void logout() {
+        Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+        LoginUserDTO loginUserDTO=(LoginUserDTO) authentication.getPrincipal();
+        String uid=loginUserDTO.getUserDO().getUid();
+        userDao.updateLogin(uid,false); // 更新用户状态为未登录
     }
 
     /**
@@ -58,26 +105,91 @@ public class UserServiceImpl implements UserService {
         if (user != null) {
             throw new PlatformException(500, "用户编号已存在");
         }
+        userDO.setLogin(false);
+        userDO.setPassword(passwordEncoder.encode(userDO.getPassword()));
         userDao.save(userDO);
     }
 
     /**
-     * 用户认证
-     * @param token 用户身份
+     * 获取用户信息
      * @return 用户信息
      */
     @Override
-    public UserDO auth(String token) {
-
-        Map<String, Claim> claims = jwtConfig.parseJwt(token);
-        UserDO userDO = UserDO.builder()
-                .uid(claims.get("uid").as(String.class))
-                .name(claims.get("name").as(String.class))
-                .role(claims.get("role").as(String.class))
-                .email(claims.get("email").as(String.class))
-                .phone(claims.get("phone").as(String.class))
-                .build();
-        return userDO;
+    public UserDetailDTO getUserInfo(){
+        UserDetailDTO ans=new UserDetailDTO();
+        UserDO user=ContextUtil.getUserDO();
+        if(null==user){
+            throw new PlatformException(500,"用户信息获取失败");
+        }
+        ans.setUser(user);
+        ans.setUserBuAppRoles(new ArrayList<>());
+        // 获取用户部门应用角色信息
+        List<UserRoleDO> userRoleDOList=userRoleDao.findByUid(user.getUid());
+        if(null==userRoleDOList||userRoleDOList.isEmpty()){
+            return ans;
+        }
+        for (UserRoleDO userRoleDO:userRoleDOList){
+            UserBuAppRoleDTO userBuAppRoleDTO=new UserBuAppRoleDTO();
+            userBuAppRoleDTO.setBuName("-");
+            userBuAppRoleDTO.setAppName("-");
+            userBuAppRoleDTO.setAppVersion("-");
+            userBuAppRoleDTO.setRole("-");
+            if(!userRoleDO.getBid().equals("-")){
+                BuDO buDO=buDao.findByBid(userRoleDO.getBid());
+                userBuAppRoleDTO.setBuName(buDO.getName());
+            }
+            if(!userRoleDO.getAid().equals("-")){
+                ApplicationDO applicationDO=applicationDao.findOneById(userRoleDO.getAid());
+                userBuAppRoleDTO.setAppName(applicationDO.getName());
+                userBuAppRoleDTO.setAppVersion(applicationDO.getVersion());
+            }
+            if(!userRoleDO.getRid().equals("-")){
+                String name=roleDao.findNameById(userRoleDO.getRid());
+                userBuAppRoleDTO.setRole(name);
+            }
+            ans.getUserBuAppRoles().add(userBuAppRoleDTO);
+        }
+        return ans;
     }
+
+    /**
+     * 删除用户
+     * @param uid 用户编号
+     */
+    @Override
+    @Transactional
+    public void deleteUser(String uid) {
+        userDao.deleteUserDOByUid(uid);
+        //删除其在角色表中的所有信息
+        userRoleDao.deleteAllByUid(uid);
+    }
+
+    /**
+     * 更新用户信息
+     * @param userDO 用户信息
+     */
+    @Override
+    @Transactional
+    public void updateUser(UserDO userDO) {
+        UserDO oldUserDO=userDao.findByUid(userDO.getUid());
+        BeanUtils.copyProperties(userDO, oldUserDO);
+        oldUserDO.setLogin(false);
+        oldUserDO.setPassword(passwordEncoder.encode(oldUserDO.getPassword()));
+        userDao.save(oldUserDO);
+    }
+
+    /**
+     * 分页获取所有用户信息
+     *
+     * @param number 页号
+     * @param size   页大小
+     * @return 用户信息分页结果
+     */
+    @Override
+    public Page<UserDO> listAllUser(int number, int size) {
+        Pageable pageable= PageRequest.of(number-1, size, Sort.by(Sort.Order.asc("uid").nullsLast()));
+        return userDao.findAll(pageable);
+    }
+
 
 }
