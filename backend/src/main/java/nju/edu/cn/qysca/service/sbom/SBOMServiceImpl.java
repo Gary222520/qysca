@@ -154,6 +154,9 @@ public class SBOMServiceImpl implements SBOMService {
             }
         } catch (IOException e) {
             throw new PlatformException(500, "SBOM导出失败");
+        } finally {
+            // 删除临时文件
+            sbomFile.delete();
         }
     }
 }
