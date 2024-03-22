@@ -223,7 +223,7 @@ const deleteComponent = (record) => {
         message.error(res.message)
         return
       }
-      if (res.data.length === 0) message.success('删除组件成功')
+      if (!res.data || res.data.length === 0) message.success('删除组件成功')
       else {
         let text = '无法删除！有以下应用依赖该组件：'
         res.data.forEach((item) => {

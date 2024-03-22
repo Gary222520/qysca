@@ -47,12 +47,12 @@ const deleteProject = () => {
     ...data.parentApp
   })
     .then((res) => {
-      // console.log('DeleteProject', res)
+      console.log('DeleteProject', res)
       if (res.code !== 200) {
         message.error(res.message)
         return
       }
-      if (res.data.length === 0) message.success('删除版本成功')
+      if (!res.data || res.data.length === 0) message.success('删除版本成功')
       else {
         let text = '无法删除！有以下应用依赖该版本：'
         res.data.forEach((item) => {
@@ -64,6 +64,7 @@ const deleteProject = () => {
       emit('success')
     })
     .catch((e) => {
+      console.log(e)
       message.error(e)
     })
 }
