@@ -8,7 +8,6 @@ import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
 import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
 import nju.edu.cn.qysca.utils.HashUtil;
 import nju.edu.cn.qysca.utils.spider.UrlConnector;
-import nju.edu.cn.qysca_spider.utils.idGenerator.UUIDGenerator;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
@@ -61,6 +60,7 @@ public class SpiderServiceImpl implements SpiderService {
      * @return ComponentDO
      */
     private ComponentDO crawl(String url) {
+        System.out.println("crawling :" + url);
         // 爬取pom文件中的组件信息
         String pomUrl = findPomUrlInDirectory(url);
         if (pomUrl == null) {
@@ -194,14 +194,13 @@ public class SpiderServiceImpl implements SpiderService {
         }
 
         ComponentDO componentDO = new ComponentDO();
-        componentDO.setId(UUIDGenerator.getUUID());
         componentDO.setGroupId(groupId);
         componentDO.setArtifactId(artifactId);
         componentDO.setVersion(version);
 
         componentDO.setName(model.getName() == null ? "-" : model.getName());
-        componentDO.setLanguage("Java");
-        componentDO.setOpensource(true);
+        componentDO.setLanguage("java");
+        componentDO.setType("opensource");
         componentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
 
         componentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
@@ -212,6 +211,8 @@ public class SpiderServiceImpl implements SpiderService {
         componentDO.setDevelopers(getDevelopers(model));
         componentDO.setLicenses(getLicense(model));
 
+        componentDO.setCreator(null);
+        componentDO.setState("SUCCESS");
         return componentDO;
     }
 

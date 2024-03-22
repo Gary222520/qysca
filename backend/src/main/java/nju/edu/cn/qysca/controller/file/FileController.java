@@ -6,6 +6,7 @@ import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.domain.file.dos.FileChunkDO;
 import nju.edu.cn.qysca.domain.file.dos.FileChunkResultDO;
 import nju.edu.cn.qysca.service.file.FileService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -19,6 +20,7 @@ public class FileController {
     private FileService fileService;
 
     @GetMapping("/chunk")
+    @PreAuthorize("@my.checkAuth('/qysca/file/chunk')")
     public ResponseMsg<FileChunkResultDO> checkChunkExist(FileChunkDO fileChunkDO) {
         FileChunkResultDO fileChunkResultDO;
         try {
@@ -30,6 +32,7 @@ public class FileController {
     }
 
     @PostMapping("/chunk")
+    @PreAuthorize("@my.checkAuth('/qysca/file/chunk')")
     public ResponseMsg<String> uploadChunk(FileChunkDO fileChunkDO) {
         try {
             fileService.uploadChunk(fileChunkDO);
@@ -40,6 +43,7 @@ public class FileController {
     }
 
     @PostMapping("/merge")
+    @PreAuthorize("@my.checkAuth('/qysca/file/merge')")
     public ResponseMsg<String> mergeChunks(@RequestBody FileChunkDO fileChunkDO) {
         try {
             String filePath = fileService.mergeChunks(fileChunkDO.getIdentifier(), fileChunkDO.getFilename(), fileChunkDO.getTotalChunks());

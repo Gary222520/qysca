@@ -41,6 +41,3 @@ tempPomFolder: src/main/resources/static/temp/
 spring.servlet.multipart.maxFileSize: 10MB
 # maxRequestSize 是总数据大小
 spring.servlet.multipart.maxRequestSize: 500MB
-jwt:
-  secret: 6e12d69c-af21-4cc2-b32d-3fa949b50106
-  expire: 86400000
