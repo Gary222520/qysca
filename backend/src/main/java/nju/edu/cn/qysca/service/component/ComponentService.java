@@ -23,14 +23,14 @@ public interface ComponentService {
      * @param saveCloseComponentDTO 保存闭源组件接口信息
      * @return 返回保存闭源组件是否成功
      */
-    Boolean saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO);
+    ComponentDO saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO);
 
     /**
      * 更新闭源组件信息
      * @param updateCloseComponentDTO 更新闭源组件接口信息
      * @return 更新闭源组件是否成功
      */
-    Boolean updateCloseComponent(UpdateCloseComponentDTO updateCloseComponentDTO);
+    void updateCloseComponent(UpdateCloseComponentDTO updateCloseComponentDTO);
 
     /**
      * 删除闭源组件
@@ -74,10 +74,10 @@ public interface ComponentService {
 
     /**
      * 保存闭源组件依赖信息
+     * @param componentDO 组件信息
      * @param saveCloseComponentDTO 保存闭源组件信息
-     * @return Boolean 保存闭源组件信息是否成功
      */
-    Boolean saveCloseComponentDependency(SaveCloseComponentDTO saveCloseComponentDTO);
+    void saveCloseComponentDependency(ComponentDO componentDO, SaveCloseComponentDTO saveCloseComponentDTO);
 
     /**
      * 将闭源组件状态设置为RUNNING

@@ -14,10 +14,12 @@ import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.Invoker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -33,7 +35,11 @@ public class MavenServiceImpl implements MavenService {
     @Autowired
     private SpiderService spiderService;
 
+
     private final String FILE_SEPARATOR = "/";
+
+    @Value("${tempPomFolder}")
+    private String tempFolder;
 
 
     /**
@@ -237,6 +243,31 @@ public class MavenServiceImpl implements MavenService {
         return null;
     }
 
+
+    @Override
+    public DependencyTreeDO spiderDependency(String groupId, String artifactId, String version) {
+        Date now = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String timeStamp = dateFormat.format(now);
+        String tempPomFolder = tempFolder + timeStamp;
+        File file = new File(tempPomFolder);
+        file.mkdirs();
+        String tempPath = tempPomFolder + "/pom.xml";
+        try {
+            String xml = spiderService.getPomStrByGav(groupId, artifactId, version);
+            FileWriter fileWriter = new FileWriter(tempPath);
+            fileWriter.write(xml);
+            fileWriter.flush();
+            fileWriter.close();
+            DependencyTreeDO dependencyTreeDO = dependencyTreeAnalysis(tempPath, "maven", "opensource");
+            deleteFolder(tempPomFolder);
+            return dependencyTreeDO;
+        } catch (Exception e) {
+            deleteFolder(tempPomFolder);
+            throw new PlatformException(500, "识别依赖信息失败");
+        }
+    }
+
     /**
      * 根据POM文件路径返回Model
      *
@@ -366,6 +397,7 @@ public class MavenServiceImpl implements MavenService {
                 .collect(Collectors.toList());
     }
 
+
     /**
      * 解压zip文件
      *
@@ -405,5 +437,28 @@ public class MavenServiceImpl implements MavenService {
         } catch (Exception e) {
             throw new PlatformException(500, "解压zip文件失败");
         }
+    }
+
+    private void deleteFolder(String filePath) {
+        File folder = new File(filePath);
+        if (folder.exists()) {
+            deleteFolderFile(folder);
+        }
+    }
+
+    /**
+     * 递归删除文件夹下的文件
+     *
+     * @param folder 文件夹
+     */
+    private void deleteFolderFile(File folder) {
+        File[] files = folder.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                deleteFolderFile(file);
+            }
+            file.delete();
+        }
+        folder.delete();
     }
 }

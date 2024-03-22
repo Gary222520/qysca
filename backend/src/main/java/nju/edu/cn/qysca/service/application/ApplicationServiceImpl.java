@@ -21,9 +21,11 @@ import nju.edu.cn.qysca.domain.user.dos.UserRoleDO;
 import nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
+import nju.edu.cn.qysca.service.spider.SpiderService;
 import nju.edu.cn.qysca.utils.excel.ExcelUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -33,6 +35,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import javax.servlet.http.HttpServletResponse;
+import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -62,8 +65,14 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Autowired
     private MavenService mavenService;
+
+    @Autowired
+    private SpiderService spiderService;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Value("${tempPomFolder}")
+    private String tempFolder;
 
 
     /**
@@ -113,7 +122,7 @@ public class ApplicationServiceImpl implements ApplicationService {
      * 根据应用信息返回子应用信息
      *
      * @param name    应用名称
-     * @param version    版本
+     * @param version 版本
      * @return SubApplicationDTO 子应用信息
      */
     @Override
@@ -139,7 +148,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationDO applicationDO = null;
         UserDO user = ContextUtil.getUserDO();
         BuDO buDO = buDao.findBuDOByName(saveApplicationDTO.getBuName());
-        if(buDO == null){
+        if (buDO == null) {
             throw new PlatformException(500, "该部门不存在");
         }
         if (StringUtils.isEmpty(saveApplicationDTO.getId())) {
@@ -161,7 +170,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         applicationDao.save(applicationDO);
         //在部门应用表中增加信息
         BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
-        if(buAppDO == null) {
+        if (buAppDO == null) {
             buAppDO = new BuAppDO();
             buAppDO.setBid(buDO.getBid());
             buAppDO.setAid(applicationDO.getId());
@@ -174,8 +183,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     /**
      * 在保存应用依赖时将应用状态改为RUNNING
      *
-     * @param name       应用名称
-     * @param version    版本
+     * @param name    应用名称
+     * @param version 版本
      */
     @Override
     @Transactional
@@ -197,7 +206,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         try {
             //部门名称为groupId 应用名称为ArtifactId
             DependencyTreeDO analyzedDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
-            ApplicationDO temp  = applicationDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+            ApplicationDO temp = applicationDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
             BuAppDO buAppDO = buAppDao.findByAid(temp.getId());
             BuDO buDO = buDao.findByBid(buAppDO.getBid());
             if (!analyzedDependencyTreeDO.getGroupId().equals((buDO.getName())) || !analyzedDependencyTreeDO.getArtifactId().equals(saveApplicationDependencyDTO.getName()) || !analyzedDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
@@ -261,6 +270,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String timeStamp = dateFormat.format(now);
         newApplicationDO.setTime(timeStamp);
+        //升级后的项目为CREATED状态
+        newApplicationDO.setState("CREATED");
+        newApplicationDO.setLock(false);
+        newApplicationDO.setRelease(false);
         applicationDao.save(newApplicationDO);
         BuAppDO newBuAppDO = new BuAppDO();
         BuAppDO oldBuAppDO = buAppDao.findByAid(oldApplicationDO.getId());
@@ -270,7 +283,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         //copy 角色表
         List<UserRoleDO> userRoleDOS = userRoleDao.findAllByAid(oldApplicationDO.getId());
         List<UserRoleDO> newUserRoleDOS = new ArrayList<>();
-        for(UserRoleDO userRoleDO : userRoleDOS) {
+        for (UserRoleDO userRoleDO : userRoleDOS) {
             UserRoleDO newUserRoleDO = new UserRoleDO();
             BeanUtils.copyProperties(userRoleDO, newUserRoleDO);
             newUserRoleDO.setId(null);
@@ -396,8 +409,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     /**
      * 改变应用的锁定状态
      *
-     * @param name 应用名称
-     * @param version    版本号
+     * @param name    应用名称
+     * @param version 版本号
      */
     @Override
     @Transactional
@@ -426,7 +439,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             applicationDO.setRelease(false);
             componentDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
             //如果是上传pom文件的不删除依赖信息
-            if(applicationDO.getChildApplication().length > 0 && applicationDO.getChildComponent().length > 0) {
+            if (applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().length > 0) {
                 dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
                 dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
             }
@@ -447,7 +460,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             componentDao.save(componentDO);
             DependencyTreeDO temp = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
             //根据结构生成依赖信息并保存
-            if(temp == null) {
+            if (temp == null) {
                 DependencyTreeDO dependencyTreeDO = generateDependencyTree(applicationDO, changeReleaseStateDTO.getType());
                 dependencyTreeDao.save(dependencyTreeDO);
                 // 对语言进行判断
@@ -488,7 +501,14 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         for (String id : applicationDO.getChildComponent()) {
             ComponentDO tempComponentDO = componentDao.findComponentDOById(id);
-            ComponentDependencyTreeDO temp = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(tempComponentDO.getGroupId(), tempComponentDO.getArtifactId(), tempComponentDO.getVersion()).getTree();
+            DependencyTreeDO tempDependencyTreeDO = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(tempComponentDO.getGroupId(), tempComponentDO.getArtifactId(), tempComponentDO.getVersion());
+            //采用增量更新的原则 如果没有则需爬取并构造
+            if (tempDependencyTreeDO == null) {
+                // 调用爬虫获得pom文件
+                tempDependencyTreeDO = mavenService.spiderDependency(tempComponentDO.getGroupId(), tempComponentDO.getArtifactId(), tempComponentDO.getVersion());
+
+            }
+            ComponentDependencyTreeDO temp = tempDependencyTreeDO.getTree();
             addDepth(temp);
             componentDependencyTreeDOS.add(temp);
         }
@@ -501,11 +521,11 @@ public class ApplicationServiceImpl implements ApplicationService {
      * 将树节点层数加1
      */
     private void addDepth(ComponentDependencyTreeDO componentDependencyTreeDO) {
-        if(componentDependencyTreeDO == null){
+        if (componentDependencyTreeDO == null) {
             return;
         }
         componentDependencyTreeDO.setDepth(componentDependencyTreeDO.getDepth() + 1);
-        for(ComponentDependencyTreeDO temp : componentDependencyTreeDO.getDependencies()) {
+        for (ComponentDependencyTreeDO temp : componentDependencyTreeDO.getDependencies()) {
             addDepth(temp);
         }
     }
@@ -559,7 +579,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         applicationDetailDTO.setApplicationDO(applicationDO);
         List<UserBriefDTO> userBriefDTOS = userRoleDao.listAppMember(applicationDO.getId());
         applicationDetailDTO.setUsers(userBriefDTOS);
-        return  applicationDetailDTO;
+        return applicationDetailDTO;
     }
 
     /**

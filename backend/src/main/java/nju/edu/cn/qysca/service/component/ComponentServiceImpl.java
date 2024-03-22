@@ -106,40 +106,49 @@ public class ComponentServiceImpl implements ComponentService {
      */
     @Transactional
     @Override
-    public Boolean saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO) {
+    public ComponentDO saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO) {
         UserDO userDO = ContextUtil.getUserDO();
         //接口获得详细信息
         if (saveCloseComponentDTO.getLanguage().equals("java")) {
             ComponentDO componentDO = mavenService.componentAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
+            ComponentDO temp = componentDao.findByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion());
+            if (temp != null) {
+                throw new PlatformException(500, "该组件已存在");
+            }
             //存储闭源组件详细信息
             componentDO.setCreator(userDO.getUid());
             componentDO.setState("RUNNING");
             componentDao.save(componentDO);
+            return componentDO;
         }
-        return true;
+        return null;
     }
 
     @Transactional
     @Override
     @Async("taskExecutor")
-    public Boolean saveCloseComponentDependency(SaveCloseComponentDTO saveCloseComponentDTO) {
-        //存储闭源组件树状依赖信息
-        DependencyTreeDO closeDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
-        dependencyTreeDao.save(closeDependencyTreeDO);
-        //存储闭源组件平铺依赖信息
-        List<DependencyTableDO> dependencyTableDOList = mavenService.dependencyTableAnalysis(closeDependencyTreeDO);
-        dependencyTableDao.saveAll(dependencyTableDOList);
-        ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(closeDependencyTreeDO.getGroupId(), closeDependencyTreeDO.getArtifactId(), closeDependencyTreeDO.getVersion());
-        componentDO.setState("SUCCESS");
-        componentDao.save(componentDO);
-        File file = new File(saveCloseComponentDTO.getFilePath());
-        deleteFolder(file.getParent());
-        return true;
+    public void saveCloseComponentDependency(ComponentDO componentDO, SaveCloseComponentDTO saveCloseComponentDTO) {
+        try {
+            //存储闭源组件树状依赖信息
+            DependencyTreeDO closeDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
+            dependencyTreeDao.save(closeDependencyTreeDO);
+            //存储闭源组件平铺依赖信息
+            List<DependencyTableDO> dependencyTableDOList = mavenService.dependencyTableAnalysis(closeDependencyTreeDO);
+            dependencyTableDao.saveAll(dependencyTableDOList);
+            componentDO.setState("SUCCESS");
+            componentDao.save(componentDO);
+            File file = new File(saveCloseComponentDTO.getFilePath());
+            deleteFolder(file.getParent());
+        } catch (Exception e) {
+            componentDO.setState("FAILED");
+            componentDao.save(componentDO);
+        }
     }
 
 
     /**
      * 将闭源组建状态设置为RUNNING
+     *
      * @param updateCloseComponentDTO 更新闭源组件信息接口
      * @return 设置闭源组件状态是否成功
      */
@@ -150,6 +159,16 @@ public class ComponentServiceImpl implements ComponentService {
         ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
         if (!userDO.getUid().equals(componentDO.getCreator())) {
             throw new PlatformException(500, "您没有权限修改该组件信息");
+        }
+        if (updateCloseComponentDTO.getFilePath() != null) {
+            ApplicationDO applicationDO = applicationDao.findByNameAndVersion(updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
+            if (applicationDO != null && (applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().length > 0)) {
+                throw new PlatformException(500, "该组件已关联应用或组件，无法修改");
+            }
+            ComponentDO temp = mavenService.componentAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
+            if (!temp.getGroupId().equals(updateCloseComponentDTO.getGroupId()) || !temp.getArtifactId().equals(updateCloseComponentDTO.getArtifactId()) || !temp.getVersion().equals(updateCloseComponentDTO.getVersion())) {
+                throw new PlatformException(500, "组件信息与文件信息不匹配");
+            }
         }
         componentDO.setState("RUNNING");
         componentDao.save(componentDO);
@@ -164,32 +183,14 @@ public class ComponentServiceImpl implements ComponentService {
      */
     @Override
     @Transactional
-    @Async("taskExecutor")
-    public Boolean updateCloseComponent(UpdateCloseComponentDTO updateCloseComponentDTO) {
+    public void updateCloseComponent(UpdateCloseComponentDTO updateCloseComponentDTO) {
         //更新基础信息
-        UserDO userDO = ContextUtil.getUserDO();
         ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
-        if (!userDO.getUid().equals(componentDO.getCreator())) {
-            throw new PlatformException(500, "您没有权限修改该组件信息");
-        }
         if (updateCloseComponentDTO.getFilePath() == null) {
             componentDO.setType(updateCloseComponentDTO.getType());
             componentDao.save(componentDO);
         } else {
-            ApplicationDO applicationDO = applicationDao.findByNameAndVersion(updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
-            if (applicationDO != null && (applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().length > 0)) {
-                throw new PlatformException(500, "该组件不可更新依赖信息");
-            }
             if (updateCloseComponentDTO.getLanguage().equals("java")) {
-                ComponentDO temp = mavenService.componentAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
-                if (!temp.getGroupId().equals(updateCloseComponentDTO.getGroupId()) || !temp.getArtifactId().equals(updateCloseComponentDTO.getArtifactId()) || !temp.getVersion().equals(updateCloseComponentDTO.getVersion())) {
-                    throw new PlatformException(500, "更新失败，组件信息不匹配");
-                }
-                componentDao.deleteByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
-                temp.setState("SUCCESS");
-                temp.setLanguage(updateCloseComponentDTO.getLanguage());
-                temp.setCreator(userDO.getUid());
-                componentDao.save(temp);
                 dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
                 DependencyTreeDO closeDependencyTreeDO = mavenService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
                 dependencyTreeDao.save(closeDependencyTreeDO);
@@ -198,10 +199,11 @@ public class ComponentServiceImpl implements ComponentService {
                 List<DependencyTableDO> dependencyTableDOList = mavenService.dependencyTableAnalysis(closeDependencyTreeDO);
                 dependencyTableDao.saveAll(dependencyTableDOList);
             }
+            componentDO.setState("SUCCESS");
+            componentDao.save(componentDO);
             File file = new File(updateCloseComponentDTO.getFilePath());
             deleteFolder(file.getParent());
         }
-        return null;
     }
 
     /**
@@ -242,31 +244,11 @@ public class ComponentServiceImpl implements ComponentService {
                 componentGavDTO.getGroupId(),
                 componentGavDTO.getArtifactId(),
                 componentGavDTO.getVersion());
-        Date now = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        String timeStamp = dateFormat.format(now);
-        String tempPomFolder = tempFolder + timeStamp;
-        File file = new File(tempPomFolder);
-        file.mkdirs();
-        String tempPath = tempPomFolder + "/pom.xml";
         if (dependencyTreeDO == null) {
-            try {
-                // 调用爬虫获得pom文件
-                String xml = spiderService.getPomStrByGav(componentGavDTO.getGroupId(), componentGavDTO.getArtifactId(), componentGavDTO.getVersion());
-                FileWriter fileWriter = new FileWriter(tempPath);
-                fileWriter.write(xml);
-                fileWriter.flush();
-                fileWriter.close();
-                dependencyTreeDO = mavenService.dependencyTreeAnalysis(tempPath, "maven", "opensource");
-                dependencyTreeDao.save(dependencyTreeDO);
-                List<DependencyTableDO> dependencyTableDOList = mavenService.dependencyTableAnalysis(dependencyTreeDO);
-                dependencyTableDao.saveAll(dependencyTableDOList);
-                deleteFolder(tempPomFolder);
-            } catch (Exception e) {
-                deleteFolder(tempPomFolder);
-                throw new PlatformException(500, "查询组件依赖树失败");
-            }
-
+            dependencyTreeDO = mavenService.spiderDependency(componentGavDTO.getGroupId(), componentGavDTO.getArtifactId(), componentGavDTO.getVersion());
+            dependencyTreeDao.save(dependencyTreeDO);
+            List<DependencyTableDO> dependencyTableDOList = mavenService.dependencyTableAnalysis(dependencyTreeDO);
+            dependencyTableDao.saveAll(dependencyTableDOList);
         }
         return dependencyTreeDO;
     }
