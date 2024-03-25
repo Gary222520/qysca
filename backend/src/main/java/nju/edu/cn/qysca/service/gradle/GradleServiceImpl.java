@@ -3,8 +3,10 @@ package nju.edu.cn.qysca.service.gradle;
 import nju.edu.cn.qysca.dao.component.ComponentDao;
 import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.spider.SpiderService;
+import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +37,7 @@ public class GradleServiceImpl implements GradleService{
      * @return root ComponentDependencyTreeDO
      */
     @Override
-    public ComponentDependencyTreeDO projectDependencyAnalysis(String filePath) {
+    public DependencyTreeDO projectDependencyAnalysis(String filePath, String type, String groupId, String artifactId, String version) {
         List<String> lines = new ArrayList<>();
         try{
             File file = new File(filePath);
@@ -58,10 +60,21 @@ public class GradleServiceImpl implements GradleService{
         }
         List<ComponentDependencyTreeDO> trees = gradleDependencyTreeAnalyze(lines);
         ComponentDependencyTreeDO root = new ComponentDependencyTreeDO();
-        // todo root的信息设置（应该存项目的信息）
+
+        root.setGroupId(groupId);
+        root.setArtifactId(artifactId);
+        root.setVersion(version);
+        root.setType(type);
         root.setDependencies(trees);
         root.setDepth(0);
-        return root;
+
+        DependencyTreeDO dependencyTreeDO = new DependencyTreeDO();
+        dependencyTreeDO.setId(UUIDGenerator.getUUID());
+        dependencyTreeDO.setGroupId(groupId);
+        dependencyTreeDO.setArtifactId(artifactId);
+        dependencyTreeDO.setVersion(version);
+        dependencyTreeDO.setTree(root);
+        return dependencyTreeDO;
     }
 
     /**
@@ -84,6 +97,7 @@ public class GradleServiceImpl implements GradleService{
             }
             if (begin >= lines.size())
                 break;
+            //String scope = getScope(lines.get(begin-1));
             int end = begin;
             while (end < lines.size() && !lines.get(end).replaceAll(" ", "").isEmpty()){
                 end++;
@@ -216,6 +230,16 @@ public class GradleServiceImpl implements GradleService{
             tree.setVersion(m3.group(4));
             return;
         }
+    }
+
+    /**
+     * 获取scope
+     * 问题：gradle的解析文件中，对于同一个依赖，可能在不同的scope中都出现了，因此一个依赖不止一个scope，无法对应上。
+     * @param line "developmentOnly - Configuration for development-only dependencies such as Spring Boot's DevTools."
+     * @return scope "developmentOnly"
+     */
+    private String getScope(String line){
+        return line.split(" ")[0];
     }
 
 //    public static void main(String[] args) {

@@ -1,7 +1,7 @@
 package nju.edu.cn.qysca.service.gradle;
 
-import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
 
 public interface GradleService {
-    ComponentDependencyTreeDO projectDependencyAnalysis(String filePath);
+    DependencyTreeDO projectDependencyAnalysis(String filePath, String type, String groupId, String artifactId, String version);
 }
