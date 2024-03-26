@@ -39,7 +39,7 @@ public class GradleServiceImpl implements GradleService{
         List<String> lines = new ArrayList<>();
         try{
             File file = new File(filePath);
-            // 创建命令 ./gradlew dependency > dependency.txt
+            // 创建命令 ./gradlew dependency
             List<String> command = List.of("./gradlew", "dependency");
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.directory(file);
