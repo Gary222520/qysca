@@ -3,7 +3,6 @@ package nju.edu.cn.qysca.service.component;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.*;
-import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -14,16 +13,16 @@ public interface ComponentService {
      * 分页查询组件
      *
      * @param searchComponentDTO 查询条件
-     * @return Page<ComponentDO> 查询结果
+     * @return Page<JavaComponentDO> 查询结果
      */
-    Page<ComponentDO> findComponentsPage(ComponentSearchDTO searchComponentDTO);
+    Page<JavaComponentDO> findComponentsPage(ComponentSearchDTO searchComponentDTO);
 
     /**
      * 保存闭源组件信息
      * @param saveCloseComponentDTO 保存闭源组件接口信息
      * @return 返回保存闭源组件是否成功
      */
-    ComponentDO saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO);
+    JavaComponentDO saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO);
 
     /**
      * 更新闭源组件信息
@@ -44,9 +43,9 @@ public interface ComponentService {
      * 查询组件依赖树信息
      *
      * @param componentGavDTO 组件gav
-     * @return DependencyTreeDO 依赖树信息
+     * @return JavaDependencyTreeDO 依赖树信息
      */
-    DependencyTreeDO findComponentDependencyTree(ComponentGavDTO componentGavDTO);
+    JavaDependencyTreeDO findComponentDependencyTree(ComponentGavDTO componentGavDTO);
 
 
 
@@ -74,10 +73,10 @@ public interface ComponentService {
 
     /**
      * 保存闭源组件依赖信息
-     * @param componentDO 组件信息
+     * @param javaComponentDO 组件信息
      * @param saveCloseComponentDTO 保存闭源组件信息
      */
-    void saveCloseComponentDependency(ComponentDO componentDO, SaveCloseComponentDTO saveCloseComponentDTO);
+    void saveCloseComponentDependency(JavaComponentDO javaComponentDO, SaveCloseComponentDTO saveCloseComponentDTO);
 
     /**
      * 将闭源组件状态设置为RUNNING

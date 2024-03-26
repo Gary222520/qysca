@@ -13,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @ApiModel(description = "组件依赖树DO")
 public class ComponentDependencyTreeDO {
+
     @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
     private String groupId;
 
