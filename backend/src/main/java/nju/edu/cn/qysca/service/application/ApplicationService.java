@@ -1,10 +1,9 @@
 package nju.edu.cn.qysca.service.application;
 
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
-import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.*;
-import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import org.springframework.data.domain.Page;
 
 import javax.servlet.http.HttpServletResponse;
@@ -138,9 +137,9 @@ public interface ApplicationService {
      * 查询应用依赖树信息
      *
      * @param applicationSearchDTO 应用版本搜索信息
-     * @return DependencyTreeDO 应用依赖树信息
+     * @return JavaDependencyTreeDO 应用依赖树信息
      */
-    DependencyTreeDO findApplicationDependencyTree(ApplicationSearchDTO applicationSearchDTO);
+    JavaDependencyTreeDO findApplicationDependencyTree(ApplicationSearchDTO applicationSearchDTO);
 
     /**
      * 分页查询应用依赖平铺信息
@@ -192,7 +191,7 @@ public interface ApplicationService {
      *
      * @param applicationDO 项目信息
      * @param type          组件类型
-     * @return DependencyTreeDO 依赖树信息
+     * @return JavaDependencyTreeDO 依赖树信息
      */
-    DependencyTreeDO generateDependencyTree(ApplicationDO applicationDO, String type);
+    JavaDependencyTreeDO generateDependencyTree(ApplicationDO applicationDO, String type);
 }

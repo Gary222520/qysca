@@ -3,9 +3,9 @@ package nju.edu.cn.qysca.service.application;
 import nju.edu.cn.qysca.auth.ContextUtil;
 import nju.edu.cn.qysca.dao.bu.BuAppDao;
 import nju.edu.cn.qysca.dao.bu.BuDao;
-import nju.edu.cn.qysca.dao.component.ComponentDao;
-import nju.edu.cn.qysca.dao.component.DependencyTableDao;
-import nju.edu.cn.qysca.dao.component.DependencyTreeDao;
+import nju.edu.cn.qysca.dao.component.JavaComponentDao;
+import nju.edu.cn.qysca.dao.component.JavaDependencyTableDao;
+import nju.edu.cn.qysca.dao.component.JavaDependencyTreeDao;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.user.UserRoleDao;
 import nju.edu.cn.qysca.domain.bu.dos.BuAppDO;
@@ -21,9 +21,11 @@ import nju.edu.cn.qysca.domain.user.dos.UserRoleDO;
 import nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.maven.MavenService;
+import nju.edu.cn.qysca.service.spider.SpiderService;
 import nju.edu.cn.qysca.utils.excel.ExcelUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -52,18 +54,24 @@ public class ApplicationServiceImpl implements ApplicationService {
     private UserRoleDao userRoleDao;
 
     @Autowired
-    private DependencyTreeDao dependencyTreeDao;
+    private JavaDependencyTreeDao javaDependencyTreeDao;
 
     @Autowired
-    private DependencyTableDao dependencyTableDao;
+    private JavaDependencyTableDao javaDependencyTableDao;
 
     @Autowired
-    private ComponentDao componentDao;
+    private JavaComponentDao javaComponentDao;
 
     @Autowired
     private MavenService mavenService;
+
+    @Autowired
+    private SpiderService spiderService;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Value("${tempPomFolder}")
+    private String tempFolder;
 
 
     /**
@@ -113,14 +121,21 @@ public class ApplicationServiceImpl implements ApplicationService {
      * 根据应用信息返回子应用信息
      *
      * @param name    应用名称
-     * @param version    版本
+     * @param version 版本
      * @return SubApplicationDTO 子应用信息
      */
     @Override
     public SubApplicationDTO findSubApplication(String name, String version) {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
         List<ApplicationDO> subApplication = applicationDao.findSubApplication(applicationDO.getId());
-        List<ComponentDO> subComponent = componentDao.findSubComponent(applicationDO.getId());
+        //查询子组件
+        Map<String, List<? extends ComponentDO>>  subComponent = new HashMap<>();
+        for(Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()) {
+            if(entry.getKey().equals("java")) {
+                List<JavaComponentDO> javaComponentDOList = javaComponentDao.findByIdIn(entry.getValue());
+                subComponent.put("java", javaComponentDOList);
+            }
+        }
         SubApplicationDTO subApplicationDTO = new SubApplicationDTO();
         subApplicationDTO.setSubApplication(subApplication);
         subApplicationDTO.setSubComponent(subComponent);
@@ -139,7 +154,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationDO applicationDO = null;
         UserDO user = ContextUtil.getUserDO();
         BuDO buDO = buDao.findBuDOByName(saveApplicationDTO.getBuName());
-        if(buDO == null){
+        if (buDO == null) {
             throw new PlatformException(500, "该部门不存在");
         }
         if (StringUtils.isEmpty(saveApplicationDTO.getId())) {
@@ -161,7 +176,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         applicationDao.save(applicationDO);
         //在部门应用表中增加信息
         BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
-        if(buAppDO == null) {
+        if (buAppDO == null) {
             buAppDO = new BuAppDO();
             buAppDO.setBid(buDO.getBid());
             buAppDO.setAid(applicationDO.getId());
@@ -174,8 +189,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     /**
      * 在保存应用依赖时将应用状态改为RUNNING
      *
-     * @param name       应用名称
-     * @param version    版本
+     * @param name    应用名称
+     * @param version 版本
      */
     @Override
     @Transactional
@@ -196,31 +211,31 @@ public class ApplicationServiceImpl implements ApplicationService {
     public void saveApplicationDependency(SaveApplicationDependencyDTO saveApplicationDependencyDTO) {
         try {
             //部门名称为groupId 应用名称为ArtifactId
-            DependencyTreeDO analyzedDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
-            ApplicationDO temp  = applicationDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+            JavaDependencyTreeDO analyzedJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
+            ApplicationDO temp = applicationDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
             BuAppDO buAppDO = buAppDao.findByAid(temp.getId());
             BuDO buDO = buDao.findByBid(buAppDO.getBid());
-            if (!analyzedDependencyTreeDO.getGroupId().equals((buDO.getName())) || !analyzedDependencyTreeDO.getArtifactId().equals(saveApplicationDependencyDTO.getName()) || !analyzedDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
+            if (!analyzedJavaDependencyTreeDO.getGroupId().equals((buDO.getName())) || !analyzedJavaDependencyTreeDO.getArtifactId().equals(saveApplicationDependencyDTO.getName()) || !analyzedJavaDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
                 throw new PlatformException(500, "上传pom文件非本项目");
             }
             // 非叶子节点不能保存pom信息
             ApplicationDO applicationDO = applicationDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
-            if (applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().length > 0) {
+            if (applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().size() > 0) {
                 throw new PlatformException(500, "该应用不能保存pom信息");
             }
-            DependencyTreeDO applicationDependencyTreeDO = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
-            if (applicationDependencyTreeDO == null) {
-                applicationDependencyTreeDO = new DependencyTreeDO();
-                applicationDependencyTreeDO.setGroupId(buDO.getName());
-                applicationDependencyTreeDO.setArtifactId(saveApplicationDependencyDTO.getName());
-                applicationDependencyTreeDO.setVersion(saveApplicationDependencyDTO.getVersion());
+            JavaDependencyTreeDO applicationJavaDependencyTreeDO = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+            if (applicationJavaDependencyTreeDO == null) {
+                applicationJavaDependencyTreeDO = new JavaDependencyTreeDO();
+                applicationJavaDependencyTreeDO.setGroupId(buDO.getName());
+                applicationJavaDependencyTreeDO.setArtifactId(saveApplicationDependencyDTO.getName());
+                applicationJavaDependencyTreeDO.setVersion(saveApplicationDependencyDTO.getVersion());
             }
-            applicationDependencyTreeDO.setTree(analyzedDependencyTreeDO.getTree());
-            dependencyTreeDao.save(applicationDependencyTreeDO);
+            applicationJavaDependencyTreeDO.setTree(analyzedJavaDependencyTreeDO.getTree());
+            javaDependencyTreeDao.save(applicationJavaDependencyTreeDO);
             // 批量更新依赖平铺表
-            dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
-            List<DependencyTableDO> applicationDependencyTableDOS = mavenService.dependencyTableAnalysis(applicationDependencyTreeDO);
-            dependencyTableDao.saveAll(applicationDependencyTableDOS);
+            javaDependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+            List<JavaDependencyTableDO> applicationJavaDependencyTableDOS = mavenService.dependencyTableAnalysis(applicationJavaDependencyTreeDO);
+            javaDependencyTableDao.saveAll(applicationJavaDependencyTableDOS);
             // 更改状态为SUCCESS
             applicationDO.setBuilder(saveApplicationDependencyDTO.getBuilder());
             applicationDO.setScanner(saveApplicationDependencyDTO.getScanner());
@@ -261,6 +276,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String timeStamp = dateFormat.format(now);
         newApplicationDO.setTime(timeStamp);
+        //升级后的项目为CREATED状态
+        newApplicationDO.setState("CREATED");
+        newApplicationDO.setLock(false);
+        newApplicationDO.setRelease(false);
         applicationDao.save(newApplicationDO);
         BuAppDO newBuAppDO = new BuAppDO();
         BuAppDO oldBuAppDO = buAppDao.findByAid(oldApplicationDO.getId());
@@ -270,7 +289,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         //copy 角色表
         List<UserRoleDO> userRoleDOS = userRoleDao.findAllByAid(oldApplicationDO.getId());
         List<UserRoleDO> newUserRoleDOS = new ArrayList<>();
-        for(UserRoleDO userRoleDO : userRoleDOS) {
+        for (UserRoleDO userRoleDO : userRoleDOS) {
             UserRoleDO newUserRoleDO = new UserRoleDO();
             BeanUtils.copyProperties(userRoleDO, newUserRoleDO);
             newUserRoleDO.setId(null);
@@ -314,9 +333,9 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
         BuDO buDO = buDao.findByBid(buAppDO.getBid());
-        componentDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
-        dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
-        dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+        javaComponentDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+        javaDependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+        javaDependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
         //删除BuApp中信息
         buAppDao.delete(buAppDO);
         //删除UserRole中信息
@@ -344,16 +363,16 @@ public class ApplicationServiceImpl implements ApplicationService {
         //叶子节点无法添加组件
         BuAppDO buAppDO = buAppDao.findByAid(parentApplicationDO.getId());
         BuDO buDO = buDao.findByBid(buAppDO.getBid());
-        DependencyTreeDO dependencyTreeDO = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationComponentDTO.getParentName(), applicationComponentDTO.getParentVersion());
-        if (dependencyTreeDO != null) {
+        JavaDependencyTreeDO javaDependencyTreeDO = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationComponentDTO.getParentName(), applicationComponentDTO.getParentVersion());
+        if (javaDependencyTreeDO != null) {
             throw new PlatformException(500, "该应用已添加组件，无法手动添加");
         }
         //不是应用发布成的组件
         if (applicationDO == null) {
-            ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentApplicationDO.getChildComponent()));
-            ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(applicationComponentDTO.getGroupId(), applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
-            temp.add(componentDO.getId());
-            parentApplicationDO.setChildComponent(temp.toArray(new String[temp.size()]));
+            if(applicationComponentDTO.getLanguage().equals("java")) {
+                JavaComponentDO javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(applicationComponentDTO.getGroupId(), applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
+                parentApplicationDO.getChildComponent().get("java").add(javaComponentDO.getId());
+            }
         } else {
             ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentApplicationDO.getChildApplication()));
             temp.add(applicationDO.getId());
@@ -380,10 +399,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         //不是应用发布成的组件
         if (applicationDO == null) {
-            ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentApplicationDO.getChildComponent()));
-            ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(applicationComponentDTO.getGroupId(), applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
-            temp.remove(componentDO.getId());
-            parentApplicationDO.setChildComponent(temp.toArray(new String[temp.size()]));
+            if(applicationComponentDTO.getLanguage().equals("java")) {
+                JavaComponentDO javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(applicationComponentDTO.getGroupId(), applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
+                parentApplicationDO.getChildComponent().get("java").add(javaComponentDO.getId());
+            }
         } else {
             ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentApplicationDO.getChildApplication()));
             temp.remove(applicationDO.getId());
@@ -396,8 +415,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     /**
      * 改变应用的锁定状态
      *
-     * @param name 应用名称
-     * @param version    版本号
+     * @param name    应用名称
+     * @param version 版本号
      */
     @Override
     @Transactional
@@ -424,35 +443,35 @@ public class ApplicationServiceImpl implements ApplicationService {
         BuDO buDO = buDao.findByBid(buAppDO.getBid());
         if (applicationDO.getRelease()) {
             applicationDO.setRelease(false);
-            componentDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+            javaComponentDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
             //如果是上传pom文件的不删除依赖信息
-            if(applicationDO.getChildApplication().length > 0 && applicationDO.getChildComponent().length > 0) {
-                dependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
-                dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+            if (applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().size() > 0) {
+                javaDependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+                javaDependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
             }
         } else {
             //发布应用成组件
             applicationDO.setRelease(true);
-            ComponentDO componentDO = new ComponentDO();
-            BeanUtils.copyProperties(applicationDO, componentDO);
-            componentDO.setGroupId(buDO.getName());
-            componentDO.setArtifactId(applicationDO.getName());
-            componentDO.setType(changeReleaseStateDTO.getType());
+            JavaComponentDO javaComponentDO = new JavaComponentDO();
+            BeanUtils.copyProperties(applicationDO, javaComponentDO);
+            javaComponentDO.setGroupId(buDO.getName());
+            javaComponentDO.setArtifactId(applicationDO.getName());
+            javaComponentDO.setType(changeReleaseStateDTO.getType());
 
             //TODO: 通过应用发布的组件没有license等信息
-            componentDO.setLanguage("java");
-            componentDO.setUrl("-");
-            componentDO.setDownloadUrl("-");
-            componentDO.setPUrl("-");
-            componentDao.save(componentDO);
-            DependencyTreeDO temp = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
+            javaComponentDO.setLanguage("java");
+            javaComponentDO.setUrl("-");
+            javaComponentDO.setDownloadUrl("-");
+            javaComponentDO.setPUrl("-");
+            javaComponentDao.save(javaComponentDO);
+            JavaDependencyTreeDO temp = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationDO.getName(), applicationDO.getVersion());
             //根据结构生成依赖信息并保存
-            if(temp == null) {
-                DependencyTreeDO dependencyTreeDO = generateDependencyTree(applicationDO, changeReleaseStateDTO.getType());
-                dependencyTreeDao.save(dependencyTreeDO);
+            if (temp == null) {
+                JavaDependencyTreeDO javaDependencyTreeDO = generateDependencyTree(applicationDO, changeReleaseStateDTO.getType());
+                javaDependencyTreeDao.save(javaDependencyTreeDO);
                 // 对语言进行判断
-                List<DependencyTableDO> dependencyTableDOS = mavenService.dependencyTableAnalysis(dependencyTreeDO);
-                dependencyTableDao.saveAll(dependencyTableDOS);
+                List<JavaDependencyTableDO> javaDependencyTableDOS = mavenService.dependencyTableAnalysis(javaDependencyTreeDO);
+                javaDependencyTableDao.saveAll(javaDependencyTableDOS);
             }
         }
         applicationDao.save(applicationDO);
@@ -463,17 +482,17 @@ public class ApplicationServiceImpl implements ApplicationService {
      *
      * @param applicationDO 项目信息
      * @param type          组件类型
-     * @return DependencyTreeDO 依赖树信息
+     * @return JavaDependencyTreeDO 依赖树信息
      */
-    public DependencyTreeDO generateDependencyTree(ApplicationDO applicationDO, String type) {
-        DependencyTreeDO dependencyTreeDO = new DependencyTreeDO();
+    public JavaDependencyTreeDO generateDependencyTree(ApplicationDO applicationDO, String type) {
+        JavaDependencyTreeDO javaDependencyTreeDO = new JavaDependencyTreeDO();
         BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
         BuDO buDO = buDao.findByBid(buAppDO.getBid());
-        dependencyTreeDO.setGroupId(buDO.getName());
-        dependencyTreeDO.setArtifactId(applicationDO.getName());
-        dependencyTreeDO.setVersion(applicationDO.getVersion());
+        javaDependencyTreeDO.setGroupId(buDO.getName());
+        javaDependencyTreeDO.setArtifactId(applicationDO.getName());
+        javaDependencyTreeDO.setVersion(applicationDO.getVersion());
         ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        BeanUtils.copyProperties(dependencyTreeDO, componentDependencyTreeDO);
+        BeanUtils.copyProperties(javaDependencyTreeDO, componentDependencyTreeDO);
         componentDependencyTreeDO.setType(type);
         componentDependencyTreeDO.setScope("-");
         componentDependencyTreeDO.setDepth(0);
@@ -482,58 +501,44 @@ public class ApplicationServiceImpl implements ApplicationService {
             ApplicationDO tempApplicationDO = applicationDao.findApplicationDOById(id);
             buAppDO = buAppDao.findByAid(tempApplicationDO.getId());
             buDO = buDao.findByBid(buAppDO.getBid());
-            ComponentDependencyTreeDO temp = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), tempApplicationDO.getName(), tempApplicationDO.getVersion()).getTree();
+            ComponentDependencyTreeDO temp = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), tempApplicationDO.getName(), tempApplicationDO.getVersion()).getTree();
             addDepth(temp);
             componentDependencyTreeDOS.add(temp);
         }
-        for (String id : applicationDO.getChildComponent()) {
-            ComponentDO tempComponentDO = componentDao.findComponentDOById(id);
-            ComponentDependencyTreeDO temp = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(tempComponentDO.getGroupId(), tempComponentDO.getArtifactId(), tempComponentDO.getVersion()).getTree();
-            addDepth(temp);
-            componentDependencyTreeDOS.add(temp);
+        for (Map.Entry<String, List<String>> entry: applicationDO.getChildComponent().entrySet()) {
+            if (entry.getKey().equals("java")) {
+                for (String id : entry.getValue()) {
+                    JavaComponentDO tempJavaComponentDO = javaComponentDao.findComponentDOById(id);
+                    JavaDependencyTreeDO tempJavaDependencyTreeDO = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(tempJavaComponentDO.getGroupId(), tempJavaComponentDO.getArtifactId(), tempJavaComponentDO.getVersion());
+                    //采用增量更新的原则 如果没有则需爬取并构造
+                    if (tempJavaDependencyTreeDO == null) {
+                        // 调用爬虫获得pom文件
+                        tempJavaDependencyTreeDO = mavenService.spiderDependency(tempJavaComponentDO.getGroupId(), tempJavaComponentDO.getArtifactId(), tempJavaComponentDO.getVersion());
+
+                    }
+                    ComponentDependencyTreeDO temp = tempJavaDependencyTreeDO.getTree();
+                    addDepth(temp);
+                    componentDependencyTreeDOS.add(temp);
+                }
+            }
         }
         componentDependencyTreeDO.setDependencies(componentDependencyTreeDOS);
-        dependencyTreeDO.setTree(componentDependencyTreeDO);
-        return dependencyTreeDO;
+        javaDependencyTreeDO.setTree(componentDependencyTreeDO);
+        return javaDependencyTreeDO;
     }
 
     /**
      * 将树节点层数加1
      */
     private void addDepth(ComponentDependencyTreeDO componentDependencyTreeDO) {
-        if(componentDependencyTreeDO == null){
+        if (componentDependencyTreeDO == null) {
             return;
         }
         componentDependencyTreeDO.setDepth(componentDependencyTreeDO.getDepth() + 1);
-        for(ComponentDependencyTreeDO temp : componentDependencyTreeDO.getDependencies()) {
+        for (ComponentDependencyTreeDO temp : componentDependencyTreeDO.getDependencies()) {
             addDepth(temp);
         }
     }
-    /**
-     * 分页获取指定应用的版本信息
-     *
-     * @param name 名称
-     * @param number     页码
-     * @param size       页大小
-     * @return Page<ApplicationDO> 应用版本信息分页结果
-     */
-/*    @Override
-    public Page<ApplicationDO> findApplicationVersionPage(String name, int number, int size) {
-        // 数据库页号从0开始，需减1
-        return applicationDao.findAllByName(name, PageRequest.of(number - 1, size, Sort.by(Sort.Order.desc("version").nullsLast())));
-    }*/
-
-    /**
-     * 检查指定应用扫描中组件的个数
-     *
-     * @param groupId    组织Id
-     * @param artifactId 工件Id
-     * @return Integer 扫描中组件的个数
-     */
-/*    @Override
-    public Integer checkRunningApplication(String groupId, String artifactId) {
-        return applicationDao.countByGroupIdAndArtifactIdAndState(groupId, artifactId, "RUNNING");
-    }*/
 
     /**
      * 获取指定应用的所有版本列表
@@ -559,21 +564,21 @@ public class ApplicationServiceImpl implements ApplicationService {
         applicationDetailDTO.setApplicationDO(applicationDO);
         List<UserBriefDTO> userBriefDTOS = userRoleDao.listAppMember(applicationDO.getId());
         applicationDetailDTO.setUsers(userBriefDTOS);
-        return  applicationDetailDTO;
+        return applicationDetailDTO;
     }
 
     /**
      * 查询应用依赖树信息
      *
      * @param applicationSearchDTO 应用版本搜索信息
-     * @return DependencyTreeDO 应用依赖树信息
+     * @return JavaDependencyTreeDO 应用依赖树信息
      */
     @Override
-    public DependencyTreeDO findApplicationDependencyTree(ApplicationSearchDTO applicationSearchDTO) {
+    public JavaDependencyTreeDO findApplicationDependencyTree(ApplicationSearchDTO applicationSearchDTO) {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
         BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
         BuDO buDO = buDao.findByBid(buAppDO.getBid());
-        return dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
+        return javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
                 buDO.getName(),
                 applicationDO.getName(),
                 applicationSearchDTO.getVersion());
@@ -598,7 +603,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(applicationSearchPageDTO.getName(), applicationSearchPageDTO.getVersion());
         BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
         BuDO buDO = buDao.findByBid(buAppDO.getBid());
-        return dependencyTableDao.findByGroupIdAndArtifactIdAndVersion(
+        return javaDependencyTableDao.findByGroupIdAndArtifactIdAndVersion(
                 buDO.getName(),
                 applicationSearchPageDTO.getName(),
                 applicationSearchPageDTO.getVersion(), pageable);
@@ -615,7 +620,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
         BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
         BuDO buDO = buDao.findByBid(buAppDO.getBid());
-        List<TableExcelBriefDTO> resList = dependencyTableDao.findTableListByGroupIdAndArtifactIdAndVersion(
+        List<TableExcelBriefDTO> resList = javaDependencyTableDao.findTableListByGroupIdAndArtifactIdAndVersion(
                 buDO.getName(), applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
         String fileName = applicationSearchDTO.getName() + "-" + applicationSearchDTO.getVersion() + "-dependencyTable-brief";
         try {
@@ -639,19 +644,19 @@ public class ApplicationServiceImpl implements ApplicationService {
         List<TableExcelDetailDTO> resList = new ArrayList<>();
         String fileName = applicationSearchDTO.getName() + "-" + applicationSearchDTO.getVersion() + "-dependencyTable-detail";
         // 先获取依赖平铺的简明信息
-        List<TableExcelBriefDTO> briefList = dependencyTableDao.findTableListByGroupIdAndArtifactIdAndVersion(
+        List<TableExcelBriefDTO> briefList = javaDependencyTableDao.findTableListByGroupIdAndArtifactIdAndVersion(
                 buDO.getName(), applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
         for (TableExcelBriefDTO brief : briefList) {
             TableExcelDetailDTO detail = new TableExcelDetailDTO();
             BeanUtils.copyProperties(brief, detail);
             ComponentDetailDTO componentDetailDTO = new ComponentDetailDTO();
             // 获取对应依赖组件的详细信息
-            ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(detail.getCGroupId(), detail.getCArtifactId(), detail.getCVersion());
-            if (componentDO == null) {
+            JavaComponentDO javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(detail.getCGroupId(), detail.getCArtifactId(), detail.getCVersion());
+            if (javaComponentDO == null) {
                 resList.add(detail);
                 continue;
             }
-            BeanUtils.copyProperties(componentDO, componentDetailDTO);
+            BeanUtils.copyProperties(javaComponentDO, componentDetailDTO);
             detail.setName(componentDetailDTO.getName());
             detail.setDescription(componentDetailDTO.getDescription());
             detail.setUrl(componentDetailDTO.getUrl());
@@ -698,12 +703,12 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationDO application = applicationDao.findByNameAndVersion(versionCompareReqDTO.getName(), versionCompareReqDTO.getFromVersion());
         BuAppDO buApp = buAppDao.findByAid(application.getId());
         BuDO buDO = buDao.findByBid(buApp.getBid());
-        DependencyTreeDO fromDependencyTree = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
+        JavaDependencyTreeDO fromDependencyTree = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
                 buDO.getName(), versionCompareReqDTO.getName(), versionCompareReqDTO.getFromVersion());
         if (fromDependencyTree == null) {
             throw new PlatformException(500, "被对比的应用版本依赖树信息不存在");
         }
-        DependencyTreeDO toDependencyTree = dependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
+        JavaDependencyTreeDO toDependencyTree = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
                 buDO.getName(), versionCompareReqDTO.getName(), versionCompareReqDTO.getToVersion());
         if (toDependencyTree == null) {
             throw new PlatformException(500, "待对比的应用版本依赖树信息不存在");
