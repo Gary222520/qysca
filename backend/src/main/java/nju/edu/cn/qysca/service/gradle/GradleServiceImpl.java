@@ -41,7 +41,7 @@ public class GradleServiceImpl implements GradleService{
         List<String> lines = new ArrayList<>();
         try{
             File file = new File(filePath);
-            // 创建命令 ./gradlew dependency > dependency.txt
+            // 创建命令 ./gradlew dependency
             List<String> command = List.of("./gradlew", "dependency");
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.directory(file);
@@ -54,7 +54,7 @@ public class GradleServiceImpl implements GradleService{
                 lines.add(line);
             }
             // 等待命令执行完毕
-            int exitCode = process.waitFor();
+            process.waitFor();
         } catch (IOException | InterruptedException e){
             throw new PlatformException(500, "gradle项目解析失败");
         }
@@ -69,7 +69,6 @@ public class GradleServiceImpl implements GradleService{
         root.setDepth(0);
 
         DependencyTreeDO dependencyTreeDO = new DependencyTreeDO();
-        dependencyTreeDO.setId(UUIDGenerator.getUUID());
         dependencyTreeDO.setGroupId(groupId);
         dependencyTreeDO.setArtifactId(artifactId);
         dependencyTreeDO.setVersion(version);

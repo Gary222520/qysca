@@ -71,7 +71,7 @@ public class SpiderServiceImpl implements SpiderService {
         if (document == null)
             return null;
 
-        ComponentDO componentDO = convertToComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
+        ComponentDO componentDO = convertToComponentDO(document.outerHtml(), pomUrl, MAVEN_REPO_BASE_URL);
         if (componentDO == null)
             return null;
 
@@ -96,7 +96,7 @@ public class SpiderServiceImpl implements SpiderService {
      * @param url url地址
      * @return Document org.jsoup.nodes.Document
      */
-    public Document getDocumentByUrl(String url) {
+    private Document getDocumentByUrl(String url) {
         try {
             // 每次爬取url时休眠一定时间，防止被ban
             //Thread.sleep(sleepTime);
@@ -175,12 +175,12 @@ public class SpiderServiceImpl implements SpiderService {
 
     /**
      * 将爬取的pom Document转换为java开源ComponentDO
-     * @param document pom Document
+     * @param pomString pom.xml转成字符串
      * @param pomUrl pom文件url
      * @param MAVEN_REPO_BASE_URL maven仓库根地址
      * @return ComponentDO
      */
-    public ComponentDO convertToComponentDO(Document document, String pomUrl, String MAVEN_REPO_BASE_URL) {
+    private ComponentDO convertToComponentDO(String pomString, String pomUrl, String MAVEN_REPO_BASE_URL) {
         // 从pom url中提取groupId, artifactId, and version
         String[] parts = pomUrl.split("/");
         String version = parts[parts.length - 2];
@@ -188,7 +188,7 @@ public class SpiderServiceImpl implements SpiderService {
         String groupId = String.join(".", Arrays.copyOfRange(parts, MAVEN_REPO_BASE_URL.split("/").length, parts.length - 3));
 
         // 将jsoup document转化为maven-model
-        Model model = convertToModel(document.outerHtml());
+        Model model = convertToModel(pomString);
         if (model == null) {
             return null;
         }
