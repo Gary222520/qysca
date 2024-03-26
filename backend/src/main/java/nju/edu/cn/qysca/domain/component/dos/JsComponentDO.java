@@ -63,4 +63,8 @@ public class JsComponentDO extends ComponentDO{
     @ApiModelProperty(value = "下载地址", example = "https://registry.npmjs.org/fontawesome-free/-/fontawesome-free-2.5.15.tgz")
     @Column(name= "download_url")
     private String downloadUrl;
+
+    @ApiModelProperty(value = "语言", example = "JavaScript")
+    @Column(name = "language", nullable = false)
+    private String language;
 }

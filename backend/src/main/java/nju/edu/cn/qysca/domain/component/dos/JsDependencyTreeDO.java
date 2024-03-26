@@ -43,5 +43,5 @@ public class JsDependencyTreeDO extends DependencyTreeDO {
     @Column(name= "tree", nullable = false)
     @ApiModelProperty(value = "依赖树")
     @Type(type = "jsonb")
-    private List<ComponentDependencyTreeDO> tree;
+    private ComponentDependencyTreeDO tree;
 }

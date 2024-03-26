@@ -1,23 +1,26 @@
 package nju.edu.cn.qysca.service.npm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
-import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
-import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTableDO;
-import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.npm.PackageJsonDTO;
 import nju.edu.cn.qysca.domain.npm.PackageLockDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 @Service
 public class NpmServiceImpl implements NpmService {
 
 
+    private final String FILE_SEPARATOR = "/";
     /**
      * 根据package.json生成ComponentDO
      * @param filePath package.json文件路径
@@ -25,17 +28,7 @@ public class NpmServiceImpl implements NpmService {
      */
     @Override
     public JavaComponentDO componentAnalysis(String filePath) {
-        PackageJsonDTO packageJsonDTO = parsePackageJson(filePath);
-        JavaComponentDO javaComponentDO = new JavaComponentDO();
-        javaComponentDO.setArtifactId(packageJsonDTO.getName());
-        javaComponentDO.setVersion(packageJsonDTO.getVersion());
-        javaComponentDO.setLanguage("javaScript");
-        javaComponentDO.setName(packageJsonDTO.getName());
-        javaComponentDO.setDescription(packageJsonDTO.getDescription());
-        javaComponentDO.setDownloadUrl("-");
-        javaComponentDO.setUrl("-");
-        javaComponentDO.setPUrl("-");
-        return javaComponentDO;
+        return null;
     }
 
     /**
@@ -131,5 +124,41 @@ public class NpmServiceImpl implements NpmService {
         componentDependencyTreeDO.setType("-");
         componentDependencyTreeDO.setScope("-");
         return componentDependencyTreeDO;
+    }
+
+    /**
+     * 提取上传的zip文件夹中的package.json文件和package-lock.json文件
+     * @param filePath zip文件路径
+     * @throws Exception
+     */
+    private void extractFile(String filePath) throws Exception{
+        File file = new File(filePath);
+        try (ZipFile zipFile = new ZipFile(file)) {
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                String name = entry.getName();
+                if (name.contains("package.json") || name.contains("package-lock.json")) {
+                    try (InputStream inputStream = zipFile.getInputStream(entry);
+                         FileOutputStream fos = new FileOutputStream(file.getParent() + FILE_SEPARATOR + "package.json")) {
+                        byte[] buffer = new byte[1024];
+                        int length;
+                        while ((length = inputStream.read(buffer)) > 0) {
+                            fos.write(buffer, 0, length);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new PlatformException(500, "解压zip文件失败");
+        }
+        File packageJson = new File(file.getParent() + FILE_SEPARATOR + "package.json");
+        if (!packageJson.exists()) {
+            throw new PlatformException(500, "zip文件中未找到package.json文件");
+        }
+        File packageLockJson = new File(file.getParent() + FILE_SEPARATOR + "package-lock.json");
+        if (!packageLockJson.exists()) {
+            throw new PlatformException(500, "zip文件中未找到package-lock.json文件");
+        }
     }
 }
