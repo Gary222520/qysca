@@ -1,9 +1,9 @@
 package nju.edu.cn.qysca.service.spider;
 
-import nju.edu.cn.qysca.dao.component.ComponentDao;
-import nju.edu.cn.qysca.dao.component.DependencyTableDao;
-import nju.edu.cn.qysca.dao.component.DependencyTreeDao;
-import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
+import nju.edu.cn.qysca.dao.component.JavaComponentDao;
+import nju.edu.cn.qysca.dao.component.JavaDependencyTableDao;
+import nju.edu.cn.qysca.dao.component.JavaDependencyTreeDao;
+import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
 import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
 import nju.edu.cn.qysca.utils.HashUtil;
@@ -29,13 +29,13 @@ public class SpiderServiceImpl implements SpiderService {
 
 
     @Autowired
-    private ComponentDao componentDao;
+    private JavaComponentDao javaComponentDao;
 
     @Autowired
-    private DependencyTreeDao dependencyTreeDao;
+    private JavaDependencyTreeDao javaDependencyTreeDao;
 
     @Autowired
-    private DependencyTableDao dependencyTableDao;
+    private JavaDependencyTableDao javaDependencyTableDao;
 
     private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
 
@@ -44,9 +44,9 @@ public class SpiderServiceImpl implements SpiderService {
      * @param groupId 组织id
      * @param artifactId 工件id
      * @param version 版本
-     * @return ComponentDO
+     * @return JavaComponentDO
      */
-    public ComponentDO crawlByGav(String groupId, String artifactId, String version) {
+    public JavaComponentDO crawlByGav(String groupId, String artifactId, String version) {
         String url = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
         return crawl(url);
     }
@@ -57,9 +57,9 @@ public class SpiderServiceImpl implements SpiderService {
      * 只会获取该组件自身的组件信息
      *
      * @param url 组件的url，该url目录下应该包含pom文件、（可选）jar包
-     * @return ComponentDO
+     * @return JavaComponentDO
      */
-    private ComponentDO crawl(String url) {
+    private JavaComponentDO crawl(String url) {
         System.out.println("crawling :" + url);
         // 爬取pom文件中的组件信息
         String pomUrl = findPomUrlInDirectory(url);
@@ -71,11 +71,11 @@ public class SpiderServiceImpl implements SpiderService {
         if (document == null)
             return null;
 
-        ComponentDO componentDO = convertToComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
-        if (componentDO == null)
+        JavaComponentDO javaComponentDO = convertToComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
+        if (javaComponentDO == null)
             return null;
 
-        ComponentDO searchResult = componentDao.findByGroupIdAndArtifactIdAndVersion(componentDO.getGroupId(), componentDO.getArtifactId(), componentDO.getVersion());
+        JavaComponentDO searchResult = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(javaComponentDO.getGroupId(), javaComponentDO.getArtifactId(), javaComponentDO.getVersion());
         if (searchResult != null) {
             // 表示该组件的组件信息已被爬取过
             return searchResult;
@@ -84,10 +84,10 @@ public class SpiderServiceImpl implements SpiderService {
         // 爬取jar包，生成hash信息
         String jarUrl = findJarUrlInDirectory(url);
         if (jarUrl != null) {
-            componentDO.setHashes(HashUtil.getHashes(jarUrl));
+            javaComponentDO.setHashes(HashUtil.getHashes(jarUrl));
         }
 
-        return componentDO;
+        return javaComponentDO;
     }
 
     /**
@@ -178,9 +178,9 @@ public class SpiderServiceImpl implements SpiderService {
      * @param document pom Document
      * @param pomUrl pom文件url
      * @param MAVEN_REPO_BASE_URL maven仓库根地址
-     * @return ComponentDO
+     * @return JavaComponentDO
      */
-    public ComponentDO convertToComponentDO(Document document, String pomUrl, String MAVEN_REPO_BASE_URL) {
+    public JavaComponentDO convertToComponentDO(Document document, String pomUrl, String MAVEN_REPO_BASE_URL) {
         // 从pom url中提取groupId, artifactId, and version
         String[] parts = pomUrl.split("/");
         String version = parts[parts.length - 2];
@@ -193,27 +193,27 @@ public class SpiderServiceImpl implements SpiderService {
             return null;
         }
 
-        ComponentDO componentDO = new ComponentDO();
-        componentDO.setGroupId(groupId);
-        componentDO.setArtifactId(artifactId);
-        componentDO.setVersion(version);
+        JavaComponentDO javaComponentDO = new JavaComponentDO();
+        javaComponentDO.setGroupId(groupId);
+        javaComponentDO.setArtifactId(artifactId);
+        javaComponentDO.setVersion(version);
 
-        componentDO.setName(model.getName() == null ? "-" : model.getName());
-        componentDO.setLanguage("java");
-        componentDO.setType("opensource");
-        componentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
+        javaComponentDO.setName(model.getName() == null ? "-" : model.getName());
+        javaComponentDO.setLanguage("java");
+        javaComponentDO.setType("opensource");
+        javaComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
 
-        componentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
-        componentDO.setDownloadUrl(getDownloadUrl(pomUrl));
-        componentDO.setSourceUrl(model.getScm() == null ? "-" : (model.getScm().getUrl() == null ? "-" : model.getScm().getUrl()));
+        javaComponentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
+        javaComponentDO.setDownloadUrl(getDownloadUrl(pomUrl));
+        javaComponentDO.setSourceUrl(model.getScm() == null ? "-" : (model.getScm().getUrl() == null ? "-" : model.getScm().getUrl()));
 
-        componentDO.setPUrl(getMavenPUrl(groupId, artifactId, version, model.getPackaging()));
-        componentDO.setDevelopers(getDevelopers(model));
-        componentDO.setLicenses(getLicense(model));
+        javaComponentDO.setPUrl(getMavenPUrl(groupId, artifactId, version, model.getPackaging()));
+        javaComponentDO.setDevelopers(getDevelopers(model));
+        javaComponentDO.setLicenses(getLicense(model));
 
-        componentDO.setCreator(null);
-        componentDO.setState("SUCCESS");
-        return componentDO;
+        javaComponentDO.setCreator(null);
+        javaComponentDO.setState("SUCCESS");
+        return javaComponentDO;
     }
 
 

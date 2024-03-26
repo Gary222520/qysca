@@ -1,6 +1,6 @@
 package nju.edu.cn.qysca.dao.component;
 
-import nju.edu.cn.qysca.domain.component.dos.DependencyTableDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.TableExcelBriefDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Repository
-public interface DependencyTableDao extends JpaRepository<DependencyTableDO, String> {
+public interface JavaDependencyTableDao extends JpaRepository<JavaDependencyTableDO, String> {
 
     /**
      *  根据GA信息删除平铺信息
@@ -42,7 +42,7 @@ public interface DependencyTableDao extends JpaRepository<DependencyTableDO, Str
      * @param pageable   分页信息
      * @return Page<ComponentTableDTO> 分页查询结果
      */
-    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.type, d.language, d.direct) from DependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
+    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.type, d.language, d.direct) from JavaDependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
     Page<ComponentTableDTO> findByGroupIdAndArtifactIdAndVersion(@Param("groupId")String groupId, @Param("artifactId") String artifactId, @Param("version") String version, Pageable pageable);
 
     /**
@@ -52,7 +52,7 @@ public interface DependencyTableDao extends JpaRepository<DependencyTableDO, Str
      * @param version    版本号
      * @return List<ComponentTableDTO> 所有依赖
      */
-    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.type, d.language, d.direct) from DependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
+    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.type, d.language, d.direct) from JavaDependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
     List<ComponentTableDTO> findDependenciesByGroupIdAndArtifactIdAndVersion(@Param("groupId")String groupId, @Param("artifactId") String artifactId, @Param("version") String version);
 
     /**
@@ -62,7 +62,7 @@ public interface DependencyTableDao extends JpaRepository<DependencyTableDO, Str
      * @param version    版本号
      * @return List<ComponentTableDTO> 组件所有直接依赖
      */
-    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.type, d.language, d.direct) from DependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version and d.direct = true")
+    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.type, d.language, d.direct) from JavaDependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version and d.direct = true")
     List<ComponentTableDTO> findDirectDependenciesByGroupIdAndArtifactIdAndVersion(@Param("groupId")String groupId, @Param("artifactId") String artifactId, @Param("version") String version);
 
     /**
@@ -72,6 +72,6 @@ public interface DependencyTableDao extends JpaRepository<DependencyTableDO, Str
      * @param version 应用版本
      * @return List<TableExcelBriefDTO> 依赖平铺信息
      */
-    @Query("SELECT new nju.edu.cn.qysca.domain.application.dtos.TableExcelBriefDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.language, d.direct, d.depth, d.scope, d.type) FROM DependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
+    @Query("SELECT new nju.edu.cn.qysca.domain.application.dtos.TableExcelBriefDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.language, d.direct, d.depth, d.scope, d.type) FROM JavaDependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
     List<TableExcelBriefDTO>  findTableListByGroupIdAndArtifactIdAndVersion(String groupId, String artifactId, String version);
 }
