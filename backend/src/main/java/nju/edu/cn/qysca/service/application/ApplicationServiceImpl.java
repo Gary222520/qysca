@@ -205,6 +205,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     public void saveApplicationDependency(SaveApplicationDependencyDTO saveApplicationDependencyDTO) {
         try {
             //部门名称为groupId 应用名称为ArtifactId
+            // TODO 多语言
             DependencyTreeDO analyzedDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
             ApplicationDO temp = applicationDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
             BuAppDO buAppDO = buAppDao.findByAid(temp.getId());
@@ -228,6 +229,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             dependencyTreeDao.save(applicationDependencyTreeDO);
             // 批量更新依赖平铺表
             dependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+            // TODO 多语言
             List<DependencyTableDO> applicationDependencyTableDOS = mavenService.dependencyTableAnalysis(applicationDependencyTreeDO);
             dependencyTableDao.saveAll(applicationDependencyTableDOS);
             // 更改状态为SUCCESS

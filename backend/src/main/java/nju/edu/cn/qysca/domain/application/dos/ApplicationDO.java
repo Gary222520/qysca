@@ -86,5 +86,5 @@ public class ApplicationDO {
     @ApiModelProperty(value = "子组件", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
     @Type(type = "string-array")
     private String[] childComponent = {};
-
+    //{"java":["222","#@33"],"go":[],"js":[],"python":[]}
 }
