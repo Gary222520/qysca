@@ -1,17 +1,20 @@
 package nju.edu.cn.qysca.domain.application.dos;
 
 import com.vladmihalcea.hibernate.type.array.StringArrayType;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nju.edu.cn.qysca.domain.bu.dos.BuDO;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
 import javax.persistence.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -19,7 +22,8 @@ import javax.persistence.*;
 @Entity
 @Table(name = "plt_application", uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "version"})})
 @TypeDefs({
-        @TypeDef(name = "string-array", typeClass = StringArrayType.class)
+        @TypeDef(name = "string-array", typeClass = StringArrayType.class),
+        @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
 })
 public class ApplicationDO {
     @Id
@@ -83,8 +87,8 @@ public class ApplicationDO {
     private String[] childApplication = {};
 
     @Column(name = "childComponent")
-    @ApiModelProperty(value = "子组件", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
-    @Type(type = "string-array")
-    private String[] childComponent = {};
+    @ApiModelProperty(value = "子组件", example = "{'java':['123e456-e74-b37-4d7a-9421d59bf3b',]}")
+    @Type(type = "jsonb")
+    private Map<String, List<String>> childComponent = new HashMap<>();
 
 }

@@ -29,12 +29,12 @@ CREATE TABLE plt_application(
 	release Boolean NOT NULL,
     creator VARCHAR(32) NOT NULL,
     child_application text[],
-    child_component text[],
+    child_component JSONB,
 	UNIQUE(name,version)
 );
 
-DROP TABLE IF EXISTS plt_component;
-CREATE TABLE plt_component(
+DROP TABLE IF EXISTS plt_java_component;
+CREATE TABLE plt_java_component(
 	id VARCHAR(32) PRIMARY KEY,
 	group_id VARCHAR(255) NOT NULL,
 	artifact_id VARCHAR(255) NOT NULL,
@@ -96,8 +96,8 @@ CREATE TABLE plt_permission(
 	url VARCHAR(255) UNIQUE NOT NULL
 );
 
-DROP TABLE IF EXISTS plt_dependency_tree;
-CREATE TABLE plt_dependency_tree(
+DROP TABLE IF EXISTS plt_java_dependency_tree;
+CREATE TABLE plt_java_dependency_tree(
 	id VARCHAR(32) PRIMARY KEY,
 	group_id VARCHAR(255) NOT NULL,
 	artifact_id VARCHAR(255) NOT NULL,
@@ -106,8 +106,8 @@ CREATE TABLE plt_dependency_tree(
 	UNIQUE(group_id,artifact_id,version)
 );
 
-DROP TABLE IF EXISTS plt_dependency_table;
-CREATE TABLE plt_dependency_table(
+DROP TABLE IF EXISTS plt_java_dependency_table;
+CREATE TABLE plt_java_dependency_table(
 	id VARCHAR(32) PRIMARY KEY,
 	group_id VARCHAR(255) NOT NULL,
 	artifact_id VARCHAR(255) NOT NULL,
