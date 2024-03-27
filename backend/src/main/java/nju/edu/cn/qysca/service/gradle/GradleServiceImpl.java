@@ -1,24 +1,21 @@
 package nju.edu.cn.qysca.service.gradle;
 
 import nju.edu.cn.qysca.dao.component.JavaComponentDao;
-import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
-import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.spider.SpiderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.*;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 @Service
 public class GradleServiceImpl implements GradleService{
@@ -29,18 +26,64 @@ public class GradleServiceImpl implements GradleService{
     @Autowired
     private JavaComponentDao javaComponentDao;
 
+    private final String FILE_SEPARATOR = "/";
+
     /**
-     *
-     * @param filePath gradle项目地址
-     * @return root ComponentDependencyTreeDO
+     *  解析上传文件的依赖信息，并生成依赖树
+     * @param filePath 上传文件路径
+     * @param builder 构造器， 例如 zip
+     * @param groupId 组织id
+     * @param artifactId 工件id
+     * @param version 版本号
+     * @param type 类型，例如 opensource
+     * @return JavaDependencyTreeDO
      */
     @Override
-    public ComponentDependencyTreeDO projectDependencyAnalysis(String filePath) {
+    public JavaDependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String groupId, String artifactId, String version, String type) {
+        if (builder.equals("zip")){
+            unzip(filePath);
+            filePath = filePath.substring(0,filePath.lastIndexOf("."));
+        } else {
+            throw new PlatformException(500, "gradle解析暂不支持此文件类型");
+        }
+
+        // 调用./gradlew dependencies命令，并获取结果
+        List<String> lines = runGradleCommand(filePath);
+        deleteFolder(filePath);
+
+        // 解析命令结果，并设置root的JavaComponentDependencyTreeDO
+        List<JavaComponentDependencyTreeDO> trees = gradleDependencyTreeAnalyze(lines);
+
+        JavaComponentDependencyTreeDO root = new JavaComponentDependencyTreeDO();
+        root.setGroupId(groupId);
+        root.setArtifactId(artifactId);
+        root.setVersion(version);
+        root.setType(type);
+        root.setDependencies(trees);
+        root.setScope("-");
+        root.setDepth(0);
+
+        // 封装为JavaDependencyTreeDO
+        JavaDependencyTreeDO dependencyTreeDO = new JavaDependencyTreeDO();
+        dependencyTreeDO.setGroupId(groupId);
+        dependencyTreeDO.setArtifactId(artifactId);
+        dependencyTreeDO.setVersion(version);
+        dependencyTreeDO.setTree(root);
+        return dependencyTreeDO;
+    }
+
+    /**
+     * 调用./gradlew dependencies命令，并返回命令结果
+     * @param filePath 文件路径，用以设置工作目录
+     * @return List<String> 命令结果
+     */
+    private static List<String> runGradleCommand(String filePath) {
         List<String> lines = new ArrayList<>();
         try{
             File file = new File(filePath);
-            // 创建命令 ./gradlew dependency > dependency.txt
-            List<String> command = List.of("./gradlew", "dependency");
+            // 创建命令 ./gradlew dependencies
+            // windows系统执行gradlew.bat，linux还是gradlew
+            List<String> command = List.of(file.getAbsolutePath()+"\\gradlew.bat", "dependencies");
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.directory(file);
             // 启动命令
@@ -52,29 +95,23 @@ public class GradleServiceImpl implements GradleService{
                 lines.add(line);
             }
             // 等待命令执行完毕
-            int exitCode = process.waitFor();
+            process.waitFor();
         } catch (IOException | InterruptedException e){
             throw new PlatformException(500, "gradle项目解析失败");
         }
-        List<ComponentDependencyTreeDO> trees = gradleDependencyTreeAnalyze(lines);
-        ComponentDependencyTreeDO root = new ComponentDependencyTreeDO();
-        // todo root的信息设置（应该存项目的信息）
-        root.setDependencies(trees);
-        root.setDepth(0);
-        return root;
+        return lines;
     }
 
     /**
      * 解析gradle依赖树文件
      * @param lines 带解析内容 整个文件 List<String>
      * @return List<ComponentDependencyTreeDO>
-     * @throws PlatformException PlatformException(500, "存在未识别的组件")
      */
-    public List<ComponentDependencyTreeDO> gradleDependencyTreeAnalyze(List<String> lines) throws PlatformException{
+    public List<JavaComponentDependencyTreeDO> gradleDependencyTreeAnalyze(List<String> lines){
 
         // 用以记录直接依赖
         Set<String> visited = new HashSet<>();
-        List<ComponentDependencyTreeDO> trees = new ArrayList<>();
+        List<JavaComponentDependencyTreeDO> trees = new ArrayList<>();
         int begin = 0;
         // 扫描文件，找出依赖树形式的文本块进行解析
         while(begin < lines.size()){
@@ -84,6 +121,7 @@ public class GradleServiceImpl implements GradleService{
             }
             if (begin >= lines.size())
                 break;
+            //String scope = getScope(lines.get(begin-1));
             int end = begin;
             while (end < lines.size() && !lines.get(end).replaceAll(" ", "").isEmpty()){
                 end++;
@@ -99,10 +137,9 @@ public class GradleServiceImpl implements GradleService{
      * @param lines 文本行
      * @param depth 深度
      * @return List<ComponentDependencyTreeDO>
-     * @throws PlatformException PlatformException(500, "存在未识别的组件")
      */
-    private List<ComponentDependencyTreeDO> parseTree(Set<String> visited, List<String> lines, int depth) throws PlatformException{
-        List<ComponentDependencyTreeDO> trees = new ArrayList<>();
+    private List<JavaComponentDependencyTreeDO> parseTree(Set<String> visited, List<String> lines, int depth){
+        List<JavaComponentDependencyTreeDO> trees = new ArrayList<>();
         int begin = 0;
         while (begin < lines.size()){
             // 通过begin和end两个指针，从依赖树文本块中分割出单个组件依赖树
@@ -111,9 +148,10 @@ public class GradleServiceImpl implements GradleService{
                 end++;
             }
             // 提取组件信息
-            ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
+            JavaComponentDependencyTreeDO componentDependencyTreeDO = new JavaComponentDependencyTreeDO();
             componentDependencyTreeDO.setDepth(depth);
-            setTreeInformation(componentDependencyTreeDO, lines.get(begin).substring(5));
+            componentDependencyTreeDO.setScope("-");
+            extractGAVFromLine(componentDependencyTreeDO, lines.get(begin).substring(5));
             String groupId = componentDependencyTreeDO.getGroupId();
             String artifactId = componentDependencyTreeDO.getArtifactId();
             String version = componentDependencyTreeDO.getVersion();
@@ -153,27 +191,12 @@ public class GradleServiceImpl implements GradleService{
     }
 
     /**
-     * 从文件中读取每一行
-     * @param filePath 文件地址
-     * @return lines List<String>
-     */
-    private static List<String> readLinesFromFile(String filePath) {
-        List<String> lines = null;
-        try {
-            lines = Files.readAllLines(Paths.get(filePath));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return lines;
-    }
-
-    /**
      * 使用正则表达式从每行信息中提取出组件的gav，并存入tree中
      *
      * @param tree ComponentDependencyTreeDO
      * @param line 一行文本
      */
-    private void setTreeInformation(ComponentDependencyTreeDO tree, String line){
+    private void extractGAVFromLine(JavaComponentDependencyTreeDO tree, String line){
 
         // "org.springframework:spring-core (n)"
         if (line.contains("(n)")){
@@ -216,6 +239,81 @@ public class GradleServiceImpl implements GradleService{
             tree.setVersion(m3.group(4));
             return;
         }
+    }
+
+    /**
+     * 获取scope
+     * 问题：gradle的解析文件中，对于同一个依赖，可能在不同的scope中都出现了，因此一个依赖不止一个scope，无法对应上。
+     * @param line "developmentOnly - Configuration for development-only dependencies such as Spring Boot's DevTools."
+     * @return scope "developmentOnly"
+     */
+    private String getScope(String line){
+        return line.split(" ")[0];
+    }
+
+
+    /**
+     * 解压zip文件
+     *
+     * @param filePath zip文件路径
+     */
+    private void unzip(String filePath) {
+        try {
+            File file = new File(filePath);
+            File dir = new File(file.getParent());
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            ZipFile zipFile = new ZipFile(filePath, Charset.forName("GBK"));
+            Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
+            while (zipEntries.hasMoreElements()) {
+                ZipEntry zipEntry = zipEntries.nextElement();
+                String entryName = zipEntry.getName();
+                String fileDestPath = dir + FILE_SEPARATOR + entryName;
+                if (!zipEntry.isDirectory()) {
+                    File destFile = new File(fileDestPath);
+                    destFile.getParentFile().mkdirs();
+                    InputStream inputStream = zipFile.getInputStream(zipEntry);
+                    FileOutputStream outputStream = new FileOutputStream(destFile);
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) > 0) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+                    outputStream.close();
+                    inputStream.close();
+                } else {
+                    File dirToCreate = new File(fileDestPath);
+                    dirToCreate.mkdirs();
+                }
+            }
+            zipFile.close();
+        } catch (Exception e) {
+            throw new PlatformException(500, "解压zip文件失败");
+        }
+    }
+
+    private void deleteFolder(String filePath) {
+        File folder = new File(filePath);
+        if (folder.exists()) {
+            deleteFolderFile(folder);
+        }
+    }
+
+    /**
+     * 递归删除文件夹下的文件
+     *
+     * @param folder 文件夹
+     */
+    private void deleteFolderFile(File folder) {
+        File[] files = folder.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                deleteFolderFile(file);
+            }
+            file.delete();
+        }
+        folder.delete();
     }
 
 //    public static void main(String[] args) {

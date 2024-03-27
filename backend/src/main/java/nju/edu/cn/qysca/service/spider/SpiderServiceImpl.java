@@ -3,8 +3,8 @@ package nju.edu.cn.qysca.service.spider;
 import nju.edu.cn.qysca.dao.component.JavaComponentDao;
 import nju.edu.cn.qysca.dao.component.JavaDependencyTableDao;
 import nju.edu.cn.qysca.dao.component.JavaDependencyTreeDao;
-import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
 import nju.edu.cn.qysca.utils.HashUtil;
 import nju.edu.cn.qysca.utils.spider.UrlConnector;
@@ -28,29 +28,48 @@ import java.util.stream.Collectors;
 public class SpiderServiceImpl implements SpiderService {
 
 
+    private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
     @Autowired
     private JavaComponentDao javaComponentDao;
-
     @Autowired
     private JavaDependencyTreeDao javaDependencyTreeDao;
-
     @Autowired
     private JavaDependencyTableDao javaDependencyTableDao;
 
-    private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
-
     /**
      * 通过gav爬取组件
-     * @param groupId 组织id
+     *
+     * @param groupId    组织id
      * @param artifactId 工件id
-     * @param version 版本
+     * @param version    版本
      * @return JavaComponentDO
      */
+    @Override
     public JavaComponentDO crawlByGav(String groupId, String artifactId, String version) {
         String url = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
         return crawl(url);
     }
 
+    /**
+     * 通过gav获取其pom文件内容
+     *
+     * @param groupId    组织id
+     * @param artifactId 工件id
+     * @param version    版本号
+     * @return pom string
+     */
+    @Override
+    public String getPomStrByGav(String groupId, String artifactId, String version) {
+        String downloadUrl = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
+        String pomUrl = findPomUrlInDirectory(downloadUrl);
+        if (pomUrl == null) {
+            return null;
+        }
+        Document document = UrlConnector.getDocumentByUrl(pomUrl);
+        if (document == null)
+            return null;
+        return document.outerHtml();
+    }
 
     /**
      * 爬取url下的组件，不爬取其依赖
@@ -71,7 +90,7 @@ public class SpiderServiceImpl implements SpiderService {
         if (document == null)
             return null;
 
-        JavaComponentDO javaComponentDO = convertToComponentDO(document, pomUrl, MAVEN_REPO_BASE_URL);
+        JavaComponentDO javaComponentDO = convertToComponentDO(document.outerHtml(), pomUrl);
         if (javaComponentDO == null)
             return null;
 
@@ -96,7 +115,7 @@ public class SpiderServiceImpl implements SpiderService {
      * @param url url地址
      * @return Document org.jsoup.nodes.Document
      */
-    public Document getDocumentByUrl(String url) {
+    private Document getDocumentByUrl(String url) {
         try {
             // 每次爬取url时休眠一定时间，防止被ban
             //Thread.sleep(sleepTime);
@@ -174,13 +193,13 @@ public class SpiderServiceImpl implements SpiderService {
     }
 
     /**
-     * 将爬取的pom Document转换为java开源ComponentDO
-     * @param document pom Document
-     * @param pomUrl pom文件url
-     * @param MAVEN_REPO_BASE_URL maven仓库根地址
+     * 将爬取的pom字符串转换为JavaComponentDO
+     *
+     * @param pomString
+     * @param pomUrl    pom文件url
      * @return JavaComponentDO
      */
-    public JavaComponentDO convertToComponentDO(Document document, String pomUrl, String MAVEN_REPO_BASE_URL) {
+    private JavaComponentDO convertToComponentDO(String pomString, String pomUrl) {
         // 从pom url中提取groupId, artifactId, and version
         String[] parts = pomUrl.split("/");
         String version = parts[parts.length - 2];
@@ -188,7 +207,7 @@ public class SpiderServiceImpl implements SpiderService {
         String groupId = String.join(".", Arrays.copyOfRange(parts, MAVEN_REPO_BASE_URL.split("/").length, parts.length - 3));
 
         // 将jsoup document转化为maven-model
-        Model model = convertToModel(document.outerHtml());
+        Model model = convertToModel(pomString);
         if (model == null) {
             return null;
         }
@@ -216,23 +235,6 @@ public class SpiderServiceImpl implements SpiderService {
         return javaComponentDO;
     }
 
-
-    /**
-     * 生成PUrl（仅对maven组件）
-     * 例如：pkg:maven/commons-codec/commons-codec@1.15?type=jar
-     * @param groupId 组织Id
-     * @param artifactId 工件id
-     * @param version 版本号
-     * @param packaging 打包方式，如pom、jar
-     * @return PUrl
-     */
-    private static String getMavenPUrl(String groupId, String artifactId, String version, String packaging){
-        String pUrl = "pkg:maven/" + groupId + "/" + artifactId + "@" + version;
-        if (packaging.equals("jar"))
-            pUrl += "?type=jar";
-        return pUrl;
-    }
-
     /**
      * 从pomUrl中得到下载地址，即去掉pomUrl中最后一段字符串
      * 例如：https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.8.1/即为下载地址
@@ -242,6 +244,23 @@ public class SpiderServiceImpl implements SpiderService {
      */
     private String getDownloadUrl(String pomUrl) {
         return pomUrl.substring(0, pomUrl.lastIndexOf('/') + 1);
+    }
+
+    /**
+     * 生成PUrl（仅对maven组件）
+     * 例如：pkg:maven/commons-codec/commons-codec@1.15?type=jar
+     *
+     * @param groupId    组织Id
+     * @param artifactId 工件id
+     * @param version    版本号
+     * @param packaging  打包方式，如pom、jar
+     * @return PUrl
+     */
+    private String getMavenPUrl(String groupId, String artifactId, String version, String packaging) {
+        String pUrl = "pkg:maven/" + groupId + "/" + artifactId + "@" + version;
+        if (packaging.equals("jar"))
+            pUrl += "?type=jar";
+        return pUrl;
     }
 
     /**
@@ -297,24 +316,5 @@ public class SpiderServiceImpl implements SpiderService {
             e.printStackTrace();
             return null;
         }
-    }
-
-    /**
-     * 通过gav获取其pom文件内容
-     * @param groupId 组织id
-     * @param artifactId 工件id
-     * @param version 版本号
-     * @return pom string
-     */
-    public String getPomStrByGav(String groupId, String artifactId, String version) {
-        String downloadUrl = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
-        String pomUrl = findPomUrlInDirectory(downloadUrl);
-        if (pomUrl == null) {
-            return null;
-        }
-        Document document = UrlConnector.getDocumentByUrl(pomUrl);
-        if (document == null)
-            return null;
-        return document.outerHtml();
     }
 }
