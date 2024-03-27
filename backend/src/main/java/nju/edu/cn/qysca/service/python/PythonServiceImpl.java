@@ -29,6 +29,34 @@ public class PythonServiceImpl implements PythonService {
     private PythonSpiderService pythonSpiderService;
 
     /**
+     * 构造python组件
+     * @param name 组件名称
+     * @param version 版本号
+     * @param type 组件类型
+     * @return PythonComponentDO
+     */
+    @Override
+    public PythonComponentDO componentAnalysis(String name, String version, String type) {
+        PythonComponentDO pythonComponentDO = new PythonComponentDO();
+        pythonComponentDO.setName(name);
+        pythonComponentDO.setVersion(version);
+        pythonComponentDO.setType(type);
+        pythonComponentDO.setLanguage("python");
+        pythonComponentDO.setDescription("-");
+        pythonComponentDO.setUrl("-");
+        pythonComponentDO.setDownloadUrl("-");
+        pythonComponentDO.setSourceUrl("-");
+        pythonComponentDO.setPUrl("-");
+        pythonComponentDO.setAuthor("-");
+        pythonComponentDO.setAuthorEmail("-");
+        pythonComponentDO.setLicenses(new ArrayList<>());
+        //creator和state由调用此方法者填充
+        pythonComponentDO.setCreator(null);
+        pythonComponentDO.setState(null);
+        return pythonComponentDO;
+    }
+
+    /**
      * 分析上传项目依赖，获得组件依赖树
      *
      * @param filePath 上传文件路径
@@ -44,6 +72,8 @@ public class PythonServiceImpl implements PythonService {
         if (builder.equals("zip")) {
             unzip(filePath);
             filePath = filePath.substring(0, filePath.lastIndexOf("."));
+        } else {
+            throw new PlatformException(500, "python解析暂不支持此文件类型");
         }
 
         File project = new File(filePath);
