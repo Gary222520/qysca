@@ -2,7 +2,7 @@ package nju.edu.cn.qysca.service.gradle;
 
 import nju.edu.cn.qysca.dao.component.JavaComponentDao;
 import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
-import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaComponentDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.spider.SpiderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,14 +32,14 @@ public class GradleServiceImpl implements GradleService{
     /**
      *
      * @param filePath gradle项目地址
-     * @return root ComponentDependencyTreeDO
+     * @return root JavaComponentDependencyTreeDO
      */
     @Override
-    public ComponentDependencyTreeDO projectDependencyAnalysis(String filePath) {
+    public JavaComponentDependencyTreeDO projectDependencyAnalysis(String filePath) {
         List<String> lines = new ArrayList<>();
         try{
             File file = new File(filePath);
-            // 创建命令 ./gradlew dependency > dependency.txt
+            // 创建命令 ./gradlew dependency
             List<String> command = List.of("./gradlew", "dependency");
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.directory(file);
@@ -56,8 +56,8 @@ public class GradleServiceImpl implements GradleService{
         } catch (IOException | InterruptedException e){
             throw new PlatformException(500, "gradle项目解析失败");
         }
-        List<ComponentDependencyTreeDO> trees = gradleDependencyTreeAnalyze(lines);
-        ComponentDependencyTreeDO root = new ComponentDependencyTreeDO();
+        List<JavaComponentDependencyTreeDO> trees = gradleDependencyTreeAnalyze(lines);
+        JavaComponentDependencyTreeDO root = new JavaComponentDependencyTreeDO();
         // todo root的信息设置（应该存项目的信息）
         root.setDependencies(trees);
         root.setDepth(0);
@@ -67,14 +67,14 @@ public class GradleServiceImpl implements GradleService{
     /**
      * 解析gradle依赖树文件
      * @param lines 带解析内容 整个文件 List<String>
-     * @return List<ComponentDependencyTreeDO>
+     * @return List<JavaComponentDependencyTreeDO>
      * @throws PlatformException PlatformException(500, "存在未识别的组件")
      */
-    public List<ComponentDependencyTreeDO> gradleDependencyTreeAnalyze(List<String> lines) throws PlatformException{
+    public List<JavaComponentDependencyTreeDO> gradleDependencyTreeAnalyze(List<String> lines) throws PlatformException{
 
         // 用以记录直接依赖
         Set<String> visited = new HashSet<>();
-        List<ComponentDependencyTreeDO> trees = new ArrayList<>();
+        List<JavaComponentDependencyTreeDO> trees = new ArrayList<>();
         int begin = 0;
         // 扫描文件，找出依赖树形式的文本块进行解析
         while(begin < lines.size()){
@@ -98,11 +98,11 @@ public class GradleServiceImpl implements GradleService{
      * 对一段依赖树进行递归解析
      * @param lines 文本行
      * @param depth 深度
-     * @return List<ComponentDependencyTreeDO>
+     * @return List<JavaComponentDependencyTreeDO>
      * @throws PlatformException PlatformException(500, "存在未识别的组件")
      */
-    private List<ComponentDependencyTreeDO> parseTree(Set<String> visited, List<String> lines, int depth) throws PlatformException{
-        List<ComponentDependencyTreeDO> trees = new ArrayList<>();
+    private List<JavaComponentDependencyTreeDO> parseTree(Set<String> visited, List<String> lines, int depth) throws PlatformException{
+        List<JavaComponentDependencyTreeDO> trees = new ArrayList<>();
         int begin = 0;
         while (begin < lines.size()){
             // 通过begin和end两个指针，从依赖树文本块中分割出单个组件依赖树
@@ -111,12 +111,12 @@ public class GradleServiceImpl implements GradleService{
                 end++;
             }
             // 提取组件信息
-            ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-            componentDependencyTreeDO.setDepth(depth);
-            setTreeInformation(componentDependencyTreeDO, lines.get(begin).substring(5));
-            String groupId = componentDependencyTreeDO.getGroupId();
-            String artifactId = componentDependencyTreeDO.getArtifactId();
-            String version = componentDependencyTreeDO.getVersion();
+            JavaComponentDependencyTreeDO javaComponentDependencyTreeDO = new JavaComponentDependencyTreeDO();
+            javaComponentDependencyTreeDO.setDepth(depth);
+            setTreeInformation(javaComponentDependencyTreeDO, lines.get(begin).substring(5));
+            String groupId = javaComponentDependencyTreeDO.getGroupId();
+            String artifactId = javaComponentDependencyTreeDO.getArtifactId();
+            String version = javaComponentDependencyTreeDO.getVersion();
 
             // 如果该直接依赖已记录过，或者该组件的gav缺失，则跳过
             if (!(depth == 1 && visited.contains(groupId + ":" + artifactId + ":" + version)) && !(groupId == null || artifactId == null || version == null) && !(groupId.isEmpty() || artifactId.isEmpty() || version.isEmpty()))
@@ -130,22 +130,22 @@ public class GradleServiceImpl implements GradleService{
                 if (javaComponentDO == null){
                     javaComponentDO = spiderService.crawlByGav(groupId, artifactId, version);
                     if (javaComponentDO != null){
-                        componentDependencyTreeDO.setType("opensource");
+                        javaComponentDependencyTreeDO.setType("opensource");
                     } else{
-                        componentDependencyTreeDO.setType("opensource");
+                        javaComponentDependencyTreeDO.setType("opensource");
                         //如果爬虫没有爬到则扫描错误 通过抛出异常处理
                         throw new PlatformException(500, "存在未识别的组件");
                     }
                 } else {
-                    componentDependencyTreeDO.setType(javaComponentDO.getType());
+                    javaComponentDependencyTreeDO.setType(javaComponentDO.getType());
                 }
 
 
                 // 递归解析该组件的子依赖树文本块
                 if (begin < end) {
-                    componentDependencyTreeDO.setDependencies(parseTree(visited, lines.subList(begin + 1, end).stream().map(s -> s.substring(5)).collect(Collectors.toList()), depth + 1));
+                    javaComponentDependencyTreeDO.setDependencies(parseTree(visited, lines.subList(begin + 1, end).stream().map(s -> s.substring(5)).collect(Collectors.toList()), depth + 1));
                 }
-                trees.add(componentDependencyTreeDO);
+                trees.add(javaComponentDependencyTreeDO);
             }
             begin = end;
         }
@@ -170,10 +170,10 @@ public class GradleServiceImpl implements GradleService{
     /**
      * 使用正则表达式从每行信息中提取出组件的gav，并存入tree中
      *
-     * @param tree ComponentDependencyTreeDO
+     * @param tree JavaComponentDependencyTreeDO
      * @param line 一行文本
      */
-    private void setTreeInformation(ComponentDependencyTreeDO tree, String line){
+    private void setTreeInformation(JavaComponentDependencyTreeDO tree, String line){
 
         // "org.springframework:spring-core (n)"
         if (line.contains("(n)")){
@@ -220,7 +220,7 @@ public class GradleServiceImpl implements GradleService{
 
 //    public static void main(String[] args) {
 //        GradleServiceImpl gradleService = new GradleServiceImpl();
-//        List<ComponentDependencyTreeDO> trees = gradleService.gradleDependencyTreeAnalyze("C:\\Users\\ASUS\\Desktop\\1.txt");
+//        List<JavaComponentDependencyTreeDO> trees = gradleService.gradleDependencyTreeAnalyze("C:\\Users\\ASUS\\Desktop\\1.txt");
 //        System.out.println(trees);
 //    }
 }

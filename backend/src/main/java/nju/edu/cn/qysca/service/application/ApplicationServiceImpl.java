@@ -491,19 +491,19 @@ public class ApplicationServiceImpl implements ApplicationService {
         javaDependencyTreeDO.setGroupId(buDO.getName());
         javaDependencyTreeDO.setArtifactId(applicationDO.getName());
         javaDependencyTreeDO.setVersion(applicationDO.getVersion());
-        ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        BeanUtils.copyProperties(javaDependencyTreeDO, componentDependencyTreeDO);
-        componentDependencyTreeDO.setType(type);
-        componentDependencyTreeDO.setScope("-");
-        componentDependencyTreeDO.setDepth(0);
-        List<ComponentDependencyTreeDO> componentDependencyTreeDOS = new ArrayList<>();
+        JavaComponentDependencyTreeDO javaComponentDependencyTreeDO = new JavaComponentDependencyTreeDO();
+        BeanUtils.copyProperties(javaDependencyTreeDO, javaComponentDependencyTreeDO);
+        javaComponentDependencyTreeDO.setType(type);
+        javaComponentDependencyTreeDO.setScope("-");
+        javaComponentDependencyTreeDO.setDepth(0);
+        List<JavaComponentDependencyTreeDO> javaComponentDependencyTreeDOS = new ArrayList<>();
         for (String id : applicationDO.getChildApplication()) {
             ApplicationDO tempApplicationDO = applicationDao.findApplicationDOById(id);
             buAppDO = buAppDao.findByAid(tempApplicationDO.getId());
             buDO = buDao.findByBid(buAppDO.getBid());
-            ComponentDependencyTreeDO temp = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), tempApplicationDO.getName(), tempApplicationDO.getVersion()).getTree();
+            JavaComponentDependencyTreeDO temp = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), tempApplicationDO.getName(), tempApplicationDO.getVersion()).getTree();
             addDepth(temp);
-            componentDependencyTreeDOS.add(temp);
+            javaComponentDependencyTreeDOS.add(temp);
         }
         for (Map.Entry<String, List<String>> entry: applicationDO.getChildComponent().entrySet()) {
             if (entry.getKey().equals("java")) {
@@ -516,26 +516,26 @@ public class ApplicationServiceImpl implements ApplicationService {
                         tempJavaDependencyTreeDO = mavenService.spiderDependency(tempJavaComponentDO.getGroupId(), tempJavaComponentDO.getArtifactId(), tempJavaComponentDO.getVersion());
 
                     }
-                    ComponentDependencyTreeDO temp = tempJavaDependencyTreeDO.getTree();
+                    JavaComponentDependencyTreeDO temp = tempJavaDependencyTreeDO.getTree();
                     addDepth(temp);
-                    componentDependencyTreeDOS.add(temp);
+                    javaComponentDependencyTreeDOS.add(temp);
                 }
             }
         }
-        componentDependencyTreeDO.setDependencies(componentDependencyTreeDOS);
-        javaDependencyTreeDO.setTree(componentDependencyTreeDO);
+        javaComponentDependencyTreeDO.setDependencies(javaComponentDependencyTreeDOS);
+        javaDependencyTreeDO.setTree(javaComponentDependencyTreeDO);
         return javaDependencyTreeDO;
     }
 
     /**
      * 将树节点层数加1
      */
-    private void addDepth(ComponentDependencyTreeDO componentDependencyTreeDO) {
-        if (componentDependencyTreeDO == null) {
+    private void addDepth(JavaComponentDependencyTreeDO javaComponentDependencyTreeDO) {
+        if (javaComponentDependencyTreeDO == null) {
             return;
         }
-        componentDependencyTreeDO.setDepth(componentDependencyTreeDO.getDepth() + 1);
-        for (ComponentDependencyTreeDO temp : componentDependencyTreeDO.getDependencies()) {
+        javaComponentDependencyTreeDO.setDepth(javaComponentDependencyTreeDO.getDepth() + 1);
+        for (JavaComponentDependencyTreeDO temp : javaComponentDependencyTreeDO.getDependencies()) {
             addDepth(temp);
         }
     }
@@ -729,7 +729,7 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @param to   待对比者
      * @return ComponentCompareTreeDTO 对比树
      */
-    private ComponentCompareTreeDTO recursionDealWithChange(ComponentDependencyTreeDO from, ComponentDependencyTreeDO to) {
+    private ComponentCompareTreeDTO recursionDealWithChange(JavaComponentDependencyTreeDO from, JavaComponentDependencyTreeDO to) {
         if (from == null || to == null) {
             return null;
         }
@@ -738,13 +738,13 @@ public class ApplicationServiceImpl implements ApplicationService {
         BeanUtils.copyProperties(to, root);
         root.setMark("CHANGE");
         // 分析各子树应属于何种标记
-        Map<String, ComponentDependencyTreeDO> fromMap = new HashMap<>();
-        Map<String, ComponentDependencyTreeDO> toMap = new HashMap<>();
+        Map<String, JavaComponentDependencyTreeDO> fromMap = new HashMap<>();
+        Map<String, JavaComponentDependencyTreeDO> toMap = new HashMap<>();
         Set<String> intersection = new HashSet<>();
-        for (ComponentDependencyTreeDO fromChild : from.getDependencies()) {
+        for (JavaComponentDependencyTreeDO fromChild : from.getDependencies()) {
             fromMap.put(fromChild.getGroupId() + fromChild.getArtifactId() + fromChild.getType(), fromChild);
         }
-        for (ComponentDependencyTreeDO toChild : to.getDependencies()) {
+        for (JavaComponentDependencyTreeDO toChild : to.getDependencies()) {
             toMap.put(toChild.getGroupId() + toChild.getArtifactId() + toChild.getType(), toChild);
         }
         for (String key : toMap.keySet()) {
@@ -754,7 +754,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             }
         }
         // 依次进行分析
-        for (ComponentDependencyTreeDO toChild : to.getDependencies()) {
+        for (JavaComponentDependencyTreeDO toChild : to.getDependencies()) {
             String key = toChild.getGroupId() + toChild.getArtifactId() + toChild.getType();
             if (intersection.contains(key)) {
                 if (fromMap.get(key).getVersion().equals(toMap.get(key).getVersion())) {
@@ -767,7 +767,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 root.getDependencies().add(recursionMark(toMap.get(key), "ADD"));
             }
         }
-        for (ComponentDependencyTreeDO fromChild : from.getDependencies()) {
+        for (JavaComponentDependencyTreeDO fromChild : from.getDependencies()) {
             String key = fromChild.getGroupId() + fromChild.getArtifactId() + fromChild.getType();
             if (!intersection.contains(key)) {
                 root.getDependencies().add(recursionMark(fromMap.get(key), "DELETE"));
@@ -783,14 +783,14 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @param mark 标记符号（ADD,DELETE,SAME）
      * @return ComponentCompareTreeDTO 对比树
      */
-    private ComponentCompareTreeDTO recursionMark(ComponentDependencyTreeDO tree, String mark) {
+    private ComponentCompareTreeDTO recursionMark(JavaComponentDependencyTreeDO tree, String mark) {
         if (tree == null) {
             return null;
         }
         ComponentCompareTreeDTO root = new ComponentCompareTreeDTO();
         BeanUtils.copyProperties(tree, root);
         root.setMark(mark);
-        for (ComponentDependencyTreeDO child : tree.getDependencies()) {
+        for (JavaComponentDependencyTreeDO child : tree.getDependencies()) {
             ComponentCompareTreeDTO childAns = recursionMark(child, mark);
             if (childAns != null) {
                 root.getDependencies().add(childAns);
