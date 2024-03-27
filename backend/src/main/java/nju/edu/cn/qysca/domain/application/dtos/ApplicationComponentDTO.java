@@ -26,4 +26,7 @@ public class ApplicationComponentDTO {
     @ApiModelProperty(value= "版本号", example = "1.0.0")
     private String version;
 
+    @ApiModelProperty(value = "语言", example = "java")
+    private String language;
+
 }

@@ -1,7 +1,7 @@
 package nju.edu.cn.qysca.service.gradle;
 
-import nju.edu.cn.qysca.dao.component.ComponentDao;
-import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
+import nju.edu.cn.qysca.dao.component.JavaComponentDao;
+import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
@@ -29,7 +29,7 @@ public class GradleServiceImpl implements GradleService{
     private SpiderService spiderService;
 
     @Autowired
-    private ComponentDao componentDao;
+    private JavaComponentDao javaComponentDao;
 
     /**
      *
@@ -138,11 +138,11 @@ public class GradleServiceImpl implements GradleService{
                     visited.add(groupId + ":" + artifactId + ":" + version);
 
                 // 查知识库
-                ComponentDO componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
+                JavaComponentDO javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
                 // 如果知识库没有则爬取
-                if (componentDO == null){
-                    componentDO = spiderService.crawlByGav(groupId, artifactId, version);
-                    if (componentDO != null){
+                if (javaComponentDO == null){
+                    javaComponentDO = spiderService.crawlByGav(groupId, artifactId, version);
+                    if (javaComponentDO != null){
                         componentDependencyTreeDO.setType("opensource");
                     } else{
                         componentDependencyTreeDO.setType("opensource");
@@ -150,7 +150,7 @@ public class GradleServiceImpl implements GradleService{
                         throw new PlatformException(500, "存在未识别的组件");
                     }
                 } else {
-                    componentDependencyTreeDO.setType(componentDO.getType());
+                    componentDependencyTreeDO.setType(javaComponentDO.getType());
                 }
 
 

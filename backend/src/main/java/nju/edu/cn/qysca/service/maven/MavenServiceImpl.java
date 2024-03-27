@@ -3,7 +3,7 @@ package nju.edu.cn.qysca.service.maven;
 import fr.dutra.tools.maven.deptree.core.InputType;
 import fr.dutra.tools.maven.deptree.core.Node;
 import fr.dutra.tools.maven.deptree.core.Parser;
-import nju.edu.cn.qysca.dao.component.ComponentDao;
+import nju.edu.cn.qysca.dao.component.JavaComponentDao;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.spider.SpiderService;
@@ -14,10 +14,12 @@ import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.Invoker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -27,13 +29,17 @@ import java.util.zip.ZipFile;
 public class MavenServiceImpl implements MavenService {
 
     @Autowired
-    private ComponentDao componentDao;
+    private JavaComponentDao javaComponentDao;
 
 
     @Autowired
     private SpiderService spiderService;
 
+
     private final String FILE_SEPARATOR = "/";
+
+    @Value("${tempPomFolder}")
+    private String tempFolder;
 
 
     /**
@@ -42,30 +48,30 @@ public class MavenServiceImpl implements MavenService {
      * @param filePath 上传文件路径
      * @param builder    构建器
      * @param type       组件类型
-     * @return ComponentDO 组件信息
+     * @return JavaComponentDO 组件信息
      */
     @Override
-    public ComponentDO componentAnalysis(String filePath, String builder, String type) {
+    public JavaComponentDO componentAnalysis(String filePath, String builder, String type) {
         String pomFilePath = analyzePomPath(filePath, builder);
         Model model = pomToModel(pomFilePath);
-        ComponentDO componentDO = new ComponentDO();
-        componentDO.setGroupId(getGroupIdFromPomModel(model));
-        componentDO.setArtifactId(getArtifactIdFromPomModel(model));
-        componentDO.setVersion(getVersionFromPomModel(model));
-        componentDO.setLanguage("java");
-        componentDO.setName(model.getName() == null ? "-" : model.getName());
-        componentDO.setType(type);
-        componentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
-        componentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
-        componentDO.setDownloadUrl(model.getDistributionManagement() == null ? "-" : model.getDistributionManagement().getDownloadUrl());
-        componentDO.setSourceUrl(model.getScm() == null ? "-" : model.getScm().getUrl());
-        componentDO.setPUrl(getMavenPUrl(componentDO.getGroupId(), model.getArtifactId(), model.getVersion(), model.getPackaging()));
-        componentDO.setLicenses(getLicense(model));
-        componentDO.setDevelopers(getDevelopers(model));
+        JavaComponentDO javaComponentDO = new JavaComponentDO();
+        javaComponentDO.setGroupId(getGroupIdFromPomModel(model));
+        javaComponentDO.setArtifactId(getArtifactIdFromPomModel(model));
+        javaComponentDO.setVersion(getVersionFromPomModel(model));
+        javaComponentDO.setLanguage("java");
+        javaComponentDO.setName(model.getName() == null ? "-" : model.getName());
+        javaComponentDO.setType(type);
+        javaComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
+        javaComponentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
+        javaComponentDO.setDownloadUrl(model.getDistributionManagement() == null ? "-" : model.getDistributionManagement().getDownloadUrl());
+        javaComponentDO.setSourceUrl(model.getScm() == null ? "-" : model.getScm().getUrl());
+        javaComponentDO.setPUrl(getMavenPUrl(javaComponentDO.getGroupId(), model.getArtifactId(), model.getVersion(), model.getPackaging()));
+        javaComponentDO.setLicenses(getLicense(model));
+        javaComponentDO.setDevelopers(getDevelopers(model));
         //TODO: hash信息解析
         // 上传jar包才可以生成hash信息
         //javaCloseComponentDO.setHashes(getHashes(model));
-        return componentDO;
+        return javaComponentDO;
     }
 
     /**
@@ -73,50 +79,50 @@ public class MavenServiceImpl implements MavenService {
      * @param filePath 上传文件路径
      * @param builder 构建器
      * @param type 组件类型
-     * @return DependencyTreeDO 依赖树信息
+     * @return JavaDependencyTreeDO 依赖树信息
      */
     @Override
-    public DependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String type) {
+    public JavaDependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String type) {
         String pomFilePath = analyzePomPath(filePath, builder);
         Model model = pomToModel(pomFilePath);
-        DependencyTreeDO dependencyTreeDO = new DependencyTreeDO();
-        dependencyTreeDO.setGroupId(getGroupIdFromPomModel(model));
-        dependencyTreeDO.setArtifactId(getArtifactIdFromPomModel(model));
-        dependencyTreeDO.setVersion(getVersionFromPomModel(model));
+        JavaDependencyTreeDO javaDependencyTreeDO = new JavaDependencyTreeDO();
+        javaDependencyTreeDO.setGroupId(getGroupIdFromPomModel(model));
+        javaDependencyTreeDO.setArtifactId(getArtifactIdFromPomModel(model));
+        javaDependencyTreeDO.setVersion(getVersionFromPomModel(model));
         Node node = mavenDependencyTreeAnalyzer(filePath, builder);
         ComponentDependencyTreeDO componentDependencyTreeDO = convertNode(node, 0);
         componentDependencyTreeDO.setType(type);
-        dependencyTreeDO.setTree(componentDependencyTreeDO);
-        return dependencyTreeDO;
+        javaDependencyTreeDO.setTree(componentDependencyTreeDO);
+        return javaDependencyTreeDO;
     }
 
     /**
      * 根据依赖树信息生成依赖平铺信息
-     * @param dependencyTreeDO 依赖树信息
-     * @return List<DependencyTableDO> 依赖平铺信息表
+     * @param javaDependencyTreeDO 依赖树信息
+     * @return List<JavaDependencyTableDO> 依赖平铺信息表
      */
     @Override
-    public List<DependencyTableDO> dependencyTableAnalysis(DependencyTreeDO dependencyTreeDO) {
-        List<DependencyTableDO> closeDependencyTableDOList = new ArrayList<>();
-        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(dependencyTreeDO.getTree().getDependencies());
+    public List<JavaDependencyTableDO> dependencyTableAnalysis(JavaDependencyTreeDO javaDependencyTreeDO) {
+        List<JavaDependencyTableDO> closeJavaDependencyTableDOList = new ArrayList<>();
+        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(javaDependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {
-            DependencyTableDO dependencyTableDO = new DependencyTableDO();
-            dependencyTableDO.setGroupId(dependencyTreeDO.getGroupId());
-            dependencyTableDO.setArtifactId(dependencyTreeDO.getArtifactId());
-            dependencyTableDO.setVersion(dependencyTreeDO.getVersion());
+            JavaDependencyTableDO javaDependencyTableDO = new JavaDependencyTableDO();
+            javaDependencyTableDO.setGroupId(javaDependencyTreeDO.getGroupId());
+            javaDependencyTableDO.setArtifactId(javaDependencyTreeDO.getArtifactId());
+            javaDependencyTableDO.setVersion(javaDependencyTreeDO.getVersion());
             ComponentDependencyTreeDO componentDependencyTree = queue.poll();
-            dependencyTableDO.setCGroupId(componentDependencyTree.getGroupId());
-            dependencyTableDO.setCArtifactId(componentDependencyTree.getArtifactId());
-            dependencyTableDO.setCVersion(componentDependencyTree.getVersion());
-            dependencyTableDO.setScope(componentDependencyTree.getScope());
-            dependencyTableDO.setDepth(componentDependencyTree.getDepth());
-            dependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
-            dependencyTableDO.setType(componentDependencyTree.getType());
-            dependencyTableDO.setLanguage("java");
+            javaDependencyTableDO.setCGroupId(componentDependencyTree.getGroupId());
+            javaDependencyTableDO.setCArtifactId(componentDependencyTree.getArtifactId());
+            javaDependencyTableDO.setCVersion(componentDependencyTree.getVersion());
+            javaDependencyTableDO.setScope(componentDependencyTree.getScope());
+            javaDependencyTableDO.setDepth(componentDependencyTree.getDepth());
+            javaDependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
+            javaDependencyTableDO.setType(componentDependencyTree.getType());
+            javaDependencyTableDO.setLanguage("java");
             queue.addAll(componentDependencyTree.getDependencies());
-            closeDependencyTableDOList.add(dependencyTableDO);
+            closeJavaDependencyTableDOList.add(javaDependencyTableDO);
         }
-        return closeDependencyTableDOList;
+        return closeJavaDependencyTableDOList;
     }
 
     /**
@@ -166,14 +172,14 @@ public class MavenServiceImpl implements MavenService {
         componentDependencyTreeDO.setScope(node.getScope() == null ? "-" : node.getScope());
         if (depth != 0) {
             // 从知识库中查找
-            ComponentDO componentDO = null;
-            componentDO = componentDao.findByGroupIdAndArtifactIdAndVersion(node.getGroupId(), node.getArtifactId(), node.getVersion());
+            JavaComponentDO javaComponentDO = null;
+            javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(node.getGroupId(), node.getArtifactId(), node.getVersion());
 
             // 如果知识库中没有则爬取
-            if (componentDO == null) {
-                componentDO = spiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
-                if (componentDO != null) {
-                    componentDao.save(componentDO);
+            if (javaComponentDO == null) {
+                javaComponentDO = spiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
+                if (javaComponentDO != null) {
+                    javaComponentDao.save(javaComponentDO);
                     componentDependencyTreeDO.setType("opensource");
                 } else {
                     componentDependencyTreeDO.setType("opensource");
@@ -181,7 +187,7 @@ public class MavenServiceImpl implements MavenService {
                     throw new PlatformException(500, "存在未识别的组件");
                 }
             } else {
-                componentDependencyTreeDO.setType(componentDO.getType());
+                componentDependencyTreeDO.setType(javaComponentDO.getType());
             }
         }
         componentDependencyTreeDO.setDepth(depth);
@@ -235,6 +241,31 @@ public class MavenServiceImpl implements MavenService {
             return file.getParent() + FILE_SEPARATOR + "pom.xml";
         }
         return null;
+    }
+
+
+    @Override
+    public JavaDependencyTreeDO spiderDependency(String groupId, String artifactId, String version) {
+        Date now = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String timeStamp = dateFormat.format(now);
+        String tempPomFolder = tempFolder + timeStamp;
+        File file = new File(tempPomFolder);
+        file.mkdirs();
+        String tempPath = tempPomFolder + "/pom.xml";
+        try {
+            String xml = spiderService.getPomStrByGav(groupId, artifactId, version);
+            FileWriter fileWriter = new FileWriter(tempPath);
+            fileWriter.write(xml);
+            fileWriter.flush();
+            fileWriter.close();
+            JavaDependencyTreeDO javaDependencyTreeDO = dependencyTreeAnalysis(tempPath, "maven", "opensource");
+            deleteFolder(tempPomFolder);
+            return javaDependencyTreeDO;
+        } catch (Exception e) {
+            deleteFolder(tempPomFolder);
+            throw new PlatformException(500, "识别依赖信息失败");
+        }
     }
 
     /**
@@ -366,6 +397,7 @@ public class MavenServiceImpl implements MavenService {
                 .collect(Collectors.toList());
     }
 
+
     /**
      * 解压zip文件
      *
@@ -405,5 +437,28 @@ public class MavenServiceImpl implements MavenService {
         } catch (Exception e) {
             throw new PlatformException(500, "解压zip文件失败");
         }
+    }
+
+    private void deleteFolder(String filePath) {
+        File folder = new File(filePath);
+        if (folder.exists()) {
+            deleteFolderFile(folder);
+        }
+    }
+
+    /**
+     * 递归删除文件夹下的文件
+     *
+     * @param folder 文件夹
+     */
+    private void deleteFolderFile(File folder) {
+        File[] files = folder.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                deleteFolderFile(file);
+            }
+            file.delete();
+        }
+        folder.delete();
     }
 }

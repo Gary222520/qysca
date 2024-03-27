@@ -24,7 +24,7 @@ public class ComponentController {
     @ApiOperation("分页查询组件")
     @PostMapping("/findComponentsPage")
     @PreAuthorize("@my.checkAuth('/qysca/component/findComponentsPage')")
-    public ResponseMsg<Page<ComponentDO>> findComponentsPage(@RequestBody ComponentSearchDTO dto) {
+    public ResponseMsg<Page<JavaComponentDO>> findComponentsPage(@RequestBody ComponentSearchDTO dto) {
         return new ResponseMsg<>(componentService.findComponentsPage(dto));
     }
 
@@ -39,8 +39,8 @@ public class ComponentController {
     @PostMapping("/saveCloseComponent")
     @PreAuthorize("@my.checkAuth('/qysca/component/saveCloseComponent')")
     public ResponseMsg<Boolean> saveCloseComponent(@RequestBody SaveCloseComponentDTO dto) {
-        componentService.saveCloseComponent(dto);
-        componentService.saveCloseComponentDependency(dto);
+        JavaComponentDO javaComponentDO = componentService.saveCloseComponent(dto);
+        componentService.saveCloseComponentDependency(javaComponentDO, dto);
         return new ResponseMsg<>(Boolean.TRUE);
     }
 
@@ -63,7 +63,7 @@ public class ComponentController {
     @ApiOperation("查询组件依赖树信息")
     @PostMapping("/findComponentDependencyTree")
     @PreAuthorize("@my.checkAuth('/qysca/component/findComponentDependencyTree')")
-    public ResponseMsg<DependencyTreeDO> findComponentDependencyTree(@RequestBody ComponentGavDTO dto) {
+    public ResponseMsg<JavaDependencyTreeDO> findComponentDependencyTree(@RequestBody ComponentGavDTO dto) {
         return new ResponseMsg<>(componentService.findComponentDependencyTree(dto));
     }
 
