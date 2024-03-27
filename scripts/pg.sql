@@ -121,3 +121,48 @@ CREATE TABLE plt_java_dependency_table(
 	type VARCHAR(255) NOT NULL,
 	language VARCHAR(255) NOT NULL
 );
+
+Drop TABLE IF EXISTS plt_js_component;
+create table plt_js_component(
+	id VARCHAR(32) PRIMARY KEY,
+    namespace VARCHAR(255) NOT NULL,
+    artifact_id VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    description VARCHAR(255),
+    website VARCHAR(255),
+    repo_url VARCHAR(255),
+    copyright_statements text[],
+    purl VARCHAR(255),
+    license VARCHAR(255),
+    download_url VARCHAR(255),
+    language VARCHAR(255) NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    creator VARCHAR(255) NOT NULL,
+    state VARCHAR(255) NOT NULL,
+    UNIQUE(namespace,artifact_id,version)
+)
+
+DROP TABLE IF EXISTS plt_js_dependency_tree;
+create table plt_js_dependency_tree(
+	id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    tree JSONB,
+    UNIQUE(name,version)
+)
+
+DROP TABLE IF EXISTS plt_js_dependency_table;
+create table plt_js_dependency_table(
+	id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    c_name VARCHAR(255) NOT NULL,
+    c_version VARCHAR(255) NOT NULL,
+    depth INTEGER NOT NULL,
+    direct BOOLEAN NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    language VARCHAR(255) NOT NULL
+)
+
+    
+    

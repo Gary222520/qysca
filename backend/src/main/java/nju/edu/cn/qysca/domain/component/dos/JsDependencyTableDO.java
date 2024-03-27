@@ -7,14 +7,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel(description = "js依赖表")
+@Entity
+@Table(name = "plt_js_dependency_table")
 public class JsDependencyTableDO {
 
     @Id

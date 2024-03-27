@@ -1,5 +1,6 @@
 package nju.edu.cn.qysca;
 
+import nju.edu.cn.qysca.domain.component.dos.JsComponentDO;
 import nju.edu.cn.qysca.service.npm.NpmServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ public class NpmTest {
 
     @Test
     public void test1() {
-        npmService.generatePackageLock("src/main/resources/static/temp/");
+        JsComponentDO componentDO = npmService.componentAnalysis("src/main/resources/static/temp/package.json", "opensource");
+        System.out.println(componentDO);
     }
 }

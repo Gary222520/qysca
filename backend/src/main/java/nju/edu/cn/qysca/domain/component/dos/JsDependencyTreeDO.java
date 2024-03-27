@@ -11,18 +11,18 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel(description = "js依赖树")
+@Entity
 @TypeDefs({
         @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
 })
+@Table(name = "plt_js_dependency_tree", uniqueConstraints = @UniqueConstraint(columnNames = {"name","version"}))
 public class JsDependencyTreeDO extends DependencyTreeDO {
 
     @Id

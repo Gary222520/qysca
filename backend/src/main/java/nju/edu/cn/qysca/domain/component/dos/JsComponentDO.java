@@ -21,6 +21,7 @@ import javax.persistence.*;
 @TypeDefs({
         @TypeDef(name = "string-array", typeClass = StringArrayType.class),
 })
+@Table(name="plt_js_component", uniqueConstraints = @UniqueConstraint(columnNames = {"namespace", "artifact_id", "version"}))
 public class JsComponentDO extends ComponentDO{
 
     @Id
@@ -82,4 +83,8 @@ public class JsComponentDO extends ComponentDO{
     @Column(name="creator")
     @ApiModelProperty(value = "创建者",example = "Font Awesome")
     private String creator;
+
+    @Column(name = "state", nullable = false)
+    @ApiModelProperty(value = "扫描状态", example = "SUCCESS,FAILED,RUNNING,CREATED")
+    private String state;
 }
