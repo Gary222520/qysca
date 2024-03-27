@@ -1,16 +1,16 @@
 package nju.edu.cn.qysca.service.npm;
 
-import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
-import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTableDO;
-import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.JsComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.JsDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.JsDependencyTableDO;
 
 import java.util.List;
 
 public interface NpmService {
 
-    JavaComponentDO componentAnalysis(String filePath);
+    JsComponentDO componentAnalysis(String filePath, String type);
 
-    JavaDependencyTreeDO dependencyTreeAnalysis(String packagePath, String filePath);
+    JsDependencyTreeDO dependencyTreeAnalysis(String filePath, String type);
 
-    List<JavaDependencyTableDO> dependencyTableAnalysis(JavaDependencyTreeDO javaDependencyTreeDO);
+    List<JsDependencyTableDO> dependencyTableAnalysis(JsDependencyTreeDO jsDependencyTreeDO);
 }

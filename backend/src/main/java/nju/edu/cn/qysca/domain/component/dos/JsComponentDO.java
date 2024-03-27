@@ -67,4 +67,8 @@ public class JsComponentDO extends ComponentDO{
     @ApiModelProperty(value = "语言", example = "JavaScript")
     @Column(name = "language", nullable = false)
     private String language;
+
+    @Column(name="type",nullable = false)
+    @ApiModelProperty(value = "组件类型",example = "opensource")
+    private String type;
 }

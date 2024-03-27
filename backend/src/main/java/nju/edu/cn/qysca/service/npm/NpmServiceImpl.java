@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.npm.PackageJsonDTO;
 import nju.edu.cn.qysca.domain.npm.PackageLockDTO;
+import nju.edu.cn.qysca.domain.npm.PackageLockDependencyDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -21,44 +25,60 @@ public class NpmServiceImpl implements NpmService {
 
 
     private final String FILE_SEPARATOR = "/";
+
     /**
      * 根据package.json生成ComponentDO
      * @param filePath package.json文件路径
-     * @return
+     * @param type 组件类型
+     * @return JsComponentDO Js组件信息
      */
     @Override
-    public JavaComponentDO componentAnalysis(String filePath) {
-        return null;
+    public JsComponentDO componentAnalysis(String filePath, String type) {
+        PackageJsonDTO packageJsonDTO = parsePackageJson(filePath);
+        JsComponentDO jsComponentDO = new JsComponentDO();
+        String name = packageJsonDTO.getName();
+        if(name.contains("@")) {
+            String[] temp = parsePackageName(name);
+            jsComponentDO.setNamespace(temp[0]);
+            jsComponentDO.setArtifactId(temp[1]);
+        }else {
+            jsComponentDO.setNamespace("-");
+            jsComponentDO.setArtifactId(name);
+        }
+        jsComponentDO.setLanguage("javaScript");
+        jsComponentDO.setVersion(packageJsonDTO.getVersion());
+        jsComponentDO.setDescription(packageJsonDTO.getDescription());
+        jsComponentDO.setLicense(packageJsonDTO.getLicense());
+        jsComponentDO.setType(type);
+        // TODO: 剩余部分信息
+        return jsComponentDO;
+
     }
 
     /**
      *
-     * @param packagePath package.json文件路径
      * @param filePath package-lock.json文件路径
-     * @return JavaDependencyTreeDO 依赖树信息
+     * @param type 组件类型
+     * @return JsDependencyTreeDO 依赖树信息
      */
     @Override
-    public JavaDependencyTreeDO dependencyTreeAnalysis(String packagePath, String filePath) {
-        PackageJsonDTO packageJsonDTO = parsePackageJson(packagePath);
-        JavaDependencyTreeDO javaDependencyTreeDO = new JavaDependencyTreeDO();
-        javaDependencyTreeDO.setArtifactId(packageJsonDTO.getName());
-        javaDependencyTreeDO.setVersion(packageJsonDTO.getVersion());
+    public JsDependencyTreeDO dependencyTreeAnalysis(String filePath, String type) {
         PackageLockDTO packageLockDTO = parsePackageLock(filePath);
-        ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        componentDependencyTreeDO.setArtifactId(packageJsonDTO.getName());
-        componentDependencyTreeDO.setVersion(packageJsonDTO.getVersion());
-        componentDependencyTreeDO.setScope("-");
-        componentDependencyTreeDO.setDepth(0);
-        return javaDependencyTreeDO;
+        JsDependencyTreeDO jsDependencyTreeDO = new JsDependencyTreeDO();
+        jsDependencyTreeDO.setName(packageLockDTO.getName());
+        jsDependencyTreeDO.setVersion(packageLockDTO.getVersion());
+        ComponentDependencyTreeDO componentDependencyTreeDO = convertNode(packageLockDTO, type);
+        jsDependencyTreeDO.setTree(componentDependencyTreeDO);
+        return jsDependencyTreeDO;
     }
 
     /**
      * 根据依赖树信息生成依赖平铺列表
-     * @param javaDependencyTreeDO 依赖树信息
-     * @return List<JavaDependencyTableDO> 依赖平铺列表
+     * @param jsDependencyTreeDO 依赖树信息
+     * @return List<JsDependencyTableDO> 依赖平铺列表
      */
     @Override
-    public List<JavaDependencyTableDO> dependencyTableAnalysis(JavaDependencyTreeDO javaDependencyTreeDO) {
+    public List<JsDependencyTableDO> dependencyTableAnalysis(JsDependencyTreeDO jsDependencyTreeDO) {
         return null;
     }
 
@@ -160,5 +180,62 @@ public class NpmServiceImpl implements NpmService {
         if (!packageLockJson.exists()) {
             throw new PlatformException(500, "zip文件中未找到package-lock.json文件");
         }
+    }
+
+    /**
+     * 解析包名，提取namespace和name
+     * @param packageName 包名
+     * @return String[] namespace和name
+     */
+    private String[] parsePackageName(String packageName){
+        String regex = "^(@[^/]+)/(.+)$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(packageName);
+        if (matcher.find()) {
+            String namespace = matcher.group(1);
+            String name = matcher.group(2);
+            return new String[]{namespace, name};
+        }
+        return null;
+    }
+
+    /**
+     * 根据packageLockDTO生成ComponentDependencyTreeDO
+     * @param packageLockDTO package-lock.json依赖信息
+     * @param type 组件类型
+     * @return ComponentDependencyTreeDO 依赖信息
+     */
+    private ComponentDependencyTreeDO convertNode(PackageLockDTO packageLockDTO, String type) {
+        ComponentDependencyTreeDO root = new ComponentDependencyTreeDO();
+        root.setArtifactId(packageLockDTO.getName());
+        root.setVersion(packageLockDTO.getVersion());
+        root.setDepth(0);
+        root.setType(type);
+        root.setDependencies(convertDependencies(packageLockDTO.getDependencies(), 1));
+        return root;
+    }
+
+    /**
+     * 根据packageLockDTO生成子依赖信息
+     * @param dependencies 依赖信息
+     * @param depth 深度
+     * @return List<ComponentDependencyTreeDO> 子依赖信息
+     */
+    private List<ComponentDependencyTreeDO> convertDependencies(Map<String, PackageLockDependencyDTO> dependencies, int depth) {
+        if(dependencies == null) {
+            return null;
+        }
+        List<ComponentDependencyTreeDO> children = new ArrayList<>();
+        for(Map.Entry<String, PackageLockDependencyDTO> entry : dependencies.entrySet()) {
+            ComponentDependencyTreeDO child = new ComponentDependencyTreeDO();
+            child.setArtifactId(entry.getKey());
+            child.setVersion(entry.getValue().getVersion());
+            //增量更新机制
+            child.setType("opensource");
+            child.setDepth(depth);
+            child.setDependencies(convertDependencies(entry.getValue().getDependencies(), depth + 1));
+            children.add(child);
+        }
+        return children;
     }
 }
