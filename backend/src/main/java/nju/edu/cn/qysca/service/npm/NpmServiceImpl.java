@@ -2,7 +2,7 @@ package nju.edu.cn.qysca.service.npm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
-import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTreeDO;
 import nju.edu.cn.qysca.domain.npm.PackageJsonDTO;
@@ -51,11 +51,11 @@ public class NpmServiceImpl implements NpmService {
         javaDependencyTreeDO.setArtifactId(packageJsonDTO.getName());
         javaDependencyTreeDO.setVersion(packageJsonDTO.getVersion());
         PackageLockDTO packageLockDTO = parsePackageLock(filePath);
-        ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        componentDependencyTreeDO.setArtifactId(packageJsonDTO.getName());
-        componentDependencyTreeDO.setVersion(packageJsonDTO.getVersion());
-        componentDependencyTreeDO.setScope("-");
-        componentDependencyTreeDO.setDepth(0);
+        JavaComponentDependencyTreeDO javaComponentDependencyTreeDO = new JavaComponentDependencyTreeDO();
+        javaComponentDependencyTreeDO.setArtifactId(packageJsonDTO.getName());
+        javaComponentDependencyTreeDO.setVersion(packageJsonDTO.getVersion());
+        javaComponentDependencyTreeDO.setScope("-");
+        javaComponentDependencyTreeDO.setDepth(0);
         return javaDependencyTreeDO;
     }
 
@@ -122,14 +122,14 @@ public class NpmServiceImpl implements NpmService {
     /**
      * 递归解析packLockDTO, 返回根节点
      * @param packageLockDTO
-     * @return ComponentDependencyTreeDO 组件依赖信息树
+     * @return JavaComponentDependencyTreeDO 组件依赖信息树
      */
-    private ComponentDependencyTreeDO convertPackageLock(PackageLockDTO packageLockDTO) {
-        ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        componentDependencyTreeDO.setArtifactId(packageLockDTO.getName());
-        componentDependencyTreeDO.setVersion(packageLockDTO.getVersion());
-        componentDependencyTreeDO.setType("-");
-        componentDependencyTreeDO.setScope("-");
-        return componentDependencyTreeDO;
+    private JavaComponentDependencyTreeDO convertPackageLock(PackageLockDTO packageLockDTO) {
+        JavaComponentDependencyTreeDO javaComponentDependencyTreeDO = new JavaComponentDependencyTreeDO();
+        javaComponentDependencyTreeDO.setArtifactId(packageLockDTO.getName());
+        javaComponentDependencyTreeDO.setVersion(packageLockDTO.getVersion());
+        javaComponentDependencyTreeDO.setType("-");
+        javaComponentDependencyTreeDO.setScope("-");
+        return javaComponentDependencyTreeDO;
     }
 }

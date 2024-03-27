@@ -1,3 +1,43 @@
+DROP TABLE IF EXISTS plt_go_component;
+CREATE TABLE plt_go_component(
+	id VARCHAR(32) PRIMARY KEY,
+	name VARCHAR(255) NOT NULL,
+	version VARCHAR(255) NOT NULL,
+	language VARCHAR(255) NOT NULL,
+	type VARCHAR(255) NOT NULL,
+	description VARCHAR(2000),
+	url VARCHAR(255),
+	download_url VARCHAR(255),
+	source_url VARCHAR(255),
+	p_url VARCHAR(255),
+    creator VARCHAR(32),
+	licenses JSONB,
+	state VARCHAR(32) NOT NULL,
+	UNIQUE(name,version)
+);
+
+DROP TABLE IF EXISTS plt_go_dependency_tree;
+CREATE TABLE plt_go_dependency_tree(
+	id VARCHAR(32) PRIMARY KEY,
+	name VARCHAR(255) NOT NULL,
+	version VARCHAR(255) NOT NULL,
+	tree JSONB,
+	UNIQUE(name,version)
+);
+
+DROP TABLE IF EXISTS plt_go_dependency_table;
+CREATE TABLE plt_go_dependency_table(
+	id VARCHAR(32) PRIMARY KEY,
+	name VARCHAR(255) NOT NULL,
+	version VARCHAR(255) NOT NULL,
+	c_name VARCHAR(255) NOT NULL,
+	c_version VARCHAR(255) NOT NULL,
+	depth INTEGER NOT NULL,
+	direct BOOLEAN NOT NULL,
+	type VARCHAR(255) NOT NULL,
+	language VARCHAR(255) NOT NULL
+);
+
 DROP TABLE IF EXISTS plt_bu;
 CREATE TABLE plt_bu (
 	id VARCHAR(32) PRIMARY KEY,
