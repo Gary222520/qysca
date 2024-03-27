@@ -3,10 +3,14 @@ package nju.edu.cn.qysca.service.spider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
+import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class PythonSpiderServiceImpl implements PythonSpiderService{
@@ -22,7 +26,7 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
      * @return ComponentDO
      */
     @Override
-    public ComponentDO crawlByNV(String name, String version){
+    public PythonComponentDO crawlByNV(String name, String version){
         String url = PYPI_REPO_BASE_URL + name + "/" + version + "/json";
         return crawl(url, name, version);
     }
@@ -34,13 +38,13 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
      * @param version 组件版本
      * @return ComponentDO
      */
-    private ComponentDO crawl(String url, String name, String version){
+    private PythonComponentDO crawl(String url, String name, String version){
         Document document = getDocumentByUrl(url);
         if (document == null)
             return null;
 
         String jsonString = document.outerHtml();
-        ComponentDO componentDO = convertToComponentDO(jsonString);
+        PythonComponentDO componentDO = convertToComponentDO(jsonString, name, version);
         return componentDO;
     }
 
@@ -49,18 +53,46 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
      * @param jsonString json形式的组件信息
      * @return ComponentDO
      */
-    private ComponentDO convertToComponentDO(String jsonString){
-        ComponentDO componentDO = new ComponentDO();
+    private PythonComponentDO convertToComponentDO(String jsonString, String name, String version){
+        PythonComponentDO componentDO = new PythonComponentDO();
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(jsonString);
-            //todo
+            componentDO.setName(name);
+            componentDO.setVersion(version);
+            componentDO.setLanguage("python");
+            componentDO.setType("opensource");
+            componentDO.setDescription(jsonNode.get("info").get("description").asText());
+            componentDO.setAuthor(jsonNode.get("info").get("author").asText());
+            componentDO.setAuthorEmail(jsonNode.get("info").get("author_email").asText());
+            componentDO.setUrl(jsonNode.get("info").get("home_page").asText());
+            componentDO.setDownloadUrl(jsonNode.get("info").get("package_url").asText());
+            componentDO.setSourceUrl("");
+            componentDO.setPUrl(getPyPiPUrl(name, version));
+
+            List<LicenseDO> licenseDOList = new ArrayList<>();
+            licenseDOList.add(new LicenseDO(jsonNode.get("info").get("license").asText(), null));
+            componentDO.setLicenses(licenseDOList);
+
+            componentDO.setCreator(null);
+            componentDO.setState("SUCCESS");
 
 
         } catch (JsonProcessingException e){
             e.printStackTrace();
         }
         return componentDO;
+    }
+
+    /**
+     * 生成PUrl（仅对python-pypi组件）
+     * 例如：pkg:pypi/django@1.11.1
+     * @param name 组件名
+     * @param version 版本号
+     * @return PUrl
+     */
+    private static String getPyPiPUrl(String name, String version){
+        return "pkg:pypi/" + name + "@" + version;
     }
 
     /**

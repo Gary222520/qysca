@@ -22,7 +22,7 @@ import java.util.List;
 @TypeDefs({
         @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
 })
-public class PythonComponentDO {
+public class PythonComponentDO extends ComponentDO{
     @Id
     @Column(name="id",nullable = false)
     @GenericGenerator(name = "jpa-uuid", strategy = "uuid")

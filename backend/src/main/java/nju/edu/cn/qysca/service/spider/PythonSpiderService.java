@@ -1,7 +1,7 @@
 package nju.edu.cn.qysca.service.spider;
 
-import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
 
 public interface PythonSpiderService {
-    ComponentDO crawlByNV(String name, String version);
+    PythonComponentDO crawlByNV(String name, String version);
 }
