@@ -37,23 +37,6 @@ public class SpiderServiceImpl implements SpiderService {
     private JavaDependencyTableDao javaDependencyTableDao;
 
     /**
-     * 生成PUrl（仅对maven组件）
-     * 例如：pkg:maven/commons-codec/commons-codec@1.15?type=jar
-     *
-     * @param groupId    组织Id
-     * @param artifactId 工件id
-     * @param version    版本号
-     * @param packaging  打包方式，如pom、jar
-     * @return PUrl
-     */
-    private static String getMavenPUrl(String groupId, String artifactId, String version, String packaging) {
-        String pUrl = "pkg:maven/" + groupId + "/" + artifactId + "@" + version;
-        if (packaging.equals("jar"))
-            pUrl += "?type=jar";
-        return pUrl;
-    }
-
-    /**
      * 通过gav爬取组件
      *
      * @param groupId    组织id
@@ -261,6 +244,23 @@ public class SpiderServiceImpl implements SpiderService {
      */
     private String getDownloadUrl(String pomUrl) {
         return pomUrl.substring(0, pomUrl.lastIndexOf('/') + 1);
+    }
+
+    /**
+     * 生成PUrl（仅对maven组件）
+     * 例如：pkg:maven/commons-codec/commons-codec@1.15?type=jar
+     *
+     * @param groupId    组织Id
+     * @param artifactId 工件id
+     * @param version    版本号
+     * @param packaging  打包方式，如pom、jar
+     * @return PUrl
+     */
+    private String getMavenPUrl(String groupId, String artifactId, String version, String packaging) {
+        String pUrl = "pkg:maven/" + groupId + "/" + artifactId + "@" + version;
+        if (packaging.equals("jar"))
+            pUrl += "?type=jar";
+        return pUrl;
     }
 
     /**
