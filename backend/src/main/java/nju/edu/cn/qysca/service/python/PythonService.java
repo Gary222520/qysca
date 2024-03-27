@@ -1,13 +1,21 @@
 package nju.edu.cn.qysca.service.python;
 
-import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
-import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTreeDO;
 
 import java.util.List;
 
 public interface PythonService {
+
+    /**
+     * 构造python组件
+     * @param name 组件名称
+     * @param version 版本号
+     * @param type 组件类型
+     * @return PythonComponentDO
+     */
+    PythonComponentDO componentAnalysis(String name, String version, String type);
 
     /**
      * 分析上传项目依赖，获得组件依赖树
