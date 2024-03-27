@@ -338,9 +338,9 @@ public class NpmServiceImpl implements NpmService {
             JsComponentDO jsComponentDO = null;
             if (entry.getKey().contains("@")) {
                 String[] temp = parsePackageName(entry.getKey());
-                jsComponentDO = jsComponentDao.findByNamespaceAndNameAndVersion(temp[0], temp[1], entry.getValue().getVersion());
+                jsComponentDO = jsComponentDao.findByNamespaceAndArtifactIdAndVersion(temp[0], temp[1], entry.getValue().getVersion());
             } else {
-                jsComponentDO = jsComponentDao.findByNamespaceAndNameAndVersion("-", entry.getKey(), entry.getValue().getVersion());
+                jsComponentDO = jsComponentDao.findByNamespaceAndArtifactIdAndVersion("-", entry.getKey(), entry.getValue().getVersion());
             }
             if (jsComponentDO == null) {
                 jsComponentDO = spiderComponentInfo(entry.getKey(), entry.getValue().getVersion());

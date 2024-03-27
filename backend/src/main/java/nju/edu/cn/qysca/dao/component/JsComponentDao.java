@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface JsComponentDao extends JpaRepository<JsComponentDO, String> {
 
-    JsComponentDO findByNamespaceAndNameAndVersion(String namespace, String name, String version);
+    JsComponentDO findByNamespaceAndArtifactIdAndVersion(String namespace, String artifactId, String version);
 }
