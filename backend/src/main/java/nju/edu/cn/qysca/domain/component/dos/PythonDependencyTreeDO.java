@@ -1,7 +1,6 @@
 package nju.edu.cn.qysca.domain.component.dos;
 
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,6 +15,7 @@ import javax.persistence.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
 @Table(name= "plt_python_dependency_tree",uniqueConstraints = {@UniqueConstraint(columnNames = {"name","version"})})
 @TypeDefs({
         @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
@@ -39,5 +39,5 @@ public class PythonDependencyTreeDO extends DependencyTreeDO{
     @Column(name = "tree")
     @ApiModelProperty(value = "依赖树")
     @Type(type="jsonb")
-    private ComponentDependencyTreeDO tree;
+    private PythonComponentDependencyTreeDO tree;
 }

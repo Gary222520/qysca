@@ -31,7 +31,7 @@ public class PythonComponentDO extends ComponentDO{
     private String id;
 
     @Column(name="name",nullable = false)
-    @ApiModelProperty(value = "包名", example = "kafka-counter")
+    @ApiModelProperty(value = "组件名", example = "kafka-counter")
     private String name;
 
     @Column(name = "version",nullable = false)

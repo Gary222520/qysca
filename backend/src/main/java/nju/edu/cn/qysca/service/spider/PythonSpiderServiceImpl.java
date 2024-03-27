@@ -9,6 +9,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,11 +43,9 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
      * @return ComponentDO
      */
     private PythonComponentDO crawl(String url, String name, String version){
-        Document document = getDocumentByUrl(url);
-        if (document == null)
+        String jsonString = getUrlContent(url);
+        if (jsonString.isEmpty())
             return null;
-
-        String jsonString = document.outerHtml();
         PythonComponentDO componentDO = convertToComponentDO(jsonString, name, version);
         return componentDO;
     }
@@ -67,7 +69,7 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
             componentDO.setAuthorEmail(jsonNode.get("info").get("author_email").asText());
             componentDO.setUrl(jsonNode.get("info").get("home_page").asText());
             componentDO.setDownloadUrl(jsonNode.get("info").get("package_url").asText());
-            componentDO.setSourceUrl("");
+            componentDO.setSourceUrl(jsonNode.get("info").get("release_url").asText());
             componentDO.setPUrl(getPyPiPUrl(name, version));
 
             List<LicenseDO> licenseDOList = new ArrayList<>();
@@ -96,20 +98,27 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
     }
 
     /**
-     * 给定一个url地址，爬取其内容至一个document
-     *
-     * @param url url地址
-     * @return Document org.jsoup.nodes.Document
+     * 爬取指定url的内容，以字符串返回
+     * @param urlString url地址
+     * @return String
      */
-    private Document getDocumentByUrl(String url) {
+    public static String getUrlContent(String urlString) {
+        StringBuilder content = new StringBuilder();
+
         try {
-            // 每次爬取url时休眠一定时间，防止被ban
-            //Thread.sleep(sleepTime);
-            // 连接到url并获取其内容
-            return Jsoup.connect(url).get();
+            URL url = new URL(urlString);
+            URLConnection conn = url.openConnection();
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+            in.close();
         } catch (Exception e) {
-            System.err.println("can't visit or it is invalid: " + url);
-            return null;
+            e.printStackTrace();
         }
+
+        return content.toString();
     }
 }

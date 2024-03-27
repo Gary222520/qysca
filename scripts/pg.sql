@@ -38,6 +38,49 @@ CREATE TABLE plt_go_dependency_table(
 	language VARCHAR(255) NOT NULL
 );
 
+DROP TABLE IF EXISTS plt_python_component;
+CREATE TABLE plt_python_component(
+    id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    language VARCHAR(255) NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    description TEXT,
+    url VARCHAR(255),
+    download_url VARCHAR(255),
+    source_url VARCHAR(255),
+    p_url VARCHAR(255),
+    author VARCHAR(255),
+    author_email varchar(255),
+    licenses JSONB,
+    creator VARCHAR(32),
+    state VARCHAR(32) NOT NULL,
+    UNIQUE(name,version)
+);
+
+DROP TABLE IF EXISTS plt_python_dependency_tree;
+CREATE TABLE plt_python_dependency_tree(
+    id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    tree JSONB,
+    UNIQUE(name,version)
+);
+
+
+DROP TABLE IF EXISTS plt_python_dependency_table;
+CREATE TABLE plt_python_dependency_table(
+    id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    c_name VARCHAR(255) NOT NULL,
+    c_version VARCHAR(255) NOT NULL,
+    depth INTEGER NOT NULL,
+    direct BOOLEAN NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    language VARCHAR(255) NOT NULL
+);
+
 DROP TABLE IF EXISTS plt_bu;
 CREATE TABLE plt_bu (
 	id VARCHAR(32) PRIMARY KEY,

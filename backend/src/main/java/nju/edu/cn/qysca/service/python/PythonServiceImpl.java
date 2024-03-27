@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.dao.component.PythonComponentDao;
-import nju.edu.cn.qysca.domain.component.dos.ComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.PythonComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
@@ -28,11 +28,6 @@ public class PythonServiceImpl implements PythonService {
     @Autowired
     private PythonSpiderService pythonSpiderService;
 
-//    public static void main(String[] args) {
-//        PythonServiceImpl pythonService = new PythonServiceImpl();
-//        System.out.println(pythonService.projectDependencyAnalysis("backend/src/main/resources/vyper"));
-//    }
-
     /**
      * 分析上传项目依赖，获得组件依赖树
      *
@@ -48,7 +43,7 @@ public class PythonServiceImpl implements PythonService {
         // todo 目前只支持上传zip
         if (builder.equals("zip")) {
             unzip(filePath);
-            filePath = filePath.substring(0, filePath.lastIndexOf("/"));
+            filePath = filePath.substring(0, filePath.lastIndexOf("."));
         }
 
         File project = new File(filePath);
@@ -61,17 +56,17 @@ public class PythonServiceImpl implements PythonService {
         // 5. pipdeptree --json-tree获取json形式的依赖树
         String[] command1 = {"python", "-m", "venv", "venv"};
         //String[] command2 = {".\\venv\\Scripts\\activate.bat"};
-        String[] command3 = {project.getPath() + ".\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
-        String[] command4 = {project.getPath() + ".\\venv\\Scripts\\python.exe", "-m", "pip", "install", "-r", project.getPath() + "\\requirements.txt"};
-        String[] command5 = {project.getPath() + ".\\venv\\Scripts\\python.exe", "-m", "pip", "install", "-r", project.getPath() + "\\requirements-docs.txt"};
-        String[] command6 = {project.getAbsolutePath() + ".\\venv\\Scripts\\python.exe", "setup.py", "develop"};
-        String[] command7 = {project.getPath() + ".\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
+        String[] command3 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
+        String[] command4 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "-r", project.getPath() + "\\requirements.txt"};
+        String[] command5 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "-r", project.getPath() + "\\requirements-docs.txt"};
+        String[] command6 = {project.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "setup.py", "develop"};
+        String[] command7 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
 
         executeCommand(command1, project, false);
         executeCommand(command3, null, false);
-        executeCommand(command4, null, false);
-        executeCommand(command5, null, false);
-        executeCommand(command6, project, false);
+        executeCommand(command4, null, true);
+        executeCommand(command5, null, true);
+        executeCommand(command6, project, true);
         String jsonString = executeCommand(command7, null, true);
         deleteFolder(filePath);
 
@@ -89,13 +84,13 @@ public class PythonServiceImpl implements PythonService {
     @Override
     public List<PythonDependencyTableDO> dependencyTableAnalysis(PythonDependencyTreeDO pythonDependencyTreeDO) {
         List<PythonDependencyTableDO> pythonDependencyTableDOList = new ArrayList<>();
-        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(pythonDependencyTreeDO.getTree().getDependencies());
+        Queue<PythonComponentDependencyTreeDO> queue = new LinkedList<>(pythonDependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {
             PythonDependencyTableDO pythonDependencyTableDO = new PythonDependencyTableDO();
             pythonDependencyTableDO.setName(pythonDependencyTreeDO.getName());
             pythonDependencyTableDO.setVersion(pythonDependencyTreeDO.getVersion());
-            ComponentDependencyTreeDO componentDependencyTree = queue.poll();
-            pythonDependencyTableDO.setCName(componentDependencyTree.getArtifactId());
+            PythonComponentDependencyTreeDO componentDependencyTree = queue.poll();
+            pythonDependencyTableDO.setCName(componentDependencyTree.getName());
             pythonDependencyTableDO.setCVersion(componentDependencyTree.getVersion());
             pythonDependencyTableDO.setDepth(componentDependencyTree.getDepth());
             pythonDependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
@@ -124,7 +119,7 @@ public class PythonServiceImpl implements PythonService {
         executeCommand(command1, null, false);
         executeCommand(command3, null, false);
         executeCommand(command4, null, false);
-        String jsonString = executeCommand(command5, null, false);
+        String jsonString = executeCommand(command5, null, true);
         deleteFolder(".\\venv");
 
         PythonDependencyTreeDO dependencyTreeDO = parseJsonDependencyTree(jsonString, name, version, "opensource");
@@ -184,14 +179,13 @@ public class PythonServiceImpl implements PythonService {
             throw new PlatformException(500, "json依赖树解析错误");
         }
 
-        ComponentDependencyTreeDO root = new ComponentDependencyTreeDO();
-        root.setArtifactId(name);
+        PythonComponentDependencyTreeDO root = new PythonComponentDependencyTreeDO();
+        root.setName(name);
         root.setVersion(version);
         root.setDepth(0);
-        root.setScope("-");
         root.setType(type);
 
-        List<ComponentDependencyTreeDO> dependencies = new ArrayList<>();
+        List<PythonComponentDependencyTreeDO> dependencies = new ArrayList<>();
         for (JsonNode node : jsonNode) {
             // 这三个包是环境中生成的，并不是项目的依赖
             if (node.get("key").asText().equals("pipdeptree") || node.get("key").asText().equals("setuptools") || node.get("key").asText().equals("pip"))
@@ -212,31 +206,30 @@ public class PythonServiceImpl implements PythonService {
      * @param depth 深度
      * @return ComponentDependencyTreeDO
      */
-    private ComponentDependencyTreeDO parseTree(JsonNode tree, int depth) {
-        ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        componentDependencyTreeDO.setArtifactId(tree.get("key").asText());
+    private PythonComponentDependencyTreeDO parseTree(JsonNode tree, int depth) {
+        PythonComponentDependencyTreeDO componentDependencyTreeDO = new PythonComponentDependencyTreeDO();
+        componentDependencyTreeDO.setName(tree.get("key").asText());
         componentDependencyTreeDO.setVersion(tree.get("installed_version").asText());
         // 从知识库中查找
-        PythonComponentDO componentDO = componentDao.findByNameAndVersion(componentDependencyTreeDO.getArtifactId(), componentDependencyTreeDO.getVersion());
+        PythonComponentDO componentDO = componentDao.findByNameAndVersion(componentDependencyTreeDO.getName(), componentDependencyTreeDO.getVersion());
         if (componentDO == null) {
             // 如果知识库中没有则爬取
-            componentDO = pythonSpiderService.crawlByNV(componentDependencyTreeDO.getArtifactId(), componentDependencyTreeDO.getVersion());
+            componentDO = pythonSpiderService.crawlByNV(componentDependencyTreeDO.getName(), componentDependencyTreeDO.getVersion());
             if (componentDO != null) {
                 componentDao.save(componentDO);
                 componentDependencyTreeDO.setType("opensource");
             } else {
                 componentDependencyTreeDO.setType("opensource");
-                //如果爬虫没有爬到则扫描错误 通过抛出异常处理
-                throw new PlatformException(500, "存在未识别的组件");
+//                //如果爬虫没有爬到则扫描错误 通过抛出异常处理
+//                throw new PlatformException(500, "存在未识别的组件");
             }
         } else {
             componentDependencyTreeDO.setType(componentDO.getType());
         }
         componentDependencyTreeDO.setDepth(depth);
-        componentDependencyTreeDO.setScope("-");
 
         // 递归解析依赖
-        List<ComponentDependencyTreeDO> dependencies = new ArrayList<>();
+        List<PythonComponentDependencyTreeDO> dependencies = new ArrayList<>();
         for (JsonNode node : tree.get("dependencies")) {
             dependencies.add(parseTree(node, depth + 1));
         }
