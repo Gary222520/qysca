@@ -12,7 +12,6 @@ import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
 import javax.persistence.*;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -43,5 +42,5 @@ public class JsDependencyTreeDO extends DependencyTreeDO {
     @Column(name= "tree", nullable = false)
     @ApiModelProperty(value = "依赖树")
     @Type(type = "jsonb")
-    private ComponentDependencyTreeDO tree;
+    private JsComponentDependencyTreeDO tree;
 }

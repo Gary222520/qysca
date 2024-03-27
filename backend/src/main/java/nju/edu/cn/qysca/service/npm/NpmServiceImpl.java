@@ -76,7 +76,7 @@ public class NpmServiceImpl implements NpmService {
         JsDependencyTreeDO jsDependencyTreeDO = new JsDependencyTreeDO();
         jsDependencyTreeDO.setName(packageLockDTO.getName());
         jsDependencyTreeDO.setVersion(packageLockDTO.getVersion());
-        ComponentDependencyTreeDO componentDependencyTreeDO = convertNode(packageLockDTO, type);
+        JsComponentDependencyTreeDO componentDependencyTreeDO = convertNode(packageLockDTO, type);
         jsDependencyTreeDO.setTree(componentDependencyTreeDO);
         return jsDependencyTreeDO;
     }
@@ -90,19 +90,19 @@ public class NpmServiceImpl implements NpmService {
     @Override
     public List<JsDependencyTableDO> dependencyTableAnalysis(JsDependencyTreeDO jsDependencyTreeDO) {
         List<JsDependencyTableDO> jsDependencyTableDOS = new ArrayList<>();
-        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(jsDependencyTreeDO.getTree().getDependencies());
+        Queue<JsComponentDependencyTreeDO> queue = new LinkedList<>(jsDependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {
             JsDependencyTableDO jsDependencyTableDO = new JsDependencyTableDO();
             jsDependencyTableDO.setName(jsDependencyTreeDO.getName());
             jsDependencyTableDO.setVersion(jsDependencyTreeDO.getVersion());
-            ComponentDependencyTreeDO componentDependencyTree = queue.poll();
-            jsDependencyTableDO.setCName(componentDependencyTree.getArtifactId());
-            jsDependencyTableDO.setCVersion(componentDependencyTree.getVersion());
-            jsDependencyTableDO.setDepth(componentDependencyTree.getDepth());
+            JsComponentDependencyTreeDO jsComponentDependencyTree = queue.poll();
+            jsDependencyTableDO.setCName(jsComponentDependencyTree.getName());
+            jsDependencyTableDO.setCVersion(jsComponentDependencyTree.getVersion());
+            jsDependencyTableDO.setDepth(jsComponentDependencyTree.getDepth());
             jsDependencyTableDO.setDirect(jsDependencyTableDO.getDepth() == 1);
-            jsDependencyTableDO.setType(componentDependencyTree.getType());
+            jsDependencyTableDO.setType(jsComponentDependencyTree.getType());
             jsDependencyTableDO.setLanguage("javaScript");
-            queue.addAll(componentDependencyTree.getDependencies());
+            queue.addAll(jsComponentDependencyTree.getDependencies());
             jsDependencyTableDOS.add(jsDependencyTableDO);
         }
         return jsDependencyTableDOS;
@@ -119,8 +119,8 @@ public class NpmServiceImpl implements NpmService {
         JsDependencyTreeDO jsDependencyTreeDO = new JsDependencyTreeDO();
         jsDependencyTreeDO.setName(name);
         jsDependencyTreeDO.setVersion(version);
-        ComponentDependencyTreeDO componentDependencyTreeDO = buildDependencyTree(name, version, 0);
-        jsDependencyTreeDO.setTree(componentDependencyTreeDO);
+        JsComponentDependencyTreeDO jsComponentDependencyTreeDO = buildDependencyTree(name, version, 0);
+        jsDependencyTreeDO.setTree(jsComponentDependencyTreeDO);
         return jsDependencyTreeDO;
     }
 
@@ -131,13 +131,13 @@ public class NpmServiceImpl implements NpmService {
      * @param depth 深度
      * @return ComponentDependencyTreeDO 依赖树信息
      */
-    private ComponentDependencyTreeDO buildDependencyTree(String name, String version, int depth){
-        ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        componentDependencyTreeDO.setArtifactId(name);
-        componentDependencyTreeDO.setVersion(version);
-        componentDependencyTreeDO.setDepth(depth);
-        componentDependencyTreeDO.setType("opensource");
-        List<ComponentDependencyTreeDO> dependencyTreeDOS = new ArrayList<>();
+    private JsComponentDependencyTreeDO buildDependencyTree(String name, String version, int depth){
+        JsComponentDependencyTreeDO jsComponentDependencyTreeDO = new JsComponentDependencyTreeDO();
+        jsComponentDependencyTreeDO.setName(name);
+        jsComponentDependencyTreeDO.setVersion(version);
+        jsComponentDependencyTreeDO.setDepth(depth);
+        jsComponentDependencyTreeDO.setType("opensource");
+        List<JsComponentDependencyTreeDO> dependencyTreeDOS = new ArrayList<>();
         try {
             String url = "https://registry.npmjs.org/" + name + FILE_SEPARATOR + version;
             CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -158,7 +158,7 @@ public class NpmServiceImpl implements NpmService {
                     if (childVersion.contains("^")) {
                         childVersion = resolveVersion(childName, childVersion.substring(1));
                     }
-                    ComponentDependencyTreeDO childComponentDependencyTreeDO = buildDependencyTree(childName, childVersion, depth + 1);
+                    JsComponentDependencyTreeDO childComponentDependencyTreeDO = buildDependencyTree(childName, childVersion, depth + 1);
                     dependencyTreeDOS.add(childComponentDependencyTreeDO);
                 }
             }
@@ -169,15 +169,15 @@ public class NpmServiceImpl implements NpmService {
                     if (childVersion.contains("^")) {
                         childVersion = resolveVersion(childName, childVersion.substring(1));
                     }
-                    ComponentDependencyTreeDO childComponentDependencyTreeDO = buildDependencyTree(childName, childVersion, depth + 1);
+                    JsComponentDependencyTreeDO childComponentDependencyTreeDO = buildDependencyTree(childName, childVersion, depth + 1);
                     dependencyTreeDOS.add(childComponentDependencyTreeDO);
                 }
             }
-            componentDependencyTreeDO.setDependencies(dependencyTreeDOS);
+            jsComponentDependencyTreeDO.setDependencies(dependencyTreeDOS);
         }catch (Exception e){
             throw new PlatformException(500, "存在未识别的组件");
         }
-        return componentDependencyTreeDO;
+        return jsComponentDependencyTreeDO;
     }
 
     /**
@@ -237,13 +237,12 @@ public class NpmServiceImpl implements NpmService {
      * @param packageLockDTO
      * @return ComponentDependencyTreeDO 组件依赖信息树
      */
-    private ComponentDependencyTreeDO convertPackageLock(PackageLockDTO packageLockDTO) {
-        ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        componentDependencyTreeDO.setArtifactId(packageLockDTO.getName());
-        componentDependencyTreeDO.setVersion(packageLockDTO.getVersion());
-        componentDependencyTreeDO.setType("-");
-        componentDependencyTreeDO.setScope("-");
-        return componentDependencyTreeDO;
+    private JsComponentDependencyTreeDO convertPackageLock(PackageLockDTO packageLockDTO) {
+        JsComponentDependencyTreeDO jsComponentDependencyTreeDO = new JsComponentDependencyTreeDO();
+        jsComponentDependencyTreeDO.setName(packageLockDTO.getName());
+        jsComponentDependencyTreeDO.setVersion(packageLockDTO.getVersion());
+        jsComponentDependencyTreeDO.setType("-");
+        return jsComponentDependencyTreeDO;
     }
 
     /**
@@ -308,9 +307,9 @@ public class NpmServiceImpl implements NpmService {
      * @param type           组件类型
      * @return ComponentDependencyTreeDO 依赖信息
      */
-    private ComponentDependencyTreeDO convertNode(PackageLockDTO packageLockDTO, String type) {
-        ComponentDependencyTreeDO root = new ComponentDependencyTreeDO();
-        root.setArtifactId(packageLockDTO.getName());
+    private JsComponentDependencyTreeDO convertNode(PackageLockDTO packageLockDTO, String type) {
+        JsComponentDependencyTreeDO root = new JsComponentDependencyTreeDO();
+        root.setName(packageLockDTO.getName());
         root.setVersion(packageLockDTO.getVersion());
         root.setDepth(0);
         root.setType(type);
@@ -325,14 +324,14 @@ public class NpmServiceImpl implements NpmService {
      * @param depth        深度
      * @return List<ComponentDependencyTreeDO> 子依赖信息
      */
-    private List<ComponentDependencyTreeDO> convertDependencies(Map<String, PackageLockDependencyDTO> dependencies, int depth) {
+    private List<JsComponentDependencyTreeDO> convertDependencies(Map<String, PackageLockDependencyDTO> dependencies, int depth) {
         if (dependencies == null) {
             return null;
         }
-        List<ComponentDependencyTreeDO> children = new ArrayList<>();
+        List<JsComponentDependencyTreeDO> children = new ArrayList<>();
         for (Map.Entry<String, PackageLockDependencyDTO> entry : dependencies.entrySet()) {
-            ComponentDependencyTreeDO child = new ComponentDependencyTreeDO();
-            child.setArtifactId(entry.getKey());
+            JsComponentDependencyTreeDO child = new JsComponentDependencyTreeDO();
+            child.setName(entry.getKey());
             child.setVersion(entry.getValue().getVersion());
             //增量更新机制
             JsComponentDO jsComponentDO = null;
