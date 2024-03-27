@@ -42,19 +42,18 @@ public class GradleServiceImpl implements GradleService{
     public JavaDependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String groupId, String artifactId, String version, String type) {
         if (builder.equals("zip")){
             unzip(filePath);
-            filePath = filePath.substring(0,filePath.lastIndexOf("/"));
+            filePath = filePath.substring(0,filePath.lastIndexOf("."));
         } else {
             throw new PlatformException(500, "gradle解析暂不支持此文件类型");
         }
 
-        // 调用./gradlew dependency命令，并获取结果
+        // 调用./gradlew dependencies命令，并获取结果
         List<String> lines = runGradleCommand(filePath);
         deleteFolder(filePath);
 
-        // 解析命令结果，并设置根ComponentDependencyTreeDO
+        // 解析命令结果，并设置root的JavaComponentDependencyTreeDO
         List<JavaComponentDependencyTreeDO> trees = gradleDependencyTreeAnalyze(lines);
 
-        //
         JavaComponentDependencyTreeDO root = new JavaComponentDependencyTreeDO();
         root.setGroupId(groupId);
         root.setArtifactId(artifactId);
@@ -64,6 +63,7 @@ public class GradleServiceImpl implements GradleService{
         root.setScope("-");
         root.setDepth(0);
 
+        // 封装为JavaDependencyTreeDO
         JavaDependencyTreeDO dependencyTreeDO = new JavaDependencyTreeDO();
         dependencyTreeDO.setGroupId(groupId);
         dependencyTreeDO.setArtifactId(artifactId);
@@ -73,7 +73,7 @@ public class GradleServiceImpl implements GradleService{
     }
 
     /**
-     * 调用./gradlew dependency命令，并返回命令结果
+     * 调用./gradlew dependencies命令，并返回命令结果
      * @param filePath 文件路径，用以设置工作目录
      * @return List<String> 命令结果
      */
@@ -81,8 +81,9 @@ public class GradleServiceImpl implements GradleService{
         List<String> lines = new ArrayList<>();
         try{
             File file = new File(filePath);
-            // 创建命令 ./gradlew dependency
-            List<String> command = List.of("./gradlew", "dependency");
+            // 创建命令 ./gradlew dependencies
+            // windows系统执行gradlew.bat，linux还是gradlew
+            List<String> command = List.of(file.getAbsolutePath()+"\\gradlew.bat", "dependencies");
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.directory(file);
             // 启动命令
