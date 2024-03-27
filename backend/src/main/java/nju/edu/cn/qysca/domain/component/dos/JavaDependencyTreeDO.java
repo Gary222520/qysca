@@ -43,5 +43,5 @@ public class JavaDependencyTreeDO extends DependencyTreeDO{
     @Column(name = "tree")
     @ApiModelProperty(value = "依赖树")
     @Type(type="jsonb")
-    private ComponentDependencyTreeDO tree;
+    private JavaComponentDependencyTreeDO tree;
 }

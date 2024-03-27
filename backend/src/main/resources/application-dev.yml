@@ -37,6 +37,7 @@ spring:
 
 uploadFolder: src/main/resources/static/upload/
 tempPomFolder: src/main/resources/static/temp/
+tempGoFolder: src/main/resources/static/temp/go/
 # maxFileSize 单个数据大小
 spring.servlet.multipart.maxFileSize: 10MB
 # maxRequestSize 是总数据大小

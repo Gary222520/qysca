@@ -90,9 +90,9 @@ public class MavenServiceImpl implements MavenService {
         javaDependencyTreeDO.setArtifactId(getArtifactIdFromPomModel(model));
         javaDependencyTreeDO.setVersion(getVersionFromPomModel(model));
         Node node = mavenDependencyTreeAnalyzer(filePath, builder);
-        ComponentDependencyTreeDO componentDependencyTreeDO = convertNode(node, 0);
-        componentDependencyTreeDO.setType(type);
-        javaDependencyTreeDO.setTree(componentDependencyTreeDO);
+        JavaComponentDependencyTreeDO javaComponentDependencyTreeDO = convertNode(node, 0);
+        javaComponentDependencyTreeDO.setType(type);
+        javaDependencyTreeDO.setTree(javaComponentDependencyTreeDO);
         return javaDependencyTreeDO;
     }
 
@@ -104,13 +104,13 @@ public class MavenServiceImpl implements MavenService {
     @Override
     public List<JavaDependencyTableDO> dependencyTableAnalysis(JavaDependencyTreeDO javaDependencyTreeDO) {
         List<JavaDependencyTableDO> closeJavaDependencyTableDOList = new ArrayList<>();
-        Queue<ComponentDependencyTreeDO> queue = new LinkedList<>(javaDependencyTreeDO.getTree().getDependencies());
+        Queue<JavaComponentDependencyTreeDO> queue = new LinkedList<>(javaDependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {
             JavaDependencyTableDO javaDependencyTableDO = new JavaDependencyTableDO();
             javaDependencyTableDO.setGroupId(javaDependencyTreeDO.getGroupId());
             javaDependencyTableDO.setArtifactId(javaDependencyTreeDO.getArtifactId());
             javaDependencyTableDO.setVersion(javaDependencyTreeDO.getVersion());
-            ComponentDependencyTreeDO componentDependencyTree = queue.poll();
+            JavaComponentDependencyTreeDO componentDependencyTree = queue.poll();
             javaDependencyTableDO.setCGroupId(componentDependencyTree.getGroupId());
             javaDependencyTableDO.setCArtifactId(componentDependencyTree.getArtifactId());
             javaDependencyTableDO.setCVersion(componentDependencyTree.getVersion());
@@ -164,12 +164,12 @@ public class MavenServiceImpl implements MavenService {
      * @return
      * @throws PlatformException
      */
-    private ComponentDependencyTreeDO convertNode(Node node, int depth) throws PlatformException {
-        ComponentDependencyTreeDO componentDependencyTreeDO = new ComponentDependencyTreeDO();
-        componentDependencyTreeDO.setGroupId(node.getGroupId() == null ? "-" : node.getGroupId());
-        componentDependencyTreeDO.setArtifactId(node.getArtifactId() == null ? "-" : node.getArtifactId());
-        componentDependencyTreeDO.setVersion(node.getVersion() == null ? "-" : node.getVersion());
-        componentDependencyTreeDO.setScope(node.getScope() == null ? "-" : node.getScope());
+    private JavaComponentDependencyTreeDO convertNode(Node node, int depth) throws PlatformException {
+        JavaComponentDependencyTreeDO javaComponentDependencyTreeDO = new JavaComponentDependencyTreeDO();
+        javaComponentDependencyTreeDO.setGroupId(node.getGroupId() == null ? "-" : node.getGroupId());
+        javaComponentDependencyTreeDO.setArtifactId(node.getArtifactId() == null ? "-" : node.getArtifactId());
+        javaComponentDependencyTreeDO.setVersion(node.getVersion() == null ? "-" : node.getVersion());
+        javaComponentDependencyTreeDO.setScope(node.getScope() == null ? "-" : node.getScope());
         if (depth != 0) {
             // 从知识库中查找
             JavaComponentDO javaComponentDO = null;
@@ -180,22 +180,22 @@ public class MavenServiceImpl implements MavenService {
                 javaComponentDO = spiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 if (javaComponentDO != null) {
                     javaComponentDao.save(javaComponentDO);
-                    componentDependencyTreeDO.setType("opensource");
+                    javaComponentDependencyTreeDO.setType("opensource");
                 } else {
-                    componentDependencyTreeDO.setType("opensource");
+                    javaComponentDependencyTreeDO.setType("opensource");
                     //如果爬虫没有爬到则扫描错误 通过抛出异常处理
                     throw new PlatformException(500, "存在未识别的组件");
                 }
             } else {
-                componentDependencyTreeDO.setType(javaComponentDO.getType());
+                javaComponentDependencyTreeDO.setType(javaComponentDO.getType());
             }
         }
-        componentDependencyTreeDO.setDepth(depth);
+        javaComponentDependencyTreeDO.setDepth(depth);
         for (Node child : node.getChildNodes()) {
-            ComponentDependencyTreeDO childDependencyTreeDO = convertNode(child, depth + 1);
-            componentDependencyTreeDO.getDependencies().add(childDependencyTreeDO);
+            JavaComponentDependencyTreeDO childDependencyTreeDO = convertNode(child, depth + 1);
+            javaComponentDependencyTreeDO.getDependencies().add(childDependencyTreeDO);
         }
-        return componentDependencyTreeDO;
+        return javaComponentDependencyTreeDO;
     }
 
     /**
