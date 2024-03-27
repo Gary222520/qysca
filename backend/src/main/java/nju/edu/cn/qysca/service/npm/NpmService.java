@@ -13,4 +13,6 @@ public interface NpmService {
     JsDependencyTreeDO dependencyTreeAnalysis(String filePath, String type);
 
     List<JsDependencyTableDO> dependencyTableAnalysis(JsDependencyTreeDO jsDependencyTreeDO);
+
+    JsDependencyTreeDO spiderDependencyTree(String name, String version);
 }

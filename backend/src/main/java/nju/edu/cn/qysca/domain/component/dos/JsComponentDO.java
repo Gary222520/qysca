@@ -1,20 +1,26 @@
 package nju.edu.cn.qysca.domain.component.dos;
 
+import com.vladmihalcea.hibernate.type.array.StringArrayType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel(description = "js组件DO")
+@Entity
+@TypeDefs({
+        @TypeDef(name = "string-array", typeClass = StringArrayType.class),
+})
 public class JsComponentDO extends ComponentDO{
 
     @Id
@@ -50,7 +56,8 @@ public class JsComponentDO extends ComponentDO{
 
     @Column(name = "copyright_statements")
     @ApiModelProperty(value = "版权声明", example = "[\"The Font Awesome Team, https://github.com/orgs/FortAwesome/people\"]")
-    private String[] copyright_statements;
+    @Type(type = "string-array")
+    private String[] copyrightStatements;
 
     @Column(name = "purl")
     @ApiModelProperty(value = "purl地址", example = "pkg:npm/fontawesome-free@2.5.15")
@@ -71,4 +78,8 @@ public class JsComponentDO extends ComponentDO{
     @Column(name="type",nullable = false)
     @ApiModelProperty(value = "组件类型",example = "opensource")
     private String type;
+
+    @Column(name="creator")
+    @ApiModelProperty(value = "创建者",example = "Font Awesome")
+    private String creator;
 }
