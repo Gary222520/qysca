@@ -3,6 +3,7 @@ package nju.edu.cn.qysca.service.npm;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.dao.component.JsComponentDao;
 import nju.edu.cn.qysca.domain.component.dos.*;
@@ -348,10 +349,10 @@ public class NpmServiceImpl implements NpmService {
                     jsComponentDao.save(jsComponentDO);
                 } else {
                     child.setType("opensource");
-                    throw new PlatformException(500, "存在未识别的组件");
                 }
+            }else {
+                child.setType(jsComponentDO.getType());
             }
-            child.setType(jsComponentDO.getType());
             child.setDepth(depth);
             child.setDependencies(convertDependencies(entry.getValue().getDependencies(), depth + 1));
             children.add(child);
@@ -366,7 +367,7 @@ public class NpmServiceImpl implements NpmService {
      * @param version 组件版本
      * @return JsComponentDO 组件信息
      */
-    private JsComponentDO spiderComponentInfo(String name, String version) {
+    public JsComponentDO spiderComponentInfo(String name, String version) {
         JsComponentDO jsComponentDO = new JsComponentDO();
         if (name.contains("@")) {
             String[] temp = parsePackageName(name);
@@ -382,6 +383,13 @@ public class NpmServiceImpl implements NpmService {
         jsComponentDO.setType("opensource");
         jsComponentDO.setCreator("-");
         try {
+            if(version.contains("npm")){
+                String[] temp = parsePackageNameAndVersion(version);
+                if(temp != null) {
+                    name = temp[0];
+                    version = temp[1];
+                }
+            }
             String url = "https://registry.npmjs.org/" + name + FILE_SEPARATOR + version;
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpGet httpGet = new HttpGet(url);
@@ -394,23 +402,35 @@ public class NpmServiceImpl implements NpmService {
             JSONObject jsonObject = JSON.parseObject(content);
             jsComponentDO.setDescription(jsonObject.getString("description"));
             jsComponentDO.setWebsite(jsonObject.getString("homepage"));
-            jsComponentDO.setRepoUrl(jsonObject.getJSONObject("repository").getString("url"));
+            if(jsonObject.get("repository") instanceof JSONObject) {
+                jsComponentDO.setRepoUrl(jsonObject.getJSONObject("repository").getString("url"));
+            }else{
+                jsComponentDO.setRepoUrl(jsonObject.getString("repository"));
+            }
             jsComponentDO.setLicense(jsonObject.getString("license"));
-            jsComponentDO.setDownloadUrl(jsonObject.getJSONObject("dist").getString("tarball"));
+            jsComponentDO.setDownloadUrl(jsonObject.getJSONObject("dist") ==null ? "" : jsonObject.getJSONObject("dist").getString("tarball"));
             List<String> copyrightStatements = new ArrayList<>();
-            copyrightStatements.add(jsonObject.getJSONObject("author").getString("name") + " ," + jsonObject.getJSONObject("author").getString("email"));
-            JSONArray jsonArray = jsonObject.getJSONArray("contributors");
-            for (int i = 0; i < jsonArray.size(); i++) {
-                JSONObject contributor = jsonArray.getJSONObject(i);
-                StringBuilder contributorStr = new StringBuilder();
-                contributorStr.append(contributor.getString("name"));
-                if (contributor.containsKey("email")) {
-                    contributorStr.append(" ,").append(contributor.getString("email"));
+            if(jsonObject.get("author") instanceof JSONObject) {
+                if (jsonObject.getJSONObject("author") != null) {
+                    copyrightStatements.add(jsonObject.getJSONObject("author").getString("name") + " ," + jsonObject.getJSONObject("author").getString("email"));
                 }
-                if (contributor.containsKey("url")) {
-                    contributorStr.append(" ,").append(contributor.getString("url"));
+            }
+            if(jsonObject.get("contributors") instanceof JSONArray) {
+                JSONArray jsonArray = jsonObject.getJSONArray("contributors");
+                if (jsonArray != null) {
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        JSONObject contributor = jsonArray.getJSONObject(i);
+                        StringBuilder contributorStr = new StringBuilder();
+                        contributorStr.append(contributor.getString("name"));
+                        if (contributor.containsKey("email")) {
+                            contributorStr.append(" ,").append(contributor.getString("email"));
+                        }
+                        if (contributor.containsKey("url")) {
+                            contributorStr.append(" ,").append(contributor.getString("url"));
+                        }
+                        copyrightStatements.add(contributorStr.toString());
+                    }
                 }
-                copyrightStatements.add(contributorStr.toString());
             }
             jsComponentDO.setCopyrightStatements(copyrightStatements.toArray(new String[0]));
         } catch (Exception e) {
@@ -467,5 +487,13 @@ public class NpmServiceImpl implements NpmService {
         StringBuilder sb = new StringBuilder();
         sb.append(majorVersion + 1).append(".0.0");
         return sb.toString();
+    }
+    private String[] parsePackageNameAndVersion(String version) {
+        Pattern pattern = Pattern.compile("npm:(.+)@(.+)");
+        Matcher matcher = pattern.matcher(version);
+        if(matcher.find()){
+            return new String[]{matcher.group(1), matcher.group(2)};
+        }
+        return null;
     }
 }
