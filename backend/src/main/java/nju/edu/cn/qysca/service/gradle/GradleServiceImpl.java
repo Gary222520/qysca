@@ -29,6 +29,38 @@ public class GradleServiceImpl implements GradleService{
     private final String FILE_SEPARATOR = "/";
 
     /**
+     * 构造gradle java组件
+     * @param groupId 工件id
+     * @param artifactId 组件id
+     * @param version 版本号
+     * @param type 组件类型
+     * @return PythonComponentDO
+     */
+    @Override
+    public JavaComponentDO componentAnalysis(String groupId, String artifactId, String version, String type) {
+        JavaComponentDO javaComponentDO = new JavaComponentDO();
+        javaComponentDO.setGroupId(groupId);
+        javaComponentDO.setArtifactId(artifactId);
+        javaComponentDO.setVersion(version);
+        javaComponentDO.setType(type);
+        javaComponentDO.setLanguage("java");
+        javaComponentDO.setName(artifactId);
+        javaComponentDO.setDescription("-");
+        javaComponentDO.setUrl("-");
+        javaComponentDO.setDownloadUrl("-");
+        javaComponentDO.setSourceUrl("-");
+        javaComponentDO.setPUrl("-");
+        javaComponentDO.setDevelopers(new ArrayList<>());
+        javaComponentDO.setLicenses(new ArrayList<>());
+        javaComponentDO.setHashes(new ArrayList<>());
+        //creator和state由调用此方法者填充
+        javaComponentDO.setCreator(null);
+        javaComponentDO.setState(null);
+        return javaComponentDO;
+    }
+
+
+    /**
      *  解析上传文件的依赖信息，并生成依赖树
      * @param filePath 上传文件路径
      * @param builder 构造器， 例如 zip
@@ -316,9 +348,4 @@ public class GradleServiceImpl implements GradleService{
         folder.delete();
     }
 
-//    public static void main(String[] args) {
-//        GradleServiceImpl gradleService = new GradleServiceImpl();
-//        List<ComponentDependencyTreeDO> trees = gradleService.gradleDependencyTreeAnalyze("C:\\Users\\ASUS\\Desktop\\1.txt");
-//        System.out.println(trees);
-//    }
 }
