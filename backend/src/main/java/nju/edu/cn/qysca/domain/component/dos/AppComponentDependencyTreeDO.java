@@ -12,8 +12,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel(description = "Go组件依赖树DO")
-public class GoComponentDependencyTreeDO {
+@ApiModel(description = "App组件依赖树DO")
+public class AppComponentDependencyTreeDO {
 
     @ApiModelProperty(value = "组件名称", example = "github.com/gin-gonic/gin")
     private String name;
@@ -28,5 +28,5 @@ public class GoComponentDependencyTreeDO {
     private String type;
 
     @ApiModelProperty(value = "依赖子树")
-    private List<GoComponentDependencyTreeDO> dependencies = new ArrayList<>();
+    private List<AppComponentDependencyTreeDO> dependencies = new ArrayList<>();
 }

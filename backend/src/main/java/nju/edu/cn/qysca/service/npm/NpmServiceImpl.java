@@ -317,7 +317,7 @@ public class NpmServiceImpl implements NpmService {
      * @param packageName 包名
      * @return String[] namespace和name
      */
-    private String[] parsePackageName(String packageName) {
+    public String[] parsePackageName(String packageName) {
         String regex = "^(@[^/]+)/(.+)$";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(packageName);

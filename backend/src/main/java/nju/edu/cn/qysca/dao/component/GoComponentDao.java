@@ -4,6 +4,8 @@ import nju.edu.cn.qysca.domain.component.dos.GoComponentDO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface GoComponentDao extends JpaRepository<GoComponentDO,String> {
     /**
@@ -13,4 +15,11 @@ public interface GoComponentDao extends JpaRepository<GoComponentDO,String> {
      * @return Go组件信息
      */
     GoComponentDO findByNameAndVersion(String name,String version);
+
+    /**
+     * 根据Id查询Go组件信息
+     * @param ids Id
+     * @return List<GoComponentDO> Go组件信息
+     */
+    List<GoComponentDO> findByIdIn(List<String> ids);
 }

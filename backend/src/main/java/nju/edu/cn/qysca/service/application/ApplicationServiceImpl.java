@@ -3,9 +3,7 @@ package nju.edu.cn.qysca.service.application;
 import nju.edu.cn.qysca.auth.ContextUtil;
 import nju.edu.cn.qysca.dao.bu.BuAppDao;
 import nju.edu.cn.qysca.dao.bu.BuDao;
-import nju.edu.cn.qysca.dao.component.JavaComponentDao;
-import nju.edu.cn.qysca.dao.component.JavaDependencyTableDao;
-import nju.edu.cn.qysca.dao.component.JavaDependencyTreeDao;
+import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.user.UserRoleDao;
 import nju.edu.cn.qysca.domain.bu.dos.BuAppDO;
@@ -20,7 +18,11 @@ import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.domain.user.dos.UserRoleDO;
 import nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
+import nju.edu.cn.qysca.service.go.GoService;
+import nju.edu.cn.qysca.service.gradle.GradleService;
 import nju.edu.cn.qysca.service.maven.MavenService;
+import nju.edu.cn.qysca.service.npm.NpmService;
+import nju.edu.cn.qysca.service.python.PythonService;
 import nju.edu.cn.qysca.service.spider.SpiderService;
 import nju.edu.cn.qysca.utils.excel.ExcelUtils;
 import org.springframework.beans.BeanUtils;
@@ -57,13 +59,52 @@ public class ApplicationServiceImpl implements ApplicationService {
     private JavaDependencyTreeDao javaDependencyTreeDao;
 
     @Autowired
+    private JsDependencyTreeDao jsDependencyTreeDao;
+
+    @Autowired
+    private GoDependencyTreeDao goDependencyTreeDao;
+
+    @Autowired
+    private PythonDependencyTreeDao pythonDependencyTreeDao;
+
+    @Autowired
     private JavaDependencyTableDao javaDependencyTableDao;
+
+    @Autowired
+    private JsDependencyTableDao jsDependencyTableDao;
+
+    @Autowired
+    private GoDependencyTableDao goDependencyTableDao;
+
+    @Autowired
+    private PythonDependencyTableDao pythonDependencyTableDao;
 
     @Autowired
     private JavaComponentDao javaComponentDao;
 
     @Autowired
+    private JsComponentDao jsComponentDao;
+
+    @Autowired
+    private GoComponentDao goComponentDao;
+
+    @Autowired
+    private PythonComponentDao pythonComponentDao;
+
+    @Autowired
     private MavenService mavenService;
+
+    @Autowired
+    private NpmService npmService;
+
+    @Autowired
+    private GoService goService;
+
+    @Autowired
+    private GradleService gradleService;
+
+    @Autowired
+    private PythonService pythonService;
 
     @Autowired
     private SpiderService spiderService;
@@ -129,11 +170,25 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
         List<ApplicationDO> subApplication = applicationDao.findSubApplication(applicationDO.getId());
         //查询子组件
-        Map<String, List<? extends ComponentDO>>  subComponent = new HashMap<>();
-        for(Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()) {
-            if(entry.getKey().equals("java")) {
-                List<JavaComponentDO> javaComponentDOList = javaComponentDao.findByIdIn(entry.getValue());
-                subComponent.put("java", javaComponentDOList);
+        Map<String, List<? extends ComponentDO>> subComponent = new HashMap<>();
+        for (Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()) {
+            switch (entry.getKey()) {
+                case "java":
+                    List<JavaComponentDO> javaComponentDOList = javaComponentDao.findByIdIn(entry.getValue());
+                    subComponent.put("java", javaComponentDOList);
+                    break;
+                case "javaScript":
+                    List<JsComponentDO> jsComponentDOList = jsComponentDao.findByIdIn(entry.getValue());
+                    subComponent.put("javaScript", jsComponentDOList);
+                    break;
+                case "go":
+                    List<GoComponentDO> goComponentDOList = goComponentDao.findByIdIn(entry.getValue());
+                    subComponent.put("go", goComponentDOList);
+                    break;
+                case "python":
+                    List<PythonComponentDO> pythonComponentDOList = pythonComponentDao.findByIdIn(entry.getValue());
+                    subComponent.put("python", pythonComponentDOList);
+                    break;
             }
         }
         SubApplicationDTO subApplicationDTO = new SubApplicationDTO();
@@ -210,32 +265,81 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Transactional
     public void saveApplicationDependency(SaveApplicationDependencyDTO saveApplicationDependencyDTO) {
         try {
-            //部门名称为groupId 应用名称为ArtifactId
-            JavaDependencyTreeDO analyzedJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
-            ApplicationDO temp = applicationDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
-            BuAppDO buAppDO = buAppDao.findByAid(temp.getId());
-            BuDO buDO = buDao.findByBid(buAppDO.getBid());
-            if (!analyzedJavaDependencyTreeDO.getGroupId().equals((buDO.getName())) || !analyzedJavaDependencyTreeDO.getArtifactId().equals(saveApplicationDependencyDTO.getName()) || !analyzedJavaDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
-                throw new PlatformException(500, "上传pom文件非本项目");
-            }
-            // 非叶子节点不能保存pom信息
+            //非叶子节点不能保存pom信息
             ApplicationDO applicationDO = applicationDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
             if (applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().size() > 0) {
                 throw new PlatformException(500, "该应用不能保存pom信息");
             }
-            JavaDependencyTreeDO applicationJavaDependencyTreeDO = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
-            if (applicationJavaDependencyTreeDO == null) {
-                applicationJavaDependencyTreeDO = new JavaDependencyTreeDO();
-                applicationJavaDependencyTreeDO.setGroupId(buDO.getName());
-                applicationJavaDependencyTreeDO.setArtifactId(saveApplicationDependencyDTO.getName());
-                applicationJavaDependencyTreeDO.setVersion(saveApplicationDependencyDTO.getVersion());
+            //TODO: 尝试通过多态代码优化
+            switch (saveApplicationDependencyDTO.getLanguage()) {
+                case "java":
+                    JavaDependencyTreeDO analyzedJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
+                    BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
+                    BuDO buDO = buDao.findByBid(buAppDO.getBid());
+                    if (!analyzedJavaDependencyTreeDO.getGroupId().equals((buDO.getName())) || !analyzedJavaDependencyTreeDO.getArtifactId().equals(saveApplicationDependencyDTO.getName()) || !analyzedJavaDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
+                        throw new PlatformException(500, "上传文件非本项目");
+                    }
+                    JavaDependencyTreeDO applicationJavaDependencyTreeDO = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+                    if (applicationJavaDependencyTreeDO == null) {
+                        applicationJavaDependencyTreeDO = new JavaDependencyTreeDO();
+                        applicationJavaDependencyTreeDO.setGroupId(buDO.getName());
+                        applicationJavaDependencyTreeDO.setArtifactId(saveApplicationDependencyDTO.getName());
+                        applicationJavaDependencyTreeDO.setVersion(saveApplicationDependencyDTO.getVersion());
+                    }
+                    applicationJavaDependencyTreeDO.setTree(analyzedJavaDependencyTreeDO.getTree());
+                    javaDependencyTreeDao.save(applicationJavaDependencyTreeDO);
+                    javaDependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+                    List<JavaDependencyTableDO> applicationJavaDependencyTableDOS = mavenService.dependencyTableAnalysis(applicationJavaDependencyTreeDO);
+                    javaDependencyTableDao.saveAll(applicationJavaDependencyTableDOS);
+                    break;
+                case "javaScript":
+                    JsDependencyTreeDO analyzedJsDependencyTreeDO = npmService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), "");
+                    if (!analyzedJsDependencyTreeDO.getName().equals(saveApplicationDependencyDTO.getName()) || !analyzedJsDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
+                        throw new PlatformException(500, "上传文件非本项目");
+                    }
+                    JsDependencyTreeDO applicationJsDependencyTreeDO = jsDependencyTreeDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+                    if (applicationJsDependencyTreeDO == null) {
+                        applicationJsDependencyTreeDO = new JsDependencyTreeDO();
+                        applicationJsDependencyTreeDO.setName(saveApplicationDependencyDTO.getName());
+                        applicationJsDependencyTreeDO.setVersion(saveApplicationDependencyDTO.getVersion());
+                    }
+                    applicationJsDependencyTreeDO.setTree(analyzedJsDependencyTreeDO.getTree());
+                    jsDependencyTreeDao.save(applicationJsDependencyTreeDO);
+                    jsDependencyTableDao.deleteAllByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+                    List<JsDependencyTableDO> applicationJsDependencyTableDOS = npmService.dependencyTableAnalysis(applicationJsDependencyTreeDO);
+                    jsDependencyTableDao.saveAll(applicationJsDependencyTableDOS);
+                    break;
+                case "go":
+                    GoDependencyTreeDO analyzedGoDependencyTreeDO = goService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "", saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder());
+                    //GO从实现来看不需要检查
+                    GoDependencyTreeDO applicationGoDependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+                    if (applicationGoDependencyTreeDO == null) {
+                        applicationGoDependencyTreeDO = new GoDependencyTreeDO();
+                        applicationGoDependencyTreeDO.setName(saveApplicationDependencyDTO.getName());
+                        applicationGoDependencyTreeDO.setVersion(saveApplicationDependencyDTO.getVersion());
+                    }
+                    applicationGoDependencyTreeDO.setTree(analyzedGoDependencyTreeDO.getTree());
+                    goDependencyTreeDao.save(applicationGoDependencyTreeDO);
+                    goDependencyTableDao.deleteAllByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+                    List<GoDependencyTableDO> applicationGoDependencyTableDOS = goService.dependencyTableAnalysis(applicationGoDependencyTreeDO);
+                    goDependencyTableDao.saveAll(applicationGoDependencyTableDOS);
+                    break;
+                case "python":
+                    PythonDependencyTreeDO analyzedPythonDependencyTreeDO = pythonService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), saveApplicationDependencyDTO.getVersion(), saveApplicationDependencyDTO.getName(), "");
+                    //Python从实现上来看不需要检查
+                    PythonDependencyTreeDO applicationPythonDependencyTreeDO = pythonDependencyTreeDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+                    if (applicationPythonDependencyTreeDO == null) {
+                        applicationPythonDependencyTreeDO = new PythonDependencyTreeDO();
+                        applicationPythonDependencyTreeDO.setName(saveApplicationDependencyDTO.getName());
+                        applicationPythonDependencyTreeDO.setVersion(saveApplicationDependencyDTO.getVersion());
+                    }
+                    applicationPythonDependencyTreeDO.setTree(analyzedPythonDependencyTreeDO.getTree());
+                    pythonDependencyTreeDao.save(applicationPythonDependencyTreeDO);
+                    pythonDependencyTableDao.deleteAllByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+                    List<PythonDependencyTableDO> applicationPythonDependencyTableDOS = pythonService.dependencyTableAnalysis(applicationPythonDependencyTreeDO);
+                    pythonDependencyTableDao.saveAll(applicationPythonDependencyTableDOS);
+                    break;
             }
-            applicationJavaDependencyTreeDO.setTree(analyzedJavaDependencyTreeDO.getTree());
-            javaDependencyTreeDao.save(applicationJavaDependencyTreeDO);
-            // 批量更新依赖平铺表
-            javaDependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(buDO.getName(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
-            List<JavaDependencyTableDO> applicationJavaDependencyTableDOS = mavenService.dependencyTableAnalysis(applicationJavaDependencyTreeDO);
-            javaDependencyTableDao.saveAll(applicationJavaDependencyTableDOS);
             // 更改状态为SUCCESS
             applicationDO.setBuilder(saveApplicationDependencyDTO.getBuilder());
             applicationDO.setScanner(saveApplicationDependencyDTO.getScanner());
@@ -363,15 +467,30 @@ public class ApplicationServiceImpl implements ApplicationService {
         //叶子节点无法添加组件
         BuAppDO buAppDO = buAppDao.findByAid(parentApplicationDO.getId());
         BuDO buDO = buDao.findByBid(buAppDO.getBid());
+        //TODO: 可以在数据库表中增加判断
         JavaDependencyTreeDO javaDependencyTreeDO = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(buDO.getName(), applicationComponentDTO.getParentName(), applicationComponentDTO.getParentVersion());
         if (javaDependencyTreeDO != null) {
             throw new PlatformException(500, "该应用已添加组件，无法手动添加");
         }
         //不是应用发布成的组件
         if (applicationDO == null) {
-            if(applicationComponentDTO.getLanguage().equals("java")) {
-                JavaComponentDO javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(applicationComponentDTO.getGroupId(), applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
-                parentApplicationDO.getChildComponent().get("java").add(javaComponentDO.getId());
+            switch (applicationComponentDTO.getLanguage()) {
+                case "java":
+                    JavaComponentDO javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(applicationComponentDTO.getGroupId(), applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
+                    parentApplicationDO.getChildComponent().get("java").add(javaComponentDO.getId());
+                    break;
+                case "javaScript":
+                    //TODO: 和前端对接
+                    JsComponentDO jsComponentDO = jsComponentDao.findByNamespaceAndArtifactIdAndVersion(applicationComponentDTO.getGroupId(), applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
+                    parentApplicationDO.getChildComponent().get("javaScript").add(jsComponentDO.getId());
+                    break;
+                case "go":
+                    GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
+                    parentApplicationDO.getChildComponent().get("go").add(goComponentDO.getId());
+                    break;
+                case "python":
+                    PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
+                    parentApplicationDO.getChildComponent().get("python").add(pythonComponentDO.getId());
             }
         } else {
             ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentApplicationDO.getChildApplication()));
@@ -399,9 +518,23 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         //不是应用发布成的组件
         if (applicationDO == null) {
-            if(applicationComponentDTO.getLanguage().equals("java")) {
-                JavaComponentDO javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(applicationComponentDTO.getGroupId(), applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
-                parentApplicationDO.getChildComponent().get("java").add(javaComponentDO.getId());
+            switch (applicationComponentDTO.getLanguage()) {
+                case "java":
+                    JavaComponentDO javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(applicationComponentDTO.getGroupId(), applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
+                    parentApplicationDO.getChildComponent().get("java").remove(javaComponentDO.getId());
+                    break;
+                case "javaScript":
+                    JsComponentDO jsComponentDO = jsComponentDao.findByNamespaceAndArtifactIdAndVersion(applicationComponentDTO.getGroupId(), applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
+                    parentApplicationDO.getChildComponent().get("javaScript").remove(jsComponentDO.getId());
+                    break;
+                case "go":
+                    GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
+                    parentApplicationDO.getChildComponent().get("go").remove(goComponentDO.getId());
+                    break;
+                case "python":
+                    PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(applicationComponentDTO.getArtifactId(), applicationComponentDTO.getVersion());
+                    parentApplicationDO.getChildComponent().get("python").remove(pythonComponentDO.getId());
+                    break;
             }
         } else {
             ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentApplicationDO.getChildApplication()));
@@ -505,7 +638,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             addDepth(temp);
             javaComponentDependencyTreeDOS.add(temp);
         }
-        for (Map.Entry<String, List<String>> entry: applicationDO.getChildComponent().entrySet()) {
+        for (Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()) {
             if (entry.getKey().equals("java")) {
                 for (String id : entry.getValue()) {
                     JavaComponentDO tempJavaComponentDO = javaComponentDao.findComponentDOById(id);
