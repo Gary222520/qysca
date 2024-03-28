@@ -31,6 +31,11 @@ public class NpmTest {
 
     @Test
     public void test3(){
-        npmService.spiderComponentInfo("pinkle", "2.0.4");
+        npmService.spiderComponentInfo("pinkie", "2.0.4");
+    }
+
+    @Test
+    public void test4(){
+        npmService.spiderDependencyTree("pinkie", "2.0.4");
     }
 }

@@ -3,7 +3,6 @@ package nju.edu.cn.qysca.service.npm;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.dao.component.JsComponentDao;
 import nju.edu.cn.qysca.domain.component.dos.*;
@@ -111,28 +110,36 @@ public class NpmServiceImpl implements NpmService {
 
     /**
      * 根据爬虫获得依赖信息
-     * @param name 组件名称
+     *
+     * @param name    组件名称
      * @param version 组件版本
      * @return JsDependencyTreeDO 组件依赖信息
      */
+    //会存在循环依赖问题 version规范问题 404问题 是否有限问题
+    //可以考虑是否能够拉取content使用npm构建来生成依赖树
     @Override
     public JsDependencyTreeDO spiderDependencyTree(String name, String version) {
         JsDependencyTreeDO jsDependencyTreeDO = new JsDependencyTreeDO();
         jsDependencyTreeDO.setName(name);
         jsDependencyTreeDO.setVersion(version);
-        JsComponentDependencyTreeDO jsComponentDependencyTreeDO = buildDependencyTree(name, version, 0);
+        Set<String> set = new HashSet<>();
+        JsComponentDependencyTreeDO jsComponentDependencyTreeDO = buildDependencyTree(name, version, 0, set);
         jsDependencyTreeDO.setTree(jsComponentDependencyTreeDO);
         return jsDependencyTreeDO;
     }
 
     /**
      * 爬虫构建树状依赖信息
-     * @param name 组件名称
+     *
+     * @param name    组件名称
      * @param version 组件版本
-     * @param depth 深度
+     * @param depth   深度
      * @return ComponentDependencyTreeDO 依赖树信息
      */
-    private JsComponentDependencyTreeDO buildDependencyTree(String name, String version, int depth){
+    private JsComponentDependencyTreeDO buildDependencyTree(String name, String version, int depth, Set<String> set) {
+        if (set.contains(name + "@" + version)) {
+            return null;
+        }
         JsComponentDependencyTreeDO jsComponentDependencyTreeDO = new JsComponentDependencyTreeDO();
         jsComponentDependencyTreeDO.setName(name);
         jsComponentDependencyTreeDO.setVersion(version);
@@ -146,20 +153,31 @@ public class NpmServiceImpl implements NpmService {
             httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
             CloseableHttpResponse response = httpClient.execute(httpGet);
             if (response.getStatusLine().getStatusCode() != 200) {
+                System.out.println(response.getStatusLine().getStatusCode());
                 throw new PlatformException(500, "存在未识别的组件");
             }
             String content = EntityUtils.toString(response.getEntity(), "UTF-8");
             JSONObject jsonObject = JSON.parseObject(content);
             JSONObject dependencies = jsonObject.getJSONObject("dependencies");
             JSONObject devDependencies = jsonObject.getJSONObject("devDependencies");
+            set.add(name + "@" + version);
             if (dependencies != null) {
                 for (Map.Entry<String, Object> entry : dependencies.entrySet()) {
                     String childName = entry.getKey();
                     String childVersion = (String) entry.getValue();
                     if (childVersion.contains("^")) {
-                        childVersion = resolveVersion(childName, childVersion.substring(1));
+                        String maxVersion = upLimitMajorVersion(childVersion.substring(1));
+                        childVersion = resolveVersion(childName, childVersion.substring(1), maxVersion);
                     }
-                    JsComponentDependencyTreeDO childComponentDependencyTreeDO = buildDependencyTree(childName, childVersion, depth + 1);
+                    if (childVersion.contains("~")) {
+                        String maxVersion = upLimitMinorVersion(childVersion.substring(1));
+                        childVersion = resolveVersion(childName, childVersion.substring(1), maxVersion);
+                    }
+                    if(childVersion.contains("*")) {
+                        childVersion = resolveVersion(childName,"0.0.0", "99.99.99");
+                    }
+                    System.out.println(childName + "@" + childVersion);
+                    JsComponentDependencyTreeDO childComponentDependencyTreeDO = buildDependencyTree(childName, childVersion, depth + 1, set);
                     dependencyTreeDOS.add(childComponentDependencyTreeDO);
                 }
             }
@@ -168,15 +186,25 @@ public class NpmServiceImpl implements NpmService {
                     String childName = entry.getKey();
                     String childVersion = (String) entry.getValue();
                     if (childVersion.contains("^")) {
-                        childVersion = resolveVersion(childName, childVersion.substring(1));
+                        String maxVersion = upLimitMajorVersion(childVersion.substring(1));
+                        childVersion = resolveVersion(childName, childVersion.substring(1), maxVersion);
                     }
-                    JsComponentDependencyTreeDO childComponentDependencyTreeDO = buildDependencyTree(childName, childVersion, depth + 1);
+                    if (childVersion.contains("~")) {
+                        String maxVersion = upLimitMinorVersion(childVersion.substring(1));
+                        childVersion = resolveVersion(childName, childVersion.substring(1), maxVersion);
+                    }
+                    if(childVersion.contains("*")) {
+                        childVersion = resolveVersion(childName,"0.0.0", "99.99.99");
+                    }
+                    System.out.println(childName + "@" + childVersion);
+                    JsComponentDependencyTreeDO childComponentDependencyTreeDO = buildDependencyTree(childName, childVersion, depth + 1, set);
                     dependencyTreeDOS.add(childComponentDependencyTreeDO);
                 }
             }
             jsComponentDependencyTreeDO.setDependencies(dependencyTreeDOS);
-        }catch (Exception e){
-            throw new PlatformException(500, "存在未识别的组件");
+        } catch (Exception e) {
+            System.out.println(name + "@" + version + ":未找到");
+            e.printStackTrace();
         }
         return jsComponentDependencyTreeDO;
     }
@@ -350,7 +378,7 @@ public class NpmServiceImpl implements NpmService {
                 } else {
                     child.setType("opensource");
                 }
-            }else {
+            } else {
                 child.setType(jsComponentDO.getType());
             }
             child.setDepth(depth);
@@ -383,9 +411,9 @@ public class NpmServiceImpl implements NpmService {
         jsComponentDO.setType("opensource");
         jsComponentDO.setCreator("-");
         try {
-            if(version.contains("npm")){
+            if (version.contains("npm")) {
                 String[] temp = parsePackageNameAndVersion(version);
-                if(temp != null) {
+                if (temp != null) {
                     name = temp[0];
                     version = temp[1];
                 }
@@ -402,20 +430,20 @@ public class NpmServiceImpl implements NpmService {
             JSONObject jsonObject = JSON.parseObject(content);
             jsComponentDO.setDescription(jsonObject.getString("description"));
             jsComponentDO.setWebsite(jsonObject.getString("homepage"));
-            if(jsonObject.get("repository") instanceof JSONObject) {
+            if (jsonObject.get("repository") instanceof JSONObject) {
                 jsComponentDO.setRepoUrl(jsonObject.getJSONObject("repository").getString("url"));
-            }else{
+            } else {
                 jsComponentDO.setRepoUrl(jsonObject.getString("repository"));
             }
             jsComponentDO.setLicense(jsonObject.getString("license"));
-            jsComponentDO.setDownloadUrl(jsonObject.getJSONObject("dist") ==null ? "" : jsonObject.getJSONObject("dist").getString("tarball"));
+            jsComponentDO.setDownloadUrl(jsonObject.getJSONObject("dist") == null ? "" : jsonObject.getJSONObject("dist").getString("tarball"));
             List<String> copyrightStatements = new ArrayList<>();
-            if(jsonObject.get("author") instanceof JSONObject) {
+            if (jsonObject.get("author") instanceof JSONObject) {
                 if (jsonObject.getJSONObject("author") != null) {
                     copyrightStatements.add(jsonObject.getJSONObject("author").getString("name") + " ," + jsonObject.getJSONObject("author").getString("email"));
                 }
             }
-            if(jsonObject.get("contributors") instanceof JSONArray) {
+            if (jsonObject.get("contributors") instanceof JSONArray) {
                 JSONArray jsonArray = jsonObject.getJSONArray("contributors");
                 if (jsonArray != null) {
                     for (int i = 0; i < jsonArray.size(); i++) {
@@ -446,7 +474,7 @@ public class NpmServiceImpl implements NpmService {
      * @param minVersion 最小版本
      * @return String 符合条件的最新版本
      */
-    private String resolveVersion(String name, String minVersion) {
+    private String resolveVersion(String name, String minVersion, String maxVersion) {
         String result = minVersion;
         try {
             String url = "https://registry.npmjs.org/" + name;
@@ -462,10 +490,9 @@ public class NpmServiceImpl implements NpmService {
             JSONObject versions = jsonObject.getJSONObject("versions");
             List<String> sortedVersions = new ArrayList<>(versions.keySet());
             Collections.sort(sortedVersions);
-            String upLimitVersion = upLimitVersion(minVersion);
             for (int i = sortedVersions.size() - 1; i >= 0; i--) {
-                if(sortedVersions.get(i).compareTo(upLimitVersion) < 0 &&sortedVersions.get(i).compareTo(minVersion) >= 0){
-                    result =  sortedVersions.get(i);
+                if (sortedVersions.get(i).compareTo(maxVersion) < 0 && sortedVersions.get(i).compareTo(minVersion) >= 0) {
+                    result = sortedVersions.get(i);
                     return result;
                 }
             }
@@ -478,20 +505,42 @@ public class NpmServiceImpl implements NpmService {
 
     /**
      * 获取大于指定版本的整数版本
+     *
      * @param minVersion 最小版本
      * @return String 大于指定版本的整数版本
      */
-    private String upLimitVersion(String minVersion) {
+    private String upLimitMajorVersion(String minVersion) {
         Integer index = minVersion.indexOf(".");
-        Integer  majorVersion = Integer.parseInt(minVersion.substring(0, index));
+        Integer majorVersion = Integer.parseInt(minVersion.substring(0, index));
         StringBuilder sb = new StringBuilder();
         sb.append(majorVersion + 1).append(".0.0");
         return sb.toString();
     }
+
+    /**
+     * 获取大于指定版本的次版本号的整数版本
+     *
+     * @param minVersion
+     * @return
+     */
+    private String upLimitMinorVersion(String minVersion) {
+        String[] versionParts = minVersion.split("\\.");
+        int majorVersion = Integer.parseInt(versionParts[0]);
+        int minorVersion = Integer.parseInt(versionParts[1]);
+        int patch = Integer.parseInt(versionParts[2]);
+        return majorVersion + "." + (minorVersion + 1) + ".0";
+    }
+
+    /**
+     * 解析版本号
+     *
+     * @param version 版本号
+     * @return String[] 组件名称和版本
+     */
     private String[] parsePackageNameAndVersion(String version) {
         Pattern pattern = Pattern.compile("npm:(.+)@(.+)");
         Matcher matcher = pattern.matcher(version);
-        if(matcher.find()){
+        if (matcher.find()) {
             return new String[]{matcher.group(1), matcher.group(2)};
         }
         return null;
