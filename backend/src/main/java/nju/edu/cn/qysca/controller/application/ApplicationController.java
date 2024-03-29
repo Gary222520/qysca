@@ -4,6 +4,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import nju.edu.cn.qysca.controller.ResponseMsg;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
@@ -132,14 +133,14 @@ public class ApplicationController {
     @ApiOperation("查询应用依赖树信息")
     @PostMapping("/findApplicationDependencyTree")
     @PreAuthorize("@my.checkAuth('/qysca/application/findApplicationDependencyTree')")
-    public ResponseMsg<JavaDependencyTreeDO> findApplicationDependencyTree(@RequestBody ApplicationSearchDTO dto) {
+    public ResponseMsg<AppDependencyTreeDO> findApplicationDependencyTree(@RequestBody ApplicationSearchDTO dto) {
         return new ResponseMsg<>(applicationService.findApplicationDependencyTree(dto));
     }
 
     @ApiOperation("分页查询应用依赖平铺信息")
     @PostMapping("/findApplicationDependencyTable")
     @PreAuthorize("@my.checkAuth('/qysca/application/findApplicationDependencyTable')")
-    public ResponseMsg<Page<ComponentTableDTO>> findApplicationDependencyTable(@RequestBody ApplicationSearchPageDTO dto) {
+    public ResponseMsg<Page<AppComponentTableDTO>> findApplicationDependencyTable(@RequestBody ApplicationSearchPageDTO dto) {
         return new ResponseMsg<>(applicationService.findApplicationDependencyTable(dto));
     }
 

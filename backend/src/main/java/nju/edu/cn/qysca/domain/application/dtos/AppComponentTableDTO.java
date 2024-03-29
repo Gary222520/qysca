@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.component.dtos;
+package nju.edu.cn.qysca.domain.application.dtos;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -7,15 +7,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@ApiModel("组件平铺信息DTO")
-public class ComponentTableDTO {
+@AllArgsConstructor
+@ApiModel(description = "应用组件信息DTO")
+public class AppComponentTableDTO {
 
-    @ApiModelProperty(value = "组件名", example = "spring-boot")
+    @ApiModelProperty(value = "组件名称", example = "log4j")
     private String cName;
 
-    @ApiModelProperty(value = "版本号", example = "2.5.15")
+    @ApiModelProperty(value = "组件版本", example = "1.2.1")
     private String cVersion;
 
     @ApiModelProperty(value = "依赖层级", example = "1")

@@ -29,9 +29,6 @@ public class ComponentCompareTreeDTO {
     @ApiModelProperty(value = "组件名称", example = "spring-boot-starter")
     private String name;
 
-    @ApiModelProperty(value = "依赖范围", example = "compile")
-    private String scope;
-
     @ApiModelProperty(value = "依赖层级", example = "1")
     private Integer depth;
 

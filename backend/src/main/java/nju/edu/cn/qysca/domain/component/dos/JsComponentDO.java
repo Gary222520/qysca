@@ -31,17 +31,13 @@ public class JsComponentDO extends ComponentDO{
     @ApiModelProperty(value = "uuid", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private String id;
 
-    @Column(name="artifact_id",nullable = false)
-    @ApiModelProperty(value = "工件id", example = "fontawesome-free")
-    private String artifactId;
+    @Column(name="name",nullable = false)
+    @ApiModelProperty(value = "名称", example = "fontawesome-free")
+    private String name;
 
     @Column(name = "version",nullable = false)
     @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String version;
-
-    @Column(name = "namespace")
-    @ApiModelProperty(value = "命名空间", example = "@fortawesome")
-    private String namespace;
 
     @Column(name = "description")
     @ApiModelProperty(value = "组件描述", example = "The iconic font, CSS, and SVG framework")

@@ -23,6 +23,7 @@ import java.util.List;
         @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
 })
 public class JavaComponentDO extends ComponentDO {
+
     @Id
     @Column(name="id",nullable = false)
     @GenericGenerator(name = "jpa-uuid", strategy = "uuid")
@@ -30,21 +31,17 @@ public class JavaComponentDO extends ComponentDO {
     @ApiModelProperty(value = "uuid", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private String id;
 
-    @Column(name="group_id",nullable = false)
-    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
-    private String groupId;
-
-    @Column(name="artifact_id",nullable = false)
-    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
-    private String artifactId;
+    @Column(name="name",nullable = false)
+    @ApiModelProperty(value = "名称", example = "fontawesome-free")
+    private String name;
 
     @Column(name = "version",nullable = false)
     @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String version;
 
-    @Column(name="name")
+    @Column(name="j_name")
     @ApiModelProperty(value = "组件名称", example = "spring-boot-starter")
-    private String name;
+    private String jName;
 
     @Column(name="language",nullable = false)
     @ApiModelProperty(value = "语言", example = "java")

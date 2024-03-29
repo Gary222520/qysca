@@ -15,63 +15,24 @@ import java.util.List;
 @Repository
 public interface JavaDependencyTableDao extends JpaRepository<JavaDependencyTableDO, String> {
 
-    /**
-     *  根据GA信息删除平铺信息
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
-     */
-
-    void deleteAllByGroupIdAndArtifactId(String groupId, String artifactId);
 
     /**
-     * 根据GAV信息删除平铺信息
-     * @param groupId 父组件groupId
-     * @param artifactId 父组件artifactId
-     * @param version 父组件version
-     */
-    void deleteAllByGroupIdAndArtifactIdAndVersion(String groupId, String artifactId, String version);
-
-
-
-    /**
-     * 根据gav分页查询组件依赖平铺信息
+     * 根据name, version分页查询组件依赖平铺信息
      *
-     * @param groupId    组织id
-     * @param artifactId 工件id
+     * @param name     组件name
      * @param version    版本号
      * @param pageable   分页信息
      * @return Page<ComponentTableDTO> 分页查询结果
      */
-    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.type, d.language, d.direct) from JavaDependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
-    Page<ComponentTableDTO> findByGroupIdAndArtifactIdAndVersion(@Param("groupId")String groupId, @Param("artifactId") String artifactId, @Param("version") String version, Pageable pageable);
+    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cName, d.cVersion, d.depth, d.type, d.language, d.direct) from JavaDependencyTableDO d where d.name = :name and d.version = :version")
+    Page<ComponentTableDTO> findByNameAndVersion(@Param("name") String name, @Param("version") String version, Pageable pageable);
+
+
 
     /**
-     * 根据gav查询所有依赖平铺信息
-     * @param groupId    组织id
-     * @param artifactId 工件id
-     * @param version    版本号
-     * @return List<ComponentTableDTO> 所有依赖
+     * 根据名称和版本号删除
+     * @param name 名称
+     * @param version 版本号
      */
-    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.type, d.language, d.direct) from JavaDependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
-    List<ComponentTableDTO> findDependenciesByGroupIdAndArtifactIdAndVersion(@Param("groupId")String groupId, @Param("artifactId") String artifactId, @Param("version") String version);
-
-    /**
-     * 根据gav查询组件直接依赖平铺信息
-     * @param groupId    组织id
-     * @param artifactId 工件id
-     * @param version    版本号
-     * @return List<ComponentTableDTO> 组件所有直接依赖
-     */
-    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.scope, d.depth, d.type, d.language, d.direct) from JavaDependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version and d.direct = true")
-    List<ComponentTableDTO> findDirectDependenciesByGroupIdAndArtifactIdAndVersion(@Param("groupId")String groupId, @Param("artifactId") String artifactId, @Param("version") String version);
-
-    /**
-     *  根据gav查询组件所有依赖平铺信息
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
-     * @param version 应用版本
-     * @return List<TableExcelBriefDTO> 依赖平铺信息
-     */
-    @Query("SELECT new nju.edu.cn.qysca.domain.application.dtos.TableExcelBriefDTO(d.cGroupId, d.cArtifactId, d.cVersion, d.language, d.direct, d.depth, d.scope, d.type) FROM JavaDependencyTableDO d where d.groupId = :groupId and d.artifactId = :artifactId and d.version = :version")
-    List<TableExcelBriefDTO>  findTableListByGroupIdAndArtifactIdAndVersion(String groupId, String artifactId, String version);
+    void deleteAllByNameAndVersion(String name, String version);
 }

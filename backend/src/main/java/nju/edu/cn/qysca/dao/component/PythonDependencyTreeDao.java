@@ -14,4 +14,12 @@ public interface PythonDependencyTreeDao extends JpaRepository<PythonDependencyT
      * @return PythonDependencyTreeDO python依赖树信息
      */
     PythonDependencyTreeDO findByNameAndVersion(String name, String version);
+
+
+    /**
+     * 根据名称和版本号删除
+     * @param name 名称
+     * @param version 版本号
+     */
+    void deleteByNameAndVersion(String name, String version);
 }

@@ -94,7 +94,7 @@ public class SpiderServiceImpl implements SpiderService {
         if (javaComponentDO == null)
             return null;
 
-        JavaComponentDO searchResult = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(javaComponentDO.getGroupId(), javaComponentDO.getArtifactId(), javaComponentDO.getVersion());
+        JavaComponentDO searchResult = javaComponentDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion());
         if (searchResult != null) {
             // 表示该组件的组件信息已被爬取过
             return searchResult;
@@ -213,8 +213,7 @@ public class SpiderServiceImpl implements SpiderService {
         }
 
         JavaComponentDO javaComponentDO = new JavaComponentDO();
-        javaComponentDO.setGroupId(groupId);
-        javaComponentDO.setArtifactId(artifactId);
+        javaComponentDO.setName(groupId + ":" + artifactId);
         javaComponentDO.setVersion(version);
 
         javaComponentDO.setName(model.getName() == null ? "-" : model.getName());

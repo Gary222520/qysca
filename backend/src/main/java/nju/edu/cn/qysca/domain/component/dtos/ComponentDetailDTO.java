@@ -17,17 +17,12 @@ import java.util.List;
 @NoArgsConstructor
 @ApiModel("组件详细信息DTO")
 public class ComponentDetailDTO {
-    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
-    private String groupId;
-
-    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
-    private String artifactId;
-
-    @ApiModelProperty(value = "版本号", example = "2.5.15")
-    private String version;
 
     @ApiModelProperty(value = "组件名称", example = "spring-boot-starter")
     private String name;
+
+    @ApiModelProperty(value = "版本号", example = "2.5.15")
+    private String version;
 
     @ApiModelProperty(value = "语言", example = "java")
     private String language;

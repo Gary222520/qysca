@@ -40,15 +40,6 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
     void deleteByNameAndVersion(String name, String version);
 
 
-    /**
-     * 查询指定应用指定状态的版本数量
-     *
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
-     * @param state 状态
-     * @return Integer 版本数量
-     */
-    //Integer countByGroupIdAndArtifactIdAndState(String groupId, String artifactId, String state);
 
     /**
      * 查询指定应用的版本信息

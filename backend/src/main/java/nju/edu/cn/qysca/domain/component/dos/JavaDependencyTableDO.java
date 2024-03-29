@@ -21,33 +21,21 @@ public class JavaDependencyTableDO extends DependencyTableDO{
     @ApiModelProperty(value = "uuid", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private String id;
 
-    @Column(name="group_id",nullable = false)
-    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
-    private String groupId;
-
-    @Column(name="artifact_id",nullable = false)
-    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
-    private String artifactId;
+    @Column(name="name",nullable = false)
+    @ApiModelProperty(value = "名称", example = "org.springframework.boot")
+    private String name;
 
     @Column(name = "version",nullable = false)
     @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String version;
 
-    @Column(name="c_group_id",nullable = false)
-    @ApiModelProperty(value = "子组件组织id", example = "org.springframework.boot")
-    private String cGroupId;
-
-    @Column(name="c_artifact_id",nullable = false)
-    @ApiModelProperty(value = "子组件工件id", example = "spring-boot-starter")
-    private String cArtifactId;
+    @Column(name="c_name",nullable = false)
+    @ApiModelProperty(value = "子组件名称", example = "org.springframework.boot")
+    private String cName;
 
     @Column(name = "c_version",nullable = false)
     @ApiModelProperty(value = "子组件版本号", example = "2.5.15")
     private String cVersion;
-
-    @Column(name = "scope")
-    @ApiModelProperty(value = "依赖范围", example = "compile")
-    private String scope;
 
     @Column(name = "depth",nullable = false)
     @ApiModelProperty(value = "依赖层级", example = "1")

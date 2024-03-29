@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.component.dos;
+package nju.edu.cn.qysca.domain.application.dos;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -26,6 +26,9 @@ public class AppComponentDependencyTreeDO {
 
     @ApiModelProperty(value = "类型",example = "opensource")
     private String type;
+
+    @ApiModelProperty(value = "语言", example = "java")
+    private String language;
 
     @ApiModelProperty(value = "依赖子树")
     private List<AppComponentDependencyTreeDO> dependencies = new ArrayList<>();

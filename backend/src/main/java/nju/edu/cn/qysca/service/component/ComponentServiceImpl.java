@@ -2,13 +2,18 @@ package nju.edu.cn.qysca.service.component;
 
 
 import nju.edu.cn.qysca.auth.ContextUtil;
+import nju.edu.cn.qysca.dao.application.AppComponentDao;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.bu.BuAppDao;
 import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.exception.PlatformException;
+import nju.edu.cn.qysca.service.go.GoService;
+import nju.edu.cn.qysca.service.gradle.GradleService;
 import nju.edu.cn.qysca.service.maven.MavenService;
+import nju.edu.cn.qysca.service.npm.NpmService;
+import nju.edu.cn.qysca.service.python.PythonService;
 import nju.edu.cn.qysca.service.spider.SpiderService;
 import org.springframework.beans.BeanUtils;
 import nju.edu.cn.qysca.domain.component.dos.*;
@@ -30,20 +35,59 @@ public class ComponentServiceImpl implements ComponentService {
     private JavaComponentDao javaComponentDao;
 
     @Autowired
+    private AppComponentDao appComponentDao;
+
+    @Autowired
     private ApplicationDao applicationDao;
 
     @Autowired
-    private BuAppDao buAppDao;
+    private JsComponentDao jsComponentDao;
+
+    @Autowired
+    private GoComponentDao goComponentDao;
+
+    @Autowired
+    private PythonComponentDao pythonComponentDao;
 
 
     @Autowired
     private JavaDependencyTreeDao javaDependencyTreeDao;
 
     @Autowired
+    private JsDependencyTreeDao jsDependencyTreeDao;
+
+    @Autowired
+    private GoDependencyTreeDao goDependencyTreeDao;
+
+    @Autowired
+    private PythonDependencyTreeDao pythonDependencyTreeDao;
+
+    @Autowired
     private JavaDependencyTableDao javaDependencyTableDao;
 
     @Autowired
+    private JsDependencyTableDao jsDependencyTableDao;
+
+    @Autowired
+    private GoDependencyTableDao goDependencyTableDao;
+
+    @Autowired
+    private PythonDependencyTableDao pythonDependencyTableDao;
+
+    @Autowired
     private MavenService mavenService;
+
+    @Autowired
+    private GradleService gradleService;
+
+    @Autowired
+    private NpmService npmService;
+
+    @Autowired
+    private PythonService pythonService;
+
+    @Autowired
+    private GoService goService;
 
     @Autowired
     private SpiderService spiderService;
@@ -58,42 +102,63 @@ public class ComponentServiceImpl implements ComponentService {
      * @return Page<JavaComponentDO> 查询结果
      */
     @Override
-    public Page<JavaComponentDO> findComponentsPage(ComponentSearchDTO searchComponentDTO) {
-        // 设置查询条件
-        JavaComponentDO searcher = new JavaComponentDO();
-        searcher.setType(searchComponentDTO.getType());
-        searcher.setGroupId(searchComponentDTO.getGroupId().equals("") ? null : searchComponentDTO.getGroupId());
-        searcher.setArtifactId(searchComponentDTO.getArtifactId().equals("") ? null : searchComponentDTO.getArtifactId());
-        searcher.setVersion(searchComponentDTO.getArtifactId().equals("") ? null : searchComponentDTO.getVersion());
-        searcher.setName(searchComponentDTO.getName().equals("") ? null : searchComponentDTO.getName());
-        searcher.setLanguage(searchComponentDTO.getLanguage().equals("") ? null : searchComponentDTO.getLanguage());
-        // 设置模糊查询器
-        ExampleMatcher matcher = ExampleMatcher.matching()
-                .withIgnorePaths("id", "description", "url", "downloadUrl", "sourceUrl", "pUrl", "developers", "licenses", "hashes")
-                .withIgnoreNullValues();
-        Example<JavaComponentDO> example = Example.of(searcher, matcher);
+    public Page<? extends ComponentDO> findComponentsPage(ComponentSearchDTO searchComponentDTO) {
         // 设置排序规则
         List<Sort.Order> orders = new ArrayList<>();
-        orders.add(new Sort.Order(Sort.Direction.ASC, "language"));
         orders.add(new Sort.Order(Sort.Direction.ASC, "name").nullsLast());
-        orders.add(new Sort.Order(Sort.Direction.ASC, "groupId").nullsLast());
-        orders.add(new Sort.Order(Sort.Direction.ASC, "artifactId").nullsLast());
         orders.add(new Sort.Order(Sort.Direction.DESC, "version").nullsLast());
+        Page<? extends ComponentDO> result = null;
         // 数据库页号从0开始，需减1
         Pageable pageable = PageRequest.of(searchComponentDTO.getNumber() - 1, searchComponentDTO.getSize(), Sort.by(orders));
-        return javaComponentDao.findAll(example, pageable);
+        switch (searchComponentDTO.getLanguage()) {
+            case "java":
+                result = javaComponentDao.findComponentsPage(searchComponentDTO.getName(), searchComponentDTO.getVersion(), searchComponentDTO.getType(), pageable);
+                break;
+            case "javaScript":
+                result = jsComponentDao.findComponentsPage(searchComponentDTO.getName(), searchComponentDTO.getVersion(), searchComponentDTO.getType(), pageable);
+                break;
+            case "go":
+                result = goComponentDao.findComponentsPage(searchComponentDTO.getName(), searchComponentDTO.getVersion(), searchComponentDTO.getType(), pageable);
+                break;
+            case "python":
+                result = pythonComponentDao.findComponentsPage(searchComponentDTO.getName(), searchComponentDTO.getVersion(), searchComponentDTO.getType(), pageable);
+                break;
+            case "app":
+                result = appComponentDao.findComponentsPage(searchComponentDTO.getName(), searchComponentDTO.getVersion(), searchComponentDTO.getType(), pageable);
+                break;
+        }
+        return result;
     }
 
 
     /**
      * 模糊查询组件名称
      *
-     * @param name 组件名称
+     * @param name     组件名称
+     * @param language 组件语言
      * @return List<String> 模糊查询组件名称结果
      */
     @Override
-    public List<ComponentSearchNameDTO> searchComponentName(String name) {
-        return javaComponentDao.searchComponentName(name);
+    public List<ComponentSearchNameDTO> searchComponentName(String name, String language) {
+        List<ComponentSearchNameDTO> componentSearchNameDTOS = new ArrayList<>();
+        switch (language) {
+            case "java":
+                componentSearchNameDTOS = javaComponentDao.searchComponentName(name);
+                break;
+            case "javaScript":
+                componentSearchNameDTOS = jsComponentDao.searchComponentName(name);
+                break;
+            case "go":
+                componentSearchNameDTOS = goComponentDao.searchComponentName(name);
+                break;
+            case "python":
+                componentSearchNameDTOS = pythonComponentDao.searchComponentName(name);
+                break;
+            case "app":
+                componentSearchNameDTOS = appComponentDao.searchComponentName(name);
+                break;
+        }
+        return componentSearchNameDTOS;
     }
 
     /**
@@ -104,12 +169,12 @@ public class ComponentServiceImpl implements ComponentService {
      */
     @Transactional
     @Override
-    public JavaComponentDO saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO) {
+    public void saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO) {
         UserDO userDO = ContextUtil.getUserDO();
         //接口获得详细信息
         if (saveCloseComponentDTO.getLanguage().equals("java")) {
             JavaComponentDO javaComponentDO = mavenService.componentAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
-            JavaComponentDO temp = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(javaComponentDO.getGroupId(), javaComponentDO.getArtifactId(), javaComponentDO.getVersion());
+            JavaComponentDO temp = javaComponentDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion());
             if (temp != null) {
                 throw new PlatformException(500, "该组件已存在");
             }
@@ -117,30 +182,102 @@ public class ComponentServiceImpl implements ComponentService {
             javaComponentDO.setCreator(userDO.getUid());
             javaComponentDO.setState("RUNNING");
             javaComponentDao.save(javaComponentDO);
-            return javaComponentDO;
+        } else if (saveCloseComponentDTO.getLanguage().equals("javaScript")) {
+            JsComponentDO jsComponentDO = npmService.componentAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getType());
+            JsComponentDO temp = jsComponentDao.findByNameAndVersion(jsComponentDO.getName(), jsComponentDO.getVersion());
+            if (temp != null) {
+                throw new PlatformException(500, "该组件已存在");
+            }
+            jsComponentDO.setCreator(userDO.getUid());
+            jsComponentDO.setState("RUNNING");
+            jsComponentDao.save(jsComponentDO);
+        } else if (saveCloseComponentDTO.getLanguage().equals("go")) {
+            GoComponentDO goComponentDO = goService.componentAnalysis(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getType());
+            GoComponentDO temp = goComponentDao.findByNameAndVersion(goComponentDO.getName(), goComponentDO.getVersion());
+            if (temp != null) {
+                throw new PlatformException(500, "该组件已存在");
+            }
+            goComponentDO.setCreator(userDO.getUid());
+            goComponentDO.setState("RUNNING");
+            goComponentDao.save(goComponentDO);
+        } else if (saveCloseComponentDTO.getLanguage().equals("python")) {
+            PythonComponentDO pythonComponentDO = pythonService.componentAnalysis(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getType());
+            PythonComponentDO temp = pythonComponentDao.findByNameAndVersion(pythonComponentDO.getName(), pythonComponentDO.getVersion());
+            if (temp != null) {
+                throw new PlatformException(500, "该组件已存在");
+            }
+            pythonComponentDO.setCreator(userDO.getUid());
+            pythonComponentDao.save(pythonComponentDO);
         }
-        return null;
     }
 
     @Transactional
     @Override
     @Async("taskExecutor")
-    public void saveCloseComponentDependency(JavaComponentDO javaComponentDO, SaveCloseComponentDTO saveCloseComponentDTO) {
-        try {
-            //存储闭源组件树状依赖信息
-            JavaDependencyTreeDO closeJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
-            javaDependencyTreeDao.save(closeJavaDependencyTreeDO);
-            //存储闭源组件平铺依赖信息
-            List<JavaDependencyTableDO> javaDependencyTableDOList = mavenService.dependencyTableAnalysis(closeJavaDependencyTreeDO);
-            javaDependencyTableDao.saveAll(javaDependencyTableDOList);
-            javaComponentDO.setState("SUCCESS");
-            javaComponentDao.save(javaComponentDO);
-            File file = new File(saveCloseComponentDTO.getFilePath());
-            deleteFolder(file.getParent());
-        } catch (Exception e) {
-            javaComponentDO.setState("FAILED");
-            javaComponentDao.save(javaComponentDO);
+    public void saveCloseComponentDependency(SaveCloseComponentDTO saveCloseComponentDTO) {
+        switch (saveCloseComponentDTO.getLanguage()) {
+            case "java":
+                JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion());
+                try {
+                    //存储闭源组件树状依赖信息
+                    JavaDependencyTreeDO closeJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
+                    javaDependencyTreeDao.save(closeJavaDependencyTreeDO);
+                    //存储闭源组件平铺依赖信息
+                    List<JavaDependencyTableDO> javaDependencyTableDOList = mavenService.dependencyTableAnalysis(closeJavaDependencyTreeDO);
+                    javaDependencyTableDao.saveAll(javaDependencyTableDOList);
+                    javaComponentDO.setState("SUCCESS");
+                    javaComponentDao.save(javaComponentDO);
+
+                } catch (Exception e) {
+                    javaComponentDO.setState("FAILED");
+                    javaComponentDao.save(javaComponentDO);
+                }
+                break;
+            case "javaScript":
+                JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion());
+                try {
+                    JsDependencyTreeDO closeJsDependencyTreeDO = npmService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getType());
+                    jsDependencyTreeDao.save(closeJsDependencyTreeDO);
+                    List<JsDependencyTableDO> jsDependencyTableDOList = npmService.dependencyTableAnalysis(closeJsDependencyTreeDO);
+                    jsDependencyTableDao.saveAll(jsDependencyTableDOList);
+                    jsComponentDO.setState("SUCCESS");
+                    jsComponentDao.save(jsComponentDO);
+                } catch (Exception e) {
+                    jsComponentDO.setState("FAILED");
+                    jsComponentDao.save(jsComponentDO);
+                }
+                break;
+            case "go":
+                GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion());
+                try {
+                    GoDependencyTreeDO closeGoDependencyTreeDO = goService.dependencyTreeAnalysis(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getType(), saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder());
+                    goDependencyTreeDao.save(closeGoDependencyTreeDO);
+                    List<GoDependencyTableDO> goDependencyTableDOList = goService.dependencyTableAnalysis(closeGoDependencyTreeDO);
+                    goDependencyTableDao.saveAll(goDependencyTableDOList);
+                    goComponentDO.setState("SUCCESS");
+                    goComponentDao.save(goComponentDO);
+                } catch (Exception e) {
+                    goComponentDO.setState("FAILED");
+                    goComponentDao.save(goComponentDO);
+                }
+                break;
+            case "python":
+                PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion());
+                try {
+                    PythonDependencyTreeDO pythonDependencyTreeDO = pythonService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getType());
+                    pythonDependencyTreeDao.save(pythonDependencyTreeDO);
+                    List<PythonDependencyTableDO> pythonDependencyTableDOS = pythonService.dependencyTableAnalysis(pythonDependencyTreeDO);
+                    pythonDependencyTableDao.saveAll(pythonDependencyTableDOS);
+                    pythonComponentDO.setState("SUCCESS");
+                    pythonComponentDao.save(pythonComponentDO);
+                } catch (Exception e) {
+                    pythonComponentDO.setState("FAILED");
+                    pythonComponentDao.save(pythonComponentDO);
+                }
+                break;
         }
+        File file = new File(saveCloseComponentDTO.getFilePath());
+        deleteFolder(file.getParent());
     }
 
 
@@ -154,22 +291,60 @@ public class ComponentServiceImpl implements ComponentService {
     @Transactional
     public Boolean changeCloseComponentState(UpdateCloseComponentDTO updateCloseComponentDTO) {
         UserDO userDO = ContextUtil.getUserDO();
-        JavaComponentDO javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
-        if (!userDO.getUid().equals(javaComponentDO.getCreator())) {
-            throw new PlatformException(500, "您没有权限修改该组件信息");
-        }
         if (updateCloseComponentDTO.getFilePath() != null) {
-            ApplicationDO applicationDO = applicationDao.findByNameAndVersion(updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
+            ApplicationDO applicationDO = applicationDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
             if (applicationDO != null && (applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().size() > 0)) {
                 throw new PlatformException(500, "该组件已关联应用或组件，无法修改");
             }
-            JavaComponentDO temp = mavenService.componentAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
-            if (!temp.getGroupId().equals(updateCloseComponentDTO.getGroupId()) || !temp.getArtifactId().equals(updateCloseComponentDTO.getArtifactId()) || !temp.getVersion().equals(updateCloseComponentDTO.getVersion())) {
-                throw new PlatformException(500, "组件信息与文件信息不匹配");
-            }
         }
-        javaComponentDO.setState("RUNNING");
-        javaComponentDao.save(javaComponentDO);
+        switch (updateCloseComponentDTO.getLanguage()) {
+            case "java":
+                JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                if (!userDO.getUid().equals(javaComponentDO.getCreator())) {
+                    throw new PlatformException(500, "您没有权限修改该组件信息");
+                }
+                if (updateCloseComponentDTO.getFilePath() != null) {
+                    JavaComponentDO temp = mavenService.componentAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
+                    if (!temp.getName().equals(updateCloseComponentDTO.getName()) || !temp.getVersion().equals(updateCloseComponentDTO.getVersion())) {
+                        throw new PlatformException(500, "组件信息与文件信息不匹配");
+                    }
+                }
+                javaComponentDO.setState("RUNNING");
+                javaComponentDao.save(javaComponentDO);
+                break;
+            case "javaScript":
+                JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                if (!userDO.getUid().equals(jsComponentDO.getCreator())) {
+                    throw new PlatformException(500, "您没有权限修改该组件信息");
+                }
+                if (updateCloseComponentDTO.getFilePath() != null) {
+                    JsComponentDO temp = npmService.componentAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getType());
+                    if (!temp.getName().equals(updateCloseComponentDTO.getName()) || !temp.getVersion().equals(updateCloseComponentDTO.getVersion())) {
+                        throw new PlatformException(500, "组件信息与文件信息不匹配");
+                    }
+                }
+                jsComponentDO.setState("RUNNING");
+                jsComponentDao.save(jsComponentDO);
+                break;
+            case "go":
+                GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                if (!userDO.getUid().equals(goComponentDO.getCreator())) {
+                    throw new PlatformException(500, "您没有权限修改该组件信息");
+                }
+                //Go语言无法检查
+                goComponentDO.setState("RUNNING");
+                goComponentDao.save(goComponentDO);
+                break;
+            case "python":
+                PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                if (!userDO.getUid().equals(pythonComponentDO.getCreator())) {
+                    throw new PlatformException(500, "您没有权限修改该组件信息");
+                }
+                //Python语言无法检查
+                pythonComponentDO.setState("RUNNING");
+                pythonComponentDao.save(pythonComponentDO);
+                break;
+        }
         return true;
     }
 
@@ -182,27 +357,61 @@ public class ComponentServiceImpl implements ComponentService {
     @Override
     @Transactional
     public void updateCloseComponent(UpdateCloseComponentDTO updateCloseComponentDTO) {
-        //更新基础信息
-        JavaComponentDO javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
-        if (updateCloseComponentDTO.getFilePath() == null) {
-            javaComponentDO.setType(updateCloseComponentDTO.getType());
-            javaComponentDao.save(javaComponentDO);
-        } else {
-            if (updateCloseComponentDTO.getLanguage().equals("java")) {
-                javaDependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
+        switch (updateCloseComponentDTO.getLanguage()) {
+            case "java":
+                JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                javaComponentDO.setType(updateCloseComponentDTO.getType());
+                javaDependencyTreeDao.deleteByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
                 JavaDependencyTreeDO closeJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
                 javaDependencyTreeDao.save(closeJavaDependencyTreeDO);
                 //存储闭源组件平铺依赖信息
-                javaDependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(updateCloseComponentDTO.getGroupId(), updateCloseComponentDTO.getArtifactId(), updateCloseComponentDTO.getVersion());
+                javaDependencyTableDao.deleteAllByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
                 List<JavaDependencyTableDO> javaDependencyTableDOList = mavenService.dependencyTableAnalysis(closeJavaDependencyTreeDO);
                 javaDependencyTableDao.saveAll(javaDependencyTableDOList);
-            }
-            javaComponentDO.setState("SUCCESS");
-            javaComponentDao.save(javaComponentDO);
-            File file = new File(updateCloseComponentDTO.getFilePath());
-            deleteFolder(file.getParent());
+                javaComponentDO.setState("SUCCESS");
+                javaComponentDao.save(javaComponentDO);
+                break;
+            case "javaScript":
+                JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                jsComponentDO.setType(updateCloseComponentDTO.getType());
+                jsDependencyTreeDao.deleteByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                JsDependencyTreeDO jsDependencyTreeDO = npmService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getType());
+                jsDependencyTreeDao.save(jsDependencyTreeDO);
+                jsDependencyTableDao.deleteAllByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                List<JsDependencyTableDO> jsDependencyTableDOList = npmService.dependencyTableAnalysis(jsDependencyTreeDO);
+                jsDependencyTableDao.saveAll(jsDependencyTableDOList);
+                jsComponentDO.setState("SUCCESS");
+                jsComponentDao.save(jsComponentDO);
+                break;
+            case "go":
+                GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                goComponentDO.setType(updateCloseComponentDTO.getType());
+                goDependencyTreeDao.deleteByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                GoDependencyTreeDO goDependencyTreeDO = goService.dependencyTreeAnalysis(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion(), updateCloseComponentDTO.getType(), updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder());
+                goDependencyTreeDao.save(goDependencyTreeDO);
+                goDependencyTableDao.deleteAllByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                List<GoDependencyTableDO> goDependencyTableDOList = goService.dependencyTableAnalysis(goDependencyTreeDO);
+                goDependencyTableDao.saveAll(goDependencyTableDOList);
+                goComponentDO.setState("SUCCESS");
+                goComponentDao.save(goComponentDO);
+                break;
+            case "python":
+                PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                pythonComponentDO.setType(updateCloseComponentDTO.getType());
+                pythonDependencyTreeDao.deleteByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                PythonDependencyTreeDO pythonDependencyTreeDO = pythonService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion(), updateCloseComponentDTO.getType());
+                pythonDependencyTreeDao.save(pythonDependencyTreeDO);
+                pythonDependencyTableDao.deleteAllByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
+                List<PythonDependencyTableDO> pythonDependencyTableDOList = pythonService.dependencyTableAnalysis(pythonDependencyTreeDO);
+                pythonDependencyTableDao.saveAll(pythonDependencyTableDOList);
+                pythonComponentDO.setState("SUCCESS");
+                pythonComponentDao.save(pythonComponentDO);
+                break;
         }
+        File file = new File(updateCloseComponentDTO.getFilePath());
+        deleteFolder(file.getParent());
     }
+
 
     /**
      * 删除闭源组件
@@ -214,15 +423,34 @@ public class ComponentServiceImpl implements ComponentService {
     @Transactional
     public List<ApplicationDO> deleteCloseComponent(DeleteCloseComponentDTO deleteCloseComponentDTO) {
         //确定是否是闭源组件
-        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(deleteCloseComponentDTO.getArtifactId(), deleteCloseComponentDTO.getVersion());
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
         if (applicationDO == null) {
             throw new PlatformException(500, "该组件不可删除");
         }
         List<ApplicationDO> parentApplicationDOList = applicationDao.findParentApplication(applicationDO.getId());
         if (parentApplicationDOList.size() == 0) {
-            javaComponentDao.deleteByGroupIdAndArtifactIdAndVersion(deleteCloseComponentDTO.getGroupId(), deleteCloseComponentDTO.getArtifactId(), deleteCloseComponentDTO.getVersion());
-            javaDependencyTreeDao.deleteByGroupIdAndArtifactIdAndVersion(deleteCloseComponentDTO.getGroupId(), deleteCloseComponentDTO.getArtifactId(), deleteCloseComponentDTO.getVersion());
-            javaDependencyTableDao.deleteAllByGroupIdAndArtifactIdAndVersion(deleteCloseComponentDTO.getGroupId(), deleteCloseComponentDTO.getArtifactId(), deleteCloseComponentDTO.getVersion());
+            switch (deleteCloseComponentDTO.getLanguage()) {
+                case "java":
+                    javaComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                    javaDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                    javaDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                    break;
+                case "javaScript":
+                    jsComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                    jsDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                    jsDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                    break;
+                case "go":
+                    goComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                    goDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                    goDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                    break;
+                case "python":
+                    pythonComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                    pythonDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                    pythonDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                    break;
+            }
         } else {
             return parentApplicationDOList;
         }
@@ -237,18 +465,49 @@ public class ComponentServiceImpl implements ComponentService {
      */
     @Transactional
     @Override
-    public JavaDependencyTreeDO findComponentDependencyTree(ComponentGavDTO componentGavDTO) {
-        JavaDependencyTreeDO javaDependencyTreeDO = javaDependencyTreeDao.findByGroupIdAndArtifactIdAndVersion(
-                componentGavDTO.getGroupId(),
-                componentGavDTO.getArtifactId(),
-                componentGavDTO.getVersion());
-        if (javaDependencyTreeDO == null) {
-            javaDependencyTreeDO = mavenService.spiderDependency(componentGavDTO.getGroupId(), componentGavDTO.getArtifactId(), componentGavDTO.getVersion());
-            javaDependencyTreeDao.save(javaDependencyTreeDO);
-            List<JavaDependencyTableDO> javaDependencyTableDOList = mavenService.dependencyTableAnalysis(javaDependencyTreeDO);
-            javaDependencyTableDao.saveAll(javaDependencyTableDOList);
+    public DependencyTreeDO findComponentDependencyTree(ComponentGavDTO componentGavDTO) {
+        DependencyTreeDO dependencyTreeDO = null;
+        switch (componentGavDTO.getLanguage()) {
+            case "java":
+                dependencyTreeDO = javaDependencyTreeDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
+                if (dependencyTreeDO == null) {
+                    String[] temp = componentGavDTO.getName().split(":");
+                    dependencyTreeDO = mavenService.spiderDependency(temp[0], temp[1], componentGavDTO.getVersion());
+                    javaDependencyTreeDao.save((JavaDependencyTreeDO) dependencyTreeDO);
+                    List<JavaDependencyTableDO> javaDependencyTableDOList = mavenService.dependencyTableAnalysis((JavaDependencyTreeDO) dependencyTreeDO);
+                    javaDependencyTableDao.saveAll(javaDependencyTableDOList);
+                }
+                break;
+            case "javaScript":
+                dependencyTreeDO = jsDependencyTreeDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
+                if (dependencyTreeDO == null) {
+                    dependencyTreeDO = npmService.spiderDependencyTree(componentGavDTO.getName(), componentGavDTO.getVersion());
+                    jsDependencyTreeDao.save((JsDependencyTreeDO) dependencyTreeDO);
+                    List<JsDependencyTableDO> jsDependencyTableDOList = npmService.dependencyTableAnalysis((JsDependencyTreeDO) dependencyTreeDO);
+                    jsDependencyTableDao.saveAll(jsDependencyTableDOList);
+                }
+                break;
+            case "go":
+                dependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
+                if (dependencyTreeDO == null) {
+                    dependencyTreeDO = goService.spiderDependency(componentGavDTO.getName(), componentGavDTO.getVersion());
+                    goDependencyTreeDao.save((GoDependencyTreeDO) dependencyTreeDO);
+                    List<GoDependencyTableDO> goDependencyTableDOList = goService.dependencyTableAnalysis((GoDependencyTreeDO) dependencyTreeDO);
+                    goDependencyTableDao.saveAll(goDependencyTableDOList);
+                }
+                break;
+            case "python":
+                dependencyTreeDO = pythonDependencyTreeDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
+                if (dependencyTreeDO == null) {
+                    dependencyTreeDO = pythonService.spiderDependency(componentGavDTO.getName(), componentGavDTO.getVersion());
+                    pythonService.spiderDependency(componentGavDTO.getName(), componentGavDTO.getVersion());
+                    pythonDependencyTreeDao.save((PythonDependencyTreeDO) dependencyTreeDO);
+                    List<PythonDependencyTableDO> pythonDependencyTableDOList = pythonService.dependencyTableAnalysis((PythonDependencyTreeDO) dependencyTreeDO);
+                    pythonDependencyTableDao.saveAll(pythonDependencyTableDOList);
+                }
+                break;
         }
-        return javaDependencyTreeDO;
+        return dependencyTreeDO;
     }
 
 
@@ -263,15 +522,26 @@ public class ComponentServiceImpl implements ComponentService {
         // 设置排序规则
         List<Sort.Order> orders = new ArrayList<>();
         orders.add(new Sort.Order(Sort.Direction.ASC, "depth").nullsLast());
-        orders.add(new Sort.Order(Sort.Direction.ASC, "groupId").nullsLast());
-        orders.add(new Sort.Order(Sort.Direction.ASC, "artifactId").nullsLast());
+        orders.add(new Sort.Order(Sort.Direction.ASC, "name").nullsLast());
         orders.add(new Sort.Order(Sort.Direction.DESC, "version").nullsLast());
         // 数据库页号从0开始，需减1
         Pageable pageable = PageRequest.of(componentGavPageDTO.getNumber() - 1, componentGavPageDTO.getSize(), Sort.by(orders));
-        return javaDependencyTableDao.findByGroupIdAndArtifactIdAndVersion(
-                componentGavPageDTO.getGroupId(),
-                componentGavPageDTO.getArtifactId(),
-                componentGavPageDTO.getVersion(), pageable);
+        Page<ComponentTableDTO> result = null;
+        switch (componentGavPageDTO.getLanguage()) {
+            case "java":
+                result = javaDependencyTableDao.findByNameAndVersion(componentGavPageDTO.getName(), componentGavPageDTO.getVersion(), pageable);
+                break;
+            case "javaScript":
+                result = jsDependencyTableDao.findByNameAndVersion(componentGavPageDTO.getName(), componentGavPageDTO.getVersion(), pageable);
+                break;
+            case "go":
+                result = goDependencyTableDao.findByNameAndVersion(componentGavPageDTO.getName(), componentGavPageDTO.getVersion(), pageable);
+                break;
+            case "python":
+                result = pythonDependencyTableDao.findByNameAndVersion(componentGavPageDTO.getName(), componentGavPageDTO.getVersion(), pageable);
+                break;
+        }
+        return result;
     }
 
 
@@ -284,11 +554,24 @@ public class ComponentServiceImpl implements ComponentService {
     @Override
     public ComponentDetailDTO findComponentDetail(ComponentGavDTO componentGavDTO) {
         ComponentDetailDTO componentDetailDTO = new ComponentDetailDTO();
-        JavaComponentDO javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(
-                componentGavDTO.getGroupId(),
-                componentGavDTO.getArtifactId(),
-                componentGavDTO.getVersion());
-        BeanUtils.copyProperties(javaComponentDO, componentDetailDTO);
+        switch (componentGavDTO.getLanguage()) {
+            case "java":
+                JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(componentDetailDTO.getName(), componentDetailDTO.getVersion());
+                BeanUtils.copyProperties(javaComponentDO, componentDetailDTO);
+                break;
+            case "javaScript":
+                JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(componentDetailDTO.getName(), componentDetailDTO.getVersion());
+                BeanUtils.copyProperties(jsComponentDO, componentDetailDTO);
+                break;
+            case "go":
+                GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(componentDetailDTO.getName(), componentDetailDTO.getVersion());
+                BeanUtils.copyProperties(goComponentDO, componentDetailDTO);
+                break;
+            case "python":
+                PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(componentDetailDTO.getName(), componentDetailDTO.getVersion());
+                BeanUtils.copyProperties(pythonComponentDO, componentDetailDTO);
+                break;
+        }
         return componentDetailDTO;
     }
 

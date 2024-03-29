@@ -1,10 +1,11 @@
-package nju.edu.cn.qysca.domain.component.dos;
+package nju.edu.cn.qysca.domain.application.dos;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nju.edu.cn.qysca.domain.component.dos.DependencyTableDO;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -15,7 +16,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "plt_app_dependency_table")
 @ApiModel(description = "应用依赖关系表")
-public class AppDependencyTableDO extends DependencyTableDO{
+public class AppDependencyTableDO extends DependencyTableDO {
 
     @Id
     @Column(name = "id", nullable = false)

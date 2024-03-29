@@ -4,12 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.dao.component.PythonComponentDao;
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.spider.PythonSpiderService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -154,6 +157,47 @@ public class PythonServiceImpl implements PythonService {
 
         PythonDependencyTreeDO dependencyTreeDO = parseJsonDependencyTree(jsonString, name, version, "opensource");
         return dependencyTreeDO;
+    }
+
+
+    /**
+     * 将python依赖信息转换成应用依赖信息
+     * @param pythonComponentDependencyTreeDO  python依赖信息
+     * @return AppComponentDependencyTreeDO 应用依赖信息
+     */
+    @Override
+    public AppComponentDependencyTreeDO translateComponentDependency(PythonComponentDependencyTreeDO pythonComponentDependencyTreeDO) {
+        if(pythonComponentDependencyTreeDO == null){
+            return null;
+        }
+        AppComponentDependencyTreeDO appComponentDependencyTreeDO = new AppComponentDependencyTreeDO();
+        appComponentDependencyTreeDO.setName(pythonComponentDependencyTreeDO.getName());
+        appComponentDependencyTreeDO.setVersion(pythonComponentDependencyTreeDO.getVersion());
+        appComponentDependencyTreeDO.setDepth(pythonComponentDependencyTreeDO.getDepth());
+        appComponentDependencyTreeDO.setType(pythonComponentDependencyTreeDO.getType());
+        List<AppComponentDependencyTreeDO> children = new ArrayList<>();
+        for(PythonComponentDependencyTreeDO childPythonComponentDependencyTreeDO : pythonComponentDependencyTreeDO.getDependencies()) {
+            AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependency(childPythonComponentDependencyTreeDO);
+            children.add(childAppComponentDependencyTreeDO);
+        }
+        appComponentDependencyTreeDO.setDependencies(children);
+        return appComponentDependencyTreeDO;
+    }
+
+    /**
+     * 将Python依赖表转换为App依赖表
+     * @param pythonDependencyTableDOS python依赖表信息
+     * @return List<AppDependencyTableDO> App依赖表
+     */
+    @Override
+    public List<AppDependencyTableDO> translateDependencyTable(List<PythonDependencyTableDO> pythonDependencyTableDOS) {
+        List<AppDependencyTableDO> appDependencyTableDOS = new ArrayList<>();
+        for(PythonDependencyTableDO pythonDependencyTableDO : pythonDependencyTableDOS){
+            AppDependencyTableDO appDependencyTableDO = new AppDependencyTableDO();
+            BeanUtils.copyProperties(pythonDependencyTableDO, appDependencyTableDO);
+            appDependencyTableDOS.add(appDependencyTableDO);
+        }
+        return appDependencyTableDOS;
     }
 
     /**

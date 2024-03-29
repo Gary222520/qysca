@@ -1,10 +1,12 @@
-package nju.edu.cn.qysca.domain.component.dos;
+package nju.edu.cn.qysca.domain.application.dos;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -16,7 +18,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "plt_app_dependency_tree", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "version"}))
 @ApiModel(description = "App组件依赖树信息")
-public class AppDependencyTreeDO extends DependencyTreeDO{
+public class AppDependencyTreeDO extends DependencyTreeDO {
 
     @Id
     @Column(name = "id", nullable = false)

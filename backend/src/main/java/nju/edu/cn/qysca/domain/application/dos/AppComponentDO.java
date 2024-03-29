@@ -1,4 +1,4 @@
-package nju.edu.cn.qysca.domain.component.dos;
+package nju.edu.cn.qysca.domain.application.dos;
 
 import com.vladmihalcea.hibernate.type.array.StringArrayType;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
@@ -7,6 +7,9 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
+import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;

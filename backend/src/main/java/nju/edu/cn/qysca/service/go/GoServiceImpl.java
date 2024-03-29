@@ -3,6 +3,9 @@ package nju.edu.cn.qysca.service.go;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import nju.edu.cn.qysca.dao.component.GoComponentDao;
+import nju.edu.cn.qysca.dao.component.GoDependencyTableDao;
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -10,6 +13,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -260,6 +264,46 @@ public class GoServiceImpl implements GoService{
             goComponentDO.setLicenses(new ArrayList<>());
         }
         return goComponentDO;
+    }
+
+
+    /**
+     * 将Go组件依赖关系转换成应用组件依赖关系
+     * @param goComponentDependencyTreeDO go组件依赖树关系
+     * @return AppComponentDependencyTreeDO 应用组件依赖树
+     */
+    @Override
+    public AppComponentDependencyTreeDO translateComponentDependency(GoComponentDependencyTreeDO goComponentDependencyTreeDO) {
+        if(goComponentDependencyTreeDO == null){
+            return null;
+        }
+        AppComponentDependencyTreeDO appComponentDependencyTreeDO=new AppComponentDependencyTreeDO();
+        appComponentDependencyTreeDO.setName(goComponentDependencyTreeDO.getName());
+        appComponentDependencyTreeDO.setVersion(goComponentDependencyTreeDO.getVersion());
+        appComponentDependencyTreeDO.setDepth(goComponentDependencyTreeDO.getDepth());
+        appComponentDependencyTreeDO.setType(goComponentDependencyTreeDO.getType());
+        List<AppComponentDependencyTreeDO> children=new ArrayList<>();
+        for(GoComponentDependencyTreeDO childGoComponentDependencyTreeDO : goComponentDependencyTreeDO.getDependencies()) {
+            AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependency(childGoComponentDependencyTreeDO);
+            children.add(childAppComponentDependencyTreeDO);
+        }
+        return appComponentDependencyTreeDO;
+    }
+
+    /**
+     * 将go依赖信息表转化成应用依赖信息表
+     * @param goDependencyTableDOS go依赖信息表
+     * @return List<AppDependencyTableDO> 应用依赖关系表
+     */
+    @Override
+    public List<AppDependencyTableDO> translateDependencyTable(List<GoDependencyTableDO> goDependencyTableDOS) {
+        List<AppDependencyTableDO> appDependencyTableDOS = new ArrayList<>();
+        for(GoDependencyTableDO goDependencyTableDO : goDependencyTableDOS){
+            AppDependencyTableDO appDependencyTableDO = new AppDependencyTableDO();
+            BeanUtils.copyProperties(goDependencyTableDO, appDependencyTableDO);
+            appDependencyTableDOS.add(appDependencyTableDO);
+        }
+        return appDependencyTableDOS;
     }
 
     /**

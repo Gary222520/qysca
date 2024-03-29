@@ -28,13 +28,9 @@ public class JavaDependencyTreeDO extends DependencyTreeDO{
     @ApiModelProperty(value = "uuid", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private String id;
 
-    @Column(name="group_id",nullable = false)
-    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
-    private String groupId;
-
-    @Column(name="artifact_id",nullable = false)
-    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
-    private String artifactId;
+    @Column(name="name",nullable = false)
+    @ApiModelProperty(value = "名称", example = "org.springframework.boot")
+    private String name;
 
     @Column(name = "version",nullable = false)
     @ApiModelProperty(value = "版本号", example = "2.5.15")

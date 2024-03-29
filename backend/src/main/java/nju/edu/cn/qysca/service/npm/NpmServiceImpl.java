@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.dao.component.JsComponentDao;
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.npm.PackageJsonDTO;
 import nju.edu.cn.qysca.domain.npm.PackageLockDTO;
@@ -15,6 +17,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -47,14 +50,7 @@ public class NpmServiceImpl implements NpmService {
         PackageJsonDTO packageJsonDTO = parsePackageJson(filePath);
         JsComponentDO jsComponentDO = new JsComponentDO();
         String name = packageJsonDTO.getName();
-        if (name.contains("@")) {
-            String[] temp = parsePackageName(name);
-            jsComponentDO.setNamespace(temp[0]);
-            jsComponentDO.setArtifactId(temp[1]);
-        } else {
-            jsComponentDO.setNamespace("-");
-            jsComponentDO.setArtifactId(name);
-        }
+        jsComponentDO.setName(name);
         jsComponentDO.setLanguage("javaScript");
         jsComponentDO.setVersion(packageJsonDTO.getVersion());
         jsComponentDO.setDescription(packageJsonDTO.getDescription());
@@ -207,6 +203,46 @@ public class NpmServiceImpl implements NpmService {
             e.printStackTrace();
         }
         return jsComponentDependencyTreeDO;
+    }
+
+    /**
+     * 将JsComponentDependencyTreeDO转换为AppComponentDependencyTreeDO
+     * @param jsComponentDependencyTreeDO Js组件依赖信息
+     * @return AppComponentDependencyTreeDO App组件依赖信息
+     */
+    @Override
+    public AppComponentDependencyTreeDO translateComponentDependencyTree(JsComponentDependencyTreeDO jsComponentDependencyTreeDO) {
+        if (jsComponentDependencyTreeDO == null) {
+            return null;
+        }
+        AppComponentDependencyTreeDO appComponentDependencyTreeDO = new AppComponentDependencyTreeDO();
+        appComponentDependencyTreeDO.setName(jsComponentDependencyTreeDO.getName());
+        appComponentDependencyTreeDO.setVersion(jsComponentDependencyTreeDO.getVersion());
+        appComponentDependencyTreeDO.setDepth(jsComponentDependencyTreeDO.getDepth());
+        appComponentDependencyTreeDO.setType(jsComponentDependencyTreeDO.getType());
+        List<AppComponentDependencyTreeDO> dependencies = new ArrayList<>();
+        for (JsComponentDependencyTreeDO childJsComponentDependencyTreeDO : jsComponentDependencyTreeDO.getDependencies()) {
+            AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependencyTree(childJsComponentDependencyTreeDO);
+            dependencies.add(childAppComponentDependencyTreeDO);
+        }
+        appComponentDependencyTreeDO.setDependencies(dependencies);
+        return appComponentDependencyTreeDO;
+    }
+
+    /**
+     * 将Js组件依赖表转换成应用组件依赖表
+     * @param jsDependencyTableDOS js组件依赖表
+     * @return List<AppDependencyTableDO> 应用组件依赖表
+     */
+    @Override
+    public List<AppDependencyTableDO> translateDependencyTable(List<JsDependencyTableDO> jsDependencyTableDOS) {
+        List<AppDependencyTableDO> appDependencyTableDOS = new ArrayList<>();
+        for (JsDependencyTableDO jsDependencyTableDO : jsDependencyTableDOS) {
+            AppDependencyTableDO appDependencyTableDO = new AppDependencyTableDO();
+            BeanUtils.copyProperties(jsDependencyTableDO, appDependencyTableDO);
+            appDependencyTableDOS.add(appDependencyTableDO);
+        }
+        return appDependencyTableDOS;
     }
 
     /**
@@ -364,12 +400,7 @@ public class NpmServiceImpl implements NpmService {
             child.setVersion(entry.getValue().getVersion());
             //增量更新机制
             JsComponentDO jsComponentDO = null;
-            if (entry.getKey().contains("@")) {
-                String[] temp = parsePackageName(entry.getKey());
-                jsComponentDO = jsComponentDao.findByNamespaceAndArtifactIdAndVersion(temp[0], temp[1], entry.getValue().getVersion());
-            } else {
-                jsComponentDO = jsComponentDao.findByNamespaceAndArtifactIdAndVersion("-", entry.getKey(), entry.getValue().getVersion());
-            }
+            jsComponentDO = jsComponentDao.findByNameAndVersion(entry.getKey(), entry.getValue().getVersion());
             if (jsComponentDO == null) {
                 jsComponentDO = spiderComponentInfo(entry.getKey(), entry.getValue().getVersion());
                 if (jsComponentDO != null) {
@@ -397,14 +428,7 @@ public class NpmServiceImpl implements NpmService {
      */
     public JsComponentDO spiderComponentInfo(String name, String version) {
         JsComponentDO jsComponentDO = new JsComponentDO();
-        if (name.contains("@")) {
-            String[] temp = parsePackageName(name);
-            jsComponentDO.setNamespace(temp[0]);
-            jsComponentDO.setArtifactId(temp[1]);
-        } else {
-            jsComponentDO.setNamespace("-");
-            jsComponentDO.setArtifactId(name);
-        }
+        jsComponentDO.setName(name);
         jsComponentDO.setVersion(version);
         jsComponentDO.setPurl("pkg:npm/" + name + "@" + version);
         jsComponentDO.setLanguage("javaScript");

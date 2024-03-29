@@ -92,7 +92,6 @@ public class GradleServiceImpl implements GradleService{
         root.setVersion(version);
         root.setType(type);
         root.setDependencies(trees);
-        root.setScope("-");
         root.setDepth(0);
 
         // 封装为JavaDependencyTreeDO
@@ -182,7 +181,6 @@ public class GradleServiceImpl implements GradleService{
             // 提取组件信息
             JavaComponentDependencyTreeDO componentDependencyTreeDO = new JavaComponentDependencyTreeDO();
             componentDependencyTreeDO.setDepth(depth);
-            componentDependencyTreeDO.setScope("-");
             extractGAVFromLine(componentDependencyTreeDO, lines.get(begin).substring(5));
             String groupId = componentDependencyTreeDO.getGroupId();
             String artifactId = componentDependencyTreeDO.getArtifactId();
