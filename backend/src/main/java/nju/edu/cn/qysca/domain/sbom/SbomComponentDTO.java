@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nju.edu.cn.qysca.domain.component.dos.HashDO;
-import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
+import nju.edu.cn.qysca.domain.component.dos.ComponentLicenseDO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ public class SbomComponentDTO {
     private String pUrl;
 
     @ApiModelProperty(value = "许可证列表")
-    private List<LicenseDO> licenses = new ArrayList<>();
+    private List<ComponentLicenseDO> licenses = new ArrayList<>();
 
     @ApiModelProperty(value = "哈希值列表")
     private List<HashDO> hashes = new ArrayList<>();

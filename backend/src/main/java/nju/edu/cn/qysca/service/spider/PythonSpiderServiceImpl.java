@@ -3,10 +3,8 @@ package nju.edu.cn.qysca.service.spider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
+import nju.edu.cn.qysca.domain.component.dos.ComponentLicenseDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -72,9 +70,9 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
             componentDO.setSourceUrl(jsonNode.get("info").get("release_url").asText());
             componentDO.setPUrl(getPyPiPUrl(name, version));
 
-            List<LicenseDO> licenseDOList = new ArrayList<>();
-            licenseDOList.add(new LicenseDO(jsonNode.get("info").get("license").asText(), null));
-            componentDO.setLicenses(licenseDOList);
+            List<ComponentLicenseDO> componentLicenseDOList = new ArrayList<>();
+            componentLicenseDOList.add(new ComponentLicenseDO(jsonNode.get("info").get("license").asText(), null));
+            componentDO.setLicenses(componentLicenseDOList);
 
             componentDO.setCreator(null);
             componentDO.setState("SUCCESS");

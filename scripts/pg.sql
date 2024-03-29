@@ -204,3 +204,23 @@ CREATE TABLE plt_java_dependency_table(
 	type VARCHAR(255) NOT NULL,
 	language VARCHAR(255) NOT NULL
 );
+
+DROP TABLE IF EXISTS plt_license;
+CREATE TABLE plt_license(
+    id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    full_name VARCHAR(255) NOT NULL UNIQUE,
+    url VARCHAR(255),
+    is_osi_approved BOOLEAN,
+    is_fsf_approved BOOLEAN,
+    is_spdx_approved BOOLEAN,
+    risk_level VARCHAR(255),
+    risk_disclosure TEXT,
+    gpl_compatibility BOOLEAN,
+    gpl_compatibility_description TEXT,
+    obligations_required JSONB,
+    obligations_not_required JSONB,
+    rights_allowed JSONB,
+    rights_prohibited JSONB,
+    text TEXT
+);

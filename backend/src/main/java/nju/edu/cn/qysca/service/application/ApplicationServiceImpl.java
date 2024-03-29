@@ -668,9 +668,9 @@ public class ApplicationServiceImpl implements ApplicationService {
             StringBuilder devId = new StringBuilder();
             StringBuilder devName = new StringBuilder();
             StringBuilder devEmail = new StringBuilder();
-            for (LicenseDO licenseDO : componentDetailDTO.getLicenses()) {
-                liName.append(licenseDO.getName()).append(";");
-                liUrl.append(licenseDO.getUrl()).append(";");
+            for (ComponentLicenseDO componentLicenseDO : componentDetailDTO.getLicenses()) {
+                liName.append(componentLicenseDO.getName()).append(";");
+                liUrl.append(componentLicenseDO.getUrl()).append(";");
             }
             for (DeveloperDO developerDO : componentDetailDTO.getDevelopers()) {
                 devId.append(developerDO.getId()).append(";");
