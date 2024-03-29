@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel("许可证义务与权利条目")
-public class LicenseTerm {
+public class LicenseTermDO {
 
     @ApiModelProperty(value = "条目名", example = "保留许可信息")
     private String title;

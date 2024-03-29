@@ -21,7 +21,7 @@ import java.util.List;
 @TypeDefs({
         @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
 })
-public class License {
+public class LicenseDO {
     @Id
     @Column(name="id",nullable = false)
     @GenericGenerator(name = "jpa-uuid", strategy = "uuid")
@@ -29,12 +29,12 @@ public class License {
     @ApiModelProperty(value = "uuid", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private String id;
 
-    @Column(name="name",nullable = false)
+    @Column(name="name",nullable = false,unique = true)
     @ApiModelProperty(value = "许可证名称（id）", example = "Apache-2.0")
     private String name;
 
-    @Column(name="full_name",nullable = false)
-    @ApiModelProperty(value = "许可证全名", example = "Apache License 2.0")
+    @Column(name="full_name",nullable = false,unique = true)
+    @ApiModelProperty(value = "许可证全名", example = "Apache LicenseDO 2.0")
     private String fullName;
 
     @Column(name="url",nullable = true)
@@ -72,24 +72,24 @@ public class License {
     @Column(name="obligations_required",nullable = true)
     @ApiModelProperty(value = "必须义务")
     @Type(type="jsonb")
-    private List<LicenseTerm> obligationsRequired;
+    private List<LicenseTermDO> obligationsRequired;
 
     @Column(name="obligations_not_required",nullable = true)
     @ApiModelProperty(value = "无需义务")
     @Type(type="jsonb")
-    private List<LicenseTerm> obligationsNotRequired;
+    private List<LicenseTermDO> obligationsNotRequired;
 
     @Column(name="rights_allowed",nullable = true)
     @ApiModelProperty(value = "允许权利")
     @Type(type="jsonb")
-    private List<LicenseTerm> rightsAllowed;
+    private List<LicenseTermDO> rightsAllowed;
 
     @Column(name="rights_prohibited",nullable = true)
     @ApiModelProperty(value = "禁止权利")
     @Type(type="jsonb")
-    private List<LicenseTerm> rightsProhibited;
+    private List<LicenseTermDO> rightsProhibited;
 
     @Column(name="text",nullable = true)
-    @ApiModelProperty(value = "许可证内容", example = "Apache License, Version 2.0 Apache License Version 2.0, January 2004 http://www.apache.org/licenses/ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION 1\\. Definitions. \"License\" shall mean the terms and conditions for use, reproduction, and dist....")
+    @ApiModelProperty(value = "许可证内容", example = "Apache LicenseDO, Version 2.0 Apache LicenseDO Version 2.0, January 2004 http://www.apache.org/licenses/ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION 1\\. Definitions. \"LicenseDO\" shall mean the terms and conditions for use, reproduction, and dist....")
     private String text;
 }

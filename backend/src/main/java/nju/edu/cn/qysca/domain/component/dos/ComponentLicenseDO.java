@@ -12,9 +12,9 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel("许可证DO")
-public class LicenseDO implements Serializable {
+public class ComponentLicenseDO implements Serializable {
 
-    @ApiModelProperty(value = "许可证名称", example = "Eclipse Public License v2.0")
+    @ApiModelProperty(value = "许可证名称", example = "Eclipse Public LicenseDO v2.0")
     private String name;
 
     @ApiModelProperty(value = "许可证URL", example = "https://www.eclipse.org/legal/epl-v20.html")

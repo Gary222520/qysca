@@ -82,7 +82,7 @@ public class JavaComponentDO extends ComponentDO {
     @Column(name = "licenses")
     @ApiModelProperty(value = "许可证列表")
     @Type(type="jsonb")
-    private List<LicenseDO> licenses = new ArrayList<>();
+    private List<ComponentLicenseDO> licenses = new ArrayList<>();
 
     @Column(name = "hashes")
     @ApiModelProperty(value = "哈希值列表")
