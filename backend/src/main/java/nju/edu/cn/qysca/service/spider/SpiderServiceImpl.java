@@ -5,7 +5,7 @@ import nju.edu.cn.qysca.dao.component.JavaDependencyTableDao;
 import nju.edu.cn.qysca.dao.component.JavaDependencyTreeDao;
 import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
 import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
-import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
+import nju.edu.cn.qysca.domain.component.dos.ComponentLicenseDO;
 import nju.edu.cn.qysca.utils.HashUtil;
 import nju.edu.cn.qysca.utils.spider.UrlConnector;
 import org.apache.maven.model.Model;
@@ -288,11 +288,11 @@ public class SpiderServiceImpl implements SpiderService {
      * @param model maven-model
      * @return licenseDO列表
      */
-    private List<LicenseDO> getLicense(Model model) {
+    private List<ComponentLicenseDO> getLicense(Model model) {
         List<org.apache.maven.model.License> mavenLicenses = model.getLicenses();
         return mavenLicenses.stream()
                 .map(mavenLicense -> {
-                    LicenseDO license = new LicenseDO();
+                    ComponentLicenseDO license = new ComponentLicenseDO();
                     license.setName(mavenLicense.getName() == null ? "-" : mavenLicense.getName());
                     license.setUrl(mavenLicense.getUrl() == null ? "-" : mavenLicense.getUrl());
                     return license;
