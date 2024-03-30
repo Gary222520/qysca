@@ -21,7 +21,7 @@ import javax.persistence.*;
 @TypeDefs({
         @TypeDef(name = "string-array", typeClass = StringArrayType.class),
 })
-@Table(name="plt_js_component", uniqueConstraints = @UniqueConstraint(columnNames = {"namespace", "artifact_id", "version"}))
+@Table(name="plt_js_component", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "version"}))
 public class JsComponentDO extends ComponentDO{
 
     @Id

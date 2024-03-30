@@ -21,9 +21,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -115,13 +114,23 @@ public class NpmServiceImpl implements NpmService {
     //可以考虑是否能够拉取content使用npm构建来生成依赖树
     @Override
     public JsDependencyTreeDO spiderDependencyTree(String name, String version) {
-        JsDependencyTreeDO jsDependencyTreeDO = new JsDependencyTreeDO();
+/*        JsDependencyTreeDO jsDependencyTreeDO = new JsDependencyTreeDO();
         jsDependencyTreeDO.setName(name);
         jsDependencyTreeDO.setVersion(version);
         Set<String> set = new HashSet<>();
         JsComponentDependencyTreeDO jsComponentDependencyTreeDO = buildDependencyTree(name, version, 0, set);
         jsDependencyTreeDO.setTree(jsComponentDependencyTreeDO);
-        return jsDependencyTreeDO;
+        return jsDependencyTreeDO;*/
+        String filePath = null;
+        try {
+            filePath = spiderContent(name, version);
+            generatePackageLock(filePath + FILE_SEPARATOR + "package.json");
+            return dependencyTreeAnalysis(filePath + FILE_SEPARATOR + "package-lock.json", "");
+        }catch (Exception e){
+            throw new PlatformException(500, "未能识别组件信息");
+        } finally {
+            deleteFolder(filePath);
+        }
     }
 
     /**
@@ -568,5 +577,56 @@ public class NpmServiceImpl implements NpmService {
             return new String[]{matcher.group(1), matcher.group(2)};
         }
         return null;
+    }
+
+    private String spiderContent(String name, String version) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String tempDirName = dateFormat.format(new Date());
+        File tempDir = new File(tempDirName);
+        if(!tempDir.exists()){
+            tempDir.mkdirs();
+        }
+        try{
+            String url = "https://registry.npmjs.org/" + name + FILE_SEPARATOR + version;
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            HttpGet httpGet = new HttpGet(url);
+            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
+            CloseableHttpResponse response = httpClient.execute(httpGet);
+            if (response.getStatusLine().getStatusCode() != 200) {
+                System.out.println(response.getStatusLine().getStatusCode());
+                throw new PlatformException(500, "存在未识别的组件");
+            }
+            String content = EntityUtils.toString(response.getEntity(), "UTF-8");
+            File file = new File(tempDir, "package.json");
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writer.write(content);
+            writer.close();
+        }catch (Exception e){
+            throw new PlatformException(500, "存在未识别的组件");
+        }
+        return  tempDirName;
+    }
+
+    private void deleteFolder(String filePath) {
+        File folder = new File(filePath);
+        if (folder.exists()) {
+            deleteFolderFile(folder);
+        }
+    }
+
+    /**
+     * 递归删除文件夹下的文件
+     *
+     * @param folder 文件夹
+     */
+    private void deleteFolderFile(File folder) {
+        File[] files = folder.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                deleteFolderFile(file);
+            }
+            file.delete();
+        }
+        folder.delete();
     }
 }
