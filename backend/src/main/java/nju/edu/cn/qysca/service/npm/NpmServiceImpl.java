@@ -19,6 +19,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -36,6 +37,10 @@ public class NpmServiceImpl implements NpmService {
     private JsComponentDao jsComponentDao;
 
     private final String FILE_SEPARATOR = "/";
+
+    @Value("${tempPomFolder}")
+    private String tempFolder;
+
 
     /**
      * 根据package.json生成ComponentDO
@@ -110,21 +115,12 @@ public class NpmServiceImpl implements NpmService {
      * @param version 组件版本
      * @return JsDependencyTreeDO 组件依赖信息
      */
-    //会存在循环依赖问题 version规范问题 404问题 是否有限问题
-    //可以考虑是否能够拉取content使用npm构建来生成依赖树
     @Override
     public JsDependencyTreeDO spiderDependencyTree(String name, String version) {
-/*        JsDependencyTreeDO jsDependencyTreeDO = new JsDependencyTreeDO();
-        jsDependencyTreeDO.setName(name);
-        jsDependencyTreeDO.setVersion(version);
-        Set<String> set = new HashSet<>();
-        JsComponentDependencyTreeDO jsComponentDependencyTreeDO = buildDependencyTree(name, version, 0, set);
-        jsDependencyTreeDO.setTree(jsComponentDependencyTreeDO);
-        return jsDependencyTreeDO;*/
         String filePath = null;
         try {
             filePath = spiderContent(name, version);
-            generatePackageLock(filePath + FILE_SEPARATOR + "package.json");
+            generatePackageLock(filePath);
             return dependencyTreeAnalysis(filePath + FILE_SEPARATOR + "package-lock.json", "");
         }catch (Exception e){
             throw new PlatformException(500, "未能识别组件信息");
@@ -133,86 +129,6 @@ public class NpmServiceImpl implements NpmService {
         }
     }
 
-    /**
-     * 爬虫构建树状依赖信息
-     *
-     * @param name    组件名称
-     * @param version 组件版本
-     * @param depth   深度
-     * @return ComponentDependencyTreeDO 依赖树信息
-     */
-    private JsComponentDependencyTreeDO buildDependencyTree(String name, String version, int depth, Set<String> set) {
-        if (set.contains(name + "@" + version)) {
-            return null;
-        }
-        JsComponentDependencyTreeDO jsComponentDependencyTreeDO = new JsComponentDependencyTreeDO();
-        jsComponentDependencyTreeDO.setName(name);
-        jsComponentDependencyTreeDO.setVersion(version);
-        jsComponentDependencyTreeDO.setDepth(depth);
-        jsComponentDependencyTreeDO.setType("opensource");
-        List<JsComponentDependencyTreeDO> dependencyTreeDOS = new ArrayList<>();
-        try {
-            String url = "https://registry.npmjs.org/" + name + FILE_SEPARATOR + version;
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            HttpGet httpGet = new HttpGet(url);
-            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
-            CloseableHttpResponse response = httpClient.execute(httpGet);
-            if (response.getStatusLine().getStatusCode() != 200) {
-                System.out.println(response.getStatusLine().getStatusCode());
-                throw new PlatformException(500, "存在未识别的组件");
-            }
-            String content = EntityUtils.toString(response.getEntity(), "UTF-8");
-            JSONObject jsonObject = JSON.parseObject(content);
-            JSONObject dependencies = jsonObject.getJSONObject("dependencies");
-            JSONObject devDependencies = jsonObject.getJSONObject("devDependencies");
-            set.add(name + "@" + version);
-            if (dependencies != null) {
-                for (Map.Entry<String, Object> entry : dependencies.entrySet()) {
-                    String childName = entry.getKey();
-                    String childVersion = (String) entry.getValue();
-                    if (childVersion.contains("^")) {
-                        String maxVersion = upLimitMajorVersion(childVersion.substring(1));
-                        childVersion = resolveVersion(childName, childVersion.substring(1), maxVersion);
-                    }
-                    if (childVersion.contains("~")) {
-                        String maxVersion = upLimitMinorVersion(childVersion.substring(1));
-                        childVersion = resolveVersion(childName, childVersion.substring(1), maxVersion);
-                    }
-                    if(childVersion.contains("*")) {
-                        childVersion = resolveVersion(childName,"0.0.0", "99.99.99");
-                    }
-                    System.out.println(childName + "@" + childVersion);
-                    JsComponentDependencyTreeDO childComponentDependencyTreeDO = buildDependencyTree(childName, childVersion, depth + 1, set);
-                    dependencyTreeDOS.add(childComponentDependencyTreeDO);
-                }
-            }
-            if (devDependencies != null) {
-                for (Map.Entry<String, Object> entry : devDependencies.entrySet()) {
-                    String childName = entry.getKey();
-                    String childVersion = (String) entry.getValue();
-                    if (childVersion.contains("^")) {
-                        String maxVersion = upLimitMajorVersion(childVersion.substring(1));
-                        childVersion = resolveVersion(childName, childVersion.substring(1), maxVersion);
-                    }
-                    if (childVersion.contains("~")) {
-                        String maxVersion = upLimitMinorVersion(childVersion.substring(1));
-                        childVersion = resolveVersion(childName, childVersion.substring(1), maxVersion);
-                    }
-                    if(childVersion.contains("*")) {
-                        childVersion = resolveVersion(childName,"0.0.0", "99.99.99");
-                    }
-                    System.out.println(childName + "@" + childVersion);
-                    JsComponentDependencyTreeDO childComponentDependencyTreeDO = buildDependencyTree(childName, childVersion, depth + 1, set);
-                    dependencyTreeDOS.add(childComponentDependencyTreeDO);
-                }
-            }
-            jsComponentDependencyTreeDO.setDependencies(dependencyTreeDOS);
-        } catch (Exception e) {
-            System.out.println(name + "@" + version + ":未找到");
-            e.printStackTrace();
-        }
-        return jsComponentDependencyTreeDO;
-    }
 
     /**
      * 将JsComponentDependencyTreeDO转换为AppComponentDependencyTreeDO
@@ -257,13 +173,13 @@ public class NpmServiceImpl implements NpmService {
     /**
      * 生成package-lock.json文件
      *
-     * @param filePath package.json文件路径
+     * @param filePath package.json所在文件夹路径
      */
     public void generatePackageLock(String filePath) {
         List<String> lines = new ArrayList<>();
         try {
             File file = new File(filePath);
-            List<String> command = List.of("cmd.exe", "/c", "npm install");
+            List<String> command = List.of("cmd.exe", "/c", "npm install", "--package-lock-only");
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.directory(file);
             Process process = processBuilder.start();
@@ -494,75 +410,13 @@ public class NpmServiceImpl implements NpmService {
                 }
             }
             jsComponentDO.setCopyrightStatements(copyrightStatements.toArray(new String[0]));
+            jsComponentDO.setState("SUCCESS");
         } catch (Exception e) {
             return null;
         }
         return jsComponentDO;
     }
 
-    /**
-     * 解析版本约束，找到符合条件的最新版本
-     *
-     * @param name       项目名称
-     * @param minVersion 最小版本
-     * @return String 符合条件的最新版本
-     */
-    private String resolveVersion(String name, String minVersion, String maxVersion) {
-        String result = minVersion;
-        try {
-            String url = "https://registry.npmjs.org/" + name;
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            HttpGet httpGet = new HttpGet(url);
-            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
-            CloseableHttpResponse response = httpClient.execute(httpGet);
-            if (response.getStatusLine().getStatusCode() != 200) {
-                return null;
-            }
-            String content = EntityUtils.toString(response.getEntity(), "UTF-8");
-            JSONObject jsonObject = JSON.parseObject(content);
-            JSONObject versions = jsonObject.getJSONObject("versions");
-            List<String> sortedVersions = new ArrayList<>(versions.keySet());
-            Collections.sort(sortedVersions);
-            for (int i = sortedVersions.size() - 1; i >= 0; i--) {
-                if (sortedVersions.get(i).compareTo(maxVersion) < 0 && sortedVersions.get(i).compareTo(minVersion) >= 0) {
-                    result = sortedVersions.get(i);
-                    return result;
-                }
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        return result;
-    }
-
-
-    /**
-     * 获取大于指定版本的整数版本
-     *
-     * @param minVersion 最小版本
-     * @return String 大于指定版本的整数版本
-     */
-    private String upLimitMajorVersion(String minVersion) {
-        Integer index = minVersion.indexOf(".");
-        Integer majorVersion = Integer.parseInt(minVersion.substring(0, index));
-        StringBuilder sb = new StringBuilder();
-        sb.append(majorVersion + 1).append(".0.0");
-        return sb.toString();
-    }
-
-    /**
-     * 获取大于指定版本的次版本号的整数版本
-     *
-     * @param minVersion
-     * @return
-     */
-    private String upLimitMinorVersion(String minVersion) {
-        String[] versionParts = minVersion.split("\\.");
-        int majorVersion = Integer.parseInt(versionParts[0]);
-        int minorVersion = Integer.parseInt(versionParts[1]);
-        int patch = Integer.parseInt(versionParts[2]);
-        return majorVersion + "." + (minorVersion + 1) + ".0";
-    }
 
     /**
      * 解析版本号
@@ -582,7 +436,7 @@ public class NpmServiceImpl implements NpmService {
     private String spiderContent(String name, String version) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         String tempDirName = dateFormat.format(new Date());
-        File tempDir = new File(tempDirName);
+        File tempDir = new File(tempFolder, tempDirName);
         if(!tempDir.exists()){
             tempDir.mkdirs();
         }
@@ -604,7 +458,7 @@ public class NpmServiceImpl implements NpmService {
         }catch (Exception e){
             throw new PlatformException(500, "存在未识别的组件");
         }
-        return  tempDirName;
+        return  tempDir.getPath();
     }
 
     private void deleteFolder(String filePath) {
