@@ -402,13 +402,13 @@ public class MavenServiceImpl implements MavenService {
      * 获得Model中的License信息
      *
      * @param model pom文件
-     * @return List<LicenseDO> 许可证信息
+     * @return List<ComponentLicenseDO> 许可证信息
      */
-    private List<LicenseDO> getLicense(Model model) {
+    private List<ComponentLicenseDO> getLicense(Model model) {
         List<org.apache.maven.model.License> mavenLicenses = model.getLicenses();
         return mavenLicenses.stream()
                 .map(mavenLicense -> {
-                    LicenseDO license = new LicenseDO();
+                    ComponentLicenseDO license = new ComponentLicenseDO();
                     license.setName(mavenLicense.getName() == null ? "-" : mavenLicense.getName());
                     license.setUrl(mavenLicense.getUrl() == null ? "-" : mavenLicense.getUrl());
                     return license;

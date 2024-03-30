@@ -38,7 +38,7 @@ public class ComponentCompareTreeDTO {
     @ApiModelProperty(value = "语言", example = "java")
     private String language;
 
-    @ApiModelProperty(value = "许可证", example = "Apache License, Version 2.0")
+    @ApiModelProperty(value = "许可证", example = "Apache LicenseDO, Version 2.0")
     private String licenses;
 
     @ApiModelProperty(value = "是否直接依赖", example = "true")

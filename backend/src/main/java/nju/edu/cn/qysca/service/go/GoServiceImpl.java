@@ -247,14 +247,14 @@ public class GoServiceImpl implements GoService{
             if(null!=description && description.length()!=0){
                 goComponentDO.setDescription(description);
             }
-            List<LicenseDO> licenses=new ArrayList<>();
+            List<ComponentLicenseDO> licenses=new ArrayList<>();
             JSONObject license=jsonObject.getJSONObject("license");
             if(null !=license){
                 String lname=license.getString("spdx_id");
                 String lurl=license.getString("url");
                 if(null!=lname && lname.length()!=0 && null!=lurl && lurl.length()!=0){
-                    LicenseDO licenseDO=new LicenseDO(lname,lurl);
-                    licenses.add(licenseDO);
+                    ComponentLicenseDO componentLicenseDO =new ComponentLicenseDO(lname,lurl);
+                    licenses.add(componentLicenseDO);
                 }
             }
             goComponentDO.setLicenses(licenses);

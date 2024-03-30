@@ -52,7 +52,7 @@ public class TableExcelDetailDTO {
     @ExcelExport(value = "源码地址")
     private String sourceUrl;
 
-    @ApiModelProperty(value = "许可证名称", example = "Eclipse Public License v2.0")
+    @ApiModelProperty(value = "许可证名称", example = "Eclipse Public LicenseDO v2.0")
     @ExcelExport(value = "许可证名称")
     private String licensesName;
 
