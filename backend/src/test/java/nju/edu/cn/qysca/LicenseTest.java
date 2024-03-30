@@ -17,35 +17,29 @@ public class LicenseTest {
     @Test
     public void test1(){
         String name = "BSD-3-Clause";
-        List<LicenseDO> licenseDOList = licenseService.searchLicense(name);
+        List<String> licenseNameList = licenseService.searchLicense(name);
 
-        assert licenseDOList.size() == 1;
-        LicenseDO licenseDO = licenseDOList.get(0);
+        assert licenseNameList.size() == 1;
+        String licenseName = licenseNameList.get(0);
 
-        assert licenseDO.getFullName().equals("BSD-3-Clause");
+        assert licenseName.equals("BSD-3-Clause");
     }
 
     @Test
     public void test2(){
 
         String name = "CC-BY-NC-SA";
-        List<LicenseDO> licenseDOList = licenseService.searchLicense(name);
-        assert !licenseDOList.isEmpty();
-        System.out.println();
-        for (LicenseDO licenseDO : licenseDOList){
-            System.out.println(licenseDO.getName());
-        }
+        List<String> licenseNameList = licenseService.searchLicense(name);
+        assert !licenseNameList.isEmpty();
+        System.out.println(licenseNameList);
     }
 
     @Test
     public void test3(){
 
         String name = "apache license";
-        List<LicenseDO> licenseDOList = licenseService.searchLicense(name);
-        assert !licenseDOList.isEmpty();
-        System.out.println();
-        for (LicenseDO licenseDO : licenseDOList){
-            System.out.println(licenseDO.getName() + "      " + licenseDO.getFullName());
-        }
+        List<String> licenseNameList = licenseService.searchLicense(name);
+        assert !licenseNameList.isEmpty();
+        System.out.println(licenseNameList);
     }
 }

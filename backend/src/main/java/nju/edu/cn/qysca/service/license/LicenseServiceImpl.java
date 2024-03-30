@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.sort;
 
@@ -18,22 +19,24 @@ public class LicenseServiceImpl implements LicenseService{
     /**
      * 查询许可证
      * @param queryName 待查询许可证名称
-     * @return List<LicenseDO> 匹配到的许可证，当精确匹配到时，只会返回一个许可证
+     * @return List<String> 匹配到的许可证名称，当精确匹配到时，只会返回一个许可证
      */
     @Override
-    public List<LicenseDO> searchLicense(String queryName){
+    public List<String> searchLicense(String queryName){
 
+        List<String> results = new ArrayList<>();
         // 先精确搜素
         LicenseDO licenseDO = exactSearch(queryName);
         if (licenseDO != null){
-            List<LicenseDO> result = new ArrayList<>();
-            result.add(licenseDO);
-            return result;
+            results.add(licenseDO.getName());
+            return results;
         }
 
         // 搜索不到时进行模糊搜索
-        List<LicenseDO> results = fuzzySearch(queryName, 30);
-
+        List<LicenseDO> licenseDOList = fuzzySearch(queryName, 30);
+        results = licenseDOList.stream()
+                .map(LicenseDO::getName)
+                .collect(Collectors.toList());
         return results;
     }
 
