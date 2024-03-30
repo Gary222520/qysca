@@ -45,23 +45,29 @@ public class NpmServiceImpl implements NpmService {
     /**
      * 根据package.json生成ComponentDO
      *
-     * @param filePath package.json文件路径
+     * @param filePath zip文件路径
      * @param type     组件类型
      * @return JsComponentDO Js组件信息
      */
     @Override
     public JsComponentDO componentAnalysis(String filePath, String type) {
-        PackageJsonDTO packageJsonDTO = parsePackageJson(filePath);
-        JsComponentDO jsComponentDO = new JsComponentDO();
-        String name = packageJsonDTO.getName();
-        jsComponentDO.setName(name);
-        jsComponentDO.setLanguage("javaScript");
-        jsComponentDO.setVersion(packageJsonDTO.getVersion());
-        jsComponentDO.setDescription(packageJsonDTO.getDescription());
-        //TODO: Licenses信息
-        jsComponentDO.setType(type);
-        // TODO: 剩余部分信息
-        return jsComponentDO;
+        try {
+            extractFile(filePath);
+            File file = new File(filePath);
+            PackageJsonDTO packageJsonDTO = parsePackageJson(file.getParent() + FILE_SEPARATOR + "package.json");
+            JsComponentDO jsComponentDO = new JsComponentDO();
+            String name = packageJsonDTO.getName();
+            jsComponentDO.setName(name);
+            jsComponentDO.setLanguage("javaScript");
+            jsComponentDO.setVersion(packageJsonDTO.getVersion());
+            jsComponentDO.setDescription(packageJsonDTO.getDescription());
+            //TODO: Licenses信息
+            jsComponentDO.setType(type);
+            // TODO: 剩余部分信息
+            return jsComponentDO;
+        }catch (Exception e){
+            throw new PlatformException(500, "解析package.json失败");
+        }
 
     }
 
@@ -72,13 +78,22 @@ public class NpmServiceImpl implements NpmService {
      */
     @Override
     public JsDependencyTreeDO dependencyTreeAnalysis(String filePath, String type) {
-        PackageLockDTO packageLockDTO = parsePackageLock(filePath);
-        JsDependencyTreeDO jsDependencyTreeDO = new JsDependencyTreeDO();
-        jsDependencyTreeDO.setName(packageLockDTO.getName());
-        jsDependencyTreeDO.setVersion(packageLockDTO.getVersion());
-        JsComponentDependencyTreeDO componentDependencyTreeDO = convertNode(packageLockDTO, type);
-        jsDependencyTreeDO.setTree(componentDependencyTreeDO);
-        return jsDependencyTreeDO;
+        try {
+            File file = new File(filePath);
+            File packageLock = new File(file.getParent() + FILE_SEPARATOR + "package-lock.json");
+            if (!packageLock.exists()) {
+                extractFile(filePath);
+            }
+            PackageLockDTO packageLockDTO = parsePackageLock(file.getParent() + FILE_SEPARATOR + "package-lock.json");
+            JsDependencyTreeDO jsDependencyTreeDO = new JsDependencyTreeDO();
+            jsDependencyTreeDO.setName(packageLockDTO.getName());
+            jsDependencyTreeDO.setVersion(packageLockDTO.getVersion());
+            JsComponentDependencyTreeDO componentDependencyTreeDO = convertNode(packageLockDTO, type);
+            jsDependencyTreeDO.setTree(componentDependencyTreeDO);
+            return jsDependencyTreeDO;
+        }catch (Exception e){
+            throw new PlatformException(500, "解析依赖树失败");
+        }
     }
 
     /**

@@ -28,7 +28,7 @@ public interface AppDependencyTableDao extends JpaRepository<AppDependencyTableD
      * @param pageable 分页
      * @return Page<AppComponentTableDTO> 应用依赖信息表
      */
-    @Query("select new nju.edu.cn.qysca.domain.application.dtos.AppComponentTableDTO(a.cName, a.cVersion, a.depth, a.type, a.language, a.direct) from AppDependencyTableDO a where a.name = ?1 and a.version = ?2")
+    @Query("select new nju.edu.cn.qysca.domain.application.dtos.AppComponentTableDTO(a.cName, a.cVersion, a.depth, a.type, a.language, a.direct) from AppDependencyTableDO a where a.name = :name and a.version = :version")
     Page<AppComponentTableDTO> findByNameAndVersion(String name, String version, Pageable pageable);
 
     /**
@@ -37,6 +37,6 @@ public interface AppDependencyTableDao extends JpaRepository<AppDependencyTableD
      * @param version 版本号
      * @return List<TableExcelBriefDTO> 应用依赖信息
      */
-    @Query("select new nju.edu.cn.qysca.domain.application.dtos.TableExcelBriefDTO(a.cName, a.cVersion, a.language, a.direct, a.depth, a.type) from AppDependencyTableDO a where a.name = ?1 and a.version = ?2")
+    @Query("select new nju.edu.cn.qysca.domain.application.dtos.TableExcelBriefDTO(a.cName, a.cVersion, a.language, a.direct, a.depth, a.type) from AppDependencyTableDO a where a.name = :name and a.version = :version")
     List<TableExcelBriefDTO> findTableListByNameAndVersion(String name, String version);
 }

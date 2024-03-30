@@ -4,8 +4,8 @@ package nju.edu.cn.qysca.service.component;
 import nju.edu.cn.qysca.auth.ContextUtil;
 import nju.edu.cn.qysca.dao.application.AppComponentDao;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
-import nju.edu.cn.qysca.dao.bu.BuAppDao;
 import nju.edu.cn.qysca.dao.component.*;
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.exception.PlatformException;
@@ -173,7 +173,12 @@ public class ComponentServiceImpl implements ComponentService {
         UserDO userDO = ContextUtil.getUserDO();
         //接口获得详细信息
         if (saveCloseComponentDTO.getLanguage().equals("java")) {
-            JavaComponentDO javaComponentDO = mavenService.componentAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
+            JavaComponentDO javaComponentDO = null;
+            if (saveCloseComponentDTO.getBuilder().equals("gradle")) {
+                javaComponentDO = gradleService.componentAnalysis(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getType());
+            } else {
+                javaComponentDO = mavenService.componentAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
+            }
             JavaComponentDO temp = javaComponentDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion());
             if (temp != null) {
                 throw new PlatformException(500, "该组件已存在");
@@ -220,7 +225,12 @@ public class ComponentServiceImpl implements ComponentService {
                 JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion());
                 try {
                     //存储闭源组件树状依赖信息
-                    JavaDependencyTreeDO closeJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
+                    JavaDependencyTreeDO closeJavaDependencyTreeDO = null;
+                    if (saveCloseComponentDTO.getBuilder().equals("gradle")) {
+                        closeJavaDependencyTreeDO = gradleService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getType());
+                    } else {
+                        closeJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
+                    }
                     javaDependencyTreeDao.save(closeJavaDependencyTreeDO);
                     //存储闭源组件平铺依赖信息
                     List<JavaDependencyTableDO> javaDependencyTableDOList = mavenService.dependencyTableAnalysis(closeJavaDependencyTreeDO);
@@ -304,9 +314,12 @@ public class ComponentServiceImpl implements ComponentService {
                     throw new PlatformException(500, "您没有权限修改该组件信息");
                 }
                 if (updateCloseComponentDTO.getFilePath() != null) {
-                    JavaComponentDO temp = mavenService.componentAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
-                    if (!temp.getName().equals(updateCloseComponentDTO.getName()) || !temp.getVersion().equals(updateCloseComponentDTO.getVersion())) {
-                        throw new PlatformException(500, "组件信息与文件信息不匹配");
+                    //gradle方式无法检查
+                    if (updateCloseComponentDTO.getBuilder().equals("maven")) {
+                        JavaComponentDO temp = mavenService.componentAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
+                        if (!temp.getName().equals(updateCloseComponentDTO.getName()) || !temp.getVersion().equals(updateCloseComponentDTO.getVersion())) {
+                            throw new PlatformException(500, "组件信息与文件信息不匹配");
+                        }
                     }
                 }
                 javaComponentDO.setState("RUNNING");
@@ -362,7 +375,12 @@ public class ComponentServiceImpl implements ComponentService {
                 JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
                 javaComponentDO.setType(updateCloseComponentDTO.getType());
                 javaDependencyTreeDao.deleteByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
-                JavaDependencyTreeDO closeJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
+                JavaDependencyTreeDO closeJavaDependencyTreeDO = null;
+                if (updateCloseComponentDTO.getBuilder().equals("gradle")) {
+                    closeJavaDependencyTreeDO = gradleService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion(), updateCloseComponentDTO.getType());
+                } else {
+                    closeJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
+                }
                 javaDependencyTreeDao.save(closeJavaDependencyTreeDO);
                 //存储闭源组件平铺依赖信息
                 javaDependencyTableDao.deleteAllByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
@@ -422,37 +440,67 @@ public class ComponentServiceImpl implements ComponentService {
     @Override
     @Transactional
     public List<ApplicationDO> deleteCloseComponent(DeleteCloseComponentDTO deleteCloseComponentDTO) {
-        //确定是否是闭源组件
-        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-        if (applicationDO == null) {
-            throw new PlatformException(500, "该组件不可删除");
-        }
-        List<ApplicationDO> parentApplicationDOList = applicationDao.findParentApplication(applicationDO.getId());
-        if (parentApplicationDOList.size() == 0) {
-            switch (deleteCloseComponentDTO.getLanguage()) {
-                case "java":
-                    javaComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                    javaDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                    javaDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                    break;
-                case "javaScript":
-                    jsComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                    jsDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                    jsDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                    break;
-                case "go":
-                    goComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                    goDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                    goDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                    break;
-                case "python":
-                    pythonComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                    pythonDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                    pythonDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                    break;
-            }
-        } else {
-            return parentApplicationDOList;
+        List<ApplicationDO> parentApplicationDOList = null;
+        switch (deleteCloseComponentDTO.getLanguage()) {
+            case "java":
+                JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                if(javaComponentDO.getCreator().equals("")){
+                    throw new PlatformException(500, "开源组件不可删除");
+                }
+                parentApplicationDOList = applicationDao.findParentApplication("java", javaComponentDO.getId());
+                if(!parentApplicationDOList.isEmpty()){
+                    return parentApplicationDOList;
+                }
+                javaComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                javaDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                javaDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                break;
+            case "javaScript":
+                JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                if(jsComponentDO.getCreator().equals("")) {
+                    throw new PlatformException(500, "开源组件不可删除");
+                }
+                parentApplicationDOList = applicationDao.findParentApplication("javaScript", jsComponentDO.getId());
+                if(!parentApplicationDOList.isEmpty()) {
+                    return parentApplicationDOList;
+                }
+                jsComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                jsDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                jsDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                break;
+            case "go":
+                GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                if(goComponentDO.getCreator().equals("")) {
+                    throw new PlatformException(500, "开源组件不可删除");
+                }
+                parentApplicationDOList =  applicationDao.findParentApplication("go", goComponentDO.getId());
+                if(!parentApplicationDOList.isEmpty()){
+                    return parentApplicationDOList;
+                }
+                goComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                goDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                goDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                break;
+            case "python":
+                PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                if(pythonComponentDO.getCreator().equals("")){
+                    throw new PlatformException(500, "开源组件不可删除");
+                }
+                parentApplicationDOList =  applicationDao.findParentApplication("python", pythonComponentDO.getId());
+                if(!parentApplicationDOList.isEmpty()){
+                    return parentApplicationDOList;
+                }
+                pythonComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                pythonDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                pythonDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                break;
+            case "app":
+                ApplicationDO applicationDO = applicationDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                parentApplicationDOList = applicationDao.findParentApplication(applicationDO.getId());
+                if(!parentApplicationDOList.isEmpty()){
+                    return parentApplicationDOList;
+                }
+                // TODO: 如何删除还需讨论
         }
         return null;
     }
@@ -570,6 +618,10 @@ public class ComponentServiceImpl implements ComponentService {
             case "python":
                 PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(componentDetailDTO.getName(), componentDetailDTO.getVersion());
                 BeanUtils.copyProperties(pythonComponentDO, componentDetailDTO);
+                break;
+            case "app":
+                AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(componentDetailDTO.getName(), componentDetailDTO.getVersion());
+                BeanUtils.copyProperties(appComponentDO, componentDetailDTO);
                 break;
         }
         return componentDetailDTO;

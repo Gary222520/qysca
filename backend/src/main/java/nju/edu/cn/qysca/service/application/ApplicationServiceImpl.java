@@ -14,7 +14,6 @@ import nju.edu.cn.qysca.domain.bu.dos.BuDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentCompareTreeDTO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentDetailDTO;
-import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dos.*;
 import nju.edu.cn.qysca.domain.application.dtos.*;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
@@ -26,7 +25,6 @@ import nju.edu.cn.qysca.service.gradle.GradleService;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.service.npm.NpmService;
 import nju.edu.cn.qysca.service.python.PythonService;
-import nju.edu.cn.qysca.service.spider.SpiderService;
 import nju.edu.cn.qysca.utils.excel.ExcelUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,18 +72,6 @@ public class ApplicationServiceImpl implements ApplicationService {
     private AppDependencyTreeDao appDependencyTreeDao;
 
     @Autowired
-    private JavaDependencyTableDao javaDependencyTableDao;
-
-    @Autowired
-    private JsDependencyTableDao jsDependencyTableDao;
-
-    @Autowired
-    private GoDependencyTableDao goDependencyTableDao;
-
-    @Autowired
-    private PythonDependencyTableDao pythonDependencyTableDao;
-
-    @Autowired
     private AppDependencyTableDao appDependencyTableDao;
 
     @Autowired
@@ -117,9 +103,6 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Autowired
     private PythonService pythonService;
-
-    @Autowired
-    private SpiderService spiderService;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -286,7 +269,12 @@ public class ApplicationServiceImpl implements ApplicationService {
             //TODO: 尝试通过多态代码优化
             switch (saveApplicationDependencyDTO.getLanguage()) {
                 case "java":
-                    JavaDependencyTreeDO analyzedJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
+                    JavaDependencyTreeDO analyzedJavaDependencyTreeDO = null;
+                    if(saveApplicationDependencyDTO.getBuilder().equals("gradle")){
+                        analyzedJavaDependencyTreeDO = gradleService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "");
+                    }else {
+                        analyzedJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
+                    }
                     if (!analyzedJavaDependencyTreeDO.getName().equals(saveApplicationDependencyDTO.getName()) || !analyzedJavaDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
                         throw new PlatformException(500, "上传文件非本项目");
                     }
@@ -446,7 +434,6 @@ public class ApplicationServiceImpl implements ApplicationService {
             }
         }
         BuAppDO buAppDO = buAppDao.findByAid(applicationDO.getId());
-        BuDO buDO = buDao.findByBid(buAppDO.getBid());
         appComponentDao.deleteByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
         appDependencyTreeDao.deleteByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
         appDependencyTableDao.deleteAllByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
@@ -475,8 +462,6 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new PlatformException(500, "该应用已锁定或已发布，无法添加组件");
         }
         //叶子节点无法添加组件
-        BuAppDO buAppDO = buAppDao.findByAid(parentApplicationDO.getId());
-        BuDO buDO = buDao.findByBid(buAppDO.getBid());
         AppDependencyTreeDO appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(applicationComponentDTO.getParentName(), applicationComponentDTO.getParentVersion());
         if (appDependencyTreeDO != null) {
             throw new PlatformException(500, "该应用已添加组件，无法手动添加");
@@ -606,7 +591,6 @@ public class ApplicationServiceImpl implements ApplicationService {
             //TODO: 通过应用发布的组件没有license等信息
             appComponentDO.setLanguage(language.toArray(new String[0]));
             appComponentDao.save(appComponentDO);
-            //Java可能会产生问题
             AppDependencyTreeDO temp = appDependencyTreeDao.findByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
             //根据结构生成依赖信息并保存
             if (temp == null) {
@@ -775,7 +759,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      */
     @Override
     public AppDependencyTreeDO findApplicationDependencyTree(ApplicationSearchDTO applicationSearchDTO) {
-        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
         return appDependencyTreeDao.findByNameAndVersion(
                 applicationSearchDTO.getName(),
                 applicationSearchDTO.getVersion());
