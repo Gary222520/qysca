@@ -119,10 +119,9 @@ CREATE TABLE plt_application(
 DROP TABLE IF EXISTS plt_java_component;
 CREATE TABLE plt_java_component(
 	id VARCHAR(32) PRIMARY KEY,
-	group_id VARCHAR(255) NOT NULL,
-	artifact_id VARCHAR(255) NOT NULL,
+	name VARCHAR(255) NOT NULL,
 	version VARCHAR(255) NOT NULL,
-	name VARCHAR(255),
+	j_name VARCHAR(255),
 	language VARCHAR(255) NOT NULL,
 	type VARCHAR(255) NOT NULL,
 	description VARCHAR(2000),
@@ -135,7 +134,7 @@ CREATE TABLE plt_java_component(
 	licenses JSONB,
 	hashes JSONB,
 	state VARCHAR(32) NOT NULL,
-	UNIQUE(group_id,artifact_id,version)
+	UNIQUE(name,version)
 );
 
 DROP TABLE IF EXISTS plt_user;
@@ -182,21 +181,18 @@ CREATE TABLE plt_permission(
 DROP TABLE IF EXISTS plt_java_dependency_tree;
 CREATE TABLE plt_java_dependency_tree(
 	id VARCHAR(32) PRIMARY KEY,
-	group_id VARCHAR(255) NOT NULL,
-	artifact_id VARCHAR(255) NOT NULL,
+	name VARCHAR(255) NOT NULL,
 	version VARCHAR(255) NOT NULL,
 	tree JSONB,
-	UNIQUE(group_id,artifact_id,version)
+	UNIQUE(name,version)
 );
 
 DROP TABLE IF EXISTS plt_java_dependency_table;
 CREATE TABLE plt_java_dependency_table(
 	id VARCHAR(32) PRIMARY KEY,
-	group_id VARCHAR(255) NOT NULL,
-	artifact_id VARCHAR(255) NOT NULL,
+	name VARCHAR(255) NOT NULL,
 	version VARCHAR(255) NOT NULL,
-	c_group_id VARCHAR(255) NOT NULL,
-	c_artifact_id VARCHAR(255) NOT NULL,
+	c_name VARCHAR(255) NOT NULL,
 	c_version VARCHAR(255) NOT NULL,
 	scope VARCHAR(255),
 	depth INTEGER NOT NULL,
@@ -224,3 +220,83 @@ CREATE TABLE plt_license(
     rights_prohibited JSONB,
     text TEXT
 );
+
+DROP TABLE IF EXISTS plt_js_component;
+create table plt_js_component (
+	id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    description VARCHAR(255),
+    website VARCHAR(255),
+    repo_url VARCHAR(255),
+    copyright_statements text[],
+    purl VARCHAR(255),
+    license VARCHAR(255),
+    download_url VARCHAR(255),
+    language VARCHAR(255) NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    creator VARCHAR(32),
+    state VARCHAR(32) NOT NULL,
+    UNIQUE(name,version)
+);
+
+DROP TABLE IF EXISTS plt_js_dependency_tree;
+CREATE TABLE plt_js_dependency_tree (
+	id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    tree JSONB,
+    UNIQUE(name,version)
+);
+DROP TABLE IF EXISTS plt_js_dependency_table;
+CREATE TABLE plt_js_dependency_table (
+	id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    c_name VARCHAR(255) NOT NULL,
+    c_version VARCHAR(255) NOT NULL,
+    depth INTEGER NOT NULL,
+    direct BOOLEAN NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    language VARCHAR(255) NOT NULL
+);
+
+DROP TABLE IF EXISTS plt_app_component;
+CREATE TABLE plt_app_component(
+	id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    language text[],
+    type VARCHAR(255) NOT NULL,
+    description VARCHAR(255),
+    developers JSONB,
+    licenses JSONB,
+    creator VARCHAR(32),
+    UNIQUE(name, version)
+);
+
+DROP TABLE IF EXISTS plt_app_dependency_tree;
+CREATE TABLE plt_app_dependency_tree(
+	id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    tree JSONB,
+    UNIQUE(name, version)
+);
+
+DROP TABLE IF EXISTS plt_app_dependency_table;
+CREATE TABLE plt_app_dependency_table(
+	id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    c_name VARCHAR(255) NOT NULL,
+    c_version VARCHAR(255) NOT NULL,
+    depth INTEGER NOT NULL,
+    direct BOOLEAN NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    language VARCHAR(255) NOT NULL
+);
+
+    
+    
+    

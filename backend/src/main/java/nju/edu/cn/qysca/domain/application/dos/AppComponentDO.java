@@ -8,8 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.ComponentLicenseDO;
 import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
-import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -68,7 +68,7 @@ public class AppComponentDO extends ComponentDO {
     @Column(name = "licenses")
     @ApiModelProperty(value = "许可证列表")
     @Type(type="jsonb")
-    private List<LicenseDO> licenses = new ArrayList<>();
+    private List<ComponentLicenseDO> licenses = new ArrayList<>();
 
     @Column(name = "creator")
     @ApiModelProperty(value = "创建者", example = "000000000")
