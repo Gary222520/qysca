@@ -231,7 +231,7 @@ create table plt_js_component (
     repo_url VARCHAR(255),
     copyright_statements text[],
     purl VARCHAR(255),
-    license VARCHAR(255),
+    licenses JSONB,
     download_url VARCHAR(255),
     language VARCHAR(255) NOT NULL,
     type VARCHAR(255) NOT NULL,

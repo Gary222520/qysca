@@ -53,7 +53,7 @@ public class NpmServiceImpl implements NpmService {
         jsComponentDO.setLanguage("javaScript");
         jsComponentDO.setVersion(packageJsonDTO.getVersion());
         jsComponentDO.setDescription(packageJsonDTO.getDescription());
-        jsComponentDO.setLicense(packageJsonDTO.getLicense());
+        //TODO: Licenses信息
         jsComponentDO.setType(type);
         // TODO: 剩余部分信息
         return jsComponentDO;
@@ -468,7 +468,7 @@ public class NpmServiceImpl implements NpmService {
             } else {
                 jsComponentDO.setRepoUrl(jsonObject.getString("repository"));
             }
-            jsComponentDO.setLicense(jsonObject.getString("license"));
+            //TODO: Licenses信息
             jsComponentDO.setDownloadUrl(jsonObject.getJSONObject("dist") == null ? "" : jsonObject.getJSONObject("dist").getString("tarball"));
             List<String> copyrightStatements = new ArrayList<>();
             if (jsonObject.get("author") instanceof JSONObject) {

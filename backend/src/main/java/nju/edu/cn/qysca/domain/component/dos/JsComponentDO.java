@@ -1,6 +1,7 @@
 package nju.edu.cn.qysca.domain.component.dos;
 
 import com.vladmihalcea.hibernate.type.array.StringArrayType;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -12,6 +13,7 @@ import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -20,6 +22,7 @@ import javax.persistence.*;
 @Entity
 @TypeDefs({
         @TypeDef(name = "string-array", typeClass = StringArrayType.class),
+        @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
 })
 @Table(name="plt_js_component", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "version"}))
 public class JsComponentDO extends ComponentDO{
@@ -62,7 +65,8 @@ public class JsComponentDO extends ComponentDO{
 
     @Column(name= "license")
     @ApiModelProperty(value = "许可证", example = "MIT")
-    private String license;
+    @Type(type="jsonb")
+    private List<ComponentLicenseDO> licenses;
 
     @ApiModelProperty(value = "下载地址", example = "https://registry.npmjs.org/fontawesome-free/-/fontawesome-free-2.5.15.tgz")
     @Column(name= "download_url")
