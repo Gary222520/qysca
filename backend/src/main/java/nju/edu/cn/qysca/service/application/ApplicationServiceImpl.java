@@ -335,7 +335,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     appDependencyTableDao.saveAll(goService.translateDependencyTable(applicationGoDependencyTableDOS));
                     break;
                 case "python":
-                    PythonDependencyTreeDO analyzedPythonDependencyTreeDO = pythonService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), saveApplicationDependencyDTO.getVersion(), saveApplicationDependencyDTO.getName(), "");
+                    PythonDependencyTreeDO analyzedPythonDependencyTreeDO = pythonService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "");
                     //Python从实现上来看不需要检查
                     appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
                     if (appDependencyTreeDO == null) {
