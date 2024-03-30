@@ -167,7 +167,7 @@ public interface ApplicationService {
      * 改变应用发布状态
      * @param changeReleaseStateDTO 应用发布状态
      */
-    void changeReleaseState(ChangeReleaseStateDTO changeReleaseStateDTO);
+    List<ApplicationDO> changeReleaseState(ChangeReleaseStateDTO changeReleaseStateDTO);
 
     /**
      * 根据结构生成依赖信息

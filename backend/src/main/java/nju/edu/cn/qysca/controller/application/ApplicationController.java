@@ -176,9 +176,8 @@ public class ApplicationController {
     @ApiOperation("改变应用发布状态")
     @PostMapping("/changeReleaseState")
     @PreAuthorize("@my.checkAuth('/qysca/application/changeReleaseState')")
-    public ResponseMsg<Void> changeReleaseState(@RequestBody ChangeReleaseStateDTO changeReleaseStateDTO) {
-        applicationService.changeReleaseState(changeReleaseStateDTO);
-        return new ResponseMsg<>(null);
+    public ResponseMsg<List<ApplicationDO>> changeReleaseState(@RequestBody ChangeReleaseStateDTO changeReleaseStateDTO) {
+        return new ResponseMsg<>(applicationService.changeReleaseState(changeReleaseStateDTO));
     }
 
     @ApiOperation("导出应用SBOM")

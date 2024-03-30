@@ -73,5 +73,4 @@ public class AppComponentDO extends ComponentDO {
     @Column(name = "creator")
     @ApiModelProperty(value = "创建者", example = "000000000")
     private String creator;
-
 }

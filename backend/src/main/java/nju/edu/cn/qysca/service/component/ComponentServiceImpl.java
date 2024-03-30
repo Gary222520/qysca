@@ -3,9 +3,12 @@ package nju.edu.cn.qysca.service.component;
 
 import nju.edu.cn.qysca.auth.ContextUtil;
 import nju.edu.cn.qysca.dao.application.AppComponentDao;
+import nju.edu.cn.qysca.dao.application.AppDependencyTableDao;
+import nju.edu.cn.qysca.dao.application.AppDependencyTreeDao;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDO;
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.exception.PlatformException;
@@ -63,6 +66,9 @@ public class ComponentServiceImpl implements ComponentService {
     private PythonDependencyTreeDao pythonDependencyTreeDao;
 
     @Autowired
+    private AppDependencyTreeDao appDependencyTreeDao;
+
+    @Autowired
     private JavaDependencyTableDao javaDependencyTableDao;
 
     @Autowired
@@ -73,6 +79,9 @@ public class ComponentServiceImpl implements ComponentService {
 
     @Autowired
     private PythonDependencyTableDao pythonDependencyTableDao;
+
+    @Autowired
+    private AppDependencyTableDao appDependencyTableDao;
 
     @Autowired
     private MavenService mavenService;
@@ -500,7 +509,10 @@ public class ComponentServiceImpl implements ComponentService {
                 if(!parentApplicationDOList.isEmpty()){
                     return parentApplicationDOList;
                 }
-                // TODO: 如何删除还需讨论
+                appComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                appDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                appDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
+                break;
         }
         return null;
     }

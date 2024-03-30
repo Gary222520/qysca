@@ -266,18 +266,21 @@ public class ApplicationServiceImpl implements ApplicationService {
                 throw new PlatformException(500, "该应用不能保存pom信息");
             }
             AppDependencyTreeDO appDependencyTreeDO = null;
-            //TODO: 尝试通过多态代码优化
+            //TODO: 尝试通过多态代码优化 增加Licenses信息
             switch (saveApplicationDependencyDTO.getLanguage()) {
                 case "java":
+                    JavaComponentDO analyzedJavaComponentDO = null;
                     JavaDependencyTreeDO analyzedJavaDependencyTreeDO = null;
                     if(saveApplicationDependencyDTO.getBuilder().equals("gradle")){
                         analyzedJavaDependencyTreeDO = gradleService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "");
                     }else {
+                        analyzedJavaComponentDO = mavenService.componentAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
                         analyzedJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
                     }
                     if (!analyzedJavaDependencyTreeDO.getName().equals(saveApplicationDependencyDTO.getName()) || !analyzedJavaDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
                         throw new PlatformException(500, "上传文件非本项目");
                     }
+
                     appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(analyzedJavaDependencyTreeDO.getName(), analyzedJavaDependencyTreeDO.getVersion());
                     if (appDependencyTreeDO == null) {
                         appDependencyTreeDO = new AppDependencyTreeDO();
@@ -563,10 +566,14 @@ public class ApplicationServiceImpl implements ApplicationService {
      */
     @Override
     @Transactional
-    public void changeReleaseState(ChangeReleaseStateDTO changeReleaseStateDTO) {
+    public List<ApplicationDO> changeReleaseState(ChangeReleaseStateDTO changeReleaseStateDTO) {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
         if (applicationDO.getRelease()) {
             // TODO: 是否可以取消发布还需要增加逻辑
+            List<ApplicationDO> parentApplicationDOS = applicationDao.findParentApplication(applicationDO.getId());
+            if(!parentApplicationDOS.isEmpty()){
+                return parentApplicationDOS;
+            }
             applicationDO.setRelease(false);
             appComponentDao.deleteByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
             appDependencyTreeDao.deleteByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
@@ -601,6 +608,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             }
         }
         applicationDao.save(applicationDO);
+        return null;
     }
 
     /**
@@ -989,6 +997,4 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         folder.delete();
     }
-
-
 }
