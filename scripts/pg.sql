@@ -1,3 +1,15 @@
+DROP TABLE IF EXISTS plt_vulnerability_cpe_match;
+CREATE TABLE plt_vulnerability_cpe_match(
+	id VARCHAR(32) PRIMARY KEY,
+	uri VARCHAR NOT NULL,
+	version_start VARCHAR(255),
+	version_end VARCHAR(255),
+	start_include BOOLEAN,
+	end_include BOOLEAN,
+	names VARCHAR[]
+);
+CREATE INDEX uri_index ON plt_vulnerability_cpe_match(uri);
+
 DROP TABLE IF EXISTS plt_go_component;
 CREATE TABLE plt_go_component(
 	id VARCHAR(32) PRIMARY KEY,
