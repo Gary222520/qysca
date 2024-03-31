@@ -41,9 +41,15 @@ const login = () => {
       store
         .dispatch('login', { ...formState })
         .then((res) => {
-          router.push('/home')
+          if (res.code === 200) router.push('/home')
+          else {
+            sessionStorage.removeItem('token')
+            sessionStorage.removeItem('user')
+          }
         })
         .catch((err) => {
+          sessionStorage.removeItem('token')
+          sessionStorage.removeItem('user')
           console.error(err)
         })
     })

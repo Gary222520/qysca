@@ -371,6 +371,10 @@ const findSubProject = async (app) => {
 }
 
 const refresh = async (index, versionChange = false) => {
+  if (index === undefined || index === null || index === '') {
+    getProjectList()
+    return
+  }
   data.currentKey = index
   const app = data.appList[index]
   if (versionChange) await changeVersion(app)
