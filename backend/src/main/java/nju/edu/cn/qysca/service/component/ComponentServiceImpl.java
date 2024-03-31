@@ -560,7 +560,6 @@ public class ComponentServiceImpl implements ComponentService {
                 dependencyTreeDO = pythonDependencyTreeDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
                 if (dependencyTreeDO == null) {
                     dependencyTreeDO = pythonService.spiderDependency(componentGavDTO.getName(), componentGavDTO.getVersion());
-                    pythonService.spiderDependency(componentGavDTO.getName(), componentGavDTO.getVersion());
                     pythonDependencyTreeDao.save((PythonDependencyTreeDO) dependencyTreeDO);
                     List<PythonDependencyTableDO> pythonDependencyTableDOList = pythonService.dependencyTableAnalysis((PythonDependencyTreeDO) dependencyTreeDO);
                     pythonDependencyTableDao.saveAll(pythonDependencyTableDOList);

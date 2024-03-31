@@ -14,6 +14,7 @@ import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.spider.PythonSpiderService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -30,6 +31,8 @@ public class PythonServiceImpl implements PythonService {
     private PythonComponentDao componentDao;
     @Autowired
     private PythonSpiderService pythonSpiderService;
+    @Value("${tempPythonFolder}")
+    String tempFolder;
 
     /**
      * 构造python组件
@@ -144,16 +147,21 @@ public class PythonServiceImpl implements PythonService {
      */
     @Override
     public PythonDependencyTreeDO spiderDependency(String name, String version) {
-        String[] command1 = {"python", "-m", "venv", "venv"};
-        String[] command3 = {".\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
-        String[] command4 = {".\\venv\\Scripts\\python.exe", "-m", "pip", "install", name, version};
-        String[] command5 = {".\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
 
-        executeCommand(command1, null, false);
-        executeCommand(command3, null, false);
-        executeCommand(command4, null, false);
+        File tempFile = new File(tempFolder);
+        if (!tempFile.exists()){ //如果不存在
+            boolean dr = tempFile.mkdirs(); //创建目录
+        }
+        String[] command1 = {"python", "-m", "venv", "venv"};
+        String[] command3 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
+        String[] command4 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", name+"=="+version};
+        String[] command5 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
+
+        executeCommand(command1, tempFile, true);
+        executeCommand(command3, null, true);
+        executeCommand(command4, null, true);
         String jsonString = executeCommand(command5, null, true);
-        deleteFolder(".\\venv");
+        deleteFolder(tempFile.getPath());
 
         PythonDependencyTreeDO dependencyTreeDO = parseJsonDependencyTree(jsonString, name, version, "opensource");
         return dependencyTreeDO;
@@ -264,11 +272,19 @@ public class PythonServiceImpl implements PythonService {
             // 这三个包是环境中生成的，并不是项目的依赖
             if (node.get("key").asText().equals("pipdeptree") || node.get("key").asText().equals("setuptools") || node.get("key").asText().equals("pip"))
                 continue;
-            dependencies.add(parseTree(node, 1));
+            // 有时候树中会重复自己，跳过
+            if (node.get("key").asText().equals(name) && node.get("installed_version").asText().equals(version)){
+                for (JsonNode subNode : node.get("dependencies")) {
+                    dependencies.add(parseTree(subNode, 1));
+                }
+            } else
+                dependencies.add(parseTree(node, 1));
         }
         root.setDependencies(dependencies);
 
         PythonDependencyTreeDO dependencyTreeDO = new PythonDependencyTreeDO();
+        dependencyTreeDO.setName(name);
+        dependencyTreeDO.setVersion(version);
         dependencyTreeDO.setTree(root);
         return dependencyTreeDO;
     }
