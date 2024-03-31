@@ -23,6 +23,10 @@ instance.interceptors.response.use(
     ) {
       return response
     }
+    if (response.data.code === 403) {
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
+    }
     return response.data
   },
   (error) => {
