@@ -35,12 +35,12 @@ const data = reactive({
   component: {},
   datasource: [],
   columns: [
-    { title: '名称', dataIndex: 'cName', key: 'cName' },
-    { title: '版本', dataIndex: 'cVersion', key: 'cVersion', width: 80 },
-    { title: '语言', dataIndex: 'language', key: 'language', width: 80 },
-    { title: '依赖方式', dataIndex: 'direct', key: 'direct', width: 90 },
-    { title: '依赖层级', dataIndex: 'depth', key: 'depth', width: 90 },
-    { title: '组件类型', dataIndex: 'type', key: 'type', width: 90 }
+    { title: '名称', dataIndex: 'cname', key: 'cName' },
+    { title: '版本', dataIndex: 'cversion', key: 'cVersion' },
+    { title: '语言', dataIndex: 'language', key: 'language' },
+    { title: '依赖方式', dataIndex: 'direct', key: 'direct' },
+    { title: '依赖层级', dataIndex: 'depth', key: 'depth' },
+    { title: '组件类型', dataIndex: 'type', key: 'type' }
   ]
 })
 const pagination = reactive({
@@ -48,7 +48,7 @@ const pagination = reactive({
   total: 0,
   pageSize: 10,
   showSizeChanger: false,
-  onchange: (page, size) => {
+  onChange: (page, size) => {
     pagination.current = page
     getComponentTiled(data.component, page, size)
   },
@@ -79,6 +79,7 @@ const getComponentTiled = (component, number = 1, size = 10) => {
       }
       data.datasource = res.data.content
       pagination.total = res.data.totalElements
+      pagination.current = number
     })
     .catch((err) => {
       data.spinning = false

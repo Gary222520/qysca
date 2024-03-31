@@ -8,12 +8,10 @@
       <div class="card_title">
         组件名称：
         <div style="font-weight: bold; margin-right: 30px">{{ data.component.name }}</div>
-        组织ID：
-        <div style="margin-right: 30px">{{ data.component.groupId }}</div>
-        工件ID：
-        <div style="margin-right: 30px">{{ data.component.artifactId }}</div>
         版本：
-        <div>{{ data.component.version }}</div>
+        <div style="margin-right: 30px">{{ data.component.version }}</div>
+        语言：
+        <div style="margin-right: 30px">{{ data.component.language }}</div>
       </div>
     </a-card>
     <a-card class="content_card">

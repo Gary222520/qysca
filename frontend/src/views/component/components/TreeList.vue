@@ -40,10 +40,12 @@ const data = reactive({
   treeData: [],
   expandedKeys: ['0-0'],
   selectedKeys: [],
-  spinning: false
+  spinning: false,
+  language: ''
 })
 const show = (component) => {
   data.visible = true
+  data.language = component.language
   const params = {
     name: component.name,
     version: component.version,
@@ -75,15 +77,16 @@ const createTree = (arr, preKey) => {
   const treeData = []
   arr.forEach((item, index) => {
     const key = `${preKey}-${index}`
-    const data = {
+    const node = {
       ...item,
-      title: item?.name,
+      language: data.language,
+      title: item.name,
       key,
-      children: createTree(item?.dependencies, key)
+      children: createTree(item.dependencies, key)
     }
-    if (data.children.length === 0) delete data.children
-    delete data.dependencies
-    treeData.push(data)
+    if (node.children.length === 0) delete node.children
+    delete node.dependencies
+    treeData.push(node)
   })
   return treeData
 }
@@ -91,6 +94,7 @@ const hide = () => {
   data.visible = false
 }
 const selectNode = (selectedKeys, e) => {
+  console.log(e.node)
   drawer.value.open(e.node, false)
   data.selectedKeys = []
 }
