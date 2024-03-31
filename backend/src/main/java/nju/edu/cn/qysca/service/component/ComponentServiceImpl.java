@@ -615,23 +615,23 @@ public class ComponentServiceImpl implements ComponentService {
         ComponentDetailDTO componentDetailDTO = new ComponentDetailDTO();
         switch (componentGavDTO.getLanguage()) {
             case "java":
-                JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(componentDetailDTO.getName(), componentDetailDTO.getVersion());
+                JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
                 BeanUtils.copyProperties(javaComponentDO, componentDetailDTO);
                 break;
             case "javaScript":
-                JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(componentDetailDTO.getName(), componentDetailDTO.getVersion());
+                JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
                 BeanUtils.copyProperties(jsComponentDO, componentDetailDTO);
                 break;
             case "go":
-                GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(componentDetailDTO.getName(), componentDetailDTO.getVersion());
+                GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
                 BeanUtils.copyProperties(goComponentDO, componentDetailDTO);
                 break;
             case "python":
-                PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(componentDetailDTO.getName(), componentDetailDTO.getVersion());
+                PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
                 BeanUtils.copyProperties(pythonComponentDO, componentDetailDTO);
                 break;
             case "app":
-                AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(componentDetailDTO.getName(), componentDetailDTO.getVersion());
+                AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
                 BeanUtils.copyProperties(appComponentDO, componentDetailDTO);
                 break;
         }
