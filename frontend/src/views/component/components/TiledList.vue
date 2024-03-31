@@ -67,7 +67,6 @@ const getComponentTiled = (component, number = 1, size = 10) => {
     number,
     size
   }
-  if (params.language === 'golang') params.language = 'go'
   data.spinning = true
   GetComponentTiled(params)
     .then((res) => {

@@ -23,7 +23,7 @@ instance.interceptors.response.use(
     ) {
       return response
     }
-    if (response.data.code === 403) {
+    if (response.data.message === '登录认证失败') {
       sessionStorage.removeItem('token')
       sessionStorage.removeItem('user')
     }

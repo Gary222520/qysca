@@ -34,10 +34,10 @@
             </a-card>
           </div>
           <div class="content" style="margin-top: 10px">
-            <a-card class="card" hoverable @click="selectLanguage('go')">
+            <a-card class="card" hoverable @click="selectLanguage('golang')">
               <div class="card_title">
                 <img class="img" src="@/assets/go.png" />
-                <div class="name">Go</div>
+                <div class="name">GoLang</div>
               </div>
               <div class="card_text">
                 <ul style="margin-bottom: 0">

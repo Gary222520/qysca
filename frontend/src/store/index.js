@@ -19,23 +19,35 @@ export default createStore({
         Login(data)
           .then((res) => {
             if (res.code !== 200) {
+              sessionStorage.removeItem('token')
+              sessionStorage.removeItem('user')
               message.error(res.message)
               return
             }
             // console.log('Login', res)
             const token = res.data
             sessionStorage.setItem('token', token)
-            GetUserInfo().then((res) => {
-              if (res.code !== 200) {
-                message.error(res.message)
-                return
-              }
-              // console.log('GetUserInfo', res)
-              sessionStorage.setItem('user', JSON.stringify(res.data))
-              resolve(res.data)
-            })
+            GetUserInfo()
+              .then((res) => {
+                if (res.code !== 200) {
+                  sessionStorage.removeItem('token')
+                  sessionStorage.removeItem('user')
+                  message.error(res.message)
+                  return
+                }
+                // console.log('GetUserInfo', res)
+                sessionStorage.setItem('user', JSON.stringify(res.data))
+                resolve(res.data)
+              })
+              .catch((err) => {
+                sessionStorage.removeItem('token')
+                sessionStorage.removeItem('user')
+                reject(new Error(err))
+              })
           })
           .catch((err) => {
+            sessionStorage.removeItem('token')
+            sessionStorage.removeItem('user')
             reject(new Error(err))
           })
       })

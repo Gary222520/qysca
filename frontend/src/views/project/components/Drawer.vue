@@ -79,7 +79,7 @@ const getComponentInfo = () => {
     version: data.component.version,
     language: data.component.language
   }
-  if (params.language === 'golang') params.language = 'go'
+  if (params.language instanceof Array) params.language = 'app'
   // console.log('params', params)
   GetComponentInfo(params)
     .then((res) => {
@@ -89,6 +89,7 @@ const getComponentInfo = () => {
         return
       }
       data.detail = res.data
+      if (data.detail?.language instanceof Array) data.detail.language = arrToString(data.detail.language)
     })
     .catch((err) => {
       console.error(err)
@@ -103,6 +104,11 @@ const showDependency = () => {
       language: data.component.language
     }
   })
+}
+const arrToString = (arr) => {
+  return arr.reduce((pre, curr) => {
+    return `${pre}; ${curr}`
+  }, '')
 }
 defineExpose({ open })
 </script>

@@ -39,7 +39,7 @@
               <!-- <a-select-option value="">All</a-select-option> -->
               <a-select-option value="java">java</a-select-option>
               <a-select-option value="python">python</a-select-option>
-              <a-select-option value="go">go</a-select-option>
+              <a-select-option value="golang">golang</a-select-option>
               <a-select-option value="javaScript">javaScript</a-select-option>
               <a-select-option value="app">application</a-select-option>
             </a-select>
@@ -65,6 +65,10 @@
             <div v-if="record.type === 'opensource'">开源</div>
             <div v-if="record.type === 'business'">商用</div>
             <div v-if="record.type === 'internal'">内部使用</div>
+          </template>
+          <template v-if="column.key === 'language'">
+            <div v-if="!record.language instanceof Array">{{ record.language }}</div>
+            <div v-if="record.language instanceof Array">{{ arrToString(record.language) }}</div>
           </template>
           <template v-if="column.key === 'action'">
             <div
@@ -247,6 +251,11 @@ const deleteComponent = (record) => {
     .catch((err) => {
       message(err)
     })
+}
+const arrToString = (arr) => {
+  return arr.reduce((pre, curr) => {
+    return `${pre}; ${curr}`
+  }, '')
 }
 </script>
 

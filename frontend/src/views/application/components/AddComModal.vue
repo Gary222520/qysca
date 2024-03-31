@@ -9,7 +9,7 @@
           <a-select v-model:value="formState.language" style="width: 300px">
             <a-select-option value="java">java</a-select-option>
             <a-select-option value="python">python</a-select-option>
-            <a-select-option value="go">go</a-select-option>
+            <a-select-option value="golang">golang</a-select-option>
             <a-select-option value="javaScript">javaScript</a-select-option>
             <a-select-option value="app">application</a-select-option>
           </a-select>
@@ -94,7 +94,7 @@ const getNameList = async () => {
         message.error(res.message)
         return
       }
-      // console.log('GetComponentNameList', res)
+      console.log('GetComponentNameList', res)
       selection.componentList = res.data.reduce((pre, curr) => {
         let exsist = false
         pre.forEach((item) => {

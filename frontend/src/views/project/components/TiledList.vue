@@ -32,14 +32,12 @@ const data = reactive({
   projectInfo: {},
   datasource: [],
   columns: [
-    { title: '组织ID', dataIndex: 'cgroupId', key: 'groupId' },
-    { title: '工件ID', dataIndex: 'cartifactId', key: 'artifactId' },
-    { title: '版本', dataIndex: 'cversion', key: 'version', width: 80 },
-    { title: '语言', dataIndex: 'language', key: 'language', width: 80 },
-    { title: '依赖方式', dataIndex: 'direct', key: 'direct', width: 90 },
-    { title: '依赖层级', dataIndex: 'depth', key: 'depth', width: 90 },
-    { title: '依赖范围', dataIndex: 'scope', key: 'scope', width: 90 },
-    { title: '组件类型', dataIndex: 'type', key: 'type', width: 90 }
+    { title: '名称', dataIndex: 'cname', key: 'cname' },
+    { title: '版本', dataIndex: 'cversion', key: 'cversion' },
+    { title: '语言', dataIndex: 'language', key: 'language' },
+    { title: '依赖方式', dataIndex: 'direct', key: 'direct' },
+    { title: '依赖层级', dataIndex: 'depth', key: 'depth' },
+    { title: '组件类型', dataIndex: 'type', key: 'type' }
   ]
 })
 const pagination = reactive({

@@ -51,7 +51,6 @@ const show = (component) => {
     version: component.version,
     language: component.language
   }
-  if (params.language === 'golang') params.language = 'go'
   data.spinning = true
   GetComponentTree(params)
     .then((res) => {
