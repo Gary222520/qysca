@@ -45,10 +45,11 @@ const data = reactive({
 const show = (component) => {
   data.visible = true
   const params = {
-    groupId: component.groupId,
-    artifactId: component.artifactId,
-    version: component.version
+    name: component.name,
+    version: component.version,
+    language: component.language
   }
+  if (params.language === 'golang') params.language = 'go'
   data.spinning = true
   GetComponentTree(params)
     .then((res) => {
@@ -76,7 +77,7 @@ const createTree = (arr, preKey) => {
     const key = `${preKey}-${index}`
     const data = {
       ...item,
-      title: item?.artifactId,
+      title: item?.name,
       key,
       children: createTree(item?.dependencies, key)
     }

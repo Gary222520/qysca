@@ -15,14 +15,15 @@
       <div class="drawer_title" style="margin-bottom: 20px">基本信息</div>
     </div>
     <a-descriptions>
-      <a-descriptions-item label="组织ID">{{ data.detail?.groupId }}</a-descriptions-item>
-      <a-descriptions-item label="工件ID">{{ data.detail?.artifactId }}</a-descriptions-item>
+      <a-descriptions-item label="名称">{{ data.detail?.name }}</a-descriptions-item>
+      <a-descriptions-item label="版本">{{ data.detail?.version }}</a-descriptions-item>
       <a-descriptions-item label="语言">{{ data.detail?.language }}</a-descriptions-item>
       <a-descriptions-item label="组件描述" span="3">{{ data.detail?.description }}</a-descriptions-item>
 
       <a-descriptions-item label="主页地址" span="3">{{ data.detail?.url }}</a-descriptions-item>
       <a-descriptions-item label="源码地址" span="3">{{ data.detail?.sourceUrl }}</a-descriptions-item>
       <a-descriptions-item label="下载地址" span="3">{{ data.detail?.downloadUrl }}</a-descriptions-item>
+      <a-descriptions-item label="包获取地址" span="3">{{ data.detail?.purl }}</a-descriptions-item>
     </a-descriptions>
 
     <div class="relative">
@@ -78,6 +79,7 @@ const getComponentInfo = () => {
     version: data.component.version,
     language: data.component.language
   }
+  if (params.language === 'golang') params.language = 'go'
   // console.log('params', params)
   GetComponentInfo(params)
     .then((res) => {
@@ -97,9 +99,8 @@ const showDependency = () => {
     path: '/home/dependency',
     query: {
       name: data.component.name,
-      groupId: data.component.groupId,
-      artifactId: data.component.artifactId,
-      version: data.component.version
+      version: data.component.version,
+      language: data.component.language
     }
   })
 }
