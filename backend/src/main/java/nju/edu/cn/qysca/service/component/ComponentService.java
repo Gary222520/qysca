@@ -15,14 +15,13 @@ public interface ComponentService {
      * @param searchComponentDTO 查询条件
      * @return Page<JavaComponentDO> 查询结果
      */
-    Page<JavaComponentDO> findComponentsPage(ComponentSearchDTO searchComponentDTO);
+    Page<? extends ComponentDO> findComponentsPage(ComponentSearchDTO searchComponentDTO);
 
     /**
      * 保存闭源组件信息
      * @param saveCloseComponentDTO 保存闭源组件接口信息
-     * @return 返回保存闭源组件是否成功
      */
-    JavaComponentDO saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO);
+    void saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO);
 
     /**
      * 更新闭源组件信息
@@ -45,7 +44,7 @@ public interface ComponentService {
      * @param componentGavDTO 组件gav
      * @return JavaDependencyTreeDO 依赖树信息
      */
-    JavaDependencyTreeDO findComponentDependencyTree(ComponentGavDTO componentGavDTO);
+    DependencyTreeDO findComponentDependencyTree(ComponentGavDTO componentGavDTO);
 
 
 
@@ -68,15 +67,15 @@ public interface ComponentService {
     /**
      * 模糊查询组件名称
      * @param name 组件名称
+     * @param language 语言
      */
-    List<ComponentSearchNameDTO> searchComponentName(String name);
+    List<ComponentSearchNameDTO> searchComponentName(String name, String language);
 
     /**
      * 保存闭源组件依赖信息
-     * @param javaComponentDO 组件信息
      * @param saveCloseComponentDTO 保存闭源组件信息
      */
-    void saveCloseComponentDependency(JavaComponentDO javaComponentDO, SaveCloseComponentDTO saveCloseComponentDTO);
+    void saveCloseComponentDependency(SaveCloseComponentDTO saveCloseComponentDTO);
 
     /**
      * 将闭源组件状态设置为RUNNING

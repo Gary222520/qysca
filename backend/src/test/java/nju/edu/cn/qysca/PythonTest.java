@@ -31,4 +31,14 @@ public class PythonTest {
     public void test2(){
         PythonDependencyTreeDO pythonDependencyTreeDO = pythonService.spiderDependency("kafka-counter","0.0.2");
     }
+
+    @Test
+    public void test3(){
+        String filePath = "D:\\MyCourse\\2024Aping\\graduate design\\qysca\\backend\\src\\main\\resources\\upload\\py.zip";
+        String builder = "zip";
+        String name = "my-kafka";
+        String version = "0.0.1";
+        String type = "internal";
+        PythonDependencyTreeDO pythonDependencyTreeDO = pythonService.dependencyTreeAnalysis(filePath, builder, name, version, type);
+    }
 }

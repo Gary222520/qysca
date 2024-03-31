@@ -11,17 +11,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @ApiModel("组件平铺信息DTO")
 public class ComponentTableDTO {
-    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
-    private String cGroupId;
 
-    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
-    private String cArtifactId;
+    @ApiModelProperty(value = "组件名", example = "spring-boot")
+    private String cName;
 
     @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String cVersion;
-
-    @ApiModelProperty(value = "依赖范围", example = "compile")
-    private String scope;
 
     @ApiModelProperty(value = "依赖层级", example = "1")
     private Integer depth;
