@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Template</title>
+    <style>
+        /* 设置标题栏样式 */
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+        }
+        header img {
+            width: 40px; /* 设置 logo 图标的宽度 */
+            height: 40px; /* 设置 logo 图标的高度 */
+            margin-right: 10px; /* 添加 logo 图标与文本之间的间距 */
+        }
+        /* 设置侧边栏样式 */
+        .sidebar {
+            width: 200px;
+            height: 100%;
+            background-color: #f0f0f0;
+            float: left;
+        }
+        /* 设置主页面样式 */
+        .main-content {
+            margin-left: 220px; /* 留出侧边栏的空间 */
+            padding: 20px;
+        }
+        /* 设置应用信息样式 */
+        .application-info {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .application-info h3 {
+            margin-top: 0;
+        }
+        .application-info p {
+            margin-bottom: 5px;
+        }
+        /* 设置组件信息表格样式 */
+        .component-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .component-table th, .component-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .component-table th {
+            background-color: #f2f2f2;
+        }
+        /* 设置详细信息区域样式 */
+        .component-detail-info {
+            display: none; /* 默认隐藏 */
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 10px;
+            padding: 10px;
+        }
+        .component-detail-info p {
+            margin: 5px 0;
+        }
+    </style>
+    <script>
+        // JavaScript 函数，用于切换详细信息的显示状态
+        function toggleComponentDetail(id) {
+            var detail = document.getElementById(id);
+            if (detail.style.display === "none") {
+                detail.style.display = "block";
+            } else {
+                detail.style.display = "none";
+            }
+        }
+    </script>
+
+</head>
+<body>
+<!-- 标题栏 -->
+<header>
+    <img src="logo.png" alt="Logo"> <!-- 添加 logo 图标 -->
+    <h1>Siemens SCA</h1> <!-- 添加报告标题 -->
+</header>
+
+<!-- 侧边栏 -->
+<div class="sidebar">
+    <h2>Sidebar</h2>
+    <ul>
+        <li><a href="#">Menu Item 1</a></li>
+        <li><a href="#">Menu Item 2</a></li>
+        <li><a href="#">Menu Item 3</a></li>
+        <!-- 可根据需要添加更多的菜单项 -->
+    </ul>
+</div>
+
+<!-- 主页面 -->
+<div class="main-content">
+    <h2>Main Content</h2>
+    <p>This is the main content area.</p>
+
+    <!-- 应用信息 -->
+    <div class="application-info" th:object="${application}" th:remove="tag">
+        <h3>Application Information</h3>
+        <p><strong>ID:</strong> <span th:text="*{id}">Application ID</span></p>
+        <p><strong>Name:</strong> <span th:text="*{name}">Application Name</span></p>
+        <p><strong>Version:</strong> <span th:text="*{version}">Application Version</span></p>
+        <p><strong>Description:</strong> <span th:text="*{description}">Application Description</span></p>
+        <p><strong>Language:</strong> <span th:text="*{language}">Application Language</span></p>
+        <p><strong>Type:</strong> <span th:text="*{type}">Application Type</span></p>
+        <p><strong>Builder:</strong> <span th:text="*{builder}">Application Builder</span></p>
+        <p><strong>Scanner:</strong> <span th:text="*{scanner}">Application Scanner</span></p>
+        <p><strong>State:</strong> <span th:text="*{state}">Application State</span></p>
+        <p><strong>Time:</strong> <span th:text="*{time}">Application Time</span></p>
+        <p><strong>Lock:</strong> <span th:text="*{lock}">Application Lock</span></p>
+        <p><strong>Release:</strong> <span th:text="*{release}">Application Release</span></p>
+        <p><strong>Creator:</strong> <span th:text="*{creator}">Application Creator</span></p>
+    </div>
+
+    <!-- 组件信息 -->
+    <h3>Component Information</h3>
+    <table class="component-table">
+        <thead>
+        <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Version</th>
+            <th>Language</th>
+            <th>Type</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- 使用 Thymeleaf 迭代 Component 列表，并为每个 Component 展示一行信息 -->
+        <tr th:each="component : ${components}">
+            <!-- 添加点击事件，调用 JavaScript 函数切换详细信息的显示状态 -->
+            <td><a href="#" th:attr="data-component-id=${component.id}" onclick="toggleComponentDetail(this.getAttribute('data-component-id'))">Show Detail</a></td>
+            <td th:text="${component.name}">Component Name</td>
+            <td th:text="${component.version}">Component Version</td>
+            <td th:text="${component.language}">Component Language</td>
+            <td th:text="${component.type}">Component Type</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- 详细信息区域 -->
+    <div th:each="component : ${components}">
+        <div class="component-detail-info" th:id="${component.id}">
+            <p><strong>Description:</strong> <span th:text="${component.description}">Component Description</span></p>
+            <p><strong>URL:</strong> <span th:text="${component.url}">Component URL</span></p>
+            <p><strong>Download URL:</strong> <span th:text="${component.downloadUrl}">Component Download URL</span></p>
+            <!-- 添加更多的详细信息 -->
+        </div>
+    </div>
+
+
+</div>
+</body>
+</html>
