@@ -5,6 +5,15 @@
     </template>
     <div style="display: flex; margin-top: 20px">
       <a-form :model="formState" ref="formRef" name="application" :label-col="{ span: 8 }">
+        <a-form-item label="语言" name="language" :rules="[{ required: true, message: '请选择语言' }]">
+          <a-select v-model:value="formState.language" style="width: 300px">
+            <a-select-option value="java">java</a-select-option>
+            <a-select-option value="python">python</a-select-option>
+            <a-select-option value="go">go</a-select-option>
+            <a-select-option value="javaScript">javaScript</a-select-option>
+            <a-select-option value="app">application</a-select-option>
+          </a-select>
+        </a-form-item>
         <a-form-item label="组件名称" name="name" :rules="[{ required: true, message: '请输入组件名称' }]">
           <a-dropdown>
             <a-input v-model:value="formState.name" @change="() => getNameList()" style="width: 300px" />
@@ -55,16 +64,17 @@ const selection = reactive({
 const formRef = ref()
 const formState = reactive({
   name: '',
-  version: ''
+  version: '',
+  language: 'java'
 })
 const parentInfo = reactive({
   parentName: '',
   parentVersion: ''
 })
 const componentInfo = reactive({
-  groupId: '',
-  artifactId: '',
-  version: ''
+  name: '',
+  version: '',
+  language: ''
 })
 const open = (parent) => {
   data.open = true
@@ -78,7 +88,7 @@ const clear = () => {
   formRef.value.resetFields()
 }
 const getNameList = async () => {
-  await GetComponentNameList({ name: formState.name })
+  await GetComponentNameList({ name: formState.name, language: formState.language })
     .then((res) => {
       if (res.code !== 200) {
         message.error(res.message)
@@ -95,8 +105,6 @@ const getNameList = async () => {
         })
         if (!exsist) {
           pre.push({
-            groupId: curr.groupId,
-            artifactId: curr.artifactId,
             name: curr.name,
             versions: [{ label: curr.version, value: curr.version }]
           })
@@ -111,8 +119,8 @@ const getNameList = async () => {
 const chooseName = (item) => {
   console.log('chooseName', item)
   formState.name = item.name
-  componentInfo.groupId = item.groupId
-  componentInfo.artifactId = item.artifactId
+  componentInfo.name = item.name
+  componentInfo.language = formState.language
   selection.options = item.versions
 }
 const chooseVersion = (version) => {
