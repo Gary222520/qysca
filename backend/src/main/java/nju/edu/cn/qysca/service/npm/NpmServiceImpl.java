@@ -123,12 +123,6 @@ public class NpmServiceImpl implements NpmService {
             jsDependencyTableDO.setDirect(jsDependencyTableDO.getDepth() == 1);
             jsDependencyTableDO.setType(jsComponentDependencyTree.getType());
             jsDependencyTableDO.setLanguage("javaScript");
-            JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(jsComponentDependencyTree.getName(), jsComponentDependencyTree.getVersion());
-            if(jsComponentDO.getLicenses() == null || jsComponentDO.getLicenses().length == 0){
-                jsDependencyTableDO.setLicenses("-");
-            }else{
-                jsDependencyTableDO.setLicenses(String.join(",", jsComponentDO.getLicenses()));
-            }
             queue.addAll(jsComponentDependencyTree.getDependencies());
             jsDependencyTableDOS.add(jsDependencyTableDO);
         }
