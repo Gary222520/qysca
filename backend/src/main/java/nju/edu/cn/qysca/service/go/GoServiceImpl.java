@@ -8,6 +8,7 @@ import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
+import nju.edu.cn.qysca.service.license.LicenseService;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -34,6 +35,9 @@ public class GoServiceImpl implements GoService{
     @Autowired
     private GoComponentDao goComponentDao;
 
+    @Autowired
+    private LicenseService licenseService;
+
     private final String FILE_SEPARATOR = "/";
 
     @Value("${tempGoFolder}")
@@ -58,7 +62,6 @@ public class GoServiceImpl implements GoService{
         goComponentDO.setSourceUrl("-");
         goComponentDO.setDownloadUrl("-");
         goComponentDO.setDescription("-");
-        goComponentDO.setLicenses(new ArrayList<>());
         // creator和state由调用此方法者填充
         goComponentDO.setCreator(null);
         goComponentDO.setState(null);
@@ -220,7 +223,6 @@ public class GoServiceImpl implements GoService{
         // 利用github api获取组件信息（description, licenses），非github组件暂不支持
         if(!name.startsWith("github.com/")){
             goComponentDO.setDescription("-");
-            goComponentDO.setLicenses(new ArrayList<>());
             return goComponentDO;
         }
         try {
@@ -247,21 +249,19 @@ public class GoServiceImpl implements GoService{
             if(null!=description && description.length()!=0){
                 goComponentDO.setDescription(description);
             }
-            List<ComponentLicenseDO> licenses=new ArrayList<>();
+            List<String> licenses=new ArrayList<>();
             JSONObject license=jsonObject.getJSONObject("license");
             if(null !=license){
                 String lname=license.getString("spdx_id");
                 String lurl=license.getString("url");
                 if(null!=lname && lname.length()!=0 && null!=lurl && lurl.length()!=0){
-                    ComponentLicenseDO componentLicenseDO =new ComponentLicenseDO(lname,lurl);
-                    licenses.add(componentLicenseDO);
+                    licenses.addAll(licenseService.searchLicense(lname));
                 }
             }
-            goComponentDO.setLicenses(licenses);
+            goComponentDO.setLicenses(licenses.toArray(new String[0]));
         }catch (Exception e){
             System.err.println("通过github api获取组件信息失败: "+name+"@"+version);
             goComponentDO.setDescription("-");
-            goComponentDO.setLicenses(new ArrayList<>());
         }
         return goComponentDO;
     }

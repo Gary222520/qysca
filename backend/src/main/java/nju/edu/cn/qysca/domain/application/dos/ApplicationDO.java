@@ -64,6 +64,11 @@ public class ApplicationDO {
     @ApiModelProperty(value = "扫描对象", example = "zip")
     private String scanner;
 
+    @Column(name = "licenses")
+    @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")
+    @Type(type = "string-array")
+    private String[] licenses = {};
+
     @Column(name = "state", nullable = false)
     @ApiModelProperty(value = "扫描状态", example = "SUCCESS,FAILED,RUNNING,CREATED")
     private String state;

@@ -63,10 +63,10 @@ public class JsComponentDO extends ComponentDO{
     @ApiModelProperty(value = "purl地址", example = "pkg:npm/fontawesome-free@2.5.15")
     private String purl;
 
-    @Column(name= "licenses")
-    @ApiModelProperty(value = "许可证", example = "MIT")
-    @Type(type="jsonb")
-    private List<ComponentLicenseDO> licenses;
+    @Column(name = "licenses")
+    @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")
+    @Type(type = "string-array")
+    private String[] licenses = {};
 
     @ApiModelProperty(value = "下载地址", example = "https://registry.npmjs.org/fontawesome-free/-/fontawesome-free-2.5.15.tgz")
     @Column(name= "download_url")

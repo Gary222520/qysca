@@ -8,6 +8,7 @@ import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
+import nju.edu.cn.qysca.service.license.LicenseService;
 import nju.edu.cn.qysca.service.spider.SpiderService;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -37,6 +38,9 @@ public class MavenServiceImpl implements MavenService {
 
     @Autowired
     private SpiderService spiderService;
+
+    @Autowired
+    private LicenseService licenseService;
 
 
     private final String FILE_SEPARATOR = "/";
@@ -68,7 +72,11 @@ public class MavenServiceImpl implements MavenService {
         javaComponentDO.setDownloadUrl(model.getDistributionManagement() == null ? "-" : model.getDistributionManagement().getDownloadUrl());
         javaComponentDO.setSourceUrl(model.getScm() == null ? "-" : model.getScm().getUrl());
         javaComponentDO.setPUrl(getMavenPUrl(getGroupIdFromPomModel(model), getArtifactIdFromPomModel(model), model.getVersion(), model.getPackaging()));
-        javaComponentDO.setLicenses(getLicense(model));
+        List<String> licenses = new ArrayList<>();
+        for(String license : getLicense(model)) {
+            licenses.addAll(licenseService.searchLicense(license));
+        }
+        javaComponentDO.setLicenses(licenses.toArray(new String[0]));
         javaComponentDO.setDevelopers(getDevelopers(model));
         //TODO: hash信息解析
         // 上传jar包才可以生成hash信息
@@ -404,16 +412,13 @@ public class MavenServiceImpl implements MavenService {
      * @param model pom文件
      * @return List<ComponentLicenseDO> 许可证信息
      */
-    private List<ComponentLicenseDO> getLicense(Model model) {
+    private List<String> getLicense(Model model) {
         List<org.apache.maven.model.License> mavenLicenses = model.getLicenses();
-        return mavenLicenses.stream()
-                .map(mavenLicense -> {
-                    ComponentLicenseDO license = new ComponentLicenseDO();
-                    license.setName(mavenLicense.getName() == null ? "-" : mavenLicense.getName());
-                    license.setUrl(mavenLicense.getUrl() == null ? "-" : mavenLicense.getUrl());
-                    return license;
-                })
-                .collect(Collectors.toList());
+        List<String> result = new ArrayList<>();
+        for(org.apache.maven.model.License license : mavenLicenses) {
+            result.add(license.getName());
+        }
+        return result;
     }
 
     /**

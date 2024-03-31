@@ -55,7 +55,6 @@ public class PythonServiceImpl implements PythonService {
         pythonComponentDO.setPUrl("-");
         pythonComponentDO.setAuthor("-");
         pythonComponentDO.setAuthorEmail("-");
-        pythonComponentDO.setLicenses(new ArrayList<>());
         //creator和state由调用此方法者填充
         pythonComponentDO.setCreator(null);
         pythonComponentDO.setState(null);

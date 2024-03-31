@@ -12,6 +12,7 @@ import nju.edu.cn.qysca.domain.npm.PackageJsonDTO;
 import nju.edu.cn.qysca.domain.npm.PackageLockDTO;
 import nju.edu.cn.qysca.domain.npm.PackageLockDependencyDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
+import nju.edu.cn.qysca.service.license.LicenseService;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -35,6 +36,9 @@ public class NpmServiceImpl implements NpmService {
 
     @Autowired
     private JsComponentDao jsComponentDao;
+
+    @Autowired
+    private LicenseService licenseService;
 
     private final String FILE_SEPARATOR = "/";
 
@@ -61,7 +65,9 @@ public class NpmServiceImpl implements NpmService {
             jsComponentDO.setLanguage("javaScript");
             jsComponentDO.setVersion(packageJsonDTO.getVersion());
             jsComponentDO.setDescription(packageJsonDTO.getDescription());
-            //TODO: Licenses信息
+            List<String> licenses = new ArrayList<>();
+            licenses.addAll(licenseService.searchLicense(packageJsonDTO.getLicense()));
+            jsComponentDO.setLicenses(licenses.toArray(new String[0]));
             jsComponentDO.setType(type);
             // TODO: 剩余部分信息
             return jsComponentDO;
@@ -399,7 +405,9 @@ public class NpmServiceImpl implements NpmService {
             } else {
                 jsComponentDO.setRepoUrl(jsonObject.getString("repository"));
             }
-            //TODO: Licenses信息
+            List<String> licenses = new ArrayList<>();
+            licenses.addAll(licenseService.searchLicense(jsonObject.getString("license")));
+            jsComponentDO.setLicenses(licenses.toArray(new String[0]));
             jsComponentDO.setDownloadUrl(jsonObject.getJSONObject("dist") == null ? "" : jsonObject.getJSONObject("dist").getString("tarball"));
             List<String> copyrightStatements = new ArrayList<>();
             if (jsonObject.get("author") instanceof JSONObject) {

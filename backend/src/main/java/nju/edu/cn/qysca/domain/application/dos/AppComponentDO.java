@@ -66,9 +66,9 @@ public class AppComponentDO extends ComponentDO {
     private List<DeveloperDO> developers = new ArrayList<>();
 
     @Column(name = "licenses")
-    @ApiModelProperty(value = "许可证列表")
-    @Type(type="jsonb")
-    private List<ComponentLicenseDO> licenses = new ArrayList<>();
+    @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")
+    @Type(type = "string-array")
+    private String[] licenses = {};
 
     @Column(name = "creator")
     @ApiModelProperty(value = "创建者", example = "000000000")

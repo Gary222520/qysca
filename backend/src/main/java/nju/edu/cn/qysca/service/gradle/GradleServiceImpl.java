@@ -49,7 +49,6 @@ public class GradleServiceImpl implements GradleService{
         javaComponentDO.setSourceUrl("-");
         javaComponentDO.setPUrl("-");
         javaComponentDO.setDevelopers(new ArrayList<>());
-        javaComponentDO.setLicenses(new ArrayList<>());
         javaComponentDO.setHashes(new ArrayList<>());
         //creator和state由调用此方法者填充
         javaComponentDO.setCreator(null);
