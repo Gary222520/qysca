@@ -124,7 +124,7 @@ public class NpmServiceImpl implements NpmService {
             jsDependencyTableDO.setType(jsComponentDependencyTree.getType());
             jsDependencyTableDO.setLanguage("javaScript");
             JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(jsComponentDependencyTree.getName(), jsComponentDependencyTree.getVersion());
-            if(jsComponentDO.getLicenses().length == 0){
+            if(jsComponentDO.getLicenses() == null || jsComponentDO.getLicenses().length == 0){
                 jsDependencyTableDO.setLicenses("-");
             }else{
                 jsDependencyTableDO.setLicenses(String.join(",", jsComponentDO.getLicenses()));

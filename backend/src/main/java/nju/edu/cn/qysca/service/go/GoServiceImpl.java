@@ -135,7 +135,7 @@ public class GoServiceImpl implements GoService{
             tableDO.setDirect(node.getDepth()==1);
             tableDO.setType(node.getType());
             GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(node.getName(), node.getVersion());
-            if(goComponentDO.getLicenses() .length == 0) {
+            if(goComponentDO.getLicenses() == null || goComponentDO.getLicenses() .length == 0) {
                 tableDO.setLicenses("-");
             }else{
                 tableDO.setLicenses(String.join(",", goComponentDO.getLicenses()));

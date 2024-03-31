@@ -132,7 +132,7 @@ public class PythonServiceImpl implements PythonService {
             pythonDependencyTableDO.setType(componentDependencyTree.getType());
             pythonDependencyTableDO.setLanguage("python");
             PythonComponentDO pythonComponentDO = componentDao.findByNameAndVersion(componentDependencyTree.getName(),componentDependencyTree.getVersion());
-            if(pythonComponentDO.getLicenses().length == 0){
+            if(pythonComponentDO.getLicenses() == null || pythonComponentDO.getLicenses().length == 0){
                 pythonDependencyTableDO.setLicenses("-");
             }else{
                 pythonDependencyTableDO.setLicenses(String.join(",", pythonComponentDO.getLicenses()));
