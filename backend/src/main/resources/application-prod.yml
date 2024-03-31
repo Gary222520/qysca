@@ -34,10 +34,14 @@ spring:
         max-active: 8
         # 连接池最大阻塞等待时间 负值表示没有限制
         max-wait: -1ms
+  thymeleaf:
+    cache: false
+    prefix: "classpath:/templates/"
 
 uploadFolder: src/main/resources/static/upload/
 tempPomFolder: src/main/resources/static/temp/
 tempGoFolder: src/main/resources/static/temp/go/
+tempReportFolder: src/main/resources/static/temp/report/
 # maxFileSize 单个数据大小
 spring.servlet.multipart.maxFileSize: 10MB
 # maxRequestSize 是总数据大小

@@ -6,5 +6,7 @@ import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
 import java.util.List;
 
 public interface ReportService {
-    void exportHtml(ApplicationDO applicationDO, List<ComponentDO> componentDOList);
+    void exportHtml(String template, ApplicationDO applicationDO, List<ComponentDO> componentDOList);
+
+    void exportPdf(String template, ApplicationDO applicationDO, List<ComponentDO> componentDOList);
 }

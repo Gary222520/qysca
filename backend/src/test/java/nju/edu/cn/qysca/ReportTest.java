@@ -41,6 +41,59 @@ public class ReportTest {
         componentDO1.setUrl("http");
         componentDO1.setDownloadUrl("http://ssee.com");
 
+        JavaComponentDO componentDO2 = new JavaComponentDO();
+        componentDO2.setId("00010001000100010001000100020002");
+        componentDO2.setName("test-com-2");
+        componentDO2.setVersion("0.0.2");
+        componentDO2.setLanguage("java");
+        componentDO2.setType("internal");
+        componentDO2.setDescription("watch out");
+        componentDO2.setUrl("seqqqq");
+        componentDO2.setDownloadUrl("http://ssweqqqe.com");
+
+        JavaComponentDO componentDO3 = new JavaComponentDO();
+        componentDO3.setId("00010001000100010001000100020003");
+        componentDO3.setName("opensca");
+        componentDO3.setVersion("0.0.3");
+        componentDO3.setLanguage("java");
+        componentDO3.setType("business");
+        componentDO3.setDescription("OpenSCA is an open source project that could steadily and flexibly offer SCA ability and aware users of all open source component assets and risks introduced.");
+        componentDO3.setUrl("opensca");
+        componentDO3.setDownloadUrl("http://opensca.com");
+
+        List<ComponentDO> componentDOList = new ArrayList<>();
+        componentDOList.add(componentDO1);
+        componentDOList.add(componentDO2);
+        componentDOList.add(componentDO3);
+
+        reportService.exportHtml("reportTemplate", applicationDO, componentDOList);
+        System.out.println("ok");
+
+    }
+
+    @Test
+    public void test2(){
+        ApplicationDO applicationDO = new ApplicationDO();
+        applicationDO.setId("00010001000100010001000100010001");
+        applicationDO.setName("test-app");
+        applicationDO.setVersion("0.0.1");
+        applicationDO.setDescription("hello world.");
+        applicationDO.setCreator("me");
+        applicationDO.setState("SUCCESS");
+        applicationDO.setRelease(false);
+        applicationDO.setLock(false);
+        applicationDO.setBuilder("maven");
+        applicationDO.setType("internal");
+
+        JavaComponentDO componentDO1 = new JavaComponentDO();
+        componentDO1.setId("00010001000100010001000100020001");
+        componentDO1.setName("test-com-1");
+        componentDO1.setVersion("0.0.1");
+        componentDO1.setLanguage("java");
+        componentDO1.setType("opensource");
+        componentDO1.setDescription("fake news!");
+        componentDO1.setUrl("http");
+        componentDO1.setDownloadUrl("http://ssee.com");
 
         JavaComponentDO componentDO2 = new JavaComponentDO();
         componentDO2.setId("00010001000100010001000100020002");
@@ -52,11 +105,22 @@ public class ReportTest {
         componentDO2.setUrl("seqqqq");
         componentDO2.setDownloadUrl("http://ssweqqqe.com");
 
+        JavaComponentDO componentDO3 = new JavaComponentDO();
+        componentDO3.setId("00010001000100010001000100020003");
+        componentDO3.setName("opensca");
+        componentDO3.setVersion("0.0.3");
+        componentDO3.setLanguage("java");
+        componentDO3.setType("business");
+        componentDO3.setDescription("OpenSCA is an open source project that could steadily and flexibly offer SCA ability and aware users of all open source component assets and risks introduced.");
+        componentDO3.setUrl("opensca");
+        componentDO3.setDownloadUrl("http://opensca.com");
+
         List<ComponentDO> componentDOList = new ArrayList<>();
         componentDOList.add(componentDO1);
         componentDOList.add(componentDO2);
+        componentDOList.add(componentDO3);
 
-        reportService.exportHtml(applicationDO, componentDOList);
+        reportService.exportPdf("reportTemplateForPdf", applicationDO, componentDOList);
         System.out.println("ok");
 
     }

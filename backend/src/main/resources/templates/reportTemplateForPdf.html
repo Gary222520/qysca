@@ -15,22 +15,30 @@
         }
 
         header img {
-            width: 80px; /* 设置 logo 图标的宽度 */
-            height: 80px; /* 设置 logo 图标的高度 */
+            width: 40px; /* 设置 logo 图标的宽度 */
+            height: 40px; /* 设置 logo 图标的高度 */
             margin-right: 10px; /* 添加 logo 图标与文本之间的间距 */
         }
 
-        /* 设置侧边栏样式 */
-        .sidebar {
-            width: 200px;
-            height: 100%;
+        /* 设置导航目录样式 */
+        nav {
             background-color: #f0f0f0;
-            float: left;
+            padding: 10px 20px;
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+
+        nav ul li {
+            margin-right: 20px;
         }
 
         /* 设置主页面样式 */
         .main-content {
-            margin-left: 220px; /* 留出侧边栏的空间 */
             padding: 20px;
         }
 
@@ -70,7 +78,6 @@
 
         /* 设置详细信息区域样式 */
         .component-detail-info {
-            display: none; /* 默认隐藏 */
             border: 1px solid #ddd;
             border-radius: 5px;
             margin-top: 10px;
@@ -81,18 +88,6 @@
             margin: 5px 0;
         }
     </style>
-    <script>
-        // JavaScript 函数，用于切换详细信息的显示状态
-        function toggleComponentDetail(id) {
-            var detail = document.getElementById(id);
-            if (detail.style.display === "none") {
-                detail.style.display = "block";
-            } else {
-                detail.style.display = "none";
-            }
-        }
-    </script>
-
 </head>
 <body>
 <!-- 标题栏 -->
@@ -102,9 +97,8 @@
     <h1>Siemens SCA</h1> <!-- 添加报告标题 -->
 </header>
 
-<!-- 侧边栏 -->
-<div class="sidebar">
-    <h2>Sidebar</h2>
+<!-- 导航目录 -->
+<nav>
     <ul>
         <li><a href="#application-info">Application</a></li>
         <li><a href="#component-info">Component</a></li>
@@ -112,7 +106,7 @@
         <li><a href="#vulnerability-info">Vulnerability</a></li>
         <!-- 可根据需要添加更多的菜单项 -->
     </ul>
-</div>
+</nav>
 
 <!-- 主页面 -->
 <div class="main-content">
@@ -142,7 +136,6 @@
     <table class="component-table">
         <thead>
         <tr>
-            <th></th>
             <th>Name</th>
             <th>Version</th>
             <th>Language</th>
@@ -150,27 +143,28 @@
         </tr>
         </thead>
         <tbody>
-                <!-- 使用 Thymeleaf 迭代 Component 列表，并为每个 Component 展示一行信息 -->
-                <tr th:each="component : ${components}">
-                    <!-- 添加点击事件，调用 JavaScript 函数切换详细信息的显示状态 -->
-                    <td><a href="#" th:attr="data-component-id=${component.id}" onclick="toggleComponentDetail(this.getAttribute('data-component-id'))">Show Detail</a></td>
-                    <td th:text="${component.name}">Component Name</td>
-                    <td th:text="${component.version}">Component Version</td>
-                    <td th:text="${component.language}">Component Language</td>
-                    <td th:text="${component.type}">Component Type</td>
-                </tr>
+        <!-- 使用 Thymeleaf 迭代 Component 列表，并为每个 Component 展示一行信息 -->
+        <tr th:each="component : ${components}">
+            <td th:text="${component.name}">Component Name</td>
+            <td th:text="${component.version}">Component Version</td>
+            <td th:text="${component.language}">Component Language</td>
+            <td th:text="${component.type}">Component Type</td>
+        </tr>
         </tbody>
     </table>
 
-        <!-- 组件详细信息区域 -->
-        <div th:each="component : ${components}">
-            <div class="component-detail-info" th:id="${component.id}">
-                <p><strong>Description:</strong> <span th:text="${component.description}">Component Description</span></p>
-                <p><strong>URL:</strong> <span th:text="${component.url}">Component URL</span></p>
-                <p><strong>Download URL:</strong> <span th:text="${component.downloadUrl}">Component Download URL</span></p>
-                <!-- 添加更多的详细信息 -->
-            </div>
+    <!-- 组件详细信息区域 -->
+    <div th:each="component : ${components}">
+        <div class="component-detail-info">
+            <p><strong>Name:</strong> <span th:text="${component.name}">Component Name</span></p>
+            <p><strong>Version:</strong> <span th:text="${component.version}">Component Version</span></p>
+            <p><strong>Language:</strong> <span th:text="${component.language}">Component Language</span></p>
+            <p><strong>Description:</strong> <span th:text="${component.description}">Component Description</span></p>
+            <p><strong>URL:</strong> <span th:text="${component.url}">Component URL</span></p>
+            <p><strong>Download URL:</strong> <span th:text="${component.downloadUrl}">Component Download URL</span></p>
+            <!-- 添加更多的详细信息 -->
         </div>
+    </div>
 
     <!-- 许可证信息 -->
     <h3 id="license-info">License Information</h3>
