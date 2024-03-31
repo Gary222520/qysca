@@ -40,6 +40,9 @@
                 <FileSearchOutlined
                   @click.stop="showAppDetail(app, false, index)"
                   :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                <!-- <FileSearchOutlined
+                  @click.stop="showComDetail(app)"
+                  :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" /> -->
               </a-tooltip>
               <!-- <a-tooltip>
                 <template #title>添加组件</template>

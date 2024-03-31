@@ -61,13 +61,13 @@
                       @click.stop="lock(app, index)"
                       :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
                   </a-tooltip>
-                  <a-tooltip v-if="app.release">
+                  <a-tooltip v-if="app.release && !app.releaseStatus">
                     <template #title>取消发布</template>
                     <a-tag color="success" @click="release(app, index)" style="margin-right: 10px; cursor: pointer">
                       <template #icon><EyeOutlined /></template>已发布
                     </a-tag>
                   </a-tooltip>
-                  <a-tooltip v-if="!app.release && !app.releasing">
+                  <a-tooltip v-if="!app.release && !app.releaseStatus">
                     <template #title>点击发布</template>
                     <a-popconfirm v-model:open="app.popconfirm" title="选择发布类型">
                       <template #cancelButton></template>
@@ -79,9 +79,9 @@
                       <CloudUploadOutlined :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
                     </a-popconfirm>
                   </a-tooltip>
-                  <div v-if="app.releasing">
+                  <div v-if="app.releaseStatus" style="display: flex; align-items: center">
                     <LoadingOutlined :style="{ fontSize: '20px', color: '#6f005f' }" />
-                    <div style="margin-left: 10px">发布中...</div>
+                    <div style="margin-left: 10px">{{ app.releaseStatus }}</div>
                   </div>
                 </div>
               </div>
@@ -132,7 +132,7 @@
           @change="init" />
       </div>
     </a-card>
-    <AddAppModal ref="addAppModal" @success="(dep) => addAppComplete(dep)"></AddAppModal>
+    <AddAppModal ref="addAppModal" @success="(app) => addAppComplete(app)"></AddAppModal>
     <AddDepModal ref="addDepModal" @success="refresh(data.currentKey)"></AddDepModal>
     <AddComModal ref="addComModal" @success="refresh(data.currentKey)"></AddComModal>
     <UpgradeAppModal ref="upgradeAppModal" @success="refresh(data.currentKey, true)"></UpgradeAppModal>
@@ -304,7 +304,10 @@ const changeVersion = async (app, version) => {
   if (version === undefined) {
     app.selection = {}
     await getVersionList(app, app.name)
-    if (app.versions.length === 0) return
+    if (app.versions.length === 0) {
+      getProjectList()
+      return
+    }
     version = app.versions[0]
   }
   await GetVersionInfo({ name: app.name, version })
@@ -383,9 +386,9 @@ const addApplication = () => {
   addAppModal.value.open()
 }
 
-const addAppComplete = async (dep) => {
+const addAppComplete = async (app) => {
   await getProjectList()
-  if (dep) addDepModal.value.open(data.currentApp, true)
+  if (app) addDepModal.value.open(app, true)
 }
 
 const addComponent = (app, index) => {
@@ -426,17 +429,20 @@ const lock = async (app, index) => {
 
 const release = async (app, index, type) => {
   data.currentKey = index
-  app.releasing = true
+  app.releaseStatus = app.release ? '取消发布中...' : '发布中...'
   ChangeRelease({ name: app.name, version: app.version, type })
     .then((res) => {
       if (res.code !== 200) {
+        app.releaseStatus = null
         message.error(res.message)
         return
       }
       // console.log('ChangeRelease', res)
+      app.releaseStatus = null
       refresh(index)
     })
     .catch((err) => {
+      app.releaseStatus = null
       console.error(err)
     })
 }

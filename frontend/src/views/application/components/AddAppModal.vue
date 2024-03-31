@@ -97,7 +97,8 @@ const submit = (dep) => {
           }
           message.success('新增应用成功')
           data.open = false
-          emit('success', dep)
+          if (dep) emit('success', params)
+          else emit('success')
           setTimeout(() => {
             clear()
           }, 500)

@@ -5,10 +5,13 @@
     </template>
     <div>
       <span style="font-size: 20px; font-weight: bold; margin-right: 20px">{{ data.detail?.name }}</span>
-      <a-tooltip>
+      <a-tooltip v-if="data.isProject">
         <template #title>刷新</template>
         <RedoOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click.stop="refresh()" />
       </a-tooltip>
+      <a-button v-if="!data.isProject" class="btn" type="primary" @click="showDetail()">
+        <FileTextOutlined />查看依赖信息
+      </a-button>
       <a-button type="primary" style="margin-left: 30px" @click="exportSBOM">导出SBOM</a-button>
     </div>
     <div class="relative">
@@ -20,7 +23,7 @@
     </a-descriptions>
 
     <div class="relative">
-      <div class="drawer_title">应用扫描信息</div>
+      <div class="drawer_title">扫描信息</div>
     </div>
     <a-descriptions>
       <a-descriptions-item label="语言">{{ data.detail?.language }}</a-descriptions-item>
@@ -29,13 +32,13 @@
       <a-descriptions-item label="扫描时间">{{ data.detail?.time }}</a-descriptions-item>
     </a-descriptions>
 
-    <div class="relative">
+    <div class="relative" v-if="data.isProject">
       <div class="drawer_title">成员信息</div>
     </div>
-    <div style="margin-bottom: 10px">
+    <div style="margin-bottom: 10px" v-if="data.isProject">
       <a-button type="primary" @click="addAppMember()"><PlusOutlined />添加成员</a-button>
     </div>
-    <div style="margin-bottom: 20px">
+    <div style="margin-bottom: 20px" v-if="data.isProject">
       <a-table :data-source="table.datasource" :columns="table.columns" bordered :pagination="false">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'action'">
@@ -57,7 +60,7 @@
       </a-table>
     </div>
 
-    <div class="relative">
+    <div class="relative" v-if="data.isProject">
       <div class="drawer_title">
         应用状态
         <a-tag v-if="data.detail.state === 'CREATED'" color="processing" :bordered="false" class="label">
@@ -68,7 +71,7 @@
         <a-tag v-if="data.detail.state === 'FAILED'" color="error" :bordered="false" class="label">扫描失败</a-tag>
       </div>
     </div>
-    <div style="margin-top: 10px">
+    <div style="margin-top: 10px" v-if="data.isProject">
       <div style="display: flex" v-if="data.detail.state === 'CREATED'">
         <a-button class="btn" type="primary" @click="addDependency()"><FileAddOutlined />添加依赖信息</a-button>
       </div>

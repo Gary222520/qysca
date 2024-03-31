@@ -74,9 +74,9 @@ const close = () => {
 }
 const getComponentInfo = () => {
   const params = {
-    groupId: data.component.groupId,
-    artifactId: data.component.artifactId,
-    version: data.component.version
+    name: data.component.name,
+    version: data.component.version,
+    language: data.component.language
   }
   // console.log('params', params)
   GetComponentInfo(params)

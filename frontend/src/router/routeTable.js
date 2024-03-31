@@ -1,10 +1,7 @@
 const Home = () => import('@/views/Home.vue')
 const Login = () => import('@/views/user/Login.vue')
-const Summary = () => import('@/views/summary/Summary.vue')
-const Scan = () => import('@/views/scan/Scan.vue')
 
 const Application = () => import('@/views/application/Application.vue')
-const Project = () => import('@/views/project/Project.vue')
 const AppDetail = () => import('@/views/project/AppDetail.vue')
 const Compare = () => import('@/views/project/Compare.vue')
 const Component = () => import('@/views/component/Component.vue')
@@ -24,28 +21,10 @@ const routes = [
     component: Home,
     children: [
       {
-        path: 'summary',
-        name: 'summary',
-        meta: { menu: 'summary', title: '统计概览' },
-        component: Summary
-      },
-      {
-        path: 'scan',
-        name: 'scan',
-        meta: { menu: 'scan', title: '扫描分析' },
-        component: Scan
-      },
-      {
         path: 'application',
         name: 'application',
         meta: { menu: 'application', title: '应用管理' },
         component: Application
-      },
-      {
-        path: 'project',
-        name: 'project',
-        meta: { menu: 'project', title: '项目管理' },
-        component: Project
       },
       {
         path: 'appDetail',
