@@ -11,7 +11,7 @@ CREATE TABLE plt_go_component(
 	source_url VARCHAR(255),
 	p_url VARCHAR(255),
     creator VARCHAR(32),
-	licenses JSONB,
+	licenses TEXT[],
 	state VARCHAR(32) NOT NULL,
 	UNIQUE(name,version)
 );
@@ -52,7 +52,7 @@ CREATE TABLE plt_python_component(
     p_url VARCHAR(255),
     author VARCHAR(255),
     author_email varchar(255),
-    licenses JSONB,
+    licenses TEXT[],
     creator VARCHAR(32),
     state VARCHAR(32) NOT NULL,
     UNIQUE(name,version)
@@ -107,6 +107,7 @@ CREATE TABLE plt_application(
 	builder VARCHAR(255),
 	scanner VARCHAR(255),
 	state VARCHAR(255) NOT NULL,
+    licenses TEXT[],
 	time VARCHAR(255) NOT NULL,
     lock Boolean NOT NULL,
 	release Boolean NOT NULL,
@@ -131,7 +132,7 @@ CREATE TABLE plt_java_component(
 	p_url VARCHAR(255),
     creator VARCHAR(32),
 	developers JSONB,
-	licenses JSONB,
+	licenses TEXT[],
 	hashes JSONB,
 	state VARCHAR(32) NOT NULL,
 	UNIQUE(name,version)
@@ -231,7 +232,7 @@ create table plt_js_component (
     repo_url VARCHAR(255),
     copyright_statements text[],
     purl VARCHAR(255),
-    licenses JSONB,
+    licenses TEXT[],
     download_url VARCHAR(255),
     language VARCHAR(255) NOT NULL,
     type VARCHAR(255) NOT NULL,
@@ -270,7 +271,7 @@ CREATE TABLE plt_app_component(
     type VARCHAR(255) NOT NULL,
     description VARCHAR(255),
     developers JSONB,
-    licenses JSONB,
+    licenses TEXT[],
     creator VARCHAR(32),
     UNIQUE(name, version)
 );
