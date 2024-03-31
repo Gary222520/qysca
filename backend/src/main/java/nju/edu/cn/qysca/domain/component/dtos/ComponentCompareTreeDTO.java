@@ -17,17 +17,11 @@ public class ComponentCompareTreeDTO {
     @ApiModelProperty(value = "对比标记", example = "SAME,CHANGE,ADD,DELETE")
     private String mark;
 
-    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
-    private String groupId;
-
-    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
-    private String artifactId;
+    @ApiModelProperty(value = "组件名称", example = "spring-boot-starter")
+    private String name;
 
     @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String version;
-
-    @ApiModelProperty(value = "组件名称", example = "spring-boot-starter")
-    private String name;
 
     @ApiModelProperty(value = "依赖层级", example = "1")
     private Integer depth;
