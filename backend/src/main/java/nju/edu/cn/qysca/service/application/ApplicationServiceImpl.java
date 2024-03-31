@@ -275,12 +275,11 @@ public class ApplicationServiceImpl implements ApplicationService {
                         analyzedJavaDependencyTreeDO = gradleService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "");
                     }else {
                         analyzedJavaComponentDO = mavenService.componentAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
+                        if (!analyzedJavaComponentDO.getName().equals(saveApplicationDependencyDTO.getName()) || !analyzedJavaComponentDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
+                            throw new PlatformException(500, "上传文件非本项目");
+                        }
                         analyzedJavaDependencyTreeDO = mavenService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
                     }
-                    if (!analyzedJavaDependencyTreeDO.getName().equals(saveApplicationDependencyDTO.getName()) || !analyzedJavaDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
-                        throw new PlatformException(500, "上传文件非本项目");
-                    }
-
                     appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(analyzedJavaDependencyTreeDO.getName(), analyzedJavaDependencyTreeDO.getVersion());
                     if (appDependencyTreeDO == null) {
                         appDependencyTreeDO = new AppDependencyTreeDO();
@@ -471,22 +470,44 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         //不是应用发布成的组件
         if (applicationDO == null) {
+            List<String> childComponent = null;
             switch (applicationComponentDTO.getLanguage()) {
                 case "java":
                     JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
+                    childComponent =parentApplicationDO.getChildComponent().get("java");
+                    if(childComponent == null){
+                        childComponent = new ArrayList<>();
+                        parentApplicationDO.getChildComponent().put("java",childComponent);
+                    }
                     parentApplicationDO.getChildComponent().get("java").add(javaComponentDO.getId());
                     break;
                 case "javaScript":
                     JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
+                    childComponent = parentApplicationDO.getChildComponent().get("javaScript");
+                    if(childComponent == null){
+                        childComponent = new ArrayList<>();
+                        parentApplicationDO.getChildComponent().put("javaScript",childComponent);
+                    }
                     parentApplicationDO.getChildComponent().get("javaScript").add(jsComponentDO.getId());
                     break;
                 case "go":
                     GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
+                    childComponent = parentApplicationDO.getChildComponent().get("go");
+                    if(childComponent == null){
+                        childComponent = new ArrayList<>();
+                        parentApplicationDO.getChildComponent().put("go",childComponent);
+                    }
                     parentApplicationDO.getChildComponent().get("go").add(goComponentDO.getId());
                     break;
                 case "python":
                     PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
+                    childComponent = parentApplicationDO.getChildComponent().get("python");
+                    if(childComponent == null){
+                        childComponent = new ArrayList<>(); new ArrayList<>();
+                        parentApplicationDO.getChildComponent().put("python",childComponent);
+                    }
                     parentApplicationDO.getChildComponent().get("python").add(pythonComponentDO.getId());
+                    break;
             }
         } else {
             ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentApplicationDO.getChildApplication()));
