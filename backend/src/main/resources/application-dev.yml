@@ -5,9 +5,9 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
-    url: jdbc:postgresql://127.0.0.1:5432/sca
-    username: postgres
-    password: 2002jiale
+    url: jdbc:postgresql://172.29.7.168:35432/qysca
+    username: qysca
+    password: qysca
     show-sql: true
   jpa:
     database: postgresql
@@ -15,7 +15,7 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQL9Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         temp:
           use-jdbc-metadata-defaults: false
   redis:
@@ -38,6 +38,7 @@ spring:
 uploadFolder: src/main/resources/static/upload/
 tempPomFolder: src/main/resources/static/temp/
 tempGoFolder: src/main/resources/static/temp/go/
+tempPythonFolder: src/main/resources/static/temp/python
 # maxFileSize 单个数据大小
 spring.servlet.multipart.maxFileSize: 10MB
 # maxRequestSize 是总数据大小

@@ -13,13 +13,9 @@ import nju.edu.cn.qysca.utils.excel.ExcelExport;
 @ApiModel("应用依赖平铺信息（简明）Excel表DTO")
 public class TableExcelBriefDTO {
 
-    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
-    @ExcelExport(value = "组织ID")
-    private String cGroupId;
-
-    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
-    @ExcelExport(value = "工件ID")
-    private String cArtifactId;
+    @ApiModelProperty(value = "名称",example = "mybatis-plus")
+    @ExcelExport(value = "名称")
+    private String cName;
 
     @ApiModelProperty(value = "版本号", example = "2.5.15")
     @ExcelExport(value = "版本")
@@ -36,10 +32,6 @@ public class TableExcelBriefDTO {
     @ApiModelProperty(value = "依赖层级", example = "1")
     @ExcelExport(value = "依赖层级")
     private Integer depth;
-
-    @ApiModelProperty(value = "依赖范围", example = "compile")
-    @ExcelExport(value = "依赖范围")
-    private String scope;
 
     @ApiModelProperty(value = "类型", example = "类型")
     @ExcelExport(value = "类型")

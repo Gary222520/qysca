@@ -17,7 +17,7 @@ public interface UserRoleDao extends JpaRepository<UserRoleDO, String> {
      * @param uid 成员编号
      * @return List<String> 角色信息
      */
-    @Query("select rid from UserRoleDO where uid = ?1")
+    @Query("select rid from UserRoleDO where uid = :uid")
     List<String> findRidsByUid(String uid);
 
     /**
@@ -48,7 +48,7 @@ public interface UserRoleDao extends JpaRepository<UserRoleDO, String> {
      * @param uid 成员编号
      * @return String 部门编号
      */
-    @Query("SELECT bid from UserRoleDO where uid = ?1 and rid = '-' and aid = '-'")
+    @Query("SELECT bid from UserRoleDO where uid = :uid and rid = '-' and aid = '-'")
     String findUserBu(String uid);
 
 
@@ -63,7 +63,7 @@ public interface UserRoleDao extends JpaRepository<UserRoleDO, String> {
      * @param bid 部门编号
      * @return List<UserBriefDTO> 成员列表
      */
-    @Query("select new nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO(u.uid, u.name, '') from UserDO u, UserRoleDO r where r.bid = ?1 and r.rid = '-' and r.aid = '-' and u.uid = r.uid")
+    @Query("select new nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO(u.uid, u.name, '') from UserDO u, UserRoleDO r where r.bid = :bid and r.rid = '-' and r.aid = '-' and u.uid = r.uid")
     List<UserBriefDTO> listBuMember(String bid);
 
     /**
@@ -77,13 +77,13 @@ public interface UserRoleDao extends JpaRepository<UserRoleDO, String> {
     /**
      * 查看部门的Bu Rep
      */
-    @Query("select uid from UserRoleDO where bid = ?1 and rid = ?2 and aid = '-'")
+    @Query("select uid from UserRoleDO where bid = :bid and rid = :rid and aid = '-'")
     String findBuRep(String bid, String rid);
 
-    @Query("select new nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO(u.uid, u.name, r.name) from UserDO u, UserRoleDO ur, RoleDO r where ur.aid = ?1 and u.uid = ur.uid and ur.rid = r.id")
+    @Query("select new nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO(u.uid, u.name, r.name) from UserDO u, UserRoleDO ur, RoleDO r where ur.aid = :aid and u.uid = ur.uid and ur.rid = r.id")
     List<UserBriefDTO> listAppMember(String aid);
 
-    @Query("select uid from UserRoleDO where bid = ?1 and rid = ?2")
+    @Query("select uid from UserRoleDO where bid = :bid and rid = :rid")
     List<String> findBuPO(String bid, String rid);
 
 }

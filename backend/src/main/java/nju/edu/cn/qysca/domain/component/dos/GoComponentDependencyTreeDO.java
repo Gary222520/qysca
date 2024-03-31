@@ -13,7 +13,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel(description = "Go组件依赖树DO")
-public class GoComponentDependencyTreeDO extends DependencyTreeDO{
+public class GoComponentDependencyTreeDO {
+
     @ApiModelProperty(value = "组件名称", example = "github.com/gin-gonic/gin")
     private String name;
 

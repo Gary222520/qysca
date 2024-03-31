@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.validation.annotation.ValidationAnnotationUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,11 +16,9 @@ import java.util.List;
 @ApiModel(description = "组件依赖树DO")
 public class JavaComponentDependencyTreeDO {
 
-    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
-    private String groupId;
 
-    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
-    private String artifactId;
+    @ApiModelProperty(value = "名称", example = "commons-lang")
+    private String name;
 
     @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String version;
@@ -28,9 +28,6 @@ public class JavaComponentDependencyTreeDO {
 
     @ApiModelProperty(value = "类型",example = "opensource")
     private String type;
-
-    @ApiModelProperty(value = "范围", example = "test")
-    private String scope;
 
     @ApiModelProperty(value = "依赖子树")
     private List<JavaComponentDependencyTreeDO> dependencies = new ArrayList<>();

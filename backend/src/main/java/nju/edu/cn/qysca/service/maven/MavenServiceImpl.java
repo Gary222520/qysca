@@ -4,8 +4,11 @@ import fr.dutra.tools.maven.deptree.core.InputType;
 import fr.dutra.tools.maven.deptree.core.Node;
 import fr.dutra.tools.maven.deptree.core.Parser;
 import nju.edu.cn.qysca.dao.component.JavaComponentDao;
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
+import nju.edu.cn.qysca.service.license.LicenseService;
 import nju.edu.cn.qysca.service.spider.SpiderService;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -13,6 +16,7 @@ import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.Invoker;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -35,6 +39,9 @@ public class MavenServiceImpl implements MavenService {
     @Autowired
     private SpiderService spiderService;
 
+    @Autowired
+    private LicenseService licenseService;
+
 
     private final String FILE_SEPARATOR = "/";
 
@@ -55,18 +62,21 @@ public class MavenServiceImpl implements MavenService {
         String pomFilePath = analyzePomPath(filePath, builder);
         Model model = pomToModel(pomFilePath);
         JavaComponentDO javaComponentDO = new JavaComponentDO();
-        javaComponentDO.setGroupId(getGroupIdFromPomModel(model));
-        javaComponentDO.setArtifactId(getArtifactIdFromPomModel(model));
+        javaComponentDO.setName(getGroupIdFromPomModel(model) + ":" + getArtifactIdFromPomModel(model));
         javaComponentDO.setVersion(getVersionFromPomModel(model));
         javaComponentDO.setLanguage("java");
-        javaComponentDO.setName(model.getName() == null ? "-" : model.getName());
+        javaComponentDO.setJName(model.getName() == null ? "-" : model.getName());
         javaComponentDO.setType(type);
         javaComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
         javaComponentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
         javaComponentDO.setDownloadUrl(model.getDistributionManagement() == null ? "-" : model.getDistributionManagement().getDownloadUrl());
         javaComponentDO.setSourceUrl(model.getScm() == null ? "-" : model.getScm().getUrl());
-        javaComponentDO.setPUrl(getMavenPUrl(javaComponentDO.getGroupId(), model.getArtifactId(), model.getVersion(), model.getPackaging()));
-        javaComponentDO.setLicenses(getLicense(model));
+        javaComponentDO.setPUrl(getMavenPUrl(getGroupIdFromPomModel(model), getArtifactIdFromPomModel(model), model.getVersion(), model.getPackaging()));
+        List<String> licenses = new ArrayList<>();
+        for(String license : getLicense(model)) {
+            licenses.addAll(licenseService.searchLicense(license));
+        }
+        javaComponentDO.setLicenses(licenses.toArray(new String[0]));
         javaComponentDO.setDevelopers(getDevelopers(model));
         //TODO: hash信息解析
         // 上传jar包才可以生成hash信息
@@ -86,8 +96,7 @@ public class MavenServiceImpl implements MavenService {
         String pomFilePath = analyzePomPath(filePath, builder);
         Model model = pomToModel(pomFilePath);
         JavaDependencyTreeDO javaDependencyTreeDO = new JavaDependencyTreeDO();
-        javaDependencyTreeDO.setGroupId(getGroupIdFromPomModel(model));
-        javaDependencyTreeDO.setArtifactId(getArtifactIdFromPomModel(model));
+        javaDependencyTreeDO.setName(getGroupIdFromPomModel(model) + ":" + getArtifactIdFromPomModel(model));
         javaDependencyTreeDO.setVersion(getVersionFromPomModel(model));
         Node node = mavenDependencyTreeAnalyzer(filePath, builder);
         JavaComponentDependencyTreeDO javaComponentDependencyTreeDO = convertNode(node, 0);
@@ -107,18 +116,21 @@ public class MavenServiceImpl implements MavenService {
         Queue<JavaComponentDependencyTreeDO> queue = new LinkedList<>(javaDependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {
             JavaDependencyTableDO javaDependencyTableDO = new JavaDependencyTableDO();
-            javaDependencyTableDO.setGroupId(javaDependencyTreeDO.getGroupId());
-            javaDependencyTableDO.setArtifactId(javaDependencyTreeDO.getArtifactId());
+            javaDependencyTableDO.setName(javaDependencyTreeDO.getName());
             javaDependencyTableDO.setVersion(javaDependencyTreeDO.getVersion());
             JavaComponentDependencyTreeDO componentDependencyTree = queue.poll();
-            javaDependencyTableDO.setCGroupId(componentDependencyTree.getGroupId());
-            javaDependencyTableDO.setCArtifactId(componentDependencyTree.getArtifactId());
+            javaDependencyTableDO.setCName(componentDependencyTree.getName());
             javaDependencyTableDO.setCVersion(componentDependencyTree.getVersion());
-            javaDependencyTableDO.setScope(componentDependencyTree.getScope());
             javaDependencyTableDO.setDepth(componentDependencyTree.getDepth());
             javaDependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
             javaDependencyTableDO.setType(componentDependencyTree.getType());
             javaDependencyTableDO.setLanguage("java");
+            JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(componentDependencyTree.getName(), componentDependencyTree.getVersion());
+            if(javaComponentDO.getLicenses() == null || javaComponentDO.getLicenses().length == 0){
+                javaDependencyTableDO.setLicenses("-");
+            }else{
+                javaDependencyTableDO.setLicenses(String.join(",", javaComponentDO.getLicenses()));
+            }
             queue.addAll(componentDependencyTree.getDependencies());
             closeJavaDependencyTableDOList.add(javaDependencyTableDO);
         }
@@ -166,14 +178,14 @@ public class MavenServiceImpl implements MavenService {
      */
     private JavaComponentDependencyTreeDO convertNode(Node node, int depth) throws PlatformException {
         JavaComponentDependencyTreeDO javaComponentDependencyTreeDO = new JavaComponentDependencyTreeDO();
-        javaComponentDependencyTreeDO.setGroupId(node.getGroupId() == null ? "-" : node.getGroupId());
-        javaComponentDependencyTreeDO.setArtifactId(node.getArtifactId() == null ? "-" : node.getArtifactId());
+        String groupId = node.getGroupId() == null ? "-" : node.getGroupId();
+        String artifactId = node.getArtifactId() == null ? "-" : node.getArtifactId();
+        javaComponentDependencyTreeDO.setName(groupId + ":" + artifactId);
         javaComponentDependencyTreeDO.setVersion(node.getVersion() == null ? "-" : node.getVersion());
-        javaComponentDependencyTreeDO.setScope(node.getScope() == null ? "-" : node.getScope());
         if (depth != 0) {
             // 从知识库中查找
             JavaComponentDO javaComponentDO = null;
-            javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(node.getGroupId(), node.getArtifactId(), node.getVersion());
+            javaComponentDO = javaComponentDao.findByNameAndVersion(node.getGroupId() + ":" + node.getArtifactId(), node.getVersion());
 
             // 如果知识库中没有则爬取
             if (javaComponentDO == null) {
@@ -266,6 +278,47 @@ public class MavenServiceImpl implements MavenService {
             deleteFolder(tempPomFolder);
             throw new PlatformException(500, "识别依赖信息失败");
         }
+    }
+
+    /**
+     * 将JavaComponentDependencyTreeDO转换为AppComponentDependencyTreeDO
+     * @param javaComponentDependencyTreeDO Java组件依赖树信息
+     * @return AppComponentDependencyTreeDO App组件依赖树信息
+     */
+    @Override
+    public AppComponentDependencyTreeDO translateComponentDependency(JavaComponentDependencyTreeDO javaComponentDependencyTreeDO) {
+        if(javaComponentDependencyTreeDO == null){
+            return null;
+        }
+        AppComponentDependencyTreeDO appComponentDependencyTreeDO = new AppComponentDependencyTreeDO();
+        appComponentDependencyTreeDO.setName(javaComponentDependencyTreeDO.getName());
+        appComponentDependencyTreeDO.setVersion(javaComponentDependencyTreeDO.getVersion());
+        appComponentDependencyTreeDO.setType(javaComponentDependencyTreeDO.getType());
+        appComponentDependencyTreeDO.setDepth(javaComponentDependencyTreeDO.getDepth());
+        appComponentDependencyTreeDO.setLanguage("java");
+        List<AppComponentDependencyTreeDO> dependencyTreeDOS = new ArrayList<>();
+        for(JavaComponentDependencyTreeDO childJavaComponentDependencyTreeDO : javaComponentDependencyTreeDO.getDependencies()) {
+            AppComponentDependencyTreeDO childAppComponentDependencyTreeDO  = translateComponentDependency(childJavaComponentDependencyTreeDO);
+            dependencyTreeDOS.add(childAppComponentDependencyTreeDO);
+        }
+        appComponentDependencyTreeDO.setDependencies(dependencyTreeDOS);
+        return appComponentDependencyTreeDO;
+    }
+
+    /**
+     * 将List<JavaDependencyTableDO>转化成List<AppDependencyTableDO>
+     * @param javaDependencyTableDOS java组件依赖关系平铺表
+     * @return List<AppDependencyTableDO> 应用组件依赖关系平铺表
+     */
+    @Override
+    public List<AppDependencyTableDO> translateDependencyTable(List<JavaDependencyTableDO> javaDependencyTableDOS) {
+        List<AppDependencyTableDO> appDependencyTableDOS = new ArrayList<>();
+        for(JavaDependencyTableDO javaDependencyTableDO : javaDependencyTableDOS) {
+            AppDependencyTableDO appDependencyTableDO = new AppDependencyTableDO();
+            BeanUtils.copyProperties(javaDependencyTableDO, appDependencyTableDO);
+            appDependencyTableDOS.add(appDependencyTableDO);
+        }
+        return appDependencyTableDOS;
     }
 
     /**
@@ -366,16 +419,13 @@ public class MavenServiceImpl implements MavenService {
      * @param model pom文件
      * @return List<ComponentLicenseDO> 许可证信息
      */
-    private List<ComponentLicenseDO> getLicense(Model model) {
+    private List<String> getLicense(Model model) {
         List<org.apache.maven.model.License> mavenLicenses = model.getLicenses();
-        return mavenLicenses.stream()
-                .map(mavenLicense -> {
-                    ComponentLicenseDO license = new ComponentLicenseDO();
-                    license.setName(mavenLicense.getName() == null ? "-" : mavenLicense.getName());
-                    license.setUrl(mavenLicense.getUrl() == null ? "-" : mavenLicense.getUrl());
-                    return license;
-                })
-                .collect(Collectors.toList());
+        List<String> result = new ArrayList<>();
+        for(org.apache.maven.model.License license : mavenLicenses) {
+            result.add(license.getName());
+        }
+        return result;
     }
 
     /**

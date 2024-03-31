@@ -30,28 +30,25 @@ public class GradleServiceImpl implements GradleService{
 
     /**
      * 构造gradle java组件
-     * @param groupId 工件id
-     * @param artifactId 组件id
+     * @param name 组件名
      * @param version 版本号
      * @param type 组件类型
      * @return PythonComponentDO
      */
     @Override
-    public JavaComponentDO componentAnalysis(String groupId, String artifactId, String version, String type) {
+    public JavaComponentDO componentAnalysis(String name, String version, String type) {
         JavaComponentDO javaComponentDO = new JavaComponentDO();
-        javaComponentDO.setGroupId(groupId);
-        javaComponentDO.setArtifactId(artifactId);
+        javaComponentDO.setName(name);
         javaComponentDO.setVersion(version);
         javaComponentDO.setType(type);
         javaComponentDO.setLanguage("java");
-        javaComponentDO.setName(artifactId);
+        javaComponentDO.setJName(name.split(":")[1]);
         javaComponentDO.setDescription("-");
         javaComponentDO.setUrl("-");
         javaComponentDO.setDownloadUrl("-");
         javaComponentDO.setSourceUrl("-");
         javaComponentDO.setPUrl("-");
         javaComponentDO.setDevelopers(new ArrayList<>());
-        javaComponentDO.setLicenses(new ArrayList<>());
         javaComponentDO.setHashes(new ArrayList<>());
         //creator和state由调用此方法者填充
         javaComponentDO.setCreator(null);
@@ -64,14 +61,13 @@ public class GradleServiceImpl implements GradleService{
      *  解析上传文件的依赖信息，并生成依赖树
      * @param filePath 上传文件路径
      * @param builder 构造器， 例如 zip
-     * @param groupId 组织id
-     * @param artifactId 工件id
+     * @param name 组件名
      * @param version 版本号
      * @param type 类型，例如 opensource
      * @return JavaDependencyTreeDO
      */
     @Override
-    public JavaDependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String groupId, String artifactId, String version, String type) {
+    public JavaDependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String name, String version, String type) {
         if (builder.equals("zip")){
             unzip(filePath);
             filePath = filePath.substring(0,filePath.lastIndexOf("."));
@@ -87,18 +83,15 @@ public class GradleServiceImpl implements GradleService{
         List<JavaComponentDependencyTreeDO> trees = gradleDependencyTreeAnalyze(lines);
 
         JavaComponentDependencyTreeDO root = new JavaComponentDependencyTreeDO();
-        root.setGroupId(groupId);
-        root.setArtifactId(artifactId);
+        root.setName(name);
         root.setVersion(version);
         root.setType(type);
         root.setDependencies(trees);
-        root.setScope("-");
         root.setDepth(0);
 
         // 封装为JavaDependencyTreeDO
         JavaDependencyTreeDO dependencyTreeDO = new JavaDependencyTreeDO();
-        dependencyTreeDO.setGroupId(groupId);
-        dependencyTreeDO.setArtifactId(artifactId);
+        dependencyTreeDO.setName(name);
         dependencyTreeDO.setVersion(version);
         dependencyTreeDO.setTree(root);
         return dependencyTreeDO;
@@ -182,22 +175,22 @@ public class GradleServiceImpl implements GradleService{
             // 提取组件信息
             JavaComponentDependencyTreeDO componentDependencyTreeDO = new JavaComponentDependencyTreeDO();
             componentDependencyTreeDO.setDepth(depth);
-            componentDependencyTreeDO.setScope("-");
             extractGAVFromLine(componentDependencyTreeDO, lines.get(begin).substring(5));
-            String groupId = componentDependencyTreeDO.getGroupId();
-            String artifactId = componentDependencyTreeDO.getArtifactId();
+            String name = componentDependencyTreeDO.getName();
             String version = componentDependencyTreeDO.getVersion();
 
             // 如果该直接依赖已记录过，或者该组件的gav缺失，则跳过
-            if (!(depth == 1 && visited.contains(groupId + ":" + artifactId + ":" + version)) && !(groupId == null || artifactId == null || version == null) && !(groupId.isEmpty() || artifactId.isEmpty() || version.isEmpty()))
+            if (!(depth == 1 && visited.contains(name + ":" + version)) && !(name == null || version == null) && !(name.isEmpty() || version.isEmpty()))
             {
                 if (depth==1)
-                    visited.add(groupId + ":" + artifactId + ":" + version);
+                    visited.add(name + ":" + version);
 
                 // 查知识库
-                JavaComponentDO javaComponentDO = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(groupId, artifactId, version);
+                JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(name, version);
                 // 如果知识库没有则爬取
                 if (javaComponentDO == null){
+                    String groupId = name.split(":")[0];
+                    String artifactId = name.split(":")[1];
                     javaComponentDO = spiderService.crawlByGav(groupId, artifactId, version);
                     if (javaComponentDO != null){
                         componentDependencyTreeDO.setType("opensource");
@@ -241,8 +234,9 @@ public class GradleServiceImpl implements GradleService{
         Pattern r1 = Pattern.compile(pattern1);
         Matcher m1 = r1.matcher(line);
         if (m1.find()) {
-            tree.setGroupId(m1.group(1));
-            tree.setArtifactId(m1.group(2));
+//            tree.setGroupId(m1.group(1));
+//            tree.setArtifactId(m1.group(2));
+            tree.setName(m1.group(1) + ":" + m1.group(2));
             tree.setVersion(m1.group(3));
             return;
         }
@@ -253,8 +247,9 @@ public class GradleServiceImpl implements GradleService{
         Pattern r2 = Pattern.compile(pattern2);
         Matcher m2 = r2.matcher(line);
         if (m2.find()) {
-            tree.setGroupId(m2.group(1));
-            tree.setArtifactId(m2.group(2));
+//            tree.setGroupId(m2.group(1));
+//            tree.setArtifactId(m2.group(2));
+            tree.setName(m2.group(1) + ":" + m2.group(2));
             tree.setVersion(m2.group(3));
             return;
         }
@@ -266,8 +261,9 @@ public class GradleServiceImpl implements GradleService{
         Pattern r3 = Pattern.compile(pattern3);
         Matcher m3 = r3.matcher(line);
         if (m3.find()) {
-            tree.setGroupId(m3.group(1));
-            tree.setArtifactId(m3.group(2));
+//            tree.setGroupId(m3.group(1));
+//            tree.setArtifactId(m3.group(2));
+            tree.setName(m3.group(1) + ":" + m3.group(2));
             tree.setVersion(m3.group(4));
             return;
         }
