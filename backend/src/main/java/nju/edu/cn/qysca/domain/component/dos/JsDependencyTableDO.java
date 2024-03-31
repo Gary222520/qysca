@@ -55,4 +55,8 @@ public class JsDependencyTableDO {
     @Column(name="language",nullable = false)
     @ApiModelProperty(value = "语言", example = "java")
     private String language;
+
+    @Column(name="licenses", nullable = false)
+    @ApiModelProperty(value = "许可证", example = "Apache License 2.0")
+    private String licenses;
 }

@@ -41,7 +41,7 @@ public interface JavaComponentDao extends JpaRepository<JavaComponentDO, String>
      * @param name 组件名称
      * @return List<String> 组件名称模糊查询列表
      */
-    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentSearchNameDTO(c.version, c.name) from JavaComponentDO c where c.name like %:name%")
+    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentSearchNameDTO(c.name, c.version) from JavaComponentDO c where c.name like %:name%")
     List<ComponentSearchNameDTO> searchComponentName(String name);
 
 

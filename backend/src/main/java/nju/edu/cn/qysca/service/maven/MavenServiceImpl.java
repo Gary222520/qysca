@@ -125,6 +125,12 @@ public class MavenServiceImpl implements MavenService {
             javaDependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
             javaDependencyTableDO.setType(componentDependencyTree.getType());
             javaDependencyTableDO.setLanguage("java");
+            JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(componentDependencyTree.getName(), componentDependencyTree.getVersion());
+            if(javaComponentDO.getLicenses().length == 0){
+                javaDependencyTableDO.setLicenses("-");
+            }else{
+                javaDependencyTableDO.setLicenses(String.join(",", javaComponentDO.getLicenses()));
+            }
             queue.addAll(componentDependencyTree.getDependencies());
             closeJavaDependencyTableDOList.add(javaDependencyTableDO);
         }
@@ -289,6 +295,7 @@ public class MavenServiceImpl implements MavenService {
         appComponentDependencyTreeDO.setVersion(javaComponentDependencyTreeDO.getVersion());
         appComponentDependencyTreeDO.setType(javaComponentDependencyTreeDO.getType());
         appComponentDependencyTreeDO.setDepth(javaComponentDependencyTreeDO.getDepth());
+        appComponentDependencyTreeDO.setLanguage("java");
         List<AppComponentDependencyTreeDO> dependencyTreeDOS = new ArrayList<>();
         for(JavaComponentDependencyTreeDO childJavaComponentDependencyTreeDO : javaComponentDependencyTreeDO.getDependencies()) {
             AppComponentDependencyTreeDO childAppComponentDependencyTreeDO  = translateComponentDependency(childJavaComponentDependencyTreeDO);

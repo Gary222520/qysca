@@ -134,6 +134,12 @@ public class GoServiceImpl implements GoService{
             tableDO.setDepth(node.getDepth());
             tableDO.setDirect(node.getDepth()==1);
             tableDO.setType(node.getType());
+            GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(node.getName(), node.getVersion());
+            if(goComponentDO.getLicenses() .length == 0) {
+                tableDO.setLicenses("-");
+            }else{
+                tableDO.setLicenses(String.join(",", goComponentDO.getLicenses()));
+            }
             tableList.add(tableDO);
             queue.addAll(node.getDependencies());
         }
@@ -282,6 +288,7 @@ public class GoServiceImpl implements GoService{
         appComponentDependencyTreeDO.setVersion(goComponentDependencyTreeDO.getVersion());
         appComponentDependencyTreeDO.setDepth(goComponentDependencyTreeDO.getDepth());
         appComponentDependencyTreeDO.setType(goComponentDependencyTreeDO.getType());
+        appComponentDependencyTreeDO.setLanguage("golang");
         List<AppComponentDependencyTreeDO> children=new ArrayList<>();
         for(GoComponentDependencyTreeDO childGoComponentDependencyTreeDO : goComponentDependencyTreeDO.getDependencies()) {
             AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependency(childGoComponentDependencyTreeDO);

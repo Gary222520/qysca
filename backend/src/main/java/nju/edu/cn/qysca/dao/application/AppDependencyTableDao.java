@@ -39,4 +39,13 @@ public interface AppDependencyTableDao extends JpaRepository<AppDependencyTableD
      */
     @Query("select new nju.edu.cn.qysca.domain.application.dtos.TableExcelBriefDTO(a.cName, a.cVersion, a.language, a.direct, a.depth, a.type) from AppDependencyTableDO a where a.name = :name and a.version = :version")
     List<TableExcelBriefDTO> findTableListByNameAndVersion(String name, String version);
+
+
+    /**
+     * 根据名称和版本查询应用依赖信息
+     * @param name 名称
+     * @param version 版本
+     * @return List<AppDependencyTableDO> 应用依赖信息
+     */
+    List<AppDependencyTableDO> findAllByNameAndVersion(String name, String version);
 }

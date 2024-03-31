@@ -40,6 +40,7 @@ import java.io.File;
 import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
@@ -266,7 +267,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 throw new PlatformException(500, "该应用不能保存pom信息");
             }
             AppDependencyTreeDO appDependencyTreeDO = null;
-            //TODO: 尝试通过多态代码优化 增加Licenses信息
+            //TODO: 尝试通过多态代码优化
             switch (saveApplicationDependencyDTO.getLanguage()) {
                 case "java":
                     JavaComponentDO analyzedJavaComponentDO = null;
@@ -309,7 +310,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     List<JsDependencyTableDO> applicationJsDependencyTableDOS = npmService.dependencyTableAnalysis(analyzedJsDependencyTreeDO);
                     appDependencyTableDao.saveAll(npmService.translateDependencyTable(applicationJsDependencyTableDOS));
                     break;
-                case "go":
+                case "golang":
                     GoDependencyTreeDO analyzedGoDependencyTreeDO = goService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "", saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder());
                     //GO从实现来看不需要检查
                     appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
@@ -344,6 +345,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             applicationDO.setBuilder(saveApplicationDependencyDTO.getBuilder());
             applicationDO.setScanner(saveApplicationDependencyDTO.getScanner());
             applicationDO.setLanguage(saveApplicationDependencyDTO.getLanguage());
+            String[] licenses = getUniqueLicenseNames(applicationDO.getName(), applicationDO.getVersion());
+            applicationDO.setLicenses(licenses);
             applicationDO.setState("SUCCESS");
             applicationDao.save(applicationDO);
             File file = new File(saveApplicationDependencyDTO.getFilePath());
@@ -468,12 +471,14 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (appDependencyTreeDO != null) {
             throw new PlatformException(500, "该应用已添加组件，无法手动添加");
         }
+        String[] licenses = null;
         //不是应用发布成的组件
         if (applicationDO == null) {
             List<String> childComponent = null;
             switch (applicationComponentDTO.getLanguage()) {
                 case "java":
                     JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
+                    licenses = javaComponentDO.getLicenses();
                     childComponent =parentApplicationDO.getChildComponent().get("java");
                     if(childComponent == null){
                         childComponent = new ArrayList<>();
@@ -483,6 +488,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     break;
                 case "javaScript":
                     JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
+                    licenses = jsComponentDO.getLicenses();
                     childComponent = parentApplicationDO.getChildComponent().get("javaScript");
                     if(childComponent == null){
                         childComponent = new ArrayList<>();
@@ -490,8 +496,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                     }
                     parentApplicationDO.getChildComponent().get("javaScript").add(jsComponentDO.getId());
                     break;
-                case "go":
+                case "golang":
                     GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
+                    licenses = goComponentDO.getLicenses();
                     childComponent = parentApplicationDO.getChildComponent().get("go");
                     if(childComponent == null){
                         childComponent = new ArrayList<>();
@@ -501,6 +508,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     break;
                 case "python":
                     PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
+                    licenses = pythonComponentDO.getLicenses();
                     childComponent = parentApplicationDO.getChildComponent().get("python");
                     if(childComponent == null){
                         childComponent = new ArrayList<>(); new ArrayList<>();
@@ -510,10 +518,15 @@ public class ApplicationServiceImpl implements ApplicationService {
                     break;
             }
         } else {
+            licenses = applicationDO.getLicenses();
             ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentApplicationDO.getChildApplication()));
             temp.add(applicationDO.getId());
             parentApplicationDO.setChildApplication(temp.toArray(new String[temp.size()]));
         }
+        Set<String> licenseSet =  new HashSet<>(Arrays.asList(parentApplicationDO.getLicenses()));
+        licenseSet.addAll(Arrays.asList(licenses));
+        String[] updatedLicenses = licenseSet.toArray(new String[0]);
+        parentApplicationDO.setLicenses(updatedLicenses);
         applicationDao.save(parentApplicationDO);
         return Boolean.TRUE;
     }
@@ -544,7 +557,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
                     parentApplicationDO.getChildComponent().get("javaScript").remove(jsComponentDO.getId());
                     break;
-                case "go":
+                case "golang":
                     GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
                     parentApplicationDO.getChildComponent().get("go").remove(goComponentDO.getId());
                     break;
@@ -558,6 +571,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             temp.remove(applicationDO.getId());
             parentApplicationDO.setChildApplication(temp.toArray(new String[temp.size()]));
         }
+        // TODO: 如何更新License信息
         applicationDao.save(parentApplicationDO);
         return Boolean.TRUE;
     }
@@ -590,7 +604,6 @@ public class ApplicationServiceImpl implements ApplicationService {
     public List<ApplicationDO> changeReleaseState(ChangeReleaseStateDTO changeReleaseStateDTO) {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
         if (applicationDO.getRelease()) {
-            // TODO: 是否可以取消发布还需要增加逻辑
             List<ApplicationDO> parentApplicationDOS = applicationDao.findParentApplication(applicationDO.getId());
             if(!parentApplicationDOS.isEmpty()){
                 return parentApplicationDOS;
@@ -709,7 +722,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                         appComponentDependencyTreeDOS.add(temp);
                     }
                     break;
-                case "go":
+                case "golang":
                     for (String id : entry.getValue()) {
                         GoComponentDO tempGoComponentDO = goComponentDao.findGoComponentDOById(id);
                         GoDependencyTreeDO tempGoDependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(tempGoComponentDO.getName(), tempGoComponentDO.getVersion());
@@ -991,6 +1004,17 @@ public class ApplicationServiceImpl implements ApplicationService {
         return root;
     }
 
+    /**
+     *  获取所有依赖的license
+     * @param name 应用名称
+     * @param version 应用版本
+     * @return String[] 所有依赖的license信息
+     */
+    private String[] getUniqueLicenseNames(String name, String version) {
+        List<AppDependencyTableDO> dependencies = appDependencyTableDao.findAllByNameAndVersion(name, version);
+        Set<String> uniqueLicenses = dependencies.stream().flatMap(dependency -> Arrays.stream(dependency.getLicenses().split(","))).map(String::trim).collect(Collectors.toSet());
+        return uniqueLicenses.toArray(new String[0]);
+    }
     /**
      * 根据文件路径删除文件夹
      *

@@ -123,6 +123,12 @@ public class NpmServiceImpl implements NpmService {
             jsDependencyTableDO.setDirect(jsDependencyTableDO.getDepth() == 1);
             jsDependencyTableDO.setType(jsComponentDependencyTree.getType());
             jsDependencyTableDO.setLanguage("javaScript");
+            JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(jsComponentDependencyTree.getName(), jsComponentDependencyTree.getVersion());
+            if(jsComponentDO.getLicenses().length == 0){
+                jsDependencyTableDO.setLicenses("-");
+            }else{
+                jsDependencyTableDO.setLicenses(String.join(",", jsComponentDO.getLicenses()));
+            }
             queue.addAll(jsComponentDependencyTree.getDependencies());
             jsDependencyTableDOS.add(jsDependencyTableDO);
         }
@@ -166,6 +172,7 @@ public class NpmServiceImpl implements NpmService {
         appComponentDependencyTreeDO.setVersion(jsComponentDependencyTreeDO.getVersion());
         appComponentDependencyTreeDO.setDepth(jsComponentDependencyTreeDO.getDepth());
         appComponentDependencyTreeDO.setType(jsComponentDependencyTreeDO.getType());
+        appComponentDependencyTreeDO.setLanguage("javaScript");
         List<AppComponentDependencyTreeDO> dependencies = new ArrayList<>();
         for (JsComponentDependencyTreeDO childJsComponentDependencyTreeDO : jsComponentDependencyTreeDO.getDependencies()) {
             AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependencyTree(childJsComponentDependencyTreeDO);

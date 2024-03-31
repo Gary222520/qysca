@@ -8,7 +8,6 @@ import nju.edu.cn.qysca.dao.application.AppDependencyTreeDao;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDO;
-import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.exception.PlatformException;
@@ -126,7 +125,7 @@ public class ComponentServiceImpl implements ComponentService {
             case "javaScript":
                 result = jsComponentDao.findComponentsPage(searchComponentDTO.getName(), searchComponentDTO.getVersion(), searchComponentDTO.getType(), pageable);
                 break;
-            case "go":
+            case "golang":
                 result = goComponentDao.findComponentsPage(searchComponentDTO.getName(), searchComponentDTO.getVersion(), searchComponentDTO.getType(), pageable);
                 break;
             case "python":
@@ -157,7 +156,7 @@ public class ComponentServiceImpl implements ComponentService {
             case "javaScript":
                 componentSearchNameDTOS = jsComponentDao.searchComponentName(name);
                 break;
-            case "go":
+            case "golang":
                 componentSearchNameDTOS = goComponentDao.searchComponentName(name);
                 break;
             case "python":
@@ -266,7 +265,7 @@ public class ComponentServiceImpl implements ComponentService {
                     jsComponentDao.save(jsComponentDO);
                 }
                 break;
-            case "go":
+            case "golang":
                 GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion());
                 try {
                     GoDependencyTreeDO closeGoDependencyTreeDO = goService.dependencyTreeAnalysis(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getType(), saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder());
@@ -348,7 +347,7 @@ public class ComponentServiceImpl implements ComponentService {
                 jsComponentDO.setState("RUNNING");
                 jsComponentDao.save(jsComponentDO);
                 break;
-            case "go":
+            case "golang":
                 GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
                 if (!userDO.getUid().equals(goComponentDO.getCreator())) {
                     throw new PlatformException(500, "您没有权限修改该组件信息");
@@ -410,7 +409,7 @@ public class ComponentServiceImpl implements ComponentService {
                 jsComponentDO.setState("SUCCESS");
                 jsComponentDao.save(jsComponentDO);
                 break;
-            case "go":
+            case "golang":
                 GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
                 goComponentDO.setType(updateCloseComponentDTO.getType());
                 goDependencyTreeDao.deleteByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
@@ -477,7 +476,7 @@ public class ComponentServiceImpl implements ComponentService {
                 jsDependencyTreeDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
                 jsDependencyTableDao.deleteAllByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
                 break;
-            case "go":
+            case "golang":
                 GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
                 if(goComponentDO.getCreator().equals("")) {
                     throw new PlatformException(500, "开源组件不可删除");
@@ -547,7 +546,7 @@ public class ComponentServiceImpl implements ComponentService {
                     jsDependencyTableDao.saveAll(jsDependencyTableDOList);
                 }
                 break;
-            case "go":
+            case "golang":
                 dependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
                 if (dependencyTreeDO == null) {
                     dependencyTreeDO = goService.spiderDependency(componentGavDTO.getName(), componentGavDTO.getVersion());
@@ -593,7 +592,7 @@ public class ComponentServiceImpl implements ComponentService {
             case "javaScript":
                 result = jsDependencyTableDao.findByNameAndVersion(componentGavPageDTO.getName(), componentGavPageDTO.getVersion(), pageable);
                 break;
-            case "go":
+            case "golang":
                 result = goDependencyTableDao.findByNameAndVersion(componentGavPageDTO.getName(), componentGavPageDTO.getVersion(), pageable);
                 break;
             case "python":
@@ -622,7 +621,7 @@ public class ComponentServiceImpl implements ComponentService {
                 JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
                 BeanUtils.copyProperties(jsComponentDO, componentDetailDTO);
                 break;
-            case "go":
+            case "golang":
                 GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
                 BeanUtils.copyProperties(goComponentDO, componentDetailDTO);
                 break;

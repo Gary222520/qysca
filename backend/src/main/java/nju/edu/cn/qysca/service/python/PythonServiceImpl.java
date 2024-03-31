@@ -131,6 +131,12 @@ public class PythonServiceImpl implements PythonService {
             pythonDependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
             pythonDependencyTableDO.setType(componentDependencyTree.getType());
             pythonDependencyTableDO.setLanguage("python");
+            PythonComponentDO pythonComponentDO = componentDao.findByNameAndVersion(componentDependencyTree.getName(),componentDependencyTree.getVersion());
+            if(pythonComponentDO.getLicenses().length == 0){
+                pythonDependencyTableDO.setLicenses("-");
+            }else{
+                pythonDependencyTableDO.setLicenses(String.join(",", pythonComponentDO.getLicenses()));
+            }
             queue.addAll(componentDependencyTree.getDependencies());
             pythonDependencyTableDOList.add(pythonDependencyTableDO);
         }
@@ -182,6 +188,7 @@ public class PythonServiceImpl implements PythonService {
         appComponentDependencyTreeDO.setVersion(pythonComponentDependencyTreeDO.getVersion());
         appComponentDependencyTreeDO.setDepth(pythonComponentDependencyTreeDO.getDepth());
         appComponentDependencyTreeDO.setType(pythonComponentDependencyTreeDO.getType());
+        appComponentDependencyTreeDO.setLanguage("python");
         List<AppComponentDependencyTreeDO> children = new ArrayList<>();
         for(PythonComponentDependencyTreeDO childPythonComponentDependencyTreeDO : pythonComponentDependencyTreeDO.getDependencies()) {
             AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependency(childPythonComponentDependencyTreeDO);

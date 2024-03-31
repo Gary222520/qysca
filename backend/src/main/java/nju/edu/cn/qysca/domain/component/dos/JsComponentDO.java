@@ -72,7 +72,7 @@ public class JsComponentDO extends ComponentDO{
     @Column(name= "download_url")
     private String downloadUrl;
 
-    @ApiModelProperty(value = "语言", example = "JavaScript")
+    @ApiModelProperty(value = "语言", example = "javaScript")
     @Column(name = "language", nullable = false)
     private String language;
 
