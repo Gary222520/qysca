@@ -1,5 +1,7 @@
 package nju.edu.cn.qysca.service.go;
 
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 
 import java.util.List;
@@ -47,4 +49,8 @@ public interface GoService {
      * @return Go组件信息
      */
     GoComponentDO spiderComponentInfo(String name,String version);
+
+    AppComponentDependencyTreeDO translateComponentDependency(GoComponentDependencyTreeDO goComponentDependencyTreeDO);
+
+    List<AppDependencyTableDO> translateDependencyTable(List<GoDependencyTableDO> goDependencyTableDOS);
 }

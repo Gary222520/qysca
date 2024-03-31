@@ -24,23 +24,23 @@ public class ComponentController {
     @ApiOperation("分页查询组件")
     @PostMapping("/findComponentsPage")
     @PreAuthorize("@my.checkAuth('/qysca/component/findComponentsPage')")
-    public ResponseMsg<Page<JavaComponentDO>> findComponentsPage(@RequestBody ComponentSearchDTO dto) {
+    public ResponseMsg<Page<? extends ComponentDO>> findComponentsPage(@RequestBody ComponentSearchDTO dto) {
         return new ResponseMsg<>(componentService.findComponentsPage(dto));
     }
 
     @ApiOperation("模糊查询组件名称")
     @GetMapping("/searchComponentName")
     @PreAuthorize("@my.checkAuth('/qysca/component/searchComponentName')")
-    public ResponseMsg<List<ComponentSearchNameDTO>>  searchComponentName(@RequestParam String name) {
-        return new ResponseMsg<>(componentService.searchComponentName(name));
+    public ResponseMsg<List<ComponentSearchNameDTO>>  searchComponentName(@RequestParam String name, @RequestParam String language) {
+        return new ResponseMsg<>(componentService.searchComponentName(name, language));
     }
 
     @ApiOperation("新增闭源组件")
     @PostMapping("/saveCloseComponent")
     @PreAuthorize("@my.checkAuth('/qysca/component/saveCloseComponent')")
     public ResponseMsg<Boolean> saveCloseComponent(@RequestBody SaveCloseComponentDTO dto) {
-        JavaComponentDO javaComponentDO = componentService.saveCloseComponent(dto);
-        componentService.saveCloseComponentDependency(javaComponentDO, dto);
+        componentService.saveCloseComponent(dto);
+        componentService.saveCloseComponentDependency(dto);
         return new ResponseMsg<>(Boolean.TRUE);
     }
 
@@ -63,7 +63,7 @@ public class ComponentController {
     @ApiOperation("查询组件依赖树信息")
     @PostMapping("/findComponentDependencyTree")
     @PreAuthorize("@my.checkAuth('/qysca/component/findComponentDependencyTree')")
-    public ResponseMsg<JavaDependencyTreeDO> findComponentDependencyTree(@RequestBody ComponentGavDTO dto) {
+    public ResponseMsg<DependencyTreeDO> findComponentDependencyTree(@RequestBody ComponentGavDTO dto) {
         return new ResponseMsg<>(componentService.findComponentDependencyTree(dto));
     }
 

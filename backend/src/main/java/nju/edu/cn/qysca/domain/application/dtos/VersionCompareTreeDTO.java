@@ -13,11 +13,8 @@ import nju.edu.cn.qysca.domain.component.dtos.ComponentCompareTreeDTO;
 @ApiModel("应用版本对比树DTO")
 public class VersionCompareTreeDTO {
 
-    @ApiModelProperty(value = "组织Id", example = "nju.edu.cn")
-    private String groupId;
-
-    @ApiModelProperty(value = "工件Id", example = "qysca")
-    private String artifactId;
+    @ApiModelProperty(value = "名称", example = "qysca")
+    private String name;
 
     @ApiModelProperty(value = "被对比的版本号", example = "1.0.0")
     private String fromVersion;

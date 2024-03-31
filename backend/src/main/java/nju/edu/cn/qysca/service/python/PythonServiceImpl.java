@@ -4,13 +4,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.dao.component.PythonComponentDao;
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.spider.PythonSpiderService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -27,6 +31,8 @@ public class PythonServiceImpl implements PythonService {
     private PythonComponentDao componentDao;
     @Autowired
     private PythonSpiderService pythonSpiderService;
+    @Value("${tempPythonFolder}")
+    String tempFolder;
 
     /**
      * 构造python组件
@@ -49,7 +55,6 @@ public class PythonServiceImpl implements PythonService {
         pythonComponentDO.setPUrl("-");
         pythonComponentDO.setAuthor("-");
         pythonComponentDO.setAuthorEmail("-");
-        pythonComponentDO.setLicenses(new ArrayList<>());
         //creator和state由调用此方法者填充
         pythonComponentDO.setCreator(null);
         pythonComponentDO.setState(null);
@@ -126,6 +131,12 @@ public class PythonServiceImpl implements PythonService {
             pythonDependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
             pythonDependencyTableDO.setType(componentDependencyTree.getType());
             pythonDependencyTableDO.setLanguage("python");
+            PythonComponentDO pythonComponentDO = componentDao.findByNameAndVersion(componentDependencyTree.getName(),componentDependencyTree.getVersion());
+            if(pythonComponentDO.getLicenses() == null || pythonComponentDO.getLicenses().length == 0){
+                pythonDependencyTableDO.setLicenses("-");
+            }else{
+                pythonDependencyTableDO.setLicenses(String.join(",", pythonComponentDO.getLicenses()));
+            }
             queue.addAll(componentDependencyTree.getDependencies());
             pythonDependencyTableDOList.add(pythonDependencyTableDO);
         }
@@ -141,19 +152,66 @@ public class PythonServiceImpl implements PythonService {
      */
     @Override
     public PythonDependencyTreeDO spiderDependency(String name, String version) {
-        String[] command1 = {"python", "-m", "venv", "venv"};
-        String[] command3 = {".\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
-        String[] command4 = {".\\venv\\Scripts\\python.exe", "-m", "pip", "install", name, version};
-        String[] command5 = {".\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
 
-        executeCommand(command1, null, false);
-        executeCommand(command3, null, false);
-        executeCommand(command4, null, false);
+        File tempFile = new File(tempFolder);
+        if (!tempFile.exists()){ //如果不存在
+            boolean dr = tempFile.mkdirs(); //创建目录
+        }
+        String[] command1 = {"python", "-m", "venv", "venv"};
+        String[] command3 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
+        String[] command4 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", name+"=="+version};
+        String[] command5 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
+
+        executeCommand(command1, tempFile, true);
+        executeCommand(command3, null, true);
+        executeCommand(command4, null, true);
         String jsonString = executeCommand(command5, null, true);
-        deleteFolder(".\\venv");
+        deleteFolder(tempFile.getPath());
 
         PythonDependencyTreeDO dependencyTreeDO = parseJsonDependencyTree(jsonString, name, version, "opensource");
         return dependencyTreeDO;
+    }
+
+
+    /**
+     * 将python依赖信息转换成应用依赖信息
+     * @param pythonComponentDependencyTreeDO  python依赖信息
+     * @return AppComponentDependencyTreeDO 应用依赖信息
+     */
+    @Override
+    public AppComponentDependencyTreeDO translateComponentDependency(PythonComponentDependencyTreeDO pythonComponentDependencyTreeDO) {
+        if(pythonComponentDependencyTreeDO == null){
+            return null;
+        }
+        AppComponentDependencyTreeDO appComponentDependencyTreeDO = new AppComponentDependencyTreeDO();
+        appComponentDependencyTreeDO.setName(pythonComponentDependencyTreeDO.getName());
+        appComponentDependencyTreeDO.setVersion(pythonComponentDependencyTreeDO.getVersion());
+        appComponentDependencyTreeDO.setDepth(pythonComponentDependencyTreeDO.getDepth());
+        appComponentDependencyTreeDO.setType(pythonComponentDependencyTreeDO.getType());
+        appComponentDependencyTreeDO.setLanguage("python");
+        List<AppComponentDependencyTreeDO> children = new ArrayList<>();
+        for(PythonComponentDependencyTreeDO childPythonComponentDependencyTreeDO : pythonComponentDependencyTreeDO.getDependencies()) {
+            AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependency(childPythonComponentDependencyTreeDO);
+            children.add(childAppComponentDependencyTreeDO);
+        }
+        appComponentDependencyTreeDO.setDependencies(children);
+        return appComponentDependencyTreeDO;
+    }
+
+    /**
+     * 将Python依赖表转换为App依赖表
+     * @param pythonDependencyTableDOS python依赖表信息
+     * @return List<AppDependencyTableDO> App依赖表
+     */
+    @Override
+    public List<AppDependencyTableDO> translateDependencyTable(List<PythonDependencyTableDO> pythonDependencyTableDOS) {
+        List<AppDependencyTableDO> appDependencyTableDOS = new ArrayList<>();
+        for(PythonDependencyTableDO pythonDependencyTableDO : pythonDependencyTableDOS){
+            AppDependencyTableDO appDependencyTableDO = new AppDependencyTableDO();
+            BeanUtils.copyProperties(pythonDependencyTableDO, appDependencyTableDO);
+            appDependencyTableDOS.add(appDependencyTableDO);
+        }
+        return appDependencyTableDOS;
     }
 
     /**
@@ -220,11 +278,19 @@ public class PythonServiceImpl implements PythonService {
             // 这三个包是环境中生成的，并不是项目的依赖
             if (node.get("key").asText().equals("pipdeptree") || node.get("key").asText().equals("setuptools") || node.get("key").asText().equals("pip"))
                 continue;
-            dependencies.add(parseTree(node, 1));
+            // 有时候树中会重复自己，跳过
+            if (node.get("key").asText().equals(name) && node.get("installed_version").asText().equals(version)){
+                for (JsonNode subNode : node.get("dependencies")) {
+                    dependencies.add(parseTree(subNode, 1));
+                }
+            } else
+                dependencies.add(parseTree(node, 1));
         }
         root.setDependencies(dependencies);
 
         PythonDependencyTreeDO dependencyTreeDO = new PythonDependencyTreeDO();
+        dependencyTreeDO.setName(name);
+        dependencyTreeDO.setVersion(version);
         dependencyTreeDO.setTree(root);
         return dependencyTreeDO;
     }
