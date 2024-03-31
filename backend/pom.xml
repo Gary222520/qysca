@@ -195,6 +195,12 @@
 			<artifactId>jackson-annotations</artifactId>
 			<version>2.13.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>ognl</groupId>
+			<artifactId>ognl</artifactId>
+			<version>3.1.15</version> <!-- 根据您的项目需要选择合适的版本 -->
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
