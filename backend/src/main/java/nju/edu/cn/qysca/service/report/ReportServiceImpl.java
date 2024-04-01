@@ -51,7 +51,10 @@ public class ReportServiceImpl implements ReportService{
         Context context = new Context();
         context.setVariable("application", applicationDO);
         context.setVariable("components", componentDOList);
-
+        File tempFolder= new File(reportFolder);
+        if (!tempFolder.exists()){
+            tempFolder.mkdirs();
+        }
         String tempOutputPath = reportFolder + applicationDO.getName() + "-report.html";
         try (FileWriter writer = new FileWriter(tempOutputPath)) {
             templateEngine.process(template, context, writer);
