@@ -213,7 +213,7 @@ public class SpiderServiceImpl implements SpiderService {
         javaComponentDO.setName(groupId + ":" + artifactId);
         javaComponentDO.setVersion(version);
 
-        javaComponentDO.setName(model.getName() == null ? "-" : model.getName());
+        javaComponentDO.setJName(model.getName() == null ? "-" : model.getName());
         javaComponentDO.setLanguage("java");
         javaComponentDO.setType("opensource");
         javaComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());

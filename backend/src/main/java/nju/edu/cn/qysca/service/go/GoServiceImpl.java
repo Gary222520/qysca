@@ -134,12 +134,7 @@ public class GoServiceImpl implements GoService{
             tableDO.setDepth(node.getDepth());
             tableDO.setDirect(node.getDepth()==1);
             tableDO.setType(node.getType());
-            GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(node.getName(), node.getVersion());
-            if(goComponentDO.getLicenses() == null || goComponentDO.getLicenses() .length == 0) {
-                tableDO.setLicenses("-");
-            }else{
-                tableDO.setLicenses(String.join(",", goComponentDO.getLicenses()));
-            }
+            tableDO.setLicenses(node.getLicenses());
             tableList.add(tableDO);
             queue.addAll(node.getDependencies());
         }
@@ -358,6 +353,9 @@ public class GoServiceImpl implements GoService{
         }
         tree.setDepth(0);
         tree.setDependencies(new ArrayList<>());
+        if(visited.size()==0 || graph.size()==0){
+            return tree;
+        }
         queue.add(tree);
         int depth=0;
         while(!queue.isEmpty()){
@@ -392,6 +390,7 @@ public class GoServiceImpl implements GoService{
                         }
                         goComponentDao.save(goComponentDO);
                     }
+                    child.setLicenses(String.join(",", goComponentDO.getLicenses()));
                     child.setType(goComponentDO.getType());
                     node.getDependencies().add(child);
                     queue.add(child);

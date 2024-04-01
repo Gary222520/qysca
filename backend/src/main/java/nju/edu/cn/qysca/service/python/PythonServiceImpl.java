@@ -131,12 +131,7 @@ public class PythonServiceImpl implements PythonService {
             pythonDependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
             pythonDependencyTableDO.setType(componentDependencyTree.getType());
             pythonDependencyTableDO.setLanguage("python");
-            PythonComponentDO pythonComponentDO = componentDao.findByNameAndVersion(componentDependencyTree.getName(),componentDependencyTree.getVersion());
-            if(pythonComponentDO.getLicenses() == null || pythonComponentDO.getLicenses().length == 0){
-                pythonDependencyTableDO.setLicenses("-");
-            }else{
-                pythonDependencyTableDO.setLicenses(String.join(",", pythonComponentDO.getLicenses()));
-            }
+            pythonDependencyTableDO.setLicenses(componentDependencyTree.getLicenses());
             queue.addAll(componentDependencyTree.getDependencies());
             pythonDependencyTableDOList.add(pythonDependencyTableDO);
         }
@@ -313,6 +308,7 @@ public class PythonServiceImpl implements PythonService {
             componentDO = pythonSpiderService.crawlByNV(componentDependencyTreeDO.getName(), componentDependencyTreeDO.getVersion());
             if (componentDO != null) {
                 componentDao.save(componentDO);
+                componentDependencyTreeDO.setLicenses(String.join(",", componentDO.getLicenses()));
                 componentDependencyTreeDO.setType("opensource");
             } else {
                 componentDependencyTreeDO.setType("opensource");
@@ -320,6 +316,7 @@ public class PythonServiceImpl implements PythonService {
 //                throw new PlatformException(500, "存在未识别的组件");
             }
         } else {
+            componentDependencyTreeDO.setLicenses(String.join(",", componentDO.getLicenses()));
             componentDependencyTreeDO.setType(componentDO.getType());
         }
         componentDependencyTreeDO.setDepth(depth);
