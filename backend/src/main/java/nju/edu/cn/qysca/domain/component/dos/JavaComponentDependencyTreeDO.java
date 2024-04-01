@@ -29,6 +29,9 @@ public class JavaComponentDependencyTreeDO {
     @ApiModelProperty(value = "类型",example = "opensource")
     private String type;
 
+    @ApiModelProperty(value = "许可证", example = "MIT")
+    private String licenses;
+
     @ApiModelProperty(value = "依赖子树")
     private List<JavaComponentDependencyTreeDO> dependencies = new ArrayList<>();
 
