@@ -272,7 +272,6 @@ public class ApplicationServiceImpl implements ApplicationService {
                 throw new PlatformException(500, "该应用不能保存pom信息");
             }
             AppDependencyTreeDO appDependencyTreeDO = null;
-            //TODO: 尝试通过多态代码优化
             switch (saveApplicationDependencyDTO.getLanguage()) {
                 case "java":
                     JavaComponentDO analyzedJavaComponentDO = null;

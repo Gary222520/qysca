@@ -289,6 +289,7 @@ public class GoServiceImpl implements GoService{
             AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependency(childGoComponentDependencyTreeDO);
             children.add(childAppComponentDependencyTreeDO);
         }
+        appComponentDependencyTreeDO.setDependencies(children);
         return appComponentDependencyTreeDO;
     }
 
