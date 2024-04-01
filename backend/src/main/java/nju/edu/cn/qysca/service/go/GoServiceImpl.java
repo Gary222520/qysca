@@ -353,6 +353,9 @@ public class GoServiceImpl implements GoService{
         }
         tree.setDepth(0);
         tree.setDependencies(new ArrayList<>());
+        if(visited.size()==0 || graph.size()==0){
+            return tree;
+        }
         queue.add(tree);
         int depth=0;
         while(!queue.isEmpty()){
