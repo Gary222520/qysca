@@ -1,6 +1,9 @@
 package nju.edu.cn.qysca.service.python;
 
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.PythonComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTreeDO;
 
@@ -43,4 +46,9 @@ public interface PythonService {
      * @return PythonDependencyTreeDO
      */
     PythonDependencyTreeDO spiderDependency(String name, String version);
+
+
+    AppComponentDependencyTreeDO translateComponentDependency(PythonComponentDependencyTreeDO pythonComponentDependencyTreeDO);
+
+    List<AppDependencyTableDO> translateDependencyTable(List<PythonDependencyTableDO> pythonDependencyTableDOS);
 }

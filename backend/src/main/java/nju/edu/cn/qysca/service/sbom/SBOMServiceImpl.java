@@ -66,7 +66,7 @@ public class SBOMServiceImpl implements SBOMService {
      * @param applicationSearchDTO ApplicationSearchDTO
      */
     public void exportSBOM(ApplicationSearchDTO applicationSearchDTO, HttpServletResponse response) {
-        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
+/*        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
         if (applicationDO == null) {
             throw new PlatformException(500, "应用不存在: name= " + applicationSearchDTO.getName() + " ;version= " + applicationSearchDTO.getVersion());
         }
@@ -158,6 +158,6 @@ public class SBOMServiceImpl implements SBOMService {
         } finally {
             // 删除临时文件
             sbomFile.delete();
-        }
+        }*/
     }
 }

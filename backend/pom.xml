@@ -217,6 +217,12 @@
 			<artifactId>html2pdf</artifactId>
 			<version>3.0.0</version>
 		</dependency>
+		<!-- 格式规范 -->
+		<dependency>
+			<groupId>cn.hutool</groupId>
+			<artifactId>hutool-all</artifactId>
+			<version>5.4.2</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

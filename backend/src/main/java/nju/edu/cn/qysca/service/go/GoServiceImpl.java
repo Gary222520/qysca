@@ -3,13 +3,18 @@ package nju.edu.cn.qysca.service.go;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import nju.edu.cn.qysca.dao.component.GoComponentDao;
+import nju.edu.cn.qysca.dao.component.GoDependencyTableDao;
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
+import nju.edu.cn.qysca.service.license.LicenseService;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,6 +34,9 @@ public class GoServiceImpl implements GoService{
 
     @Autowired
     private GoComponentDao goComponentDao;
+
+    @Autowired
+    private LicenseService licenseService;
 
     private final String FILE_SEPARATOR = "/";
 
@@ -54,7 +62,6 @@ public class GoServiceImpl implements GoService{
         goComponentDO.setSourceUrl("-");
         goComponentDO.setDownloadUrl("-");
         goComponentDO.setDescription("-");
-        goComponentDO.setLicenses(new ArrayList<>());
         // creator和state由调用此方法者填充
         goComponentDO.setCreator(null);
         goComponentDO.setState(null);
@@ -127,6 +134,7 @@ public class GoServiceImpl implements GoService{
             tableDO.setDepth(node.getDepth());
             tableDO.setDirect(node.getDepth()==1);
             tableDO.setType(node.getType());
+            tableDO.setLicenses(node.getLicenses());
             tableList.add(tableDO);
             queue.addAll(node.getDependencies());
         }
@@ -216,7 +224,6 @@ public class GoServiceImpl implements GoService{
         // 利用github api获取组件信息（description, licenses），非github组件暂不支持
         if(!name.startsWith("github.com/")){
             goComponentDO.setDescription("-");
-            goComponentDO.setLicenses(new ArrayList<>());
             return goComponentDO;
         }
         try {
@@ -243,23 +250,62 @@ public class GoServiceImpl implements GoService{
             if(null!=description && description.length()!=0){
                 goComponentDO.setDescription(description);
             }
-            List<ComponentLicenseDO> licenses=new ArrayList<>();
+            List<String> licenses=new ArrayList<>();
             JSONObject license=jsonObject.getJSONObject("license");
             if(null !=license){
                 String lname=license.getString("spdx_id");
                 String lurl=license.getString("url");
                 if(null!=lname && lname.length()!=0 && null!=lurl && lurl.length()!=0){
-                    ComponentLicenseDO componentLicenseDO =new ComponentLicenseDO(lname,lurl);
-                    licenses.add(componentLicenseDO);
+                    licenses.addAll(licenseService.searchLicense(lname));
                 }
             }
-            goComponentDO.setLicenses(licenses);
+            goComponentDO.setLicenses(licenses.toArray(new String[0]));
         }catch (Exception e){
             System.err.println("通过github api获取组件信息失败: "+name+"@"+version);
             goComponentDO.setDescription("-");
-            goComponentDO.setLicenses(new ArrayList<>());
         }
         return goComponentDO;
+    }
+
+
+    /**
+     * 将Go组件依赖关系转换成应用组件依赖关系
+     * @param goComponentDependencyTreeDO go组件依赖树关系
+     * @return AppComponentDependencyTreeDO 应用组件依赖树
+     */
+    @Override
+    public AppComponentDependencyTreeDO translateComponentDependency(GoComponentDependencyTreeDO goComponentDependencyTreeDO) {
+        if(goComponentDependencyTreeDO == null){
+            return null;
+        }
+        AppComponentDependencyTreeDO appComponentDependencyTreeDO=new AppComponentDependencyTreeDO();
+        appComponentDependencyTreeDO.setName(goComponentDependencyTreeDO.getName());
+        appComponentDependencyTreeDO.setVersion(goComponentDependencyTreeDO.getVersion());
+        appComponentDependencyTreeDO.setDepth(goComponentDependencyTreeDO.getDepth());
+        appComponentDependencyTreeDO.setType(goComponentDependencyTreeDO.getType());
+        appComponentDependencyTreeDO.setLanguage("golang");
+        List<AppComponentDependencyTreeDO> children=new ArrayList<>();
+        for(GoComponentDependencyTreeDO childGoComponentDependencyTreeDO : goComponentDependencyTreeDO.getDependencies()) {
+            AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependency(childGoComponentDependencyTreeDO);
+            children.add(childAppComponentDependencyTreeDO);
+        }
+        return appComponentDependencyTreeDO;
+    }
+
+    /**
+     * 将go依赖信息表转化成应用依赖信息表
+     * @param goDependencyTableDOS go依赖信息表
+     * @return List<AppDependencyTableDO> 应用依赖关系表
+     */
+    @Override
+    public List<AppDependencyTableDO> translateDependencyTable(List<GoDependencyTableDO> goDependencyTableDOS) {
+        List<AppDependencyTableDO> appDependencyTableDOS = new ArrayList<>();
+        for(GoDependencyTableDO goDependencyTableDO : goDependencyTableDOS){
+            AppDependencyTableDO appDependencyTableDO = new AppDependencyTableDO();
+            BeanUtils.copyProperties(goDependencyTableDO, appDependencyTableDO);
+            appDependencyTableDOS.add(appDependencyTableDO);
+        }
+        return appDependencyTableDOS;
     }
 
     /**
@@ -307,6 +353,9 @@ public class GoServiceImpl implements GoService{
         }
         tree.setDepth(0);
         tree.setDependencies(new ArrayList<>());
+        if(visited.size()==0 || graph.size()==0){
+            return tree;
+        }
         queue.add(tree);
         int depth=0;
         while(!queue.isEmpty()){
@@ -341,6 +390,7 @@ public class GoServiceImpl implements GoService{
                         }
                         goComponentDao.save(goComponentDO);
                     }
+                    child.setLicenses(String.join(",", goComponentDO.getLicenses()));
                     child.setType(goComponentDO.getType());
                     node.getDependencies().add(child);
                     queue.add(child);

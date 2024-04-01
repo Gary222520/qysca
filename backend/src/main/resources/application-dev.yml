@@ -15,7 +15,7 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQL9Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         temp:
           use-jdbc-metadata-defaults: false
   redis:
@@ -41,6 +41,7 @@ spring:
 uploadFolder: src/main/resources/static/upload/
 tempPomFolder: src/main/resources/static/temp/
 tempGoFolder: src/main/resources/static/temp/go/
+tempPythonFolder: src/main/resources/static/temp/python
 tempReportFolder: src/main/resources/static/temp/report/
 # maxFileSize 单个数据大小
 spring.servlet.multipart.maxFileSize: 10MB
