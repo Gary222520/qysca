@@ -134,6 +134,7 @@ public class GoServiceImpl implements GoService{
             tableDO.setDepth(node.getDepth());
             tableDO.setDirect(node.getDepth()==1);
             tableDO.setType(node.getType());
+            tableDO.setLicenses(node.getLicenses());
             tableList.add(tableDO);
             queue.addAll(node.getDependencies());
         }
@@ -389,6 +390,7 @@ public class GoServiceImpl implements GoService{
                         }
                         goComponentDao.save(goComponentDO);
                     }
+                    child.setLicenses(String.join(",", goComponentDO.getLicenses()));
                     child.setType(goComponentDO.getType());
                     node.getDependencies().add(child);
                     queue.add(child);

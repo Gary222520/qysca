@@ -125,6 +125,7 @@ public class MavenServiceImpl implements MavenService {
             javaDependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
             javaDependencyTableDO.setType(componentDependencyTree.getType());
             javaDependencyTableDO.setLanguage("java");
+            javaDependencyTableDO.setLicenses(componentDependencyTree.getLicenses());
             queue.addAll(componentDependencyTree.getDependencies());
             closeJavaDependencyTableDOList.add(javaDependencyTableDO);
         }
@@ -186,6 +187,7 @@ public class MavenServiceImpl implements MavenService {
                 javaComponentDO = spiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 if (javaComponentDO != null) {
                     javaComponentDao.save(javaComponentDO);
+                    javaComponentDependencyTreeDO.setLicenses(String.join(",", javaComponentDO.getLicenses()));
                     javaComponentDependencyTreeDO.setType("opensource");
                 } else {
                     javaComponentDependencyTreeDO.setType("opensource");
@@ -193,6 +195,7 @@ public class MavenServiceImpl implements MavenService {
                     throw new PlatformException(500, "存在未识别的组件");
                 }
             } else {
+                javaComponentDependencyTreeDO.setLicenses(String.join(",", javaComponentDO.getLicenses()));
                 javaComponentDependencyTreeDO.setType(javaComponentDO.getType());
             }
         }
