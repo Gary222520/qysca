@@ -1,3 +1,54 @@
+DROP TABLE IF EXISTS plt_vulnerability_cwe;
+CREATE TABLE plt_vulnerability_cwe(
+	id VARCHAR(32) PRIMARY KEY,
+	cwe_id VARCHAR(255) NOT NULL UNIQUE,
+	name TEXT,
+	weakness_abstraction VARCHAR(255),
+	status VARCHAR(255),
+	description TEXT,
+	extended_description TEXT
+);
+
+DROP TABLE IF EXISTS plt_vulnerability_cve;
+CREATE TABLE plt_vulnerability_cve(
+	id VARCHAR(32) PRIMARY KEY,
+	cve_id VARCHAR(255) NOT NULL UNIQUE,
+	cve_assigner VARCHAR(255),
+	problem_type VARCHAR[],
+	ref JSONB,
+	descriptions TEXT[],
+	cvss3 JSONB,
+	cvss2 JSONB,
+	published_date VARCHAR(255),
+	last_modified_date VARCHAR(255)
+);
+
+DROP TABLE IF EXISTS plt_vulnerability_cve_cpe;
+CREATE TABLE plt_vulnerability_cve_cpe(
+	id VARCHAR(32) PRIMARY KEY,
+	cve_id VARCHAR(255) NOT NULL,
+	uri VARCHAR NOT NULL,
+	vulnerable BOOLEAN,
+	version_start VARCHAR(255),
+	version_end VARCHAR(255),
+	start_include BOOLEAN,
+	end_include BOOLEAN
+);
+CREATE INDEX cve_id_index ON plt_vulnerability_cve_cpe(cve_id);
+CREATE INDEX vp_uri_index ON plt_vulnerability_cve_cpe(uri);
+
+DROP TABLE IF EXISTS plt_vulnerability_cpe_match;
+CREATE TABLE plt_vulnerability_cpe_match(
+	id VARCHAR(32) PRIMARY KEY,
+	uri VARCHAR NOT NULL,
+	version_start VARCHAR(255),
+	version_end VARCHAR(255),
+	start_include BOOLEAN,
+	end_include BOOLEAN,
+	names VARCHAR[]
+);
+CREATE INDEX uri_index ON plt_vulnerability_cpe_match(uri);
+
 DROP TABLE IF EXISTS plt_go_component;
 CREATE TABLE plt_go_component(
 	id VARCHAR(32) PRIMARY KEY,
