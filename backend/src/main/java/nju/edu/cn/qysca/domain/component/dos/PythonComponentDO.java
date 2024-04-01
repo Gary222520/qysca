@@ -39,11 +39,11 @@ public class PythonComponentDO extends ComponentDO{
     private String version;
 
     @Column(name="language",nullable = false)
-    @ApiModelProperty(value = "语言", example = "java")
+    @ApiModelProperty(value = "语言", example = "python")
     private String language;
 
     @Column(name = "description")
-    @ApiModelProperty(value = "组件描述", example = "Core starter, including auto-configuration support, logging and YAML")
+    @ApiModelProperty(value = "组件描述", example = "Count kafka events from multiple topics...")
     private String description;
 
     @Column(name="type",nullable = false)
@@ -51,27 +51,27 @@ public class PythonComponentDO extends ComponentDO{
     private String type;
 
     @Column(name = "url")
-    @ApiModelProperty(value = "组件主页地址", example = "https://github.com/dpkp/kafka-python")
+    @ApiModelProperty(value = "组件主页地址", example = "https://pypi.org/project/kafka-counter/")
     private String url;
 
     @Column(name = "download_url")
-    @ApiModelProperty(value = "下载地址", example = "https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-starter/2.5.15/spring-boot-starter-2.5.15.pom")
+    @ApiModelProperty(value = "下载地址", example = "https://pypi.org/project/kafka-counter/")
     private String downloadUrl;
 
     @Column(name = "source_url")
-    @ApiModelProperty(value = "源码地址", example = "https://github.com/spring-applications/spring-boot")
+    @ApiModelProperty(value = "源码地址", example = "https://github.com/sandipb/kafka-countert")
     private String sourceUrl;
 
     @Column(name = "p_url")
-    @ApiModelProperty(value = "包获取地址",example = "pkg:maven/io.grpc/grpc-protobuf@1.44.1?type=jar")
+    @ApiModelProperty(value = "包获取地址",example = "pkg:pypi/kafka-counter@0.0.2")
     private String pUrl;
 
     @Column(name = "author")
-    @ApiModelProperty(value = "作者", example = "Dana Powers")
+    @ApiModelProperty(value = "作者", example = "Sandip Bhattacharya")
     private String author;
 
     @Column(name = "author_email")
-    @ApiModelProperty(value = "作者邮件地址", example = "dana.powers@gmail.com")
+    @ApiModelProperty(value = "作者邮件地址", example = "Sandip Bhattacharya <pypi@r.sandipb.net>")
     private String authorEmail;
 
     @Column(name = "licenses")
