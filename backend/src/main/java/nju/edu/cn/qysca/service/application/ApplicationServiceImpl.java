@@ -8,6 +8,7 @@ import nju.edu.cn.qysca.dao.bu.BuAppDao;
 import nju.edu.cn.qysca.dao.bu.BuDao;
 import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
+import nju.edu.cn.qysca.dao.license.LicenseDao;
 import nju.edu.cn.qysca.dao.user.UserRoleDao;
 import nju.edu.cn.qysca.domain.bu.dos.BuAppDO;
 import nju.edu.cn.qysca.domain.bu.dos.BuDO;
@@ -16,6 +17,7 @@ import nju.edu.cn.qysca.domain.component.dtos.ComponentCompareTreeDTO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentDetailDTO;
 import nju.edu.cn.qysca.domain.application.dos.*;
 import nju.edu.cn.qysca.domain.application.dtos.*;
+import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.domain.user.dos.UserRoleDO;
 import nju.edu.cn.qysca.domain.user.dtos.UserBriefDTO;
@@ -89,6 +91,9 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Autowired
     private AppComponentDao appComponentDao;
+
+    @Autowired
+    private LicenseDao licenseDao;
 
     @Autowired
     private MavenService mavenService;
@@ -177,9 +182,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                     List<JsComponentDO> jsComponentDOList = jsComponentDao.findByIdIn(entry.getValue());
                     subComponent.put("javaScript", jsComponentDOList);
                     break;
-                case "go":
+                case "golang":
                     List<GoComponentDO> goComponentDOList = goComponentDao.findByIdIn(entry.getValue());
-                    subComponent.put("go", goComponentDOList);
+                    subComponent.put("golang", goComponentDOList);
                     break;
                 case "python":
                     List<PythonComponentDO> pythonComponentDOList = pythonComponentDao.findByIdIn(entry.getValue());
@@ -272,9 +277,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                 case "java":
                     JavaComponentDO analyzedJavaComponentDO = null;
                     JavaDependencyTreeDO analyzedJavaDependencyTreeDO = null;
-                    if(saveApplicationDependencyDTO.getBuilder().equals("gradle")){
+                    if (saveApplicationDependencyDTO.getBuilder().equals("gradle")) {
                         analyzedJavaDependencyTreeDO = gradleService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "");
-                    }else {
+                    } else {
                         analyzedJavaComponentDO = mavenService.componentAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
                         if (!analyzedJavaComponentDO.getName().equals(saveApplicationDependencyDTO.getName()) || !analyzedJavaComponentDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
                             throw new PlatformException(500, "上传文件非本项目");
@@ -479,10 +484,10 @@ public class ApplicationServiceImpl implements ApplicationService {
                 case "java":
                     JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
                     licenses = javaComponentDO.getLicenses();
-                    childComponent =parentApplicationDO.getChildComponent().get("java");
-                    if(childComponent == null){
+                    childComponent = parentApplicationDO.getChildComponent().get("java");
+                    if (childComponent == null) {
                         childComponent = new ArrayList<>();
-                        parentApplicationDO.getChildComponent().put("java",childComponent);
+                        parentApplicationDO.getChildComponent().put("java", childComponent);
                     }
                     parentApplicationDO.getChildComponent().get("java").add(javaComponentDO.getId());
                     break;
@@ -490,9 +495,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                     JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
                     licenses = jsComponentDO.getLicenses();
                     childComponent = parentApplicationDO.getChildComponent().get("javaScript");
-                    if(childComponent == null){
+                    if (childComponent == null) {
                         childComponent = new ArrayList<>();
-                        parentApplicationDO.getChildComponent().put("javaScript",childComponent);
+                        parentApplicationDO.getChildComponent().put("javaScript", childComponent);
                     }
                     parentApplicationDO.getChildComponent().get("javaScript").add(jsComponentDO.getId());
                     break;
@@ -500,9 +505,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                     GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
                     licenses = goComponentDO.getLicenses();
                     childComponent = parentApplicationDO.getChildComponent().get("go");
-                    if(childComponent == null){
+                    if (childComponent == null) {
                         childComponent = new ArrayList<>();
-                        parentApplicationDO.getChildComponent().put("go",childComponent);
+                        parentApplicationDO.getChildComponent().put("go", childComponent);
                     }
                     parentApplicationDO.getChildComponent().get("go").add(goComponentDO.getId());
                     break;
@@ -510,9 +515,10 @@ public class ApplicationServiceImpl implements ApplicationService {
                     PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
                     licenses = pythonComponentDO.getLicenses();
                     childComponent = parentApplicationDO.getChildComponent().get("python");
-                    if(childComponent == null){
-                        childComponent = new ArrayList<>(); new ArrayList<>();
-                        parentApplicationDO.getChildComponent().put("python",childComponent);
+                    if (childComponent == null) {
+                        childComponent = new ArrayList<>();
+                        new ArrayList<>();
+                        parentApplicationDO.getChildComponent().put("python", childComponent);
                     }
                     parentApplicationDO.getChildComponent().get("python").add(pythonComponentDO.getId());
                     break;
@@ -523,7 +529,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             temp.add(applicationDO.getId());
             parentApplicationDO.setChildApplication(temp.toArray(new String[temp.size()]));
         }
-        Set<String> licenseSet =  new HashSet<>(Arrays.asList(parentApplicationDO.getLicenses()));
+        Set<String> licenseSet = new HashSet<>(Arrays.asList(parentApplicationDO.getLicenses()));
         licenseSet.addAll(Arrays.asList(licenses));
         String[] updatedLicenses = licenseSet.toArray(new String[0]);
         parentApplicationDO.setLicenses(updatedLicenses);
@@ -571,7 +577,41 @@ public class ApplicationServiceImpl implements ApplicationService {
             temp.remove(applicationDO.getId());
             parentApplicationDO.setChildApplication(temp.toArray(new String[temp.size()]));
         }
+        Set<String> licenseSet = new HashSet<>();
         //拿到所有剩余组件的Licenses信息进行更新
+        for (String subApplicationId : parentApplicationDO.getChildApplication()) {
+            ApplicationDO subApplication = applicationDao.findOneById(subApplicationId);
+            licenseSet.addAll(Arrays.asList(subApplication.getLicenses()));
+        }
+        for (Map.Entry<String, List<String>> entry : parentApplicationDO.getChildComponent().entrySet()) {
+            switch (entry.getKey()) {
+                case "golang":
+                    for (String subComponentId : entry.getValue()) {
+                        GoComponentDO goComponentDO = goComponentDao.findGoComponentDOById(subComponentId);
+                        licenseSet.addAll(Arrays.asList(goComponentDO.getLicenses()));
+                    }
+                    break;
+                case "python":
+                    for (String subComponentId : entry.getValue()) {
+                        PythonComponentDO pythonComponentDO = pythonComponentDao.findPythonComponentDOById(subComponentId);
+                        licenseSet.addAll(Arrays.asList(pythonComponentDO.getLicenses()));
+                    }
+                    break;
+                case "java":
+                    for (String subComponentId : entry.getValue()) {
+                        JavaComponentDO javaComponentDO = javaComponentDao.findComponentDOById(subComponentId);
+                        licenseSet.addAll(Arrays.asList(javaComponentDO.getLicenses()));
+                    }
+                    break;
+                case "javaScript":
+                    for (String subComponentId : entry.getValue()) {
+                        JsComponentDO jsComponentDO = jsComponentDao.findJsComponentDOById(subComponentId);
+                        licenseSet.addAll(Arrays.asList(jsComponentDO.getLicenses()));
+                    }
+                    break;
+            }
+        }
+        parentApplicationDO.setLicenses(licenseSet.toArray(new String[0]));
         applicationDao.save(parentApplicationDO);
         return Boolean.TRUE;
     }
@@ -605,7 +645,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
         if (applicationDO.getRelease()) {
             List<ApplicationDO> parentApplicationDOS = applicationDao.findParentApplication(applicationDO.getId());
-            if(!parentApplicationDOS.isEmpty()){
+            if (!parentApplicationDOS.isEmpty()) {
                 return parentApplicationDOS;
             }
             applicationDO.setRelease(false);
@@ -619,17 +659,16 @@ public class ApplicationServiceImpl implements ApplicationService {
             BeanUtils.copyProperties(applicationDO, appComponentDO);
             appComponentDO.setType(changeReleaseStateDTO.getType());
             Set<String> language = new HashSet<>();
-            //应用的language这边存在矛盾
-            for(String id : applicationDO.getChildApplication()) {
+            for (String id : applicationDO.getChildApplication()) {
                 ApplicationDO child = applicationDao.findApplicationDOById(id);
                 language.add(child.getLanguage());
             }
-            for(Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()){
-                if(entry.getValue().size() > 0) {
+            for (Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()) {
+                if (entry.getValue().size() > 0) {
                     language.add(entry.getKey());
                 }
             }
-            //TODO: 通过应用发布的组件没有license等信息
+            appComponentDO.setLicenses(applicationDO.getLicenses());
             appComponentDO.setLanguage(language.toArray(new String[0]));
             appComponentDao.save(appComponentDO);
             AppDependencyTreeDO temp = appDependencyTreeDao.findByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
@@ -647,10 +686,11 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     /**
      * 依赖树生成依赖平铺表
+     *
      * @param appDependencyTreeDO 应用依赖树信息
      * @return List<AppDependencyTableDO> 应用依赖平铺表信息
      */
-    private List<AppDependencyTableDO> dependencyTableAnalysis(AppDependencyTreeDO appDependencyTreeDO){
+    private List<AppDependencyTableDO> dependencyTableAnalysis(AppDependencyTreeDO appDependencyTreeDO) {
         List<AppDependencyTableDO> appDependencyTableDOS = new ArrayList<>();
         Queue<AppComponentDependencyTreeDO> queue = new LinkedList<>(appDependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {
@@ -664,6 +704,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             appDependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
             appDependencyTableDO.setType(componentDependencyTree.getType());
             appDependencyTableDO.setLanguage(componentDependencyTree.getLanguage());
+            appDependencyTableDO.setLicenses(componentDependencyTree.getLicenses());
             queue.addAll(componentDependencyTree.getDependencies());
             appDependencyTableDOS.add(appDependencyTableDO);
         }
@@ -702,7 +743,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                         //采用增量更新的原则 如果没有则需爬取并构造
                         if (tempJavaDependencyTreeDO == null) {
                             // 调用爬虫获得pom文件
-                            String[] temp  = tempJavaComponentDO.getName().split(":");
+                            String[] temp = tempJavaComponentDO.getName().split(":");
                             tempJavaDependencyTreeDO = mavenService.spiderDependency(temp[0], temp[1], tempJavaComponentDO.getVersion());
                         }
                         AppComponentDependencyTreeDO temp = mavenService.translateComponentDependency(tempJavaDependencyTreeDO.getTree());
@@ -714,7 +755,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     for (String id : entry.getValue()) {
                         JsComponentDO tempJsComponentDO = jsComponentDao.findJsComponentDOById(id);
                         JsDependencyTreeDO tempJsDependencyTreeDO = jsDependencyTreeDao.findByNameAndVersion(tempJsComponentDO.getName(), tempJsComponentDO.getVersion());
-                        if(tempJsDependencyTreeDO == null){
+                        if (tempJsDependencyTreeDO == null) {
                             tempJsDependencyTreeDO = npmService.spiderDependencyTree(tempJsComponentDO.getName(), tempJsComponentDO.getVersion());
                         }
                         AppComponentDependencyTreeDO temp = npmService.translateComponentDependencyTree(tempJsDependencyTreeDO.getTree());
@@ -726,7 +767,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     for (String id : entry.getValue()) {
                         GoComponentDO tempGoComponentDO = goComponentDao.findGoComponentDOById(id);
                         GoDependencyTreeDO tempGoDependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(tempGoComponentDO.getName(), tempGoComponentDO.getVersion());
-                        if(tempGoDependencyTreeDO == null){
+                        if (tempGoDependencyTreeDO == null) {
                             tempGoDependencyTreeDO = goService.spiderDependency(tempGoComponentDO.getName(), tempGoComponentDO.getVersion());
                         }
                         AppComponentDependencyTreeDO temp = goService.translateComponentDependency(tempGoDependencyTreeDO.getTree());
@@ -735,10 +776,10 @@ public class ApplicationServiceImpl implements ApplicationService {
                     }
                     break;
                 case "python":
-                    for(String id : entry.getValue()){
+                    for (String id : entry.getValue()) {
                         PythonComponentDO tempPythonComponentDO = pythonComponentDao.findPythonComponentDOById(id);
                         PythonDependencyTreeDO tempPythonDependencyTreeDO = pythonDependencyTreeDao.findByNameAndVersion(tempPythonComponentDO.getName(), tempPythonComponentDO.getVersion());
-                        if(tempPythonDependencyTreeDO == null){
+                        if (tempPythonDependencyTreeDO == null) {
                             tempPythonDependencyTreeDO = pythonService.spiderDependency(tempPythonComponentDO.getName(), tempPythonComponentDO.getVersion());
                         }
                         AppComponentDependencyTreeDO temp = pythonService.translateComponentDependency(tempPythonDependencyTreeDO.getTree());
@@ -835,7 +876,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public void exportTableExcelBrief(ApplicationSearchDTO applicationSearchDTO, HttpServletResponse response) {
         List<TableExcelBriefDTO> resList = appDependencyTableDao.findTableListByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
-        String fileName = applicationSearchDTO.getName() + "-" + applicationSearchDTO.getVersion() + "-dependencyTable-brief";
+        String fileName = applicationSearchDTO.getName().replace(":","-") + "-" + applicationSearchDTO.getVersion() + "-dependencyTable-brief";
         try {
             ExcelUtils.export(response, fileName, resList, TableExcelBriefDTO.class);
         } catch (Exception e) {
@@ -852,20 +893,32 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public void exportTableExcelDetail(ApplicationSearchDTO applicationSearchDTO, HttpServletResponse response) {
         List<TableExcelDetailDTO> resList = new ArrayList<>();
-        String fileName = applicationSearchDTO.getName() + "-" + applicationSearchDTO.getVersion() + "-dependencyTable-detail";
+        String fileName = applicationSearchDTO.getName().replace(":","-") + "-" + applicationSearchDTO.getVersion() + "-dependencyTable-detail";
         // 先获取依赖平铺的简明信息
-        List<TableExcelBriefDTO> briefList =  appDependencyTableDao.findTableListByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
+        List<TableExcelBriefDTO> briefList = appDependencyTableDao.findTableListByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
         for (TableExcelBriefDTO brief : briefList) {
             TableExcelDetailDTO detail = new TableExcelDetailDTO();
             BeanUtils.copyProperties(brief, detail);
             ComponentDetailDTO componentDetailDTO = new ComponentDetailDTO();
             // 获取对应依赖组件的详细信息
-            AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(detail.getCName(), detail.getCVersion());
-            if (appComponentDO == null) {
-                resList.add(detail);
-                continue;
+            switch (detail.getLanguage()) {
+                case "golang":
+                    GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(detail.getCName(), detail.getCVersion());
+                    BeanUtils.copyProperties(goComponentDO, componentDetailDTO);
+                    break;
+                case "java":
+                    JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(detail.getCName(), detail.getCVersion());
+                    BeanUtils.copyProperties(javaComponentDO, componentDetailDTO);
+                    break;
+                case "python":
+                    PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(detail.getCName(), detail.getCVersion());
+                    BeanUtils.copyProperties(pythonComponentDO, componentDetailDTO);
+                    break;
+                case "javaScript":
+                    JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(detail.getCName(), detail.getCVersion());
+                    BeanUtils.copyProperties(jsComponentDO, componentDetailDTO);
+                    break;
             }
-            BeanUtils.copyProperties(appComponentDO, componentDetailDTO);
             detail.setCName(componentDetailDTO.getName());
             detail.setCVersion(componentDetailDTO.getVersion());
             detail.setDescription(componentDetailDTO.getDescription());
@@ -878,9 +931,10 @@ public class ApplicationServiceImpl implements ApplicationService {
             StringBuilder devId = new StringBuilder();
             StringBuilder devName = new StringBuilder();
             StringBuilder devEmail = new StringBuilder();
-            for (ComponentLicenseDO componentLicenseDO : componentDetailDTO.getLicenses()) {
-                liName.append(componentLicenseDO.getName()).append(";");
-                liUrl.append(componentLicenseDO.getUrl()).append(";");
+            for (String license : componentDetailDTO.getLicenses()) {
+                LicenseDO licenseDO = licenseDao.findByName(license);
+                liName.append(licenseDO.getName()).append(";");
+                liUrl.append(licenseDO.getUrl()).append(";");
             }
             for (DeveloperDO developerDO : componentDetailDTO.getDevelopers()) {
                 devId.append(developerDO.getId()).append(";");
@@ -1005,16 +1059,18 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     /**
-     *  获取所有依赖的license
-     * @param name 应用名称
+     * 获取所有依赖的license
+     *
+     * @param name    应用名称
      * @param version 应用版本
      * @return String[] 所有依赖的license信息
      */
     private String[] getUniqueLicenseNames(String name, String version) {
         List<AppDependencyTableDO> dependencies = appDependencyTableDao.findAllByNameAndVersion(name, version);
-        Set<String> uniqueLicenses = dependencies.stream().map(AppDependencyTableDO::getLicenses).filter(licenses ->!licenses.equals("-")).flatMap(licenses -> Arrays.stream(licenses.split(","))).map(String::trim).collect(Collectors.toSet());
+        Set<String> uniqueLicenses = dependencies.stream().map(AppDependencyTableDO::getLicenses).filter(licenses -> !licenses.equals("-")).flatMap(licenses -> Arrays.stream(licenses.split(","))).map(String::trim).collect(Collectors.toSet());
         return uniqueLicenses.toArray(new String[0]);
     }
+
     /**
      * 根据文件路径删除文件夹
      *

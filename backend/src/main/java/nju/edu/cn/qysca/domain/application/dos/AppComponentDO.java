@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
-import nju.edu.cn.qysca.domain.component.dos.ComponentLicenseDO;
 import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
