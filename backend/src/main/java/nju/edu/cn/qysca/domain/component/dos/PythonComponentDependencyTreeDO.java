@@ -30,6 +30,9 @@ public class PythonComponentDependencyTreeDO {
     @ApiModelProperty(value = "许可证", example = "MIT")
     private String licenses;
 
+    @ApiModelProperty(value = "漏洞", example = "CVE-2020-1197")
+    private String vulnerabilities;
+
     @ApiModelProperty(value = "依赖子树")
     private List<PythonComponentDependencyTreeDO> dependencies = new ArrayList<>();
 

@@ -9,6 +9,7 @@ import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
+import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -37,6 +38,9 @@ public class GoServiceImpl implements GoService{
 
     @Autowired
     private LicenseService licenseService;
+
+    @Autowired
+    private VulnerabilityService vulnerabilityService;
 
     private final String FILE_SEPARATOR = "/";
 
@@ -135,6 +139,7 @@ public class GoServiceImpl implements GoService{
             tableDO.setDirect(node.getDepth()==1);
             tableDO.setType(node.getType());
             tableDO.setLicenses(node.getLicenses());
+            tableDO.setVulnerabilities(node.getVulnerabilities());
             tableList.add(tableDO);
             queue.addAll(node.getDependencies());
         }
@@ -260,6 +265,7 @@ public class GoServiceImpl implements GoService{
                 }
             }
             goComponentDO.setLicenses(licenses.toArray(new String[0]));
+            goComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(name,version, "golang").toArray(new String[0]));
         }catch (Exception e){
             System.err.println("通过github api获取组件信息失败: "+name+"@"+version);
             goComponentDO.setDescription("-");
@@ -283,6 +289,8 @@ public class GoServiceImpl implements GoService{
         appComponentDependencyTreeDO.setVersion(goComponentDependencyTreeDO.getVersion());
         appComponentDependencyTreeDO.setDepth(goComponentDependencyTreeDO.getDepth());
         appComponentDependencyTreeDO.setType(goComponentDependencyTreeDO.getType());
+        appComponentDependencyTreeDO.setLicenses(goComponentDependencyTreeDO.getLicenses());
+        appComponentDependencyTreeDO.setVulnerabilities(goComponentDependencyTreeDO.getVulnerabilities());
         appComponentDependencyTreeDO.setLanguage("golang");
         List<AppComponentDependencyTreeDO> children=new ArrayList<>();
         for(GoComponentDependencyTreeDO childGoComponentDependencyTreeDO : goComponentDependencyTreeDO.getDependencies()) {
@@ -392,6 +400,7 @@ public class GoServiceImpl implements GoService{
                         goComponentDao.save(goComponentDO);
                     }
                     child.setLicenses(String.join(",", goComponentDO.getLicenses()));
+                    child.setVulnerabilities(String.join(",", goComponentDO.getVulnerabilities()));
                     child.setType(goComponentDO.getType());
                     node.getDependencies().add(child);
                     queue.add(child);

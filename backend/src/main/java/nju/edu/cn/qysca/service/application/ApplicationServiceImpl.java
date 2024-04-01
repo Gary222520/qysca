@@ -274,6 +274,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             AppDependencyTreeDO appDependencyTreeDO = null;
             switch (saveApplicationDependencyDTO.getLanguage()) {
                 case "java":
+                    applicationDO.setLanguage(new String[]{"java"});
                     JavaComponentDO analyzedJavaComponentDO = null;
                     JavaDependencyTreeDO analyzedJavaDependencyTreeDO = null;
                     if (saveApplicationDependencyDTO.getBuilder().equals("gradle")) {
@@ -298,6 +299,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     appDependencyTableDao.saveAll(mavenService.translateDependencyTable(applicationJavaDependencyTableDOS));
                     break;
                 case "javaScript":
+                    applicationDO.setLanguage(new String[] {"javaScript"});
                     JsDependencyTreeDO analyzedJsDependencyTreeDO = npmService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), "");
                     if (!analyzedJsDependencyTreeDO.getName().equals(saveApplicationDependencyDTO.getName()) || !analyzedJsDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
                         throw new PlatformException(500, "上传文件非本项目");
@@ -315,6 +317,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     appDependencyTableDao.saveAll(npmService.translateDependencyTable(applicationJsDependencyTableDOS));
                     break;
                 case "golang":
+                    applicationDO.setLanguage(new String[]{"golang"});
                     GoDependencyTreeDO analyzedGoDependencyTreeDO = goService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "", saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder());
                     //GO从实现来看不需要检查
                     appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
@@ -330,6 +333,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     appDependencyTableDao.saveAll(goService.translateDependencyTable(applicationGoDependencyTableDOS));
                     break;
                 case "python":
+                    applicationDO.setLanguage(new String[]{"python"});
                     PythonDependencyTreeDO analyzedPythonDependencyTreeDO = pythonService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "");
                     //Python从实现上来看不需要检查
                     appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
@@ -348,9 +352,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             // 更改状态为SUCCESS
             applicationDO.setBuilder(saveApplicationDependencyDTO.getBuilder());
             applicationDO.setScanner(saveApplicationDependencyDTO.getScanner());
-            applicationDO.setLanguage(saveApplicationDependencyDTO.getLanguage());
-            String[] licenses = getUniqueLicenseNames(applicationDO.getName(), applicationDO.getVersion());
-            applicationDO.setLicenses(licenses);
+            applicationDO.setLicenses(getUniqueLicenseNames(applicationDO.getName(), applicationDO.getVersion()));
+            applicationDO.setVulnerabilities(getUniqueVulnerabilityNames(applicationDO.getName(), applicationDO.getVersion()));
             applicationDO.setState("SUCCESS");
             applicationDao.save(applicationDO);
             File file = new File(saveApplicationDependencyDTO.getFilePath());
@@ -476,6 +479,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new PlatformException(500, "该应用已添加组件，无法手动添加");
         }
         String[] licenses = null;
+        String[] vulnerabilities = null;
+        Set<String> language = new HashSet<>(Arrays.asList(parentApplicationDO.getLanguage()));
         //不是应用发布成的组件
         if (applicationDO == null) {
             List<String> childComponent = null;
@@ -483,36 +488,43 @@ public class ApplicationServiceImpl implements ApplicationService {
                 case "java":
                     JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
                     licenses = javaComponentDO.getLicenses();
+                    vulnerabilities = javaComponentDO.getVulnerabilities();
                     childComponent = parentApplicationDO.getChildComponent().get("java");
                     if (childComponent == null) {
                         childComponent = new ArrayList<>();
                         parentApplicationDO.getChildComponent().put("java", childComponent);
                     }
                     parentApplicationDO.getChildComponent().get("java").add(javaComponentDO.getId());
+                    language.add("java");
                     break;
                 case "javaScript":
                     JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
                     licenses = jsComponentDO.getLicenses();
+                    vulnerabilities = jsComponentDO.getVulnerabilities();
                     childComponent = parentApplicationDO.getChildComponent().get("javaScript");
                     if (childComponent == null) {
                         childComponent = new ArrayList<>();
                         parentApplicationDO.getChildComponent().put("javaScript", childComponent);
                     }
                     parentApplicationDO.getChildComponent().get("javaScript").add(jsComponentDO.getId());
+                    language.add("javaScript");
                     break;
                 case "golang":
                     GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
                     licenses = goComponentDO.getLicenses();
+                    vulnerabilities = goComponentDO.getVulnerabilities();
                     childComponent = parentApplicationDO.getChildComponent().get("go");
                     if (childComponent == null) {
                         childComponent = new ArrayList<>();
                         parentApplicationDO.getChildComponent().put("go", childComponent);
                     }
                     parentApplicationDO.getChildComponent().get("go").add(goComponentDO.getId());
+                    language.add("golang");
                     break;
                 case "python":
                     PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(applicationComponentDTO.getName(), applicationComponentDTO.getVersion());
                     licenses = pythonComponentDO.getLicenses();
+                    vulnerabilities = pythonComponentDO.getVulnerabilities();
                     childComponent = parentApplicationDO.getChildComponent().get("python");
                     if (childComponent == null) {
                         childComponent = new ArrayList<>();
@@ -520,18 +532,26 @@ public class ApplicationServiceImpl implements ApplicationService {
                         parentApplicationDO.getChildComponent().put("python", childComponent);
                     }
                     parentApplicationDO.getChildComponent().get("python").add(pythonComponentDO.getId());
+                    language.add("python");
                     break;
             }
         } else {
+            language.addAll(Arrays.asList(applicationDO.getLanguage()));
             licenses = applicationDO.getLicenses();
+            vulnerabilities = applicationDO.getVulnerabilities();
             ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentApplicationDO.getChildApplication()));
             temp.add(applicationDO.getId());
             parentApplicationDO.setChildApplication(temp.toArray(new String[temp.size()]));
         }
+        parentApplicationDO.setLanguage(language.toArray(new String[0]));
         Set<String> licenseSet = new HashSet<>(Arrays.asList(parentApplicationDO.getLicenses()));
         licenseSet.addAll(Arrays.asList(licenses));
         String[] updatedLicenses = licenseSet.toArray(new String[0]);
         parentApplicationDO.setLicenses(updatedLicenses);
+        Set<String> vulnerabilitySet = new HashSet<>(Arrays.asList(parentApplicationDO.getVulnerabilities()));
+        vulnerabilitySet.addAll(Arrays.asList(vulnerabilities));
+        String[] updatedVulnerabilities = vulnerabilitySet.toArray(new String[0]);
+        parentApplicationDO.setVulnerabilities(updatedVulnerabilities);
         applicationDao.save(parentApplicationDO);
         return Boolean.TRUE;
     }
@@ -577,10 +597,12 @@ public class ApplicationServiceImpl implements ApplicationService {
             parentApplicationDO.setChildApplication(temp.toArray(new String[temp.size()]));
         }
         Set<String> licenseSet = new HashSet<>();
+        Set<String> vulnerabilitySet = new HashSet<>();
         //拿到所有剩余组件的Licenses信息进行更新
         for (String subApplicationId : parentApplicationDO.getChildApplication()) {
             ApplicationDO subApplication = applicationDao.findOneById(subApplicationId);
             licenseSet.addAll(Arrays.asList(subApplication.getLicenses()));
+            vulnerabilitySet.addAll(Arrays.asList(subApplication.getVulnerabilities()));
         }
         for (Map.Entry<String, List<String>> entry : parentApplicationDO.getChildComponent().entrySet()) {
             switch (entry.getKey()) {
@@ -588,29 +610,34 @@ public class ApplicationServiceImpl implements ApplicationService {
                     for (String subComponentId : entry.getValue()) {
                         GoComponentDO goComponentDO = goComponentDao.findGoComponentDOById(subComponentId);
                         licenseSet.addAll(Arrays.asList(goComponentDO.getLicenses()));
+                        vulnerabilitySet.addAll(Arrays.asList(goComponentDO.getVulnerabilities()));
                     }
                     break;
                 case "python":
                     for (String subComponentId : entry.getValue()) {
                         PythonComponentDO pythonComponentDO = pythonComponentDao.findPythonComponentDOById(subComponentId);
                         licenseSet.addAll(Arrays.asList(pythonComponentDO.getLicenses()));
+                        vulnerabilitySet.addAll(Arrays.asList(pythonComponentDO.getVulnerabilities()));
                     }
                     break;
                 case "java":
                     for (String subComponentId : entry.getValue()) {
                         JavaComponentDO javaComponentDO = javaComponentDao.findComponentDOById(subComponentId);
                         licenseSet.addAll(Arrays.asList(javaComponentDO.getLicenses()));
+                        vulnerabilitySet.addAll(Arrays.asList(javaComponentDO.getVulnerabilities()));
                     }
                     break;
                 case "javaScript":
                     for (String subComponentId : entry.getValue()) {
                         JsComponentDO jsComponentDO = jsComponentDao.findJsComponentDOById(subComponentId);
                         licenseSet.addAll(Arrays.asList(jsComponentDO.getLicenses()));
+                        vulnerabilitySet.addAll(Arrays.asList(jsComponentDO.getVulnerabilities()));
                     }
                     break;
             }
         }
         parentApplicationDO.setLicenses(licenseSet.toArray(new String[0]));
+        parentApplicationDO.setVulnerabilities(licenseSet.toArray(new String[0]));
         applicationDao.save(parentApplicationDO);
         return Boolean.TRUE;
     }
@@ -660,7 +687,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             Set<String> language = new HashSet<>();
             for (String id : applicationDO.getChildApplication()) {
                 ApplicationDO child = applicationDao.findApplicationDOById(id);
-                language.add(child.getLanguage());
+                language.addAll(Arrays.asList(child.getLanguage()));
             }
             for (Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()) {
                 if (entry.getValue().size() > 0) {
@@ -704,6 +731,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             appDependencyTableDO.setType(componentDependencyTree.getType());
             appDependencyTableDO.setLanguage(componentDependencyTree.getLanguage());
             appDependencyTableDO.setLicenses(componentDependencyTree.getLicenses() == null ? "-" : componentDependencyTree.getLicenses());
+            appDependencyTableDO.setVulnerabilities(componentDependencyTree.getVulnerabilities() == null ? "-" : componentDependencyTree.getVulnerabilities());
             queue.addAll(componentDependencyTree.getDependencies());
             appDependencyTableDOS.add(appDependencyTableDO);
         }
@@ -1068,6 +1096,15 @@ public class ApplicationServiceImpl implements ApplicationService {
         List<AppDependencyTableDO> dependencies = appDependencyTableDao.findAllByNameAndVersion(name, version);
         Set<String> uniqueLicenses = dependencies.stream().map(AppDependencyTableDO::getLicenses).filter(licenses -> !licenses.equals("-")).flatMap(licenses -> Arrays.stream(licenses.split(","))).map(String::trim).collect(Collectors.toSet());
         return uniqueLicenses.toArray(new String[0]);
+    }
+
+    /**
+     *
+     */
+    private String[] getUniqueVulnerabilityNames(String name, String version) {
+        List<AppDependencyTableDO> dependencies = appDependencyTableDao.findAllByNameAndVersion(name, version);
+        Set<String> uniqueVulnerabilities = dependencies.stream().map(AppDependencyTableDO::getVulnerabilities).filter(vulnerabilities -> !vulnerabilities.equals("-")).flatMap(vulnerabilities -> Arrays.stream(vulnerabilities.split(","))).map(String::trim).collect(Collectors.toSet());
+        return uniqueVulnerabilities.toArray(new String[0]);
     }
 
     /**

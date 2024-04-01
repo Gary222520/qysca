@@ -68,6 +68,11 @@ public class JsComponentDO extends ComponentDO{
     @Type(type = "string-array")
     private String[] licenses = {};
 
+    @Column(name  = "vulnerabilities")
+    @ApiModelProperty(value = "漏洞", example = "[\"CVE-2020-1197\",]")
+    @Type(type= "string-array")
+    private String[] vulnerabilities = {};
+
     @ApiModelProperty(value = "下载地址", example = "https://registry.npmjs.org/fontawesome-free/-/fontawesome-free-2.5.15.tgz")
     @Column(name= "download_url")
     private String downloadUrl;
