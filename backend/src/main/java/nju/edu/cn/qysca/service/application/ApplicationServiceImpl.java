@@ -694,7 +694,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Queue<AppComponentDependencyTreeDO> queue = new LinkedList<>(appDependencyTreeDO.getTree().getDependencies());
         while (!queue.isEmpty()) {
             AppDependencyTableDO appDependencyTableDO = new AppDependencyTableDO();
-            appDependencyTableDO.setName(appDependencyTableDO.getName());
+            appDependencyTableDO.setName(appDependencyTreeDO.getName());
             appDependencyTableDO.setVersion(appDependencyTreeDO.getVersion());
             AppComponentDependencyTreeDO componentDependencyTree = queue.poll();
             appDependencyTableDO.setCName(componentDependencyTree.getName());
@@ -703,7 +703,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             appDependencyTableDO.setDirect(componentDependencyTree.getDepth() == 1);
             appDependencyTableDO.setType(componentDependencyTree.getType());
             appDependencyTableDO.setLanguage(componentDependencyTree.getLanguage());
-            appDependencyTableDO.setLicenses(componentDependencyTree.getLicenses());
+            appDependencyTableDO.setLicenses(componentDependencyTree.getLicenses() == null ? "-" : componentDependencyTree.getLicenses());
             queue.addAll(componentDependencyTree.getDependencies());
             appDependencyTableDOS.add(appDependencyTableDO);
         }

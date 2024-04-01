@@ -273,7 +273,7 @@ public class NpmServiceImpl implements NpmService {
                 String name = entry.getName();
                 if (name.contains("package.json") || name.contains("package-lock.json")) {
                     try (InputStream inputStream = zipFile.getInputStream(entry);
-                         FileOutputStream fos = new FileOutputStream(file.getParent() + FILE_SEPARATOR + "package.json")) {
+                         FileOutputStream fos = new FileOutputStream(file.getParent() + FILE_SEPARATOR + name)) {
                         byte[] buffer = new byte[1024];
                         int length;
                         while ((length = inputStream.read(buffer)) > 0) {
