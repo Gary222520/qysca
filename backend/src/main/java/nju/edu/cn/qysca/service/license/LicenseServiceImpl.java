@@ -1,9 +1,21 @@
 package nju.edu.cn.qysca.service.license;
 
+import nju.edu.cn.qysca.dao.application.AppComponentDao;
+import nju.edu.cn.qysca.dao.application.AppDependencyTableDao;
+import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.license.LicenseDao;
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDO;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
+import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
+import nju.edu.cn.qysca.domain.license.dtos.LicenseBriefDTO;
+import nju.edu.cn.qysca.exception.PlatformException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,6 +27,15 @@ public class LicenseServiceImpl implements LicenseService{
 
     @Autowired
     private LicenseDao licenseDao;
+
+    @Autowired
+    private ApplicationDao applicationDao;
+
+    @Autowired
+    private AppComponentDao appComponentDao;
+
+    @Autowired
+    private AppDependencyTableDao appDependencyTableDao;
 
     /**
      * 查询许可证
@@ -170,4 +191,49 @@ public class LicenseServiceImpl implements LicenseService{
         }
     }
 
+    @Override
+    public Page<LicenseBriefDTO> getLicenseList(String name, String version, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
+        return licenseDao.getLicenseList(Arrays.asList(applicationDO.getLicenses()), pageable);
+    }
+
+    @Override
+    @Transactional
+    public Boolean addAppLicense(String name, String version, String licenseName) {
+        // 已经发布或锁定的禁止更新
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
+        if(applicationDO.getRelease() || applicationDO.getLock()){
+            throw new PlatformException(500, "组件已经发布或锁定，禁止更新");
+        }
+        List<String> licenses = searchLicense(licenseName);
+        Set<String> licenseSet = new HashSet<>(Arrays.asList(applicationDO.getLicenses()));
+        licenseSet.addAll(licenses);
+        applicationDO.setLicenses(licenseSet.toArray(new String[0]));
+        applicationDao.save(applicationDO);
+        AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(name, version);
+        if(appComponentDO != null) {
+            appComponentDO.setLicenses(licenseSet.toArray(new String[0]));
+            appComponentDao.save(appComponentDO);
+        }
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public Boolean deleteAppLicense(String name, String version, String licenseName) {
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
+        if(applicationDO.getRelease() || applicationDO.getLock()){
+            throw new PlatformException(500, "组件已经发布或锁定，禁止更新");
+        }
+        List<String> temp = Arrays.asList(applicationDO.getLicenses());
+        temp.remove(licenseName);
+        applicationDO.setLicenses(temp.toArray(new String[0]));
+        return true;
+    }
+
+    @Override
+    public LicenseDO getLicenseInfo(String name) {
+        return licenseDao.findByName(name);
+    }
 }
