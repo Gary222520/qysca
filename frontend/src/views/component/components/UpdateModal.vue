@@ -7,118 +7,51 @@
       <div style="display: flex; margin: 20px 0">
         <a-steps class="steps" direction="vertical" :current="data.currentStep" :items="data.steps"></a-steps>
         <div v-if="data.currentStep === 0">
-          <div class="content">
-            <a-card class="card" hoverable @click="selectLanguage('java')">
-              <div class="card_title">
-                <img class="img" src="@/assets/java.png" />
-                <div class="name">Java</div>
-              </div>
-              <div class="card_text">
-                <ul style="margin-bottom: 0">
-                  <li class="list_item">Java语言开发的组件</li>
-                  <li class="list_item">maven或gradle管理的项目</li>
-                </ul>
-              </div>
-            </a-card>
-            <a-card class="card" hoverable @click="selectLanguage('python')">
-              <div class="card_title">
-                <img class="img" src="@/assets/python.png" />
-                <div class="name">Python</div>
-              </div>
-              <div class="card_text">
-                <ul>
-                  <li class="list_item">Python语言开发的组件</li>
-                  <li class="list_item">pip工具管理的项目</li>
-                </ul>
-              </div>
-            </a-card>
-          </div>
-          <div class="content" style="margin-top: 10px">
-            <a-card class="card" hoverable @click="selectLanguage('go')">
-              <div class="card_title">
-                <img class="img" src="@/assets/go.png" />
-                <div class="name">Go</div>
-              </div>
-              <div class="card_text">
-                <ul style="margin-bottom: 0">
-                  <li class="list_item">Go语言开发的组件</li>
-                  <li class="list_item">Go.mod工具管理的项目</li>
-                </ul>
-              </div>
-            </a-card>
-            <a-card class="card" hoverable @click="selectLanguage('javascript')">
-              <div class="card_title">
-                <img class="img" src="@/assets/javascript.png" />
-                <div class="name">JavaScript</div>
-              </div>
-              <div class="card_text">
-                <ul style="margin-bottom: 0">
-                  <li class="list_item">JavaScript语言开发的组件</li>
-                  <li class="list_item">npm工具管理的NodeJS项目</li>
-                </ul>
-              </div>
-            </a-card>
-          </div>
+          <Language @select="(lang) => selectLanguage(lang)"></Language>
         </div>
         <div v-if="data.currentStep === 1">
-          <div class="content">
-            <a-card class="card" hoverable @click="selectTool('maven')">
-              <div class="card_title">
-                <img class="img" src="@/assets/maven.png" />
-                <div class="name">Maven</div>
-              </div>
-              <div class="card_text">
-                <ul style="margin-bottom: 0">
-                  <li class="list_item">maven构建并管理的项目</li>
-                  <li class="list_item">pom.xml记录依赖信息</li>
-                </ul>
-              </div>
-            </a-card>
-            <a-card class="card" hoverable @click="selectTool('zip')">
-              <div class="card_title">
-                <img class="img" src="@/assets/zip.png" />
-                <div class="name">Zip</div>
-              </div>
-              <div class="card_text">
-                <ul style="margin-bottom: 0">
-                  <li class="list_item">项目根目录的Zip压缩文件</li>
-                  <li class="list_item">扫描zip中的依赖文件</li>
-                </ul>
-              </div>
-            </a-card>
-          </div>
-          <div class="content" style="margin-top: 10px">
-            <a-card class="card" hoverable @click="selectTool('gradle')">
-              <div class="card_title">
-                <img class="img" src="@/assets/gradle.png" />
-                <div class="name">Gradle</div>
-              </div>
-              <div class="card_text">
-                <ul>
-                  <li class="list_item">gradle构建并管理的项目</li>
-                  <li class="list_item">settings.gradle记录依赖信息</li>
-                </ul>
-              </div>
-            </a-card>
-            <a-card class="card" hoverable @click="selectTool('jar')">
-              <div class="card_title">
-                <img class="img" src="@/assets/jar.png" />
-                <div class="name">Jar</div>
-              </div>
-              <div class="card_text">
-                <ul style="margin-bottom: 0">
-                  <li class="list_item">项目构建完成的jar包</li>
-                  <li class="list_item">扫描jar包中的依赖文件</li>
-                </ul>
-              </div>
-            </a-card>
-          </div>
+          <JavaBuilder
+            v-if="componentInfo.language === 'java'"
+            @select="(builder) => selectBuilder(builder)"></JavaBuilder>
+          <PythonBuilder
+            v-if="componentInfo.language === 'python'"
+            @select="(builder) => selectBuilder(builder)"></PythonBuilder>
+          <GoBuilder
+            v-if="componentInfo.language === 'golang'"
+            @select="(builder) => selectBuilder(builder)"></GoBuilder>
+          <JSBuilder
+            v-if="componentInfo.language === 'javaScript'"
+            @select="(builder) => selectBuilder(builder)"></JSBuilder>
         </div>
         <div v-if="data.currentStep === 2">
-          <div class="upload">
+          <div class="upload" v-if="componentInfo.language === 'java'">
             <div v-if="componentInfo.builder === 'maven'">
               <Upload ref="uploadRef" :accept="'.xml'" :upload-text="'pom.xml'" @success="handleUpload"></Upload>
             </div>
+            <div v-if="componentInfo.builder === 'gradle'">
+              <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
+            </div>
+            <div v-if="componentInfo.builder === 'zip'">
+              <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
+            </div>
+            <div v-if="componentInfo.builder === 'jar'">
+              <Upload ref="uploadRef" :accept="'.jar'" :upload-text="'jar包'" @success="handleUpload"></Upload>
+            </div>
+          </div>
+          <div class="upload" v-if="componentInfo.language === 'python'">
+            <div v-if="componentInfo.builder === 'zip'">
+              <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
+            </div>
+          </div>
+          <div class="upload" v-if="componentInfo.language === 'golang'">
+            <div v-if="componentInfo.builder === 'go.mod'">
+              <Upload ref="uploadRef" :accept="'.mod'" :upload-text="'go.mod'" @success="handleUpload"></Upload>
+            </div>
+            <div v-if="componentInfo.builder === 'zip'">
+              <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
+            </div>
+          </div>
+          <div class="upload" v-if="componentInfo.language === 'javaScript'">
             <div v-if="componentInfo.builder === 'zip'">
               <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
             </div>
@@ -146,6 +79,11 @@
 import { reactive, ref, defineExpose, defineEmits } from 'vue'
 import { UpdateComponent } from '@/api/frontend'
 import Upload from '@/components/Upload.vue'
+import Language from '@/components/Language.vue'
+import JavaBuilder from '@/components/builder/JavaBuilder.vue'
+import PythonBuilder from '@/components/builder/PythonBuilder.vue'
+import GoBuilder from '@/components/builder/GoBuilder.vue'
+import JSBuilder from '@/components/builder/JSBuilder.vue'
 import { message } from 'ant-design-vue'
 
 const emit = defineEmits(['success'])
@@ -179,14 +117,10 @@ const clear = () => {
   uploadRef.value.clear()
 }
 const selectLanguage = (language) => {
-  if (language === 'python' || language === 'go' || language === 'javascript') {
-    message.info('暂未支持该语言')
-    return
-  }
   componentInfo.language = language
   next()
 }
-const selectTool = (builder) => {
+const selectBuilder = (builder) => {
   componentInfo.builder = builder
   next()
 }
@@ -202,6 +136,10 @@ const next = () => {
 const submit = () => {
   const params = {
     ...componentInfo
+  }
+  if (componentInfo.filePath === '') {
+    message.info('文件未上传完成')
+    return
   }
   data.spinning = true
   UpdateComponent(params)

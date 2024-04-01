@@ -60,7 +60,7 @@
       </a-table>
     </div>
 
-    <div class="relative" v-if="data.isProject">
+    <div class="relative" v-if="data.isProject && !hasChildren">
       <div class="drawer_title">
         应用状态
         <a-tag v-if="data.detail.state === 'CREATED'" color="processing" :bordered="false" class="label">
@@ -71,9 +71,9 @@
         <a-tag v-if="data.detail.state === 'FAILED'" color="error" :bordered="false" class="label">扫描失败</a-tag>
       </div>
     </div>
-    <div style="margin-top: 10px" v-if="data.isProject">
+    <div style="margin-top: 10px" v-if="data.isProject && !hasChildren">
       <div style="display: flex" v-if="data.detail.state === 'CREATED'">
-        <a-button class="btn" type="primary" @click="addDependency()"><FileAddOutlined />添加依赖信息</a-button>
+        <a-button class="btn" type="primary" @click="addDependency()"> <FileAddOutlined />添加依赖信息 </a-button>
       </div>
       <div style="display: flex" v-if="data.detail.state === 'SUCCESS'">
         <a-button class="btn" type="primary" @click="showDetail()"><FileTextOutlined />查看依赖信息</a-button>
@@ -111,7 +111,7 @@ import {
   LoadingOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons-vue'
-import { reactive, ref, defineExpose, defineEmits } from 'vue'
+import { reactive, ref, defineExpose, defineEmits, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { GetComponentInfo, GetVersionInfo, DeleteAppMember, ExportSBOM } from '@/api/frontend'
 import { message } from 'ant-design-vue'
@@ -139,6 +139,14 @@ const data = reactive({
     { title: '开发者姓名', dataIndex: 'developerName', key: 'developerName' },
     { title: '开发者邮箱', dataIndex: 'developerEmail', key: 'developerEmail' }
   ]
+})
+const hasChildren = computed(() => {
+  if (data.detail.childApplication.length > 0) return true
+  if (data.detail.childComponent?.java) return true
+  if (data.detail.childComponent?.python) return true
+  if (data.detail.childComponent?.go) return true
+  if (data.detail.childComponent?.javaScript) return true
+  return false
 })
 const table = reactive({
   datasource: [],

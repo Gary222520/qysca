@@ -234,7 +234,7 @@ const retry = (record) => {
 }
 const deleteComponent = (record) => {
   record.popconfirm = false
-  DeleteComponent({ groupId: record.groupId, artifactId: record.artifactId, version: record.version })
+  DeleteComponent({ name: record.name, version: record.version, language: record.language })
     .then((res) => {
       // console.log('DeleteComponent', res)
       if (res.code !== 200) {

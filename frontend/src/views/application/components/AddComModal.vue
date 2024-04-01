@@ -1,5 +1,5 @@
 <template>
-  <a-modal v-model:open="data.open" :footer="null">
+  <a-modal v-model:open="data.open" @cancel="close()" :footer="null">
     <template #title>
       <div style="font-size: 20px">添加组件</div>
     </template>
@@ -11,7 +11,7 @@
             <a-select-option value="python">python</a-select-option>
             <a-select-option value="golang">golang</a-select-option>
             <a-select-option value="javaScript">javaScript</a-select-option>
-            <a-select-option value="app">application</a-select-option>
+            <a-select-option value="app">mixed</a-select-option>
           </a-select>
         </a-form-item>
         <a-form-item label="组件名称" name="name" :rules="[{ required: true, message: '请输入组件名称' }]">
@@ -83,11 +83,16 @@ const open = (parent) => {
 }
 const close = () => {
   data.open = false
+  clear()
 }
 const clear = () => {
   formRef.value.resetFields()
+  selection.componentList = []
+  selection.options = []
 }
 const getNameList = async () => {
+  formState.version = ''
+  selection.options = []
   await GetComponentNameList({ name: formState.name, language: formState.language })
     .then((res) => {
       if (res.code !== 200) {
@@ -116,9 +121,10 @@ const getNameList = async () => {
       console.error(err)
     })
 }
-const chooseName = (item) => {
+const chooseName = async (item) => {
   // console.log('chooseName', item)
   formState.name = item.name
+  await getNameList()
   componentInfo.name = item.name
   componentInfo.language = formState.language
   selection.options = item.versions
@@ -142,11 +148,8 @@ const submit = () => {
             return
           }
           message.success('添加组件成功')
-          data.open = false
           emit('success')
-          setTimeout(() => {
-            clear()
-          }, 500)
+          close()
         })
         .catch((e) => {
           message.error(e)
