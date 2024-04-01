@@ -41,7 +41,7 @@
               <a-select-option value="python">python</a-select-option>
               <a-select-option value="golang">golang</a-select-option>
               <a-select-option value="javaScript">javaScript</a-select-option>
-              <a-select-option value="app">application</a-select-option>
+              <a-select-option value="app">mixed</a-select-option>
             </a-select>
           </span>
           <a-input-search
@@ -253,9 +253,11 @@ const deleteComponent = (record) => {
     })
 }
 const arrToString = (arr) => {
-  return arr.reduce((pre, curr) => {
-    return `${pre}; ${curr}`
-  }, '')
+  return arr
+    .reduce((pre, curr) => {
+      return `${pre}; ${curr}`
+    }, '')
+    .substring(1)
 }
 </script>
 

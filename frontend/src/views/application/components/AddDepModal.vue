@@ -23,6 +23,9 @@
           <div v-if="projectInfo.builder === 'maven'">
             <Upload ref="uploadRef" :accept="'.xml'" :upload-text="'pom.xml'" @success="handleUpload"></Upload>
           </div>
+          <div v-if="projectInfo.builder === 'gradle'">
+            <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
+          </div>
           <div v-if="projectInfo.builder === 'zip'">
             <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
           </div>
@@ -31,6 +34,14 @@
           </div>
         </div>
         <div class="upload" v-if="projectInfo.language === 'python'">
+          <div v-if="projectInfo.builder === 'zip'">
+            <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
+          </div>
+        </div>
+        <div class="upload" v-if="projectInfo.language === 'golang'">
+          <div v-if="projectInfo.builder === 'go.mod'">
+            <Upload ref="uploadRef" :accept="'.mod'" :upload-text="'go.mod'" @success="handleUpload"></Upload>
+          </div>
           <div v-if="projectInfo.builder === 'zip'">
             <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
           </div>
@@ -111,6 +122,10 @@ const next = () => {
 const submit = () => {
   const params = {
     ...projectInfo
+  }
+  if (projectInfo.filePath === '') {
+    message.info('文件未上传完成')
+    return
   }
   AddDependency(params)
     .then((res) => {

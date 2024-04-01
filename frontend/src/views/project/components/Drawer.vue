@@ -27,11 +27,14 @@
     </a-descriptions>
 
     <div class="relative">
-      <div class="drawer_title">许可证信息</div>
+      <div class="drawer_title" style="margin-bottom: 20px">许可证信息</div>
     </div>
-    <a-table :data-source="data.detail?.licenses" :columns="data.licenseColumns" :pagination="false">
+    <!-- <a-table :data-source="data.detail?.licenses" :columns="data.licenseColumns" :pagination="false">
       <template #emptyText>暂无数据</template>
-    </a-table>
+    </a-table> -->
+    <a-descriptions>
+      <a-descriptions-item label="许可证">{{ arrToString(data.detail?.licenses) }}</a-descriptions-item>
+    </a-descriptions>
 
     <div class="relative">
       <div class="drawer_title">开发者信息</div>
@@ -106,9 +109,12 @@ const showDependency = () => {
   })
 }
 const arrToString = (arr) => {
-  return arr.reduce((pre, curr) => {
-    return `${pre}; ${curr}`
-  }, '')
+  if (!arr) return
+  return arr
+    .reduce((pre, curr) => {
+      return `${pre}; ${curr}`
+    }, '')
+    .substring(1)
 }
 defineExpose({ open })
 </script>

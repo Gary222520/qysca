@@ -1,15 +1,15 @@
 <template>
   <div class="main">
     <div class="content">
-      <a-card class="card" hoverable @click="selectBuilder('maven')">
+      <a-card class="card" hoverable @click="selectBuilder('go.mod')">
         <div class="card_title">
-          <img class="img" src="@/assets/maven.png" />
-          <div class="name">Maven</div>
+          <img class="img" src="@/assets/gomod.png" />
+          <div class="name">Go.mod</div>
         </div>
         <div class="card_text">
           <ul style="margin-bottom: 0">
-            <li class="list_item">maven构建并管理的项目</li>
-            <li class="list_item">pom.xml记录依赖信息</li>
+            <li class="list_item">Go Mod构建并管理的项目</li>
+            <li class="list_item">go.mod记录依赖信息</li>
           </ul>
         </div>
       </a-card>
@@ -22,32 +22,6 @@
           <ul style="margin-bottom: 0">
             <li class="list_item">项目根目录的Zip压缩文件</li>
             <li class="list_item">扫描zip中的依赖文件</li>
-          </ul>
-        </div>
-      </a-card>
-    </div>
-    <div class="content" style="margin-top: 10px">
-      <a-card class="card" hoverable @click="selectBuilder('gradle')">
-        <div class="card_title">
-          <img class="img" src="@/assets/gradle.png" />
-          <div class="name">Gradle</div>
-        </div>
-        <div class="card_text">
-          <ul>
-            <li class="list_item">gradle构建并管理的项目</li>
-            <li class="list_item">settings.gradle记录依赖信息</li>
-          </ul>
-        </div>
-      </a-card>
-      <a-card class="card" hoverable @click="selectBuilder('jar')">
-        <div class="card_title">
-          <img class="img" src="@/assets/jar.png" />
-          <div class="name">Jar</div>
-        </div>
-        <div class="card_text">
-          <ul style="margin-bottom: 0">
-            <li class="list_item">项目构建完成的jar包</li>
-            <li class="list_item">扫描jar包中的依赖文件</li>
           </ul>
         </div>
       </a-card>
