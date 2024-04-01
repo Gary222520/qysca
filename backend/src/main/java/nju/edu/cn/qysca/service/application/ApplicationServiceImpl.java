@@ -571,7 +571,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             temp.remove(applicationDO.getId());
             parentApplicationDO.setChildApplication(temp.toArray(new String[temp.size()]));
         }
-        // TODO: 如何更新License信息
+        //拿到所有剩余组件的Licenses信息进行更新
         applicationDao.save(parentApplicationDO);
         return Boolean.TRUE;
     }
@@ -1012,7 +1012,7 @@ public class ApplicationServiceImpl implements ApplicationService {
      */
     private String[] getUniqueLicenseNames(String name, String version) {
         List<AppDependencyTableDO> dependencies = appDependencyTableDao.findAllByNameAndVersion(name, version);
-        Set<String> uniqueLicenses = dependencies.stream().flatMap(dependency -> Arrays.stream(dependency.getLicenses().split(","))).map(String::trim).collect(Collectors.toSet());
+        Set<String> uniqueLicenses = dependencies.stream().map(AppDependencyTableDO::getLicenses).filter(licenses ->!licenses.equals("-")).flatMap(licenses -> Arrays.stream(licenses.split(","))).map(String::trim).collect(Collectors.toSet());
         return uniqueLicenses.toArray(new String[0]);
     }
     /**

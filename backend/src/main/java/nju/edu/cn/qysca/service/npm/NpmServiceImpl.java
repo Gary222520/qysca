@@ -123,12 +123,7 @@ public class NpmServiceImpl implements NpmService {
             jsDependencyTableDO.setDirect(jsDependencyTableDO.getDepth() == 1);
             jsDependencyTableDO.setType(jsComponentDependencyTree.getType());
             jsDependencyTableDO.setLanguage("javaScript");
-            JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(jsComponentDependencyTree.getName(), jsComponentDependencyTree.getVersion());
-            if(jsComponentDO.getLicenses() == null || jsComponentDO.getLicenses().length == 0){
-                jsDependencyTableDO.setLicenses("-");
-            }else{
-                jsDependencyTableDO.setLicenses(String.join(",", jsComponentDO.getLicenses()));
-            }
+            jsDependencyTableDO.setLicenses(jsComponentDependencyTree.getLicenses());
             queue.addAll(jsComponentDependencyTree.getDependencies());
             jsDependencyTableDOS.add(jsDependencyTableDO);
         }
@@ -358,11 +353,13 @@ public class NpmServiceImpl implements NpmService {
                 jsComponentDO = spiderComponentInfo(entry.getKey(), entry.getValue().getVersion());
                 if (jsComponentDO != null) {
                     child.setType("opensource");
+                    child.setLicenses(String.join(",", jsComponentDO.getLicenses()));
                     jsComponentDao.save(jsComponentDO);
                 } else {
                     child.setType("opensource");
                 }
             } else {
+                child.setLicenses(String.join(",", jsComponentDO.getLicenses()));
                 child.setType(jsComponentDO.getType());
             }
             child.setDepth(depth);
