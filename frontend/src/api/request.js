@@ -1,5 +1,7 @@
 import axios from 'axios'
 import { API } from '@/api/backend'
+import { message } from 'ant-design-vue'
+import router from '@/router/index'
 
 export const baseURL = 'http://localhost:9090'
 
@@ -26,6 +28,7 @@ instance.interceptors.response.use(
     if (response.data.message === '登录认证失败') {
       sessionStorage.removeItem('token')
       sessionStorage.removeItem('user')
+      router.push('/login')
     }
     return response.data
   },

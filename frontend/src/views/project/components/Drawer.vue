@@ -59,9 +59,9 @@ const data = reactive({
     { title: '许可证地址', dataIndex: 'url', key: 'url' }
   ],
   developerColumns: [
-    { title: '开发者ID', dataIndex: 'developerId', key: 'developerId' },
-    { title: '开发者姓名', dataIndex: 'developerName', key: 'developerName' },
-    { title: '开发者邮箱', dataIndex: 'developerEmail', key: 'developerEmail' }
+    { title: '开发者ID', dataIndex: 'id', key: 'id' },
+    { title: '开发者姓名', dataIndex: 'name', key: 'name' },
+    { title: '开发者邮箱', dataIndex: 'email', key: 'email' }
   ]
 })
 const open = (component, dependency) => {

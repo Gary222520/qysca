@@ -12,7 +12,7 @@
             @change="() => getNameList()"
             @search="() => findProject()"></a-input-search>
           <template #overlay>
-            <a-menu v-if="menu.items.length">
+            <a-menu v-if="menu.items.length" style="max-height: 300px; width: 250px; overflow-y: scroll">
               <a-menu-item v-for="(item, index) in menu.items" :key="index" @click="() => chooseName(item)">
                 {{ item }}
               </a-menu-item>

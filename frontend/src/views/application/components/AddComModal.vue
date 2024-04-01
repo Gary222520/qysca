@@ -15,10 +15,10 @@
           </a-select>
         </a-form-item>
         <a-form-item label="组件名称" name="name" :rules="[{ required: true, message: '请输入组件名称' }]">
-          <a-dropdown>
+          <a-dropdown placement="bottom">
             <a-input v-model:value="formState.name" @change="() => getNameList()" style="width: 300px" />
             <template #overlay>
-              <a-menu v-if="selection.componentList.length">
+              <a-menu v-if="selection.componentList.length" style="max-height: 300px; width: 300px; overflow-y: scroll">
                 <a-menu-item
                   v-for="(item, index) in selection.componentList"
                   :key="index"
@@ -94,7 +94,7 @@ const getNameList = async () => {
         message.error(res.message)
         return
       }
-      console.log('GetComponentNameList', res)
+      // console.log('GetComponentNameList', res)
       selection.componentList = res.data.reduce((pre, curr) => {
         let exsist = false
         pre.forEach((item) => {
@@ -117,7 +117,7 @@ const getNameList = async () => {
     })
 }
 const chooseName = (item) => {
-  console.log('chooseName', item)
+  // console.log('chooseName', item)
   formState.name = item.name
   componentInfo.name = item.name
   componentInfo.language = formState.language

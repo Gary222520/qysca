@@ -228,7 +228,6 @@ const exportSBOM = () => {
     })
 }
 const downloadSBOM = (data, fileName) => {
-  console.log(data)
   const blob = new Blob([data])
   const a = document.createElement('a')
   a.style.display = 'none'

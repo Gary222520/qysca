@@ -19,8 +19,6 @@ export default createStore({
         Login(data)
           .then((res) => {
             if (res.code !== 200) {
-              sessionStorage.removeItem('token')
-              sessionStorage.removeItem('user')
               message.error(res.message)
               return
             }
@@ -30,8 +28,6 @@ export default createStore({
             GetUserInfo()
               .then((res) => {
                 if (res.code !== 200) {
-                  sessionStorage.removeItem('token')
-                  sessionStorage.removeItem('user')
                   message.error(res.message)
                   return
                 }
