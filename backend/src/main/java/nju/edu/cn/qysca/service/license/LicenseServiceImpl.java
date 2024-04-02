@@ -226,9 +226,15 @@ public class LicenseServiceImpl implements LicenseService{
         if(applicationDO.getRelease() || applicationDO.getLock()){
             throw new PlatformException(500, "组件已经发布或锁定，禁止更新");
         }
-        List<String> temp = Arrays.asList(applicationDO.getLicenses());
+        List<String> temp = new ArrayList<>(Arrays.asList(applicationDO.getLicenses()));
         temp.remove(licenseName);
         applicationDO.setLicenses(temp.toArray(new String[0]));
+        applicationDao.save(applicationDO);
+        AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(name, version);
+        if(appComponentDO != null) {
+            appComponentDO.setLicenses(temp.toArray(new String[0]));
+            appComponentDao.save(appComponentDO);
+        }
         return true;
     }
 
