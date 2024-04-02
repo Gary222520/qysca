@@ -59,6 +59,14 @@ const show = (name, version) => {
   data.projectInfo.version = version
   getProjectTiled(name, version)
 }
+const getCount = async (name, version) => {
+  let count = 0
+  await GetProjectTiled({ name, version, number: 1, size: 10 }).then((res) => {
+    if (res.code !== 200) return
+    count = res.data.totalElements
+  })
+  return count
+}
 const getProjectTiled = (name, version, number = 1, size = 10) => {
   GetProjectTiled({ name, version, number, size })
     .then((res) => {
@@ -80,7 +88,7 @@ const hide = () => {
 const showInfo = (record) => {
   drawer.value.open(record, false)
 }
-defineExpose({ show, hide })
+defineExpose({ show, hide, getCount })
 </script>
 
 <style scoped>

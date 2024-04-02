@@ -65,6 +65,15 @@ export const UpdateComponent = (data) => request('post', API.UPDATE_COMPONENT, {
 // 删除闭源组件
 export const DeleteComponent = (data) => request('post', API.DELETE_COMPONENT, { data })
 
+// 获取某个应用的许可证列表
+export const GetLicenseList = (params) => request('get', API.LICENSE_LIST, { params })
+// 查看许可证详细内容
+export const GetLicenseInfo = (params) => request('get', API.LICENSE_INFO, { params })
+// 在某个应用中增加许可证
+export const AddLicense = (params) => request('post', API.ADD_LICENSE, { params })
+// 删除某个应用许可证
+export const DeleteLicense = (params) => request('post', API.DELETE_LICENSE, { params })
+
 // 文件合并
 export const FileMerge = (data) => request('post', API.FILE_MERGE, { data })
 

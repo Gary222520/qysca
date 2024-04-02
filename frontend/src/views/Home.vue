@@ -134,6 +134,7 @@ const logout = () => {
     .catch((err) => {
       sessionStorage.removeItem('token')
       sessionStorage.removeItem('user')
+      router.push('/login')
       console.error(err)
     })
 }

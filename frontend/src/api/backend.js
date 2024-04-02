@@ -63,6 +63,15 @@ export const API = {
   // 删除闭源组件
   DELETE_COMPONENT: '/qysca/component/deleteCloseComponent',
 
+  // 获取某个应用的许可证列表
+  LICENSE_LIST: '/qysca/license/getLicenseList',
+  // 查看许可证详细内容
+  LICENSE_INFO: '/qysca/license/getLicenseInfo',
+  // 在某个应用中增加许可证
+  ADD_LICENSE: '/qysca/license/addAppLicense',
+  // 删除某个应用许可证
+  DELETE_LICENSE: '/qysca/license/deleteAppLicense',
+
   // 文件上传
   FILE_UPLOAD: '/qysca/file/chunk',
   // 文件合并
