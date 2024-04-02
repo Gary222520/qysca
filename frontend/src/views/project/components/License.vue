@@ -50,6 +50,20 @@
             <div v-if="record.type === 'business'">商用</div>
             <div v-if="record.type === 'internal'">内部使用</div>
           </template>
+          <template v-if="column.key === 'action'">
+            <a-tooltip>
+              <template #title>删除</template>
+              <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个许可证吗？">
+                <template #cancelButton>
+                  <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
+                </template>
+                <template #okButton>
+                  <a-button danger type="primary" size="small" @click="deleteLicense(record)">删除</a-button>
+                </template>
+                <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+              </a-popconfirm>
+            </a-tooltip>
+          </template>
         </template>
         <template #emptyText>暂无数据</template>
       </a-table>
@@ -59,7 +73,7 @@
 </template>
 
 <script setup>
-import { PlusOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import { reactive, ref, defineExpose, defineEmits, defineProps, onMounted } from 'vue'
 import { GetLicenseList, AddLicense, DeleteLicense } from '@/api/frontend'
 import Drawer from '@/components/LicenseDrawer.vue'
@@ -139,6 +153,28 @@ const addLicense = () => {
         message.error(res.message)
         return
       }
+      message.success('添加成功')
+      getLicenseList()
+    })
+    .catch((err) => {
+      console.error(err)
+    })
+}
+const deleteLicense = (record) => {
+  record.popconfirm = false
+  const params = {
+    name: app.name,
+    version: app.version,
+    licenseName: record.name
+  }
+  DeleteLicense(params)
+    .then((res) => {
+      // console.log('DeleteLicense', res)
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      message.success('删除成功')
       getLicenseList()
     })
     .catch((err) => {

@@ -24,7 +24,7 @@
       </a-descriptions-item>
       <a-descriptions-item label="许可证内容说明" span="3">
         <span ref="text">{{ data.text }}</span>
-        <div v-if="data.showBtn" @click="data.showTotal = !data.showTotal">{{ data.showTotal ? '收起' : '展开' }}</div>
+        <div v-if="data.showBtn" @click="changeText()">{{ data.showTotal ? '收起' : '展开' }}</div>
       </a-descriptions-item>
     </a-descriptions>
 
@@ -143,7 +143,12 @@ const getLicenseInfo = () => {
       console.error(err)
     })
 }
-const cutText = (line) => {
+const changeText = () => {
+  data.showTotal = !data.showTotal
+  if (data.showTotal) text.value.innerHTML = data.text
+  else cutText(3)
+}
+const cutText = (line = 3) => {
   if (!text.value) return
   if (data.text) text.value.innerHTML = data.text
   else return

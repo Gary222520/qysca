@@ -15,6 +15,8 @@ export default createStore({
   mutations: {},
   actions: {
     login: async (context, data) => {
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
       return new Promise((resolve, reject) => {
         Login(data)
           .then((res) => {

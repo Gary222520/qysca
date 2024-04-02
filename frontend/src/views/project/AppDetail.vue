@@ -43,10 +43,6 @@
                 </a-tooltip>
               </a-radio-group>
               <div v-if="data.mode === 'tiled'">
-                <!-- <a-input-search
-              v-model:value="data.search.name"
-              placeholder="请输入组件名称"
-              style="width: 250px"></a-input-search> -->
                 <a-checkbox v-model:checked="data.detail">详细导出</a-checkbox>
                 <a-button type="primary" style="margin-left: 10px" @click="exportExcel">
                   <ExportOutlined />导出Excel
@@ -64,11 +60,7 @@
         </a-tab-pane>
         <a-tab-pane key="3" :tab="`许可证（${count.license}）`" forceRender>
           <div class="content">
-            <License
-              ref="license"
-              :name="app.name"
-              :version="app.version"
-              @setCount="(data) => setCount(data)"></License>
+            <License ref="license" @setCount="(data) => setCount(data)"></License>
           </div>
         </a-tab-pane>
       </a-tabs>
