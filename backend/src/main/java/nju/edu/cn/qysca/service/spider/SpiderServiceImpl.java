@@ -4,6 +4,7 @@ import nju.edu.cn.qysca.dao.component.JavaComponentDao;
 import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
 import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
 import nju.edu.cn.qysca.service.license.LicenseService;
+import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
 import nju.edu.cn.qysca.utils.HashUtil;
 import nju.edu.cn.qysca.utils.spider.UrlConnector;
 import org.apache.maven.model.Model;
@@ -32,6 +33,9 @@ public class SpiderServiceImpl implements SpiderService {
     private JavaComponentDao javaComponentDao;
     @Autowired
     private LicenseService licenseService;
+
+    @Autowired
+    private VulnerabilityService vulnerabilityService;
 
     /**
      * 通过gav爬取组件
@@ -224,12 +228,12 @@ public class SpiderServiceImpl implements SpiderService {
 
         javaComponentDO.setPUrl(getMavenPUrl(groupId, artifactId, version, model.getPackaging()));
         javaComponentDO.setDevelopers(getDevelopers(model));
-        //javaComponentDO.setLicenses(getLicense(model));
         List<String> licenses = new ArrayList<>();
         List<String> license = getLicense(model);
         for(String licenseName : license){
             licenses.addAll(licenseService.searchLicense(licenseName));
         }
+        javaComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(groupId + ":" + artifactId, version, "java").toArray(new String[0]));
         javaComponentDO.setLicenses(licenses.toArray(new String[0]));
         javaComponentDO.setCreator(null);
         javaComponentDO.setState("SUCCESS");

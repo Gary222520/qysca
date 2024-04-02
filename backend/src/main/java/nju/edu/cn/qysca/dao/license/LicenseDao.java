@@ -2,7 +2,12 @@ package nju.edu.cn.qysca.dao.license;
 
 
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
+import nju.edu.cn.qysca.domain.license.dtos.LicenseBriefDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -27,4 +32,8 @@ public interface LicenseDao extends JpaRepository<LicenseDO, String> {
     LicenseDO findByNameIgnoreCase(String name);
 
     List<LicenseDO> findAllByNameLike(String name);
+
+
+    @Query("select new nju.edu.cn.qysca.domain.license.dtos.LicenseBriefDTO(l.name, l.fullName, l.isOsiApproved, l.isFsfApproved, l.isSpdxApproved, l.riskLevel, l.gplCompatibility) from LicenseDO l where l.name in (:licenses)")
+    Page<LicenseBriefDTO> getLicenseList(@Param("licenses") List<String> licenses, Pageable pageable);
 }

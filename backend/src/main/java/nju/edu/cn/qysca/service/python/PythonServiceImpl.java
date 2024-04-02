@@ -156,6 +156,7 @@ public class PythonServiceImpl implements PythonService {
             pythonDependencyTableDO.setType(componentDependencyTree.getType());
             pythonDependencyTableDO.setLanguage("python");
             pythonDependencyTableDO.setLicenses(componentDependencyTree.getLicenses());
+            pythonDependencyTableDO.setVulnerabilities(componentDependencyTree.getVulnerabilities());
             queue.addAll(componentDependencyTree.getDependencies());
             pythonDependencyTableDOList.add(pythonDependencyTableDO);
         }
@@ -213,6 +214,8 @@ public class PythonServiceImpl implements PythonService {
         appComponentDependencyTreeDO.setVersion(pythonComponentDependencyTreeDO.getVersion());
         appComponentDependencyTreeDO.setDepth(pythonComponentDependencyTreeDO.getDepth());
         appComponentDependencyTreeDO.setType(pythonComponentDependencyTreeDO.getType());
+        appComponentDependencyTreeDO.setLicenses(pythonComponentDependencyTreeDO.getLicenses());
+        appComponentDependencyTreeDO.setVulnerabilities(pythonComponentDependencyTreeDO.getVulnerabilities());
         appComponentDependencyTreeDO.setLanguage("python");
         List<AppComponentDependencyTreeDO> children = new ArrayList<>();
         for(PythonComponentDependencyTreeDO childPythonComponentDependencyTreeDO : pythonComponentDependencyTreeDO.getDependencies()) {
@@ -339,6 +342,7 @@ public class PythonServiceImpl implements PythonService {
             if (componentDO != null) {
                 componentDao.save(componentDO);
                 componentDependencyTreeDO.setLicenses(String.join(",", componentDO.getLicenses()));
+                componentDependencyTreeDO.setVulnerabilities(String.join(",", componentDO.getVulnerabilities()));
                 componentDependencyTreeDO.setType("opensource");
             } else {
                 componentDependencyTreeDO.setType("opensource");
@@ -347,6 +351,7 @@ public class PythonServiceImpl implements PythonService {
             }
         } else {
             componentDependencyTreeDO.setLicenses(String.join(",", componentDO.getLicenses()));
+            componentDependencyTreeDO.setVulnerabilities(String.join(",", componentDO.getVulnerabilities()));
             componentDependencyTreeDO.setType(componentDO.getType());
         }
         componentDependencyTreeDO.setDepth(depth);
