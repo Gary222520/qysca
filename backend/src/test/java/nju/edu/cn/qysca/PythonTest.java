@@ -6,6 +6,7 @@ import nju.edu.cn.qysca.service.python.PythonService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.parameters.P;
 
 import java.util.List;
 
@@ -41,4 +42,28 @@ public class PythonTest {
         String type = "internal";
         PythonDependencyTreeDO pythonDependencyTreeDO = pythonService.dependencyTreeAnalysis(filePath, builder, name, version, type);
     }
+
+    @Test
+    public void test4(){
+        String filePath = "D:\\MyCourse\\2024Aping\\graduate design\\qysca\\backend\\src\\main\\resources\\static\\upload\\requirements.txt";
+        String builder = "txt";
+        String name = "myapp";
+        String version = "1.0.0";
+        String type = "internal";
+        PythonDependencyTreeDO pythonDependencyTreeDO = pythonService.dependencyTreeAnalysis(filePath, builder, name, version, type);
+        List<PythonDependencyTableDO> pythonDependencyTableDOList = pythonService.dependencyTableAnalysis(pythonDependencyTreeDO);
+    }
+
+    @Test
+    public void test5(){
+        String filePath = "D:\\MyCourse\\2024Aping\\graduate design\\qysca\\backend\\src\\main\\resources\\static\\upload\\setup.py.txt";
+        String builder = "py";
+        String name = "myapp";
+        String version = "1.0.0";
+        String type = "internal";
+        PythonDependencyTreeDO pythonDependencyTreeDO = pythonService.dependencyTreeAnalysis(filePath, builder, name, version, type);
+        List<PythonDependencyTableDO> pythonDependencyTableDOList = pythonService.dependencyTableAnalysis(pythonDependencyTreeDO);
+    }
+
+
 }

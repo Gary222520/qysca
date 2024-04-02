@@ -73,10 +73,17 @@ public class PythonServiceImpl implements PythonService {
      */
     @Override
     public PythonDependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String name, String version, String type) {
-        // todo 目前只支持上传zip
+        // 支持zip、txt、py三种
         if (builder.equals("zip")) {
             unzip(filePath);
             filePath = filePath.substring(0, filePath.lastIndexOf("."));
+        } else if (builder.equals("txt")) {
+            File txt = new File(filePath);
+            filePath = txt.getParentFile().getPath();
+        } else if (builder.equals("py")) {
+            // 一般情况下setup.py都会引用到外部文件，然后运行命令就会报错，依赖也就为空了
+            File py = new File(filePath);
+            filePath = py.getParentFile().getPath();
         } else {
             throw new PlatformException(500, "python解析暂不支持此文件类型");
         }
@@ -99,11 +106,19 @@ public class PythonServiceImpl implements PythonService {
 
         executeCommand(command1, project, false);
         executeCommand(command3, null, false);
-        executeCommand(command4, null, true);
-        executeCommand(command5, null, true);
-        executeCommand(command6, project, true);
+        if (builder.equals("zip") || builder.equals("txt")) {
+            executeCommand(command4, null, true);
+            executeCommand(command5, null, true);
+        }
+        if (builder.equals("zip") || builder.equals("py")) {
+            executeCommand(command6, project, true);
+        }
         String jsonString = executeCommand(command7, null, true);
-        deleteFolder(filePath);
+        if (builder.equals("zip")) {
+            deleteFolder(filePath);
+        } else {
+            deleteFolder(filePath + "\\venv");
+        }
 
         // 将json形式的依赖树转化为PythonDependencyTreeDO
         PythonDependencyTreeDO dependencyTreeDO = parseJsonDependencyTree(jsonString, name, version, type);
