@@ -27,7 +27,7 @@
       </a-card>
     </div>
     <div class="content" style="margin-top: 10px">
-      <a-card class="card" hoverable @click="selectBuilder('zip')">
+      <a-card class="card" hoverable @click="selectBuilder('gradle')">
         <div class="card_title">
           <img class="img" src="@/assets/gradle.png" />
           <div class="name">Gradle</div>

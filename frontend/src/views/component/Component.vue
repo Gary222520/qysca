@@ -154,7 +154,7 @@ const updateModal = ref()
 const warnModal = ref()
 
 const data = reactive({
-  accurate: false,
+  // accurate: false,
   search: {
     name: '',
     // groupId: '',
@@ -184,9 +184,9 @@ const pagination = reactive({
   hideOnSinglePage: true
 })
 const getComponents = (number = 1, size = 10) => {
-  data.datasource = []
-  if (data.accurate && data.search.groupId === '') return
-  if (!data.accurate && data.search.language === '' && data.search.name === '') return
+  // data.datasource = []
+  // if (data.accurate && data.search.groupId === '') return
+  // if (!data.accurate && data.search.language === '' && data.search.name === '') return
   const params = {
     ...data.search,
     number,
@@ -201,7 +201,7 @@ const getComponents = (number = 1, size = 10) => {
       }
       data.datasource = res.data.content
       data.datasource.forEach((item) => {
-        if (item.name === '-') item.name = item.artifactId
+        if (item.name === '') item.name = '-'
       })
       pagination.total = res.data.totalElements
       pagination.current = number
@@ -210,15 +210,15 @@ const getComponents = (number = 1, size = 10) => {
       console.error(err)
     })
 }
-const changeMode = (value) => {
-  data.accurate = value
-  if (!value) {
-    data.search.groupId = ''
-    data.search.version = ''
-    data.search.artifactId = ''
-  }
-  getComponents()
-}
+// const changeMode = (value) => {
+//   data.accurate = value
+//   if (!value) {
+//     data.search.groupId = ''
+//     data.search.version = ''
+//     data.search.artifactId = ''
+//   }
+//   getComponents()
+// }
 const addComponent = () => {
   addModal.value.open()
 }

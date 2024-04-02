@@ -3,102 +3,61 @@
     <div class="title">许可证管理</div>
     <a-card class="content_card">
       <div class="operations">
-        <!-- <a-radio-group v-model:value="data.search.type" @change="(e) => getComponents()">
-          <a-radio-button value="opensource" style="width: 70px">开源</a-radio-button>
-          <a-radio-button value="business" style="width: 70px">商用</a-radio-button>
-          <a-radio-button value="internal" style="width: 100px">内部使用</a-radio-button>
-        </a-radio-group> -->
         <div>
-          <!-- <span v-if="!data.accurate">
-            语言：<a-select
-              v-model:value="data.search.language"
-              placeholder="请选择语言"
-              style="width: 200px; margin-right: 10px"
-              @change="(value, option) => getComponents()">
-              <a-select-option value="java">java</a-select-option>
-              <a-select-option value="python">python</a-select-option>
-              <a-select-option value="golang">golang</a-select-option>
-              <a-select-option value="javaScript">javaScript</a-select-option>
-              <a-select-option value="app">mixed</a-select-option>
-            </a-select>
-          </span> -->
           <a-input-search
             v-if="!data.accurate"
             v-model:value="data.search.name"
             placeholder="请输入许可证名称"
             style="width: 250px"
-            @change="(e) => getComponents()"
-            @search="(value, e) => getComponents()"></a-input-search>
+            @change="(e) => getLicenses()"
+            @search="(value, e) => getLicenses()"></a-input-search>
         </div>
       </div>
-      <!-- <a-button type="primary" @click="addComponent()" style="margin-bottom: 20px"><PlusOutlined />添加组件</a-button> -->
-      <a-table :data-source="data.datasource" :columns="data.columns" bordered :pagination="pagination">
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'name'">
-            <div class="column_name" @click="showInfo(record)">{{ record.name }}</div>
+      <a-spin :spinning="data.spinning" tip="许可证信息加载中，请稍等...">
+        <a-table :data-source="data.datasource" :columns="data.columns" bordered :pagination="pagination">
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'name'">
+              <div class="column_name" @click="showInfo(record)">{{ record.name }}</div>
+            </template>
+            <template v-if="column.key === 'riskLevel'">
+              <a-tag v-if="record.riskLevel === 'high'" color="error">高危</a-tag>
+              <a-tag v-if="record.riskLevel === 'medium'" color="warning">中危</a-tag>
+              <a-tag v-if="record.riskLevel === 'low'" color="processing">低危</a-tag>
+            </template>
+            <template v-if="column.key === 'isOsiApproved'">
+              <CheckOutlined v-if="record.isOsiApproved" :style="{ color: '#52c41a' }" />
+              <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
+            </template>
+            <template v-if="column.key === 'isFsfApproved'">
+              <CheckOutlined v-if="record.isFsfApproved" :style="{ color: '#52c41a' }" />
+              <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
+            </template>
+            <template v-if="column.key === 'isSpdxApproved'">
+              <CheckOutlined v-if="record.isSpdxApproved" :style="{ color: '#52c41a' }" />
+              <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
+            </template>
+            <template v-if="column.key === 'gplCompatibility'">
+              <CheckOutlined v-if="record.gplCompatibility" :style="{ color: '#52c41a' }" />
+              <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
+            </template>
+            <template v-if="column.key === 'type'">
+              <div v-if="record.type === 'opensource'">开源</div>
+              <div v-if="record.type === 'business'">商用</div>
+              <div v-if="record.type === 'internal'">内部使用</div>
+            </template>
+            <template v-if="column.key === 'action'">
+              <a-tooltip>
+                <template #title>详情</template>
+                <FileTextOutlined
+                  :style="{ fontSize: '18px', color: '#6f005f', marginRight: '10px' }"
+                  @click="showInfo(record)" />
+              </a-tooltip>
+            </template>
           </template>
-          <template v-if="column.key === 'type'">
-            <div v-if="record.type === 'opensource'">开源</div>
-            <div v-if="record.type === 'business'">商用</div>
-            <div v-if="record.type === 'internal'">内部使用</div>
-          </template>
-          <template v-if="column.key === 'language'">
-            <div v-if="!record.language instanceof Array">{{ record.language }}</div>
-            <div v-if="record.language instanceof Array">{{ arrToString(record.language) }}</div>
-          </template>
-          <template v-if="column.key === 'action'">
-            <div
-              v-if="record.state === 'SUCCESS' || record.state === 'CREATED'"
-              style="display: flex; align-items: center">
-              <div class="action_icon">
-                <a-tooltip>
-                  <template #title>详情</template>
-                  <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showInfo(record)" />
-                </a-tooltip>
-              </div>
-              <div class="action_icon" v-if="record.state === 'SUCCESS'">
-                <a-tooltip>
-                  <template #title>更新</template>
-                  <SyncOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="updateComponent(record)" />
-                </a-tooltip>
-              </div>
-              <div class="action_icon">
-                <a-tooltip>
-                  <template #title>删除</template>
-                  <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个组件吗？">
-                    <template #cancelButton>
-                      <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
-                    </template>
-                    <template #okButton>
-                      <a-button danger type="primary" size="small" @click="deleteComponent(record)">删除</a-button>
-                    </template>
-                    <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
-                  </a-popconfirm>
-                </a-tooltip>
-              </div>
-            </div>
-            <div v-if="record.state === 'RUNNING'" style="display: flex; align-items: center">
-              <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
-              <div style="margin-left: 10px">扫描分析中...</div>
-            </div>
-            <div v-if="record.state === 'FAILED'" style="display: flex; align-items: center">
-              <a-popconfirm v-model:open="record.popconfirm" title="扫描出错，请重试">
-                <template #cancelButton>
-                  <a-button class="cancel_btn" size="small" @click="retry(record)">重试</a-button>
-                </template>
-                <template #okButton></template>
-                <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
-                <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
-              </a-popconfirm>
-            </div>
-          </template>
-        </template>
-        <template #emptyText>暂无数据</template>
-      </a-table>
+          <template #emptyText>暂无数据</template>
+        </a-table>
+      </a-spin>
       <Drawer ref="drawer"></Drawer>
-      <!-- <AddModal ref="addModal" @success="getComponents()"></AddModal>
-      <UpdateModal ref="updateModal" @success="getComponents()"></UpdateModal>
-      <WarnModal ref="warnModal" @ok="getComponents()"></WarnModal> -->
     </a-card>
   </div>
 </template>
@@ -112,40 +71,35 @@ import {
   DeleteOutlined,
   RollbackOutlined,
   LoadingOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  CheckOutlined,
+  CloseOutlined
 } from '@ant-design/icons-vue'
-import { GetComponents, DeleteComponent } from '@/api/frontend'
+import { GetAllLicense } from '@/api/frontend'
 import Drawer from '@/components/LicenseDrawer.vue'
-// import AddModal from './components/AddModal.vue'
-// import UpdateModal from './components/UpdateModal.vue'
-// import WarnModal from '@/components/WarnModal.vue'
 import { message } from 'ant-design-vue'
 
 onMounted(() => {
-  getComponents()
+  getLicenses()
 })
 const drawer = ref()
-// const addModal = ref()
-// const updateModal = ref()
-// const warnModal = ref()
 
 const data = reactive({
   accurate: false,
+  spinning: false,
   search: {
-    name: '',
-    // groupId: '',
-    // artifactId: '',
-    version: '',
-    language: 'java',
-    type: 'opensource'
+    name: ''
   },
   datasource: [],
   columns: [
-    { title: '组件名称', dataIndex: 'name', key: 'name' },
-    { title: '版本', dataIndex: 'version', key: 'version' },
-    { title: '语言', dataIndex: 'language', key: 'language' },
-    { title: '类型', dataIndex: 'type', key: 'type' },
-    { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
+    { title: '许可证', dataIndex: 'name', key: 'name' },
+    { title: '名称', dataIndex: 'fullName', key: 'fullName' },
+    { title: '风险等级', dataIndex: 'riskLevel', key: 'riskLevel' },
+    { title: 'OSI认证', dataIndex: 'isOsiApproved', key: 'isOsiApproved' },
+    { title: 'FSF许可', dataIndex: 'isFsfApproved', key: 'isFsfApproved' },
+    { title: 'SPDX认证', dataIndex: 'isSpdxApproved', key: 'isSpdxApproved' },
+    { title: 'GPL兼容性', dataIndex: 'gplCompatibility', key: 'gplCompatibility' },
+    { title: '操作', dataIndex: 'action', key: 'action', width: 120 }
   ]
 })
 const pagination = reactive({
@@ -155,20 +109,17 @@ const pagination = reactive({
   showSizeChanger: false,
   onChange: (page, size) => {
     pagination.current = page
-    getComponents(page, size)
+    getLicenses(page, size)
   },
   hideOnSinglePage: true
 })
-const getComponents = (number = 1, size = 10) => {
-  data.datasource = []
-  if (data.accurate && data.search.groupId === '') return
-  if (!data.accurate && data.search.language === '' && data.search.name === '') return
+const getLicenses = (page = 1, size = 10) => {
   const params = {
     ...data.search,
-    number,
+    page,
     size
   }
-  GetComponents(params)
+  GetAllLicense(params)
     .then((res) => {
       // console.log('GetComponents', res)
       if (res.code !== 200) {
@@ -177,64 +128,17 @@ const getComponents = (number = 1, size = 10) => {
       }
       data.datasource = res.data.content
       data.datasource.forEach((item) => {
-        if (item.name === '-') item.name = item.artifactId
+        if (item.name === '') item.name = '-'
       })
       pagination.total = res.data.totalElements
-      pagination.current = number
+      pagination.current = page
     })
     .catch((err) => {
       console.error(err)
     })
 }
-const changeMode = (value) => {
-  data.accurate = value
-  if (!value) {
-    data.search.groupId = ''
-    data.search.version = ''
-    data.search.artifactId = ''
-  }
-  getComponents()
-}
-// const addComponent = () => {
-//   addModal.value.open()
-// }
 const showInfo = (record) => {
   drawer.value.open(record, true)
-}
-// const updateComponent = (record) => {
-//   updateModal.value.open(record)
-// }
-// const retry = (record) => {
-//   record.popconfirm = false
-//   updateComponent(record)
-// }
-// const deleteComponent = (record) => {
-//   record.popconfirm = false
-//   DeleteComponent({ name: record.name, version: record.version, language: record.language })
-//     .then((res) => {
-//       // console.log('DeleteComponent', res)
-//       if (res.code !== 200) {
-//         message.error(res.message)
-//         return
-//       }
-//       if (!res.data || res.data.length === 0) {
-//         message.success('删除组件成功')
-//         getComponents()
-//       } else {
-//         warnModal.value.open(res.data, '有以下应用依赖该组件：')
-//       }
-//     })
-//     .catch((err) => {
-//       message(err)
-//     })
-// }
-const arrToString = (arr) => {
-  if (!arr) return
-  return arr
-    .reduce((pre, curr) => {
-      return `${pre}; ${curr}`
-    }, '')
-    .substring(1)
 }
 </script>
 
@@ -281,3 +185,4 @@ const arrToString = (arr) => {
 <style scoped src="@/atdv/pagination.css"></style>
 <style scoped src="@/atdv/radio-btn.css"></style>
 <style scoped src="@/atdv/select.css"></style>
+<style scoped src="@/atdv/spin.css"></style>

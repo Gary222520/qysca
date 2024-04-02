@@ -55,6 +55,12 @@
           </template>
           <template v-if="column.key === 'action'">
             <a-tooltip>
+              <template #title>详情</template>
+              <FileTextOutlined
+                :style="{ fontSize: '18px', color: '#6f005f', marginRight: '10px' }"
+                @click="showInfo(record)" />
+            </a-tooltip>
+            <a-tooltip>
               <template #title>删除</template>
               <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个许可证吗？">
                 <template #cancelButton>
@@ -76,7 +82,7 @@
 </template>
 
 <script setup>
-import { PlusOutlined, CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, CheckOutlined, CloseOutlined, FileTextOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import { reactive, ref, defineExpose, defineEmits, defineProps, onMounted } from 'vue'
 import { GetLicenseList, AddLicense, DeleteLicense } from '@/api/frontend'
 import Drawer from '@/components/LicenseDrawer.vue'

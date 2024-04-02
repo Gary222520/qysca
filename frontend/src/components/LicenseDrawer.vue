@@ -43,6 +43,15 @@
           </div>
         </a-descriptions-item>
       </a-descriptions>
+      <a-modal v-model:open="data.showTotal" width="1000px" @cancel="closeModal()">
+        <template #title>
+          <div style="font-size: 20px">许可证内容</div>
+        </template>
+        <span>{{ data.text }}</span>
+        <template #footer>
+          <a-button class="btn" @click="changeText()">确认</a-button>
+        </template>
+      </a-modal>
 
       <div class="relative">
         <div class="drawer_title" style="margin-bottom: 20px">许可证义务</div>
@@ -169,6 +178,10 @@ const changeText = () => {
   if (data.showTotal) text.value.innerHTML = data.text
   else cutText(5)
 }
+const closeModal = () => {
+  if (data.showTotal) text.value.innerHTML = data.text
+  else cutText(5)
+}
 
 const cutText = (line = 5) => {
   if (!text.value) return
@@ -235,6 +248,10 @@ defineExpose({ open })
   right: 0;
   bottom: 0;
   cursor: pointer;
+  color: #6f005f;
+}
+.btn:hover {
+  border-color: #6f005f;
   color: #6f005f;
 }
 .list {

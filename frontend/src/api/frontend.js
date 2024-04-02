@@ -65,6 +65,8 @@ export const UpdateComponent = (data) => request('post', API.UPDATE_COMPONENT, {
 // 删除闭源组件
 export const DeleteComponent = (data) => request('post', API.DELETE_COMPONENT, { data })
 
+// 许可证库界面查看许可证列表
+export const GetAllLicense = (params) => request('get', API.ALL_LICENSE, { params })
 // 获取某个应用的许可证列表
 export const GetLicenseList = (params) => request('get', API.LICENSE_LIST, { params })
 // 查看许可证详细内容
