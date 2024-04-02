@@ -18,7 +18,7 @@ public class PythonTest {
 
     @Test
     public void test1(){
-        String filePath = "D:\\MyCourse\\2024Aping\\graduate design\\qysca\\backend\\src\\main\\resources\\upload\\vyper.zip";
+        String filePath = "D:\\MyCourse\\2024Aping\\graduate design\\qysca\\backend\\src\\main\\resources\\static\\upload\\vyper.zip";
         String builder = "zip";
         String name = "vyper";
         String version = "0.4.0b6";
@@ -35,7 +35,7 @@ public class PythonTest {
 
     @Test
     public void test3(){
-        String filePath = "D:\\MyCourse\\2024Aping\\graduate design\\qysca\\backend\\src\\main\\resources\\upload\\py.zip";
+        String filePath = "D:\\MyCourse\\2024Aping\\graduate design\\qysca\\backend\\src\\main\\resources\\static\\upload\\py.zip";
         String builder = "zip";
         String name = "my-kafka";
         String version = "0.0.1";
