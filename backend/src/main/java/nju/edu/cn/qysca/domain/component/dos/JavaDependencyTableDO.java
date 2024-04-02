@@ -56,4 +56,8 @@ public class JavaDependencyTableDO extends DependencyTableDO{
     @Column(name="licenses", nullable = false)
     @ApiModelProperty(value = "许可证", example = "Apache License 2.0")
     private String licenses;
+
+    @Column(name="vulnerabilities", nullable = false)
+    @ApiModelProperty(value = "漏洞", example = "CVE-2020-1197")
+    private String vulnerabilities;
 }

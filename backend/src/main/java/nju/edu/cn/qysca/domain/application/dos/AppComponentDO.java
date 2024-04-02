@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
-import nju.edu.cn.qysca.domain.component.dos.ComponentLicenseDO;
 import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
@@ -69,6 +68,11 @@ public class AppComponentDO extends ComponentDO {
     @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")
     @Type(type = "string-array")
     private String[] licenses = {};
+
+    @Column(name  = "vulnerabilities")
+    @ApiModelProperty(value = "漏洞", example = "[\"CVE-2020-1197\",]")
+    @Type(type= "string-array")
+    private String[] vulnerabilities = {};
 
     @Column(name = "creator")
     @ApiModelProperty(value = "创建者", example = "000000000")

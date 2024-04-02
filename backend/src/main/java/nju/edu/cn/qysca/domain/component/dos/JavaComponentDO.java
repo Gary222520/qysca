@@ -81,6 +81,11 @@ public class JavaComponentDO extends ComponentDO {
     @Type(type = "string-array")
     private String[] licenses = {};
 
+    @Column(name  = "vulnerabilities")
+    @ApiModelProperty(value = "漏洞", example = "[\"CVE-2020-1197\",]")
+    @Type(type= "string-array")
+    private String[] vulnerabilities = {};
+
     @Column(name = "hashes")
     @ApiModelProperty(value = "哈希值列表")
     @Type(type="jsonb")
