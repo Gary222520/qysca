@@ -480,7 +480,12 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         String[] licenses = null;
         String[] vulnerabilities = null;
-        Set<String> language = new HashSet<>(Arrays.asList(parentApplicationDO.getLanguage()));
+        Set<String> language = null;
+        if(parentApplicationDO.getLanguage() == null){
+            language = new HashSet<>();
+        }else{
+            language = new HashSet<>(Arrays.asList(parentApplicationDO.getLanguage()));
+        }
         //不是应用发布成的组件
         if (applicationDO == null) {
             List<String> childComponent = null;
