@@ -12,6 +12,8 @@ import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.spider.PythonSpiderService;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +22,9 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -73,48 +78,52 @@ public class PythonServiceImpl implements PythonService {
      */
     @Override
     public PythonDependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String name, String version, String type) {
-        // 支持zip、txt、py三种
+        // 支持zip、tar.gz、txt三种
         if (builder.equals("zip")) {
             unzip(filePath);
+            filePath = filePath.substring(0, filePath.lastIndexOf("."));
+        } else if (builder.equals("tar.gz")){
+            unTarGz(filePath);
+            filePath = filePath.substring(0, filePath.lastIndexOf("."));
             filePath = filePath.substring(0, filePath.lastIndexOf("."));
         } else if (builder.equals("txt")) {
             File txt = new File(filePath);
             filePath = txt.getParentFile().getPath();
-        } else if (builder.equals("py")) {
-            // 一般情况下setup.py都会引用到外部文件，然后运行命令就会报错，依赖也就为空了
-            File py = new File(filePath);
-            filePath = py.getParentFile().getPath();
         } else {
             throw new PlatformException(500, "python解析暂不支持此文件类型");
         }
 
         File project = new File(filePath);
-
         // 调用以下命令，获取json形式的依赖树
         // 1. 创建虚拟环境venv
         // 2. 安装pipdeptree
-        // 3. 安装在requirements.txt或者requirements-docs.txt中的包
+        // 3. 安装在requirements.txt中的包
         // 4. 执行setup.py，里面要求了一些依赖
         // 5. pipdeptree --json-tree获取json形式的依赖树
         String[] command1 = {"python", "-m", "venv", "venv"};
-        //String[] command2 = {".\\venv\\Scripts\\activate.bat"};
-        String[] command3 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
-        String[] command4 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "-r", project.getPath() + "\\requirements.txt"};
-        String[] command5 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "-r", project.getPath() + "\\requirements-docs.txt"};
-        String[] command6 = {project.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "setup.py", "develop"};
-        String[] command7 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
-
         executeCommand(command1, project, false);
-        executeCommand(command3, null, false);
-        if (builder.equals("zip") || builder.equals("txt")) {
-            executeCommand(command4, null, true);
-            executeCommand(command5, null, true);
+
+        String[] command2 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
+        executeCommand(command2, null, false);
+
+        List<String> requirementTxtList = findRequirementFiles(project);
+        if(builder.equals("zip") || builder.equals("tar.gz") || builder.equals("txt")) {
+            for (String requirementsTxt : requirementTxtList) {
+                String[] command3 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "-r", requirementsTxt};
+                executeCommand(command3, null, true);
+            }
         }
-        if (builder.equals("zip") || builder.equals("py")) {
-            executeCommand(command6, project, true);
+
+        String[] command4 = {project.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "setup.py", "develop"};
+        if (builder.equals("zip") || builder.equals("tar.gz")) {
+            executeCommand(command4, project, true);
         }
-        String jsonString = executeCommand(command7, null, true);
-        if (builder.equals("zip")) {
+
+        String[] command5 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
+        String jsonString = executeCommand(command5, null, true);
+
+        // 删除生成的文件
+        if (builder.equals("zip") || builder.equals("tar.gz")) {
             deleteFolder(filePath);
         } else {
             deleteFolder(filePath + "\\venv");
@@ -167,12 +176,18 @@ public class PythonServiceImpl implements PythonService {
         if (!tempFile.exists()){ //如果不存在
             boolean dr = tempFile.mkdirs(); //创建目录
         }
+
+        // 调用以下命令，获取json形式的依赖树
+        // 1. 创建虚拟环境venv
+        // 2. 安装pipdeptree
+        // 3. 安装要查询的包
+        // 5. pipdeptree --json-tree获取json形式的依赖树
         String[] command1 = {"python", "-m", "venv", "venv"};
         String[] command3 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
         String[] command4 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", name+"=="+version};
         String[] command5 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
 
-        executeCommand(command1, tempFile, true);
+        executeCommand(command1, tempFile, false);
         executeCommand(command3, null, true);
         executeCommand(command4, null, true);
         String jsonString = executeCommand(command5, null, true);
@@ -346,6 +361,33 @@ public class PythonServiceImpl implements PythonService {
     }
 
     /**
+     * 获取目录下的所有requirements文件
+     * @param dir 目录
+     */
+    private List<String> findRequirementFiles(File dir) {
+        List<String> requirements = new ArrayList<>();
+        // 定义正则表达式匹配包含requirements的txt文件
+        Pattern pattern = Pattern.compile(".*requirements.*\\.txt$");
+        // 获取目录下的所有文件和子目录
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    // 如果是目录，递归调用方法获取目录下的 requirements 文件路径
+                    requirements.addAll(findRequirementFiles(file));
+                } else {
+                    // 如果是文件名匹配 requirements.txt 的正则表达式，则添加文件路径到结果列表
+                    Matcher matcher = pattern.matcher(file.getName());
+                    if (matcher.matches()) {
+                        requirements.add(file.getPath());
+                    }
+                }
+            }
+        }
+        return requirements;
+    }
+
+    /**
      * 解压zip文件
      *
      * @param filePath zip文件路径
@@ -383,6 +425,53 @@ public class PythonServiceImpl implements PythonService {
             zipFile.close();
         } catch (Exception e) {
             throw new PlatformException(500, "解压zip文件失败");
+        }
+    }
+
+    /**
+     * 解压tar.gz文件
+     * @param filePath tar.gz文件路径
+     */
+    private void unTarGz(String filePath) {
+        // 获取输出目录路径
+        String outputDirPath = new File(filePath).getParentFile().getPath();
+        // 创建输出目录
+        File outputDir = new File(outputDirPath);
+        if (!outputDir.exists()) {
+            outputDir.mkdirs();
+        }
+        try (FileInputStream fis = new FileInputStream(filePath);
+             GZIPInputStream gzis = new GZIPInputStream(fis);
+             TarArchiveInputStream taris = new TarArchiveInputStream(gzis)) {
+            // 循环遍历 Tar 文件中的条目，并解压到指定目录
+            TarArchiveEntry entry;
+            while ((entry = taris.getNextTarEntry()) != null) {
+                // 获取条目文件名
+                String entryName = entry.getName();
+                // 构建实际解压后文件的路径
+                File entryFile = new File(outputDir, entryName);
+                if (entry.isDirectory()) {
+                    // 如果是目录，创建目录
+                    entryFile.mkdirs();
+                } else {
+                    // 如果是文件，创建父目录并解压文件
+                    File parent = entryFile.getParentFile();
+                    if (!parent.exists()) {
+                        parent.mkdirs();
+                    }
+                    // 创建文件输出流
+                    try (FileOutputStream fos = new FileOutputStream(entryFile)) {
+                        // 读取 Tar 输入流并写入文件输出流
+                        byte[] buffer = new byte[1024];
+                        int len;
+                        while ((len = taris.read(buffer)) != -1) {
+                            fos.write(buffer, 0, len);
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new PlatformException(500, "解压tar.gz文件失败");
         }
     }
 

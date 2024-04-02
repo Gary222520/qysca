@@ -56,8 +56,8 @@ public class PythonTest {
 
     @Test
     public void test5(){
-        String filePath = "D:\\MyCourse\\2024Aping\\graduate design\\qysca\\backend\\src\\main\\resources\\static\\upload\\setup.py.txt";
-        String builder = "py";
+        String filePath = "D:\\MyCourse\\2024Aping\\graduate design\\qysca\\backend\\src\\main\\resources\\static\\upload\\Django-5.0.3.tar.gz";
+        String builder = "tar.gz";
         String name = "myapp";
         String version = "1.0.0";
         String type = "internal";
