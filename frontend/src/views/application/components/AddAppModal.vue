@@ -6,7 +6,7 @@
     <div style="display: flex; margin-top: 20px">
       <a-form :model="formState" ref="formRef" name="application" :label-col="{ span: 8 }">
         <a-form-item label="应用名称" name="name" :rules="[{ required: true, message: '请输入应用名称' }]">
-          <a-input v-model:value="formState.name" :placeholder="formState.artifactId" style="width: 300px" />
+          <a-input v-model:value="formState.name" style="width: 300px" />
         </a-form-item>
         <a-form-item
           label="版本编号"

@@ -26,6 +26,14 @@
           <AppstoreOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('component') }}</span>
         </a-menu-item>
+        <a-menu-item v-if="permit('vulnerability')" key="vulnerability">
+          <BugOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('vulnerability') }}</span>
+        </a-menu-item>
+        <a-menu-item v-if="permit('license')" key="license">
+          <VerifiedOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('license') }}</span>
+        </a-menu-item>
         <a-menu-item v-if="permit('buManage')" key="buManage">
           <GroupOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('buManage') }}</span>
@@ -77,7 +85,9 @@ import {
   MenuFoldOutlined,
   PieChartOutlined,
   UserOutlined,
-  GroupOutlined
+  GroupOutlined,
+  BugOutlined,
+  VerifiedOutlined
 } from '@ant-design/icons-vue'
 import { Logout } from '@/api/frontend'
 import { message } from 'ant-design-vue'
@@ -108,6 +118,8 @@ const permit = (menu) => {
   switch (menu) {
     case 'application':
     case 'component':
+    case 'vulnerability':
+    case 'license':
       res = !permission.some((item) => item.role === 'Admin')
       break
     case 'buManage':

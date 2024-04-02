@@ -4,8 +4,13 @@ const Login = () => import('@/views/user/Login.vue')
 const Application = () => import('@/views/application/Application.vue')
 const AppDetail = () => import('@/views/project/AppDetail.vue')
 const Compare = () => import('@/views/project/Compare.vue')
+
 const Component = () => import('@/views/component/Component.vue')
 const Dependency = () => import('@/views/component/Dependency.vue')
+
+const Vulnerability = () => import('@/views/vulnerability/Vulnerability.vue')
+
+const License = () => import('@/views/license/License.vue')
 
 const BuManage = () => import('@/views/bu/BuManage.vue')
 
@@ -49,6 +54,18 @@ const routes = [
         name: 'dependency',
         meta: { menu: 'component', title: '组件依赖' },
         component: Dependency
+      },
+      {
+        path: 'vulnerability',
+        name: 'vulnerability',
+        meta: { menu: 'vulnerability', title: '漏洞管理' },
+        component: Vulnerability
+      },
+      {
+        path: 'license',
+        name: 'license',
+        meta: { menu: 'license', title: '许可证管理' },
+        component: License
       },
       {
         path: 'buManage',

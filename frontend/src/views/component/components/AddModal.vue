@@ -1,5 +1,5 @@
 <template>
-  <a-modal v-model:open="data.open" width="800px" :footer="null">
+  <a-modal v-model:open="data.open" width="800px" @cancel="close()" :footer="null">
     <template #title>
       <div style="font-size: 20px">添加组件</div>
     </template>
@@ -62,14 +62,21 @@
               <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
             </div>
           </div>
-          <div style="margin-left: 40px">
-            选择组件类型：
-            <a-select v-model:value="componentInfo.type">
-              <a-select-option value="opensource">开源</a-select-option>
-              <a-select-option value="business">商用</a-select-option>
-              <a-select-option value="internal">内部</a-select-option>
-            </a-select>
-          </div>
+          <a-form :model="formState" ref="formRef" name="component" :label-col="{ span: 5 }" style="margin-top: 30px">
+            <a-form-item label="组件名称" name="name" :rules="[{ required: true, message: '请输入组件名称' }]">
+              <a-input v-model:value="formState.name" style="width: 300px" />
+            </a-form-item>
+            <a-form-item label="版本编号" name="version" :rules="[{ required: true, message: '请输入版本编号' }]">
+              <a-input v-model:value="formState.version" style="width: 300px" />
+            </a-form-item>
+            <a-form-item label="组件类型" name="type" :rules="[{ required: true, message: '请选择组件类型' }]">
+              <a-select v-model:value="formState.type" style="width: 300px">
+                <a-select-option value="opensource">开源</a-select-option>
+                <a-select-option value="business">商用</a-select-option>
+                <a-select-option value="internal">内部</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-form>
         </div>
       </div>
       <div class="button">
@@ -101,9 +108,14 @@ const data = reactive({
   spinning: false
 })
 const componentInfo = reactive({
-  language: 'java',
-  builder: 'maven',
-  filePath: '',
+  language: '',
+  builder: '',
+  filePath: ''
+})
+const formRef = ref()
+const formState = reactive({
+  name: '',
+  version: '',
   type: 'opensource'
 })
 const open = () => {
@@ -111,9 +123,11 @@ const open = () => {
 }
 const close = () => {
   data.open = false
+  clear()
 }
 const clear = () => {
   data.currentStep = 0
+  formRef.value.resetFields()
   uploadRef.value.clear()
 }
 const selectLanguage = (language) => {
@@ -134,33 +148,36 @@ const next = () => {
   data.currentStep += 1
 }
 const submit = () => {
-  const params = {
-    ...componentInfo
-  }
   if (componentInfo.filePath === '') {
     message.info('文件未上传完成')
     return
   }
-  data.spinning = true
-  AddComponent(params)
-    .then((res) => {
-      // console.log('AddComponent', res)
-      data.spinning = false
-      if (res.code !== 200) {
-        message.error(res.message)
-        return
+  formRef.value
+    .validate()
+    .then(() => {
+      const params = {
+        ...componentInfo,
+        ...formState
       }
-      message.success('添加组件成功')
-      data.open = false
-      emit('success')
-      setTimeout(() => {
-        clear()
-      }, 500)
+      data.spinning = true
+      AddComponent(params)
+        .then((res) => {
+          // console.log('AddComponent', res)
+          data.spinning = false
+          if (res.code !== 200) {
+            message.error(res.message)
+            return
+          }
+          message.success('添加组件成功')
+          emit('success')
+          close()
+        })
+        .catch((err) => {
+          data.spinning = false
+          message(err)
+        })
     })
-    .catch((err) => {
-      data.spinning = false
-      message(err)
-    })
+    .catch(() => {})
 }
 defineExpose({ open })
 </script>
