@@ -193,7 +193,7 @@ public class LicenseServiceImpl implements LicenseService{
 
     @Override
     public Page<LicenseBriefDTO> getLicenseList(String name, String version, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page - 1, size);
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
         return licenseDao.getLicenseList(Arrays.asList(applicationDO.getLicenses()), pageable);
     }
