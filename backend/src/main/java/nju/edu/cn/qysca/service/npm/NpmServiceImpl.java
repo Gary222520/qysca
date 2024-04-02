@@ -13,6 +13,7 @@ import nju.edu.cn.qysca.domain.npm.PackageLockDTO;
 import nju.edu.cn.qysca.domain.npm.PackageLockDependencyDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
+import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -39,6 +40,9 @@ public class NpmServiceImpl implements NpmService {
 
     @Autowired
     private LicenseService licenseService;
+
+    @Autowired
+    private VulnerabilityService vulnerabilityService;
 
     private final String FILE_SEPARATOR = "/";
 
@@ -69,7 +73,6 @@ public class NpmServiceImpl implements NpmService {
             licenses.addAll(licenseService.searchLicense(packageJsonDTO.getLicense()));
             jsComponentDO.setLicenses(licenses.toArray(new String[0]));
             jsComponentDO.setType(type);
-            // TODO: 剩余部分信息
             return jsComponentDO;
         }catch (Exception e){
             throw new PlatformException(500, "解析package.json失败");
@@ -124,6 +127,7 @@ public class NpmServiceImpl implements NpmService {
             jsDependencyTableDO.setType(jsComponentDependencyTree.getType());
             jsDependencyTableDO.setLanguage("javaScript");
             jsDependencyTableDO.setLicenses(jsComponentDependencyTree.getLicenses());
+            jsDependencyTableDO.setVulnerabilities(jsComponentDependencyTree.getVulnerabilities());
             queue.addAll(jsComponentDependencyTree.getDependencies());
             jsDependencyTableDOS.add(jsDependencyTableDO);
         }
@@ -167,6 +171,8 @@ public class NpmServiceImpl implements NpmService {
         appComponentDependencyTreeDO.setVersion(jsComponentDependencyTreeDO.getVersion());
         appComponentDependencyTreeDO.setDepth(jsComponentDependencyTreeDO.getDepth());
         appComponentDependencyTreeDO.setType(jsComponentDependencyTreeDO.getType());
+        appComponentDependencyTreeDO.setLicenses(jsComponentDependencyTreeDO.getLicenses());
+        appComponentDependencyTreeDO.setVulnerabilities(jsComponentDependencyTreeDO.getVulnerabilities());
         appComponentDependencyTreeDO.setLanguage("javaScript");
         List<AppComponentDependencyTreeDO> dependencies = new ArrayList<>();
         for (JsComponentDependencyTreeDO childJsComponentDependencyTreeDO : jsComponentDependencyTreeDO.getDependencies()) {
@@ -273,7 +279,7 @@ public class NpmServiceImpl implements NpmService {
                 String name = entry.getName();
                 if (name.contains("package.json") || name.contains("package-lock.json")) {
                     try (InputStream inputStream = zipFile.getInputStream(entry);
-                         FileOutputStream fos = new FileOutputStream(file.getParent() + FILE_SEPARATOR + "package.json")) {
+                         FileOutputStream fos = new FileOutputStream(file.getParent() + FILE_SEPARATOR + name)) {
                         byte[] buffer = new byte[1024];
                         int length;
                         while ((length = inputStream.read(buffer)) > 0) {
@@ -354,12 +360,14 @@ public class NpmServiceImpl implements NpmService {
                 if (jsComponentDO != null) {
                     child.setType("opensource");
                     child.setLicenses(String.join(",", jsComponentDO.getLicenses()));
+                    child.setVulnerabilities(String.join(",", jsComponentDO.getVulnerabilities()));
                     jsComponentDao.save(jsComponentDO);
                 } else {
                     child.setType("opensource");
                 }
             } else {
                 child.setLicenses(String.join(",", jsComponentDO.getLicenses()));
+                child.setVulnerabilities(String.join(",", jsComponentDO.getVulnerabilities()));
                 child.setType(jsComponentDO.getType());
             }
             child.setDepth(depth);
@@ -409,9 +417,8 @@ public class NpmServiceImpl implements NpmService {
             } else {
                 jsComponentDO.setRepoUrl(jsonObject.getString("repository"));
             }
-            List<String> licenses = new ArrayList<>();
-            licenses.addAll(licenseService.searchLicense(jsonObject.getString("license")));
-            jsComponentDO.setLicenses(licenses.toArray(new String[0]));
+            jsComponentDO.setLicenses(licenseService.searchLicense(jsonObject.getString("license")).toArray(new String[0]));
+            jsComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(name, version, "javaScript").toArray(new String[0]));
             jsComponentDO.setDownloadUrl(jsonObject.getJSONObject("dist") == null ? "" : jsonObject.getJSONObject("dist").getString("tarball"));
             List<String> copyrightStatements = new ArrayList<>();
             if (jsonObject.get("author") instanceof JSONObject) {

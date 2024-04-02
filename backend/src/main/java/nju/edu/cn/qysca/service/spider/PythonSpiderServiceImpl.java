@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
 import nju.edu.cn.qysca.service.license.LicenseService;
+import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,9 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
 
     @Autowired
     private LicenseService licenseService;
+
+    @Autowired
+    private VulnerabilityService vulnerabilityService;
 
     /**
      * 根据NV爬取python组件
@@ -77,10 +81,8 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
 /*            List<ComponentLicenseDO> componentLicenseDOList = new ArrayList<>();
             componentLicenseDOList.add(new ComponentLicenseDO(jsonNode.get("info").get("license").asText(), null));
             componentDO.setLicenses(componentLicenseDOList);*/
-            List<String> licenses = new ArrayList<>();
-            licenses.addAll(licenseService.searchLicense(jsonNode.get("info").get("license").asText()));
-            componentDO.setLicenses(licenses.toArray(new String[0]));
-
+            componentDO.setLicenses(licenseService.searchLicense(jsonNode.get("info").get("license").asText()).toArray(new String[0]));
+            componentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(name, version, "python").toArray(new String[0]));
 
             componentDO.setCreator(null);
             componentDO.setState("SUCCESS");

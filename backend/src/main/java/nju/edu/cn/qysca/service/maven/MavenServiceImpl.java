@@ -126,6 +126,7 @@ public class MavenServiceImpl implements MavenService {
             javaDependencyTableDO.setType(componentDependencyTree.getType());
             javaDependencyTableDO.setLanguage("java");
             javaDependencyTableDO.setLicenses(componentDependencyTree.getLicenses());
+            javaDependencyTableDO.setVulnerabilities(componentDependencyTree.getVulnerabilities());
             queue.addAll(componentDependencyTree.getDependencies());
             closeJavaDependencyTableDOList.add(javaDependencyTableDO);
         }
@@ -188,6 +189,7 @@ public class MavenServiceImpl implements MavenService {
                 if (javaComponentDO != null) {
                     javaComponentDao.save(javaComponentDO);
                     javaComponentDependencyTreeDO.setLicenses(String.join(",", javaComponentDO.getLicenses()));
+                    javaComponentDependencyTreeDO.setVulnerabilities(String.join(",", javaComponentDO.getVulnerabilities()));
                     javaComponentDependencyTreeDO.setType("opensource");
                 } else {
                     javaComponentDependencyTreeDO.setType("opensource");
@@ -196,6 +198,7 @@ public class MavenServiceImpl implements MavenService {
                 }
             } else {
                 javaComponentDependencyTreeDO.setLicenses(String.join(",", javaComponentDO.getLicenses()));
+                javaComponentDependencyTreeDO.setVulnerabilities(String.join(",", javaComponentDO.getVulnerabilities()));
                 javaComponentDependencyTreeDO.setType(javaComponentDO.getType());
             }
         }
@@ -292,6 +295,8 @@ public class MavenServiceImpl implements MavenService {
         appComponentDependencyTreeDO.setVersion(javaComponentDependencyTreeDO.getVersion());
         appComponentDependencyTreeDO.setType(javaComponentDependencyTreeDO.getType());
         appComponentDependencyTreeDO.setDepth(javaComponentDependencyTreeDO.getDepth());
+        appComponentDependencyTreeDO.setLicenses(javaComponentDependencyTreeDO.getLicenses());
+        appComponentDependencyTreeDO.setVulnerabilities(javaComponentDependencyTreeDO.getVulnerabilities());
         appComponentDependencyTreeDO.setLanguage("java");
         List<AppComponentDependencyTreeDO> dependencyTreeDOS = new ArrayList<>();
         for(JavaComponentDependencyTreeDO childJavaComponentDependencyTreeDO : javaComponentDependencyTreeDO.getDependencies()) {
@@ -414,7 +419,7 @@ public class MavenServiceImpl implements MavenService {
      * 获得Model中的License信息
      *
      * @param model pom文件
-     * @return List<ComponentLicenseDO> 许可证信息
+     * @return List<String> 许可证信息
      */
     private List<String> getLicense(Model model) {
         List<org.apache.maven.model.License> mavenLicenses = model.getLicenses();

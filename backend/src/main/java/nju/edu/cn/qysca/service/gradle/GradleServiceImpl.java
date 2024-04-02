@@ -194,6 +194,8 @@ public class GradleServiceImpl implements GradleService{
                     javaComponentDO = spiderService.crawlByGav(groupId, artifactId, version);
                     if (javaComponentDO != null){
                         componentDependencyTreeDO.setType("opensource");
+                        componentDependencyTreeDO.setLicenses(String.join(",",javaComponentDO.getLicenses()));
+                        componentDependencyTreeDO.setVulnerabilities(String.join(",",javaComponentDO.getVulnerabilities()));
                     } else{
                         componentDependencyTreeDO.setType("opensource");
                         //如果爬虫没有爬到则扫描错误 通过抛出异常处理
@@ -201,6 +203,8 @@ public class GradleServiceImpl implements GradleService{
                     }
                 } else {
                     componentDependencyTreeDO.setType(javaComponentDO.getType());
+                    componentDependencyTreeDO.setLicenses(String.join(",",javaComponentDO.getLicenses()));
+                    componentDependencyTreeDO.setVulnerabilities(String.join(",",javaComponentDO.getVulnerabilities()));
                 }
 
 
