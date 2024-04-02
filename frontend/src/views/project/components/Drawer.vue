@@ -146,3 +146,4 @@ defineExpose({ open })
 </style>
 <style scoped src="@/atdv/pagination.css"></style>
 <style scoped src="@/atdv/primary-btn.css"></style>
+<style scoped src="@/atdv/description.css"></style>

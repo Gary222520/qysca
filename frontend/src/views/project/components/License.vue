@@ -7,7 +7,7 @@
         </template>
         <!-- <template #icon></template> -->
         <template #description>
-          <a-input class="input" v-model:value="data.input" placeholder="输入许可证以名称添加..."></a-input>
+          <a-input class="input" v-model:value="data.input" placeholder="输入许可证名称以添加..."></a-input>
         </template>
         <template #cancelButton>
           <a-button class="cancel_btn" @click="data.popconfirm = false">取消</a-button>
@@ -91,8 +91,8 @@ const data = reactive({
   component: {},
   datasource: [],
   columns: [
-    { title: '许可证名称', dataIndex: 'name', key: 'name' },
-    { title: '全名', dataIndex: 'fullName', key: 'fullName' },
+    { title: '许可证', dataIndex: 'name', key: 'name' },
+    { title: '名称', dataIndex: 'fullName', key: 'fullName' },
     { title: '风险等级', dataIndex: 'riskLevel', key: 'riskLevel' },
     { title: 'OSI认证', dataIndex: 'isOsiApproved', key: 'isOsiApproved' },
     { title: 'FSF许可', dataIndex: 'isFsfApproved', key: 'isFsfApproved' },
@@ -144,6 +144,7 @@ const getLicenseList = (name = app.name, version = app.version, page = 1, size =
     })
 }
 const addLicense = () => {
+  data.popconfirm = false
   const params = {
     name: app.name,
     version: app.version,

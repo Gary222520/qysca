@@ -55,7 +55,7 @@
             </div>
           </div>
         </a-tab-pane>
-        <a-tab-pane key="2" :tab="`漏洞（${count.vulnerability}）`">
+        <a-tab-pane key="2" :tab="`漏洞（${count.vulnerability}）`" forceRender>
           <div class="content"><Vulnerablity></Vulnerablity></div>
         </a-tab-pane>
         <a-tab-pane key="3" :tab="`许可证（${count.license}）`" forceRender>

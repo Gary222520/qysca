@@ -37,6 +37,12 @@
           <div v-if="projectInfo.builder === 'zip'">
             <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
           </div>
+          <div v-if="projectInfo.builder === 'txt'">
+            <Upload ref="uploadRef" :accept="'.txt'" :upload-text="'.txt文件'" @success="handleUpload"></Upload>
+          </div>
+          <div v-if="projectInfo.builder === 'tar.gz'">
+            <Upload ref="uploadRef" :accept="'.gz'" :upload-text="'tar.gz文件'" @success="handleUpload"></Upload>
+          </div>
         </div>
         <div class="upload" v-if="projectInfo.language === 'golang'">
           <div v-if="projectInfo.builder === 'go.mod'">
