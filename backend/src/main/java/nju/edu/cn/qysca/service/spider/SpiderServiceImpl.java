@@ -1,11 +1,9 @@
 package nju.edu.cn.qysca.service.spider;
 
 import nju.edu.cn.qysca.dao.component.JavaComponentDao;
-import nju.edu.cn.qysca.dao.component.JavaDependencyTableDao;
-import nju.edu.cn.qysca.dao.component.JavaDependencyTreeDao;
 import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
 import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
-import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
+import nju.edu.cn.qysca.service.license.LicenseService;
 import nju.edu.cn.qysca.utils.HashUtil;
 import nju.edu.cn.qysca.utils.spider.UrlConnector;
 import org.apache.maven.model.Model;
@@ -20,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,9 +31,7 @@ public class SpiderServiceImpl implements SpiderService {
     @Autowired
     private JavaComponentDao javaComponentDao;
     @Autowired
-    private JavaDependencyTreeDao javaDependencyTreeDao;
-    @Autowired
-    private JavaDependencyTableDao javaDependencyTableDao;
+    private LicenseService licenseService;
 
     /**
      * 通过gav爬取组件
@@ -94,7 +91,7 @@ public class SpiderServiceImpl implements SpiderService {
         if (javaComponentDO == null)
             return null;
 
-        JavaComponentDO searchResult = javaComponentDao.findByGroupIdAndArtifactIdAndVersion(javaComponentDO.getGroupId(), javaComponentDO.getArtifactId(), javaComponentDO.getVersion());
+        JavaComponentDO searchResult = javaComponentDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion());
         if (searchResult != null) {
             // 表示该组件的组件信息已被爬取过
             return searchResult;
@@ -213,11 +210,10 @@ public class SpiderServiceImpl implements SpiderService {
         }
 
         JavaComponentDO javaComponentDO = new JavaComponentDO();
-        javaComponentDO.setGroupId(groupId);
-        javaComponentDO.setArtifactId(artifactId);
+        javaComponentDO.setName(groupId + ":" + artifactId);
         javaComponentDO.setVersion(version);
 
-        javaComponentDO.setName(model.getName() == null ? "-" : model.getName());
+        javaComponentDO.setJName(model.getName() == null ? "-" : model.getName());
         javaComponentDO.setLanguage("java");
         javaComponentDO.setType("opensource");
         javaComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
@@ -228,8 +224,13 @@ public class SpiderServiceImpl implements SpiderService {
 
         javaComponentDO.setPUrl(getMavenPUrl(groupId, artifactId, version, model.getPackaging()));
         javaComponentDO.setDevelopers(getDevelopers(model));
-        javaComponentDO.setLicenses(getLicense(model));
-
+        //javaComponentDO.setLicenses(getLicense(model));
+        List<String> licenses = new ArrayList<>();
+        List<String> license = getLicense(model);
+        for(String licenseName : license){
+            licenses.addAll(licenseService.searchLicense(licenseName));
+        }
+        javaComponentDO.setLicenses(licenses.toArray(new String[0]));
         javaComponentDO.setCreator(null);
         javaComponentDO.setState("SUCCESS");
         return javaComponentDO;
@@ -283,21 +284,18 @@ public class SpiderServiceImpl implements SpiderService {
     }
 
     /**
-     * 从maven-model中获得licenseDO列表
+     * 从maven-model中获得license列表
      *
      * @param model maven-model
-     * @return licenseDO列表
+     * @return List<String> license列表
      */
-    private List<LicenseDO> getLicense(Model model) {
+    private List<String> getLicense(Model model) {
         List<org.apache.maven.model.License> mavenLicenses = model.getLicenses();
-        return mavenLicenses.stream()
-                .map(mavenLicense -> {
-                    LicenseDO license = new LicenseDO();
-                    license.setName(mavenLicense.getName() == null ? "-" : mavenLicense.getName());
-                    license.setUrl(mavenLicense.getUrl() == null ? "-" : mavenLicense.getUrl());
-                    return license;
-                })
-                .collect(Collectors.toList());
+        List<String> result = new ArrayList<>();
+        for(org.apache.maven.model.License mavenLicense : mavenLicenses) {
+            result.add(mavenLicense.getName());
+        }
+        return result;
     }
 
     /**

@@ -19,7 +19,7 @@ public class GradleTest {
         String artifactId = "gradle-spring-example";
         String version = "0.0.1-SNAPSHOT";
         String type = "internal";
-        gradleService.dependencyTreeAnalysis(filePath, builder, groupId, artifactId, version, type);
+        gradleService.dependencyTreeAnalysis(filePath, builder, groupId+":"+artifactId, version, type);
         System.out.println("ok");
     }
 }

@@ -77,4 +77,26 @@ public class GoTest {
         GoDependencyTreeDO goDependencyTreeDO=goService.spiderDependency(name,version);
         System.out.println("ok");
     }
+
+    @Test
+    public void test6(){
+        // special test
+        String name="github.com/sylabs/singularity-mpi";
+        String version="v1.1.0";
+        GoDependencyTreeDO goDependencyTreeDO=goService.spiderDependency(name,version);
+        System.out.println("ok");
+    }
+
+    @Test
+    public void test7(){
+        // special test
+        String name="test_env";
+        String version="v1.4.0";
+        String type="business";
+        String builder="go.mod";
+        String filePath="D:/gos/test_env/go.mod";
+        GoDependencyTreeDO goDependencyTreeDO=goService.dependencyTreeAnalysis(name,version,type,filePath,builder);
+        List<GoDependencyTableDO> goDependencyTableDO=goService.dependencyTableAnalysis(goDependencyTreeDO);
+        System.out.println("ok");
+    }
 }

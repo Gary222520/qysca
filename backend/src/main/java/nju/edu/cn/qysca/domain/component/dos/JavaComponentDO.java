@@ -18,11 +18,12 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "plt_java_component",uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id","artifact_id","version"})})
+@Table(name= "plt_java_component",uniqueConstraints = {@UniqueConstraint(columnNames = {"name","version"})})
 @TypeDefs({
         @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
 })
 public class JavaComponentDO extends ComponentDO {
+
     @Id
     @Column(name="id",nullable = false)
     @GenericGenerator(name = "jpa-uuid", strategy = "uuid")
@@ -30,21 +31,17 @@ public class JavaComponentDO extends ComponentDO {
     @ApiModelProperty(value = "uuid", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private String id;
 
-    @Column(name="group_id",nullable = false)
-    @ApiModelProperty(value = "组织id", example = "org.springframework.boot")
-    private String groupId;
-
-    @Column(name="artifact_id",nullable = false)
-    @ApiModelProperty(value = "工件id", example = "spring-boot-starter")
-    private String artifactId;
+    @Column(name="name",nullable = false)
+    @ApiModelProperty(value = "名称", example = "fontawesome-free")
+    private String name;
 
     @Column(name = "version",nullable = false)
     @ApiModelProperty(value = "版本号", example = "2.5.15")
     private String version;
 
-    @Column(name="name")
+    @Column(name="j_name")
     @ApiModelProperty(value = "组件名称", example = "spring-boot-starter")
-    private String name;
+    private String jName;
 
     @Column(name="language",nullable = false)
     @ApiModelProperty(value = "语言", example = "java")
@@ -80,9 +77,9 @@ public class JavaComponentDO extends ComponentDO {
     private List<DeveloperDO> developers = new ArrayList<>();
 
     @Column(name = "licenses")
-    @ApiModelProperty(value = "许可证列表")
-    @Type(type="jsonb")
-    private List<LicenseDO> licenses = new ArrayList<>();
+    @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")
+    @Type(type = "string-array")
+    private String[] licenses = {};
 
     @Column(name = "hashes")
     @ApiModelProperty(value = "哈希值列表")

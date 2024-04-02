@@ -75,9 +75,9 @@ public class PythonComponentDO extends ComponentDO{
     private String authorEmail;
 
     @Column(name = "licenses")
-    @ApiModelProperty(value = "许可证列表")
-    @Type(type="jsonb")
-    private List<LicenseDO> licenses = new ArrayList<>();
+    @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")
+    @Type(type = "string-array")
+    private String[] licenses = {};
 
     @Column(name = "creator")
     @ApiModelProperty(value = "创建者", example = "000000000")

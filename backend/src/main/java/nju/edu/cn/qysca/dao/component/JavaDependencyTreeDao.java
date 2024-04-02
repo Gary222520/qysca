@@ -9,29 +9,20 @@ import org.springframework.stereotype.Repository;
 public interface JavaDependencyTreeDao extends JpaRepository<JavaDependencyTreeDO, String> {
 
     /**
-     * 根据gav查找闭源组件依赖树
+     * 根据name, version查找闭源组件依赖树
      *
-     * @param groupId    组织id
-     * @param artifactId 工件id
+     * @param name 名称
      * @param version    版本号
      * @return JavaDependencyTreeDO 查找结果
      */
-    JavaDependencyTreeDO findByGroupIdAndArtifactIdAndVersion(String groupId, String artifactId, String version);
+    JavaDependencyTreeDO findByNameAndVersion(String name, String version);
 
 
     /**
-     *  根据gav删除闭源组件依赖树
-     * @param groupId 组织ID
-     * @param artifactId 工件ID
+     * 根据gav删除闭源组件依赖树
+     * @param name 名称
      * @param version 版本号
      */
-    void deleteByGroupIdAndArtifactIdAndVersion(String groupId, String artifactId, String version);
+    void deleteByNameAndVersion(String name, String version);
 
-
-    /**
-     *  根据ga删除闭源组件依赖树
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
-     */
-    void deleteAllByGroupIdAndArtifactId(String groupId, String artifactId);
 }

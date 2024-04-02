@@ -20,7 +20,7 @@ import javax.persistence.*;
 @TypeDefs({
         @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
 })
-public class GoDependencyTreeDO {
+public class GoDependencyTreeDO extends DependencyTreeDO{
     @Id
     @Column(name="id",nullable = false)
     @GenericGenerator(name = "jpa-uuid", strategy = "uuid")

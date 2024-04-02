@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -40,15 +41,6 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
     void deleteByNameAndVersion(String name, String version);
 
 
-    /**
-     * 查询指定应用指定状态的版本数量
-     *
-     * @param groupId 组织Id
-     * @param artifactId 工件Id
-     * @param state 状态
-     * @return Integer 版本数量
-     */
-    //Integer countByGroupIdAndArtifactIdAndState(String groupId, String artifactId, String state);
 
     /**
      * 查询指定应用的版本信息
@@ -109,4 +101,13 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      */
     @Query(value = "select * from plt_application where :id = any(child_application)", nativeQuery = true)
     List<ApplicationDO> findParentApplication(String id);
+
+    /**
+     * 根据id查找其父应用
+     * @param language 语言
+     * @param id 组件Id
+     * @return List<ApplicationDO> 父应用列表
+     */
+    @Query(value = "select * from plt_application where child_component -> ?1 @> ?2", nativeQuery = true)
+    List<ApplicationDO> findParentApplication(String language, String id);
 }

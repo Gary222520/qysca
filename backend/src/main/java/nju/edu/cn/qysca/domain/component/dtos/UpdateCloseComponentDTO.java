@@ -12,11 +12,8 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "更新闭源组件接口")
 public class UpdateCloseComponentDTO {
 
-    @ApiModelProperty(value = "组件id", example = "nju.edu.cn")
-    private String groupId;
-
-    @ApiModelProperty(value = "工件Id", example = "qysca")
-    private String artifactId;
+    @ApiModelProperty(value = "名称", example = "qysca")
+    private String name;
 
     @ApiModelProperty(value = "版本号", example = "1.0.0")
     private String version;

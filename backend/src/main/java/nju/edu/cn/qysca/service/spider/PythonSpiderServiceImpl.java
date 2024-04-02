@@ -3,10 +3,9 @@ package nju.edu.cn.qysca.service.spider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nju.edu.cn.qysca.domain.component.dos.LicenseDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
+import nju.edu.cn.qysca.service.license.LicenseService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -22,6 +21,9 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
      * pypi仓库根地址
      */
     private final static String PYPI_REPO_BASE_URL = "https://pypi.org/pypi/";
+
+    @Autowired
+    private LicenseService licenseService;
 
     /**
      * 根据NV爬取python组件
@@ -72,9 +74,13 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
             componentDO.setSourceUrl(jsonNode.get("info").get("release_url").asText());
             componentDO.setPUrl(getPyPiPUrl(name, version));
 
-            List<LicenseDO> licenseDOList = new ArrayList<>();
-            licenseDOList.add(new LicenseDO(jsonNode.get("info").get("license").asText(), null));
-            componentDO.setLicenses(licenseDOList);
+/*            List<ComponentLicenseDO> componentLicenseDOList = new ArrayList<>();
+            componentLicenseDOList.add(new ComponentLicenseDO(jsonNode.get("info").get("license").asText(), null));
+            componentDO.setLicenses(componentLicenseDOList);*/
+            List<String> licenses = new ArrayList<>();
+            licenses.addAll(licenseService.searchLicense(jsonNode.get("info").get("license").asText()));
+            componentDO.setLicenses(licenses.toArray(new String[0]));
+
 
             componentDO.setCreator(null);
             componentDO.setState("SUCCESS");

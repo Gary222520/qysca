@@ -12,9 +12,12 @@ import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 @AllArgsConstructor
@@ -23,7 +26,7 @@ import java.util.Map;
 @Table(name = "plt_application", uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "version"})})
 @TypeDefs({
         @TypeDef(name = "string-array", typeClass = StringArrayType.class),
-        @TypeDef(name = "jsonb",typeClass = JsonBinaryType.class)
+        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
 })
 public class ApplicationDO {
     @Id
@@ -60,6 +63,11 @@ public class ApplicationDO {
     @Column(name = "scanner", nullable = false)
     @ApiModelProperty(value = "扫描对象", example = "zip")
     private String scanner;
+
+    @Column(name = "licenses")
+    @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")
+    @Type(type = "string-array")
+    private String[] licenses = {};
 
     @Column(name = "state", nullable = false)
     @ApiModelProperty(value = "扫描状态", example = "SUCCESS,FAILED,RUNNING,CREATED")
