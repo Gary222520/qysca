@@ -89,10 +89,14 @@ const clear = () => {
   formRef.value.resetFields()
   selection.componentList = []
   selection.options = []
+  componentInfo.name = ''
+  componentInfo.version = ''
+  componentInfo.language = ''
 }
 const getNameList = async () => {
   formState.version = ''
   selection.options = []
+  if (formState.name === '') return
   await GetComponentNameList({ name: formState.name, language: formState.language })
     .then((res) => {
       if (res.code !== 200) {
@@ -116,6 +120,9 @@ const getNameList = async () => {
         }
         return pre
       }, [])
+      componentInfo.name = formState.name
+      componentInfo.language = formState.language
+      if (selection.componentList.length === 1) selection.options = selection.componentList[0].versions
     })
     .catch((err) => {
       console.error(err)

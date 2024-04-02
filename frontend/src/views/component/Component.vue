@@ -55,7 +55,7 @@
           <a-button type="primary" v-if="data.accurate" @click="changeMode(false)"><RollbackOutlined />返回</a-button> -->
         </div>
       </div>
-      <a-button type="primary" @click="addComponent" style="margin-bottom: 20px"><PlusOutlined />添加组件</a-button>
+      <a-button type="primary" @click="addComponent()" style="margin-bottom: 20px"><PlusOutlined />添加组件</a-button>
       <a-table :data-source="data.datasource" :columns="data.columns" bordered :pagination="pagination">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">

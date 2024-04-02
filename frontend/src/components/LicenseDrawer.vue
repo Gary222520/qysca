@@ -7,11 +7,24 @@
         <a-tag v-if="data.detail?.riskLevel === 'medium'" color="warning">中危</a-tag>
         <a-tag v-if="data.detail?.riskLevel === 'low'" color="processing">低危</a-tag>
         <span style="font-size: 20px; font-weight: bold; margin-right: 10px">{{ data.detail?.name }}</span>
-        <a-tag v-if="data.detail?.isOsiApproved" color="success">OSI认证</a-tag>
-        <a-tag v-if="data.detail?.isFsfApproved" color="success">FSF许可</a-tag>
-        <a-tag v-if="data.detail?.isSpdxApproved" color="success">SPDX认证</a-tag>
-        <a-tag v-if="data.detail?.gplCompatibility" color="success">GPL兼容</a-tag>
-        <a-tag v-else color="error">GPL不兼容</a-tag>
+        <a-tag v-if="data.detail?.isOsiApproved" class="flex">
+          <template #icon><img class="tag-img" src="@/assets/osi.png" /></template>
+          OSI认证
+        </a-tag>
+        <a-tag v-if="data.detail?.isFsfApproved" class="flex">
+          <template #icon><img class="tag-img" src="@/assets/fsf.png" /></template>
+          FSF许可
+        </a-tag>
+        <a-tag v-if="data.detail?.isSpdxApproved" class="flex">
+          <template #icon><img class="tag-img" src="@/assets/spdx.png" /></template>
+          SPDX认证
+        </a-tag>
+        <a-tag v-if="data.detail?.gplCompatibility" color="success">
+          <div style="color: #48cd7f">GPL兼容</div>
+        </a-tag>
+        <a-tag v-else color="error">
+          <div style="color: #f64e60">GPL不兼容</div>
+        </a-tag>
       </div>
       <div class="relative">
         <div class="drawer_title" style="margin-bottom: 20px">基本信息</div>
@@ -239,6 +252,15 @@ defineExpose({ open })
   font-weight: bold;
   color: #fff;
   background-color: #f64e60;
+}
+.flex {
+  display: flex;
+  align-items: center;
+}
+.tag-img {
+  width: 12px;
+  height: 12px;
+  margin-right: 5px;
 }
 </style>
 <style scoped src="@/atdv/pagination.css"></style>

@@ -42,10 +42,10 @@
             <div v-if="componentInfo.builder === 'zip'">
               <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
             </div>
-            <div v-if="projectInfo.builder === 'txt'">
+            <div v-if="componentInfo.builder === 'txt'">
               <Upload ref="uploadRef" :accept="'.txt'" :upload-text="'.txt文件'" @success="handleUpload"></Upload>
             </div>
-            <div v-if="projectInfo.builder === 'tar.gz'">
+            <div v-if="componentInfo.builder === 'tar.gz'">
               <Upload ref="uploadRef" :accept="'.gz'" :upload-text="'tar.gz文件'" @success="handleUpload"></Upload>
             </div>
           </div>
