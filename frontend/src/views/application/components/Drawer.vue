@@ -26,7 +26,7 @@
       <div class="drawer_title">扫描信息</div>
     </div>
     <a-descriptions>
-      <a-descriptions-item label="语言">{{ data.detail?.language }}</a-descriptions-item>
+      <a-descriptions-item label="语言">{{ arrToString(data.detail?.language) }}</a-descriptions-item>
       <a-descriptions-item label="构建工具">{{ data.detail?.builder }}</a-descriptions-item>
       <a-descriptions-item label="扫描对象">{{ data.detail?.scanner }}</a-descriptions-item>
       <a-descriptions-item label="扫描时间">{{ data.detail?.time }}</a-descriptions-item>
@@ -255,6 +255,15 @@ const showDetail = () => {
       version: data.detail.version
     }
   })
+}
+
+const arrToString = (arr) => {
+  if (!arr) return
+  return arr
+    .reduce((pre, curr) => {
+      return `${pre}; ${curr}`
+    }, '')
+    .substring(1)
 }
 
 defineExpose({ open })

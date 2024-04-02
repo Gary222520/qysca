@@ -1,8 +1,8 @@
 <template>
-  <a-drawer v-model:open="data.open" width="800px" :closable="false" placement="right">
+  <a-drawer v-model:open="data.open" width="900px" :closable="false" placement="right">
     <template #title><div style="font-size: 24px">许可证详情</div></template>
-    <div>
-      <span style="font-size: 20px; font-weight: bold">{{ data.detail?.name }}</span>
+    <div style="display: flex; align-items: center">
+      <span style="font-size: 20px; font-weight: bold; margin-right: 10px">{{ data.detail?.name }}</span>
       <a-tag v-if="data.detail?.riskLevel === 'high'" color="error">高危</a-tag>
       <a-tag v-if="data.detail?.riskLevel === 'medium'" color="warning">中危</a-tag>
       <a-tag v-if="data.detail?.riskLevel === 'low'" color="processing">低危</a-tag>
@@ -23,81 +23,83 @@
         {{ data.detail?.gplCompatibilityDescription }}
       </a-descriptions-item>
       <a-descriptions-item label="许可证内容说明" span="3">
-        <span ref="text">{{ data.text }}</span>
-        <div v-if="data.showBtn" @click="changeText()">{{ data.showTotal ? '收起' : '展开' }}</div>
+        <div style="position: relative">
+          <span ref="text">{{ data.text }}</span>
+          <div class="text-btn" v-if="data.showBtn" @click="changeText()">{{ data.showTotal ? '收起' : '展开' }}</div>
+        </div>
       </a-descriptions-item>
     </a-descriptions>
 
     <div class="relative">
       <div class="drawer_title" style="margin-bottom: 20px">许可证义务</div>
     </div>
-    <div style="display: flex">
-      <div>
-        <a-list size="small" bordered :data-source="data.detail?.obligationsRequired">
-          <template #header>
-            <div>必须义务</div>
-          </template>
-          <template #renderItem="{ item, index }">
-            <a-list-item>
-              <span>{{ index }}、</span>
-              <span>{{ item.title }}：</span>
-              <span>{{ item.content }}</span>
-            </a-list-item>
-            <a-list-item v-if="data.detail?.obligationsRequired.length == 0">暂无内容</a-list-item>
-          </template>
-        </a-list>
-      </div>
-      <div>
-        <a-list size="small" bordered :data-source="data.detail?.obligationsNotRequired">
-          <template #header>
-            <div>无需义务</div>
-          </template>
-          <template #renderItem="{ item, index }">
-            <a-list-item>
-              <span>{{ index }}、</span>
-              <span>{{ item.title }}：</span>
-              <span>{{ item.content }}</span>
-            </a-list-item>
-            <a-list-item v-if="data.detail?.obligationsNotRequired.length == 0">暂无内容</a-list-item>
-          </template>
-        </a-list>
-      </div>
+    <div class="list prohibited">
+      <a-list size="small" bordered :data-source="data.detail?.obligationsRequired">
+        <template #header>
+          <div>必须义务</div>
+        </template>
+        <template #renderItem="{ item, index }">
+          <a-list-item>
+            <div>
+              <span style="font-weight: bold">{{ `${index + 1}、${item.title}：` }}</span>
+              <span>{{ `${item.content}` }}</span>
+            </div>
+          </a-list-item>
+          <a-list-item v-if="data.detail?.obligationsRequired.length == 0">暂无内容</a-list-item>
+        </template>
+      </a-list>
+    </div>
+    <div class="list allowed">
+      <a-list size="small" bordered :data-source="data.detail?.obligationsNotRequired">
+        <template #header>
+          <div>无需义务</div>
+        </template>
+        <template #renderItem="{ item, index }">
+          <a-list-item>
+            <div>
+              <span style="font-weight: bold">{{ `${index + 1}、${item.title}：` }}</span>
+              <span>{{ `${item.content}` }}</span>
+            </div>
+          </a-list-item>
+          <a-list-item v-if="data.detail?.obligationsNotRequired.length == 0">暂无内容</a-list-item>
+        </template>
+      </a-list>
     </div>
 
     <div class="relative">
       <div class="drawer_title" style="margin-bottom: 20px">许可证权利</div>
     </div>
-    <div style="display: flex">
-      <div>
-        <a-list size="small" bordered :data-source="data.detail?.rightsAllowed">
-          <template #header>
-            <div>允许权利</div>
-          </template>
-          <template #renderItem="{ item, index }">
-            <a-list-item>
-              <span>{{ index }}、</span>
-              <span>{{ item.title }}：</span>
-              <span>{{ item.content }}</span>
-            </a-list-item>
-            <a-list-item v-if="data.detail?.rightsAllowed.length == 0">暂无内容</a-list-item>
-          </template>
-        </a-list>
-      </div>
-      <div>
-        <a-list size="small" bordered :data-source="data.detail?.rightsProhibited">
-          <template #header>
-            <div>禁止权利</div>
-          </template>
-          <template #renderItem="{ item, index }">
-            <a-list-item>
-              <span>{{ index }}、</span>
-              <span>{{ item.title }}：</span>
-              <span>{{ item.content }}</span>
-            </a-list-item>
-            <a-list-item v-if="data.detail?.rightsProhibited.length == 0">暂无内容</a-list-item>
-          </template>
-        </a-list>
-      </div>
+    <div class="list allowed">
+      <a-list size="small" bordered :data-source="data.detail?.rightsAllowed">
+        <template #header>
+          <div>允许权利</div>
+        </template>
+        <template #renderItem="{ item, index }">
+          <a-list-item>
+            <div>
+              <span style="font-weight: bold">{{ `${index + 1}、${item.title}：` }}</span>
+              <span>{{ `${item.content}` }}</span>
+            </div>
+          </a-list-item>
+          <a-list-item v-if="data.detail?.rightsAllowed.length == 0">暂无内容</a-list-item>
+        </template>
+      </a-list>
+    </div>
+    <div class="list prohibited">
+      <a-list size="small" bordered :data-source="data.detail?.rightsProhibited">
+        <template #header>
+          <div>禁止权利</div>
+        </template>
+        <template #renderItem="{ item, index }">
+          <a-list-item>
+            <div>
+              <span style="font-weight: bold">{{ `${index + 1}、${item.title}：` }}</span>
+              <span>{{ `${item.content}` }}</span>
+            </div>
+          </a-list-item>
+          <a-list-item v-if="data.detail?.rightsProhibited.length == 0">暂无内容</a-list-item>
+        </template>
+      </a-list>
     </div>
   </a-drawer>
 </template>
@@ -117,7 +119,7 @@ const data = reactive({
   detail: {},
   text: '',
   showTotal: false,
-  showBtn: false
+  showBtn: true
 })
 const open = (license) => {
   data.open = true
@@ -137,7 +139,8 @@ const getLicenseInfo = () => {
       }
       data.detail = res.data
       data.text = data.detail?.text
-      cutText(3)
+      // handleText()
+      cutText(5)
     })
     .catch((err) => {
       console.error(err)
@@ -146,9 +149,22 @@ const getLicenseInfo = () => {
 const changeText = () => {
   data.showTotal = !data.showTotal
   if (data.showTotal) text.value.innerHTML = data.text
-  else cutText(3)
+  else cutText(5)
 }
-const cutText = (line = 3) => {
+const handleText = (line = 5) => {
+  nextTick(() => {
+    const rows = text.value.getClientRects().length
+    console.log(rows)
+    if (rows > 5) {
+      data.showTotal = false
+      data.showBtn = true
+    } else {
+      data.showTotal = true
+      data.showBtn = false
+    }
+  })
+}
+const cutText = (line = 5) => {
   if (!text.value) return
   if (data.text) text.value.innerHTML = data.text
   else return
@@ -166,7 +182,8 @@ const cutText = (line = 3) => {
     // 截取文本
     while (rows > line) {
       // 截取字符数
-      let step = 1
+      // 截取至目标行数前，每一次截取更多字符以缩减时间
+      let step = rows > line + 1 ? 100 : 1
       // 遇到换行标签
       if (/<br\/>$/.test(content)) step = 5
       content = content.slice(0, -step)
@@ -206,6 +223,29 @@ defineExpose({ open })
   position: relative;
   display: flex;
   align-items: center;
+}
+.text-btn {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  cursor: pointer;
+  color: #6f005f;
+}
+.list {
+  margin-bottom: 10px;
+}
+:deep(.ant-list-bordered) {
+  border-radius: 0;
+}
+.allowed :deep(.ant-list-split .ant-list-header) {
+  font-weight: bold;
+  color: #fff;
+  background-color: #48cd7f;
+}
+.prohibited :deep(.ant-list-split .ant-list-header) {
+  font-weight: bold;
+  color: #fff;
+  background-color: #f64e60;
 }
 </style>
 <style scoped src="@/atdv/pagination.css"></style>

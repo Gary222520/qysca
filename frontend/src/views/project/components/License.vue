@@ -25,9 +25,12 @@
             <div class="column_name" @click="showInfo(record)">{{ record.name }}</div>
           </template>
           <template v-if="column.key === 'riskLevel'">
-            <span class="risk-tag high-risk" v-if="record.riskLevel === 'high'">高危</span>
+            <a-tag v-if="record.riskLevel === 'high'" color="error">高危</a-tag>
+            <a-tag v-if="record.riskLevel === 'medium'" color="warning">中危</a-tag>
+            <a-tag v-if="record.riskLevel === 'low'" color="processing">低危</a-tag>
+            <!-- <span class="risk-tag high-risk" v-if="record.riskLevel === 'high'">高危</span>
             <span class="risk-tag medium-risk" v-if="record.riskLevel === 'medium'">中危</span>
-            <span class="risk-tag low-risk" v-if="record.riskLevel === 'low'">低危</span>
+            <span class="risk-tag low-risk" v-if="record.riskLevel === 'low'">低危</span> -->
           </template>
           <template v-if="column.key === 'isOsiApproved'">
             <CheckOutlined v-if="record.isOsiApproved" :style="{ color: '#52c41a' }" />
@@ -198,22 +201,23 @@ defineExpose({ show })
   color: #6f005f;
 }
 .risk-tag {
-  height: 25px;
-  line-height: 25px;
-  padding: 0 10px;
-  border-radius: 3px;
+  display: inline-block;
+  /* height: 20px; */
+  /* line-height: 20px; */
+  /* padding: 0 5px; */
+  /* border-radius: 3px; */
 }
 .high-risk {
   color: #ff4d4f;
-  background-color: #ffccc7;
+  /* background-color: #ffccc7; */
 }
 .medium-risk {
   color: #faad14;
-  background-color: #ffe58f;
+  /* background-color: #ffe58f; */
 }
 .low-risk {
   color: #1677ff;
-  background-color: #91caff;
+  /* background-color: #91caff; */
 }
 .input {
   width: 200px;

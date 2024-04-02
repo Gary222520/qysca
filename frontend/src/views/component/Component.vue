@@ -253,6 +253,7 @@ const deleteComponent = (record) => {
     })
 }
 const arrToString = (arr) => {
+  if (!arr) return
   return arr
     .reduce((pre, curr) => {
       return `${pre}; ${curr}`
