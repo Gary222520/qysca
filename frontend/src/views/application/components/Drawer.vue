@@ -117,6 +117,7 @@ import { GetComponentInfo, GetVersionInfo, DeleteAppMember, ExportSBOM } from '@
 import { message } from 'ant-design-vue'
 import AddDepModal from './AddDepModal.vue'
 import AddMember from './AddMember.vue'
+import { arrToString } from '@/utils/util.js'
 
 const router = useRouter()
 const addDepModal = ref()
@@ -255,15 +256,6 @@ const showDetail = () => {
       version: data.detail.version
     }
   })
-}
-
-const arrToString = (arr) => {
-  if (!arr) return
-  return arr
-    .reduce((pre, curr) => {
-      return `${pre}; ${curr}`
-    }, '')
-    .substring(1)
 }
 
 defineExpose({ open })

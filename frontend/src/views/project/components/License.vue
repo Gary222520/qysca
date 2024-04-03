@@ -28,9 +28,6 @@
             <a-tag v-if="record.riskLevel === 'high'" color="error">高危</a-tag>
             <a-tag v-if="record.riskLevel === 'medium'" color="warning">中危</a-tag>
             <a-tag v-if="record.riskLevel === 'low'" color="processing">低危</a-tag>
-            <!-- <span class="risk-tag high-risk" v-if="record.riskLevel === 'high'">高危</span>
-            <span class="risk-tag medium-risk" v-if="record.riskLevel === 'medium'">中危</span>
-            <span class="risk-tag low-risk" v-if="record.riskLevel === 'low'">低危</span> -->
           </template>
           <template v-if="column.key === 'isOsiApproved'">
             <CheckOutlined v-if="record.isOsiApproved" :style="{ color: '#52c41a' }" />
@@ -47,11 +44,6 @@
           <template v-if="column.key === 'gplCompatibility'">
             <CheckOutlined v-if="record.gplCompatibility" :style="{ color: '#52c41a' }" />
             <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
-          </template>
-          <template v-if="column.key === 'type'">
-            <div v-if="record.type === 'opensource'">开源</div>
-            <div v-if="record.type === 'business'">商用</div>
-            <div v-if="record.type === 'internal'">内部使用</div>
           </template>
           <template v-if="column.key === 'action'">
             <a-tooltip>
@@ -120,7 +112,7 @@ const pagination = reactive({
   showSizeChanger: false,
   onChange: (page, size) => {
     pagination.current = page
-    getLicenseList()
+    getLicenseList(app.name, app.version, page, size)
   },
   hideOnSinglePage: true
 })
@@ -141,7 +133,7 @@ const getLicenseList = (name = app.name, version = app.version, page = 1, size =
       }
       data.datasource = res.data.content
       pagination.total = res.data.totalElements
-      pagination.current = page
+      // pagination.current = page
       emit('setCount', { type: 'license', value: pagination.total })
     })
     .catch((err) => {

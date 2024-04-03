@@ -56,7 +56,9 @@
           </div>
         </a-tab-pane>
         <a-tab-pane key="2" :tab="`漏洞（${count.vulnerability}）`" forceRender>
-          <div class="content"><Vulnerablity></Vulnerablity></div>
+          <div class="content">
+            <Vulnerablity ref="vulnerablity" @setCount="(data) => setCount(data)"></Vulnerablity>
+          </div>
         </a-tab-pane>
         <a-tab-pane key="3" :tab="`许可证（${count.license}）`" forceRender>
           <div class="content">
@@ -89,6 +91,7 @@ const router = useRouter()
 const route = useRoute()
 const treeList = ref()
 const tiledList = ref()
+const vulnerablity = ref()
 const license = ref()
 
 const app = reactive({
@@ -118,6 +121,7 @@ const getCount = async (name, version) => {
   await tiledList.value.getCount(name, version).then((res) => {
     count.component = res
   })
+  vulnerablity.value.show(name, version)
   license.value.show(name, version)
 }
 const setCount = ({ type, value }) => {

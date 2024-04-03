@@ -7,17 +7,17 @@
         <a-tag v-if="data.detail?.riskLevel === 'medium'" color="warning">中危</a-tag>
         <a-tag v-if="data.detail?.riskLevel === 'low'" color="processing">低危</a-tag>
         <span style="font-size: 20px; font-weight: bold; margin-right: 10px">{{ data.detail?.name }}</span>
-        <a-tag v-if="data.detail?.isOsiApproved" class="flex">
+        <a-tag v-if="data.detail?.isOsiApproved" class="flex" color="success">
           <template #icon><img class="tag-img" src="@/assets/osi.png" /></template>
-          OSI认证
+          <div style="color: #48cd7f">OSI认证</div>
         </a-tag>
-        <a-tag v-if="data.detail?.isFsfApproved" class="flex">
+        <a-tag v-if="data.detail?.isFsfApproved" class="flex" color="success">
           <template #icon><img class="tag-img" src="@/assets/fsf.png" /></template>
-          FSF许可
+          <div style="color: #48cd7f">FSF许可</div>
         </a-tag>
-        <a-tag v-if="data.detail?.isSpdxApproved" class="flex">
+        <a-tag v-if="data.detail?.isSpdxApproved" class="flex" color="success">
           <template #icon><img class="tag-img" src="@/assets/spdx.png" /></template>
-          SPDX认证
+          <div style="color: #48cd7f">SPDX认证</div>
         </a-tag>
         <a-tag v-if="data.detail?.gplCompatibility" color="success">
           <div style="color: #48cd7f">GPL兼容</div>
@@ -43,11 +43,11 @@
           </div>
         </a-descriptions-item>
       </a-descriptions>
-      <a-modal v-model:open="data.showTotal" width="1000px" @cancel="closeModal()">
+      <a-modal v-model:open="data.showTotal" width="800px" @cancel="closeModal()">
         <template #title>
           <div style="font-size: 20px">许可证内容</div>
         </template>
-        <span>{{ data.text }}</span>
+        <span v-html="data.text"></span>
         <template #footer>
           <a-button class="btn" @click="changeText()">确认</a-button>
         </template>
@@ -163,7 +163,7 @@ const getLicenseInfo = () => {
         return
       }
       data.detail = res.data
-      data.text = data.detail?.text
+      data.text = handleText(data.detail?.text)
       cutText(5)
       data.spinning = false
     })
@@ -183,6 +183,14 @@ const closeModal = () => {
   else cutText(5)
 }
 
+const handleText = (text) => {
+  text = text.replace(/\\n/g, '<br/>')
+  text = text.replace(/\\u003c/g, '<')
+  text = text.replace(/\\u003d/g, '=')
+  text = text.replace(/\\u003e/g, '>')
+  text = text.replace(/\\u0026/g, '&')
+  return text
+}
 const cutText = (line = 5) => {
   if (!text.value) return
   if (data.text) text.value.innerHTML = data.text
@@ -278,6 +286,9 @@ defineExpose({ open })
   width: 12px;
   height: 12px;
   margin-right: 5px;
+}
+.lineSeparator {
+  white-space: pre-wrap;
 }
 </style>
 <style scoped src="@/atdv/pagination.css"></style>

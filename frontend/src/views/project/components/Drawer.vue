@@ -50,6 +50,7 @@ import { reactive, defineExpose } from 'vue'
 import { useRouter } from 'vue-router'
 import { GetComponentInfo } from '@/api/frontend'
 import { message } from 'ant-design-vue'
+import { arrToString } from '@/utils/util.js'
 
 const router = useRouter()
 const data = reactive({
@@ -107,14 +108,6 @@ const showDependency = () => {
       language: data.component.language
     }
   })
-}
-const arrToString = (arr) => {
-  if (!arr) return
-  return arr
-    .reduce((pre, curr) => {
-      return `${pre}; ${curr}`
-    }, '')
-    .substring(1)
 }
 defineExpose({ open })
 </script>

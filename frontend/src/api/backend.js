@@ -74,6 +74,17 @@ export const API = {
   // 删除某个应用许可证
   DELETE_LICENSE: '/qysca/license/deleteAppLicense',
 
+  // 获取某个应用的漏洞列表
+  VUL_LIST: '/qysca/vulnerability/getCveList',
+  // 查看某个漏洞的详细信息
+  VUL_INFO: '/qysca/vulnerability/getCveById',
+  // 查看某个漏洞类型的详细信息
+  VUL_TYPE_INFO: '/qysca/vulnerability/getCweById',
+  // 在某个应用中增加漏洞信息
+  ADD_VUL: '/qysca/vulnerability/addAppVulnerability',
+  // 在某个应用中删除漏洞信息
+  DELETE_VUL: '/qysca/vulnerability/deleteAppVulnerability',
+
   // 文件上传
   FILE_UPLOAD: '/qysca/file/chunk',
   // 文件合并

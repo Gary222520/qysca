@@ -76,6 +76,17 @@ export const AddLicense = (params) => request('post', API.ADD_LICENSE, { params 
 // 删除某个应用许可证
 export const DeleteLicense = (params) => request('post', API.DELETE_LICENSE, { params })
 
+// 获取某个应用的漏洞列表
+export const GetVulList = (params) => request('get', API.VUL_LIST, { params })
+// 查看某个漏洞的详细信息
+export const GetVulInfo = (params) => request('get', API.VUL_INFO, { params })
+// 查看某个漏洞类型的详细信息
+export const GetVulTypeInfo = (params) => request('get', API.VUL_TYPE_INFO, { params })
+// 在某个应用中增加漏洞信息
+export const AddVul = (params) => request('post', API.ADD_VUL, { params })
+// 在某个应用中删除漏洞信息
+export const DeleteVul = (params) => request('post', API.DELETE_VUL, { params })
+
 // 文件合并
 export const FileMerge = (data) => request('post', API.FILE_MERGE, { data })
 

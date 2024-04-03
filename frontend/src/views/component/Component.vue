@@ -144,6 +144,7 @@ import AddModal from './components/AddModal.vue'
 import UpdateModal from './components/UpdateModal.vue'
 import WarnModal from '@/components/WarnModal.vue'
 import { message } from 'ant-design-vue'
+import { arrToString } from '@/utils/util.js'
 
 onMounted(() => {
   getComponents()
@@ -251,14 +252,6 @@ const deleteComponent = (record) => {
     .catch((err) => {
       message(err)
     })
-}
-const arrToString = (arr) => {
-  if (!arr) return
-  return arr
-    .reduce((pre, curr) => {
-      return `${pre}; ${curr}`
-    }, '')
-    .substring(1)
 }
 </script>
 
