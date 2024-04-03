@@ -68,7 +68,7 @@ public class GradleServiceImpl implements GradleService{
      */
     @Override
     public JavaDependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String name, String version, String type) {
-        if (builder.equals("zip")){
+        if (builder.equals("gradle")){
             unzip(filePath);
             filePath = filePath.substring(0,filePath.lastIndexOf("."));
         } else {

@@ -315,6 +315,8 @@ public class PythonServiceImpl implements PythonService {
                 dependencies.add(parseTree(node, 1));
         }
         root.setDependencies(dependencies);
+        // 去除重复组件
+        removeDuplicates(root);
 
         PythonDependencyTreeDO dependencyTreeDO = new PythonDependencyTreeDO();
         dependencyTreeDO.setName(name);
@@ -363,6 +365,39 @@ public class PythonServiceImpl implements PythonService {
         }
         componentDependencyTreeDO.setDependencies(dependencies);
         return componentDependencyTreeDO;
+    }
+
+    /**
+     * 去除依赖树中重复的组件
+     * @param root 根节点
+     */
+    private void removeDuplicates(PythonComponentDependencyTreeDO root) {
+        Set<String> visited = new HashSet<>();  // 用于存储已经访问过的组件
+        Queue<PythonComponentDependencyTreeDO> queue = new ArrayDeque<>();
+        // 根节点入队
+        visited.add(root.getName() + ":" + root.getVersion());
+        queue.offer(root);
+        // 使用队列进行BFS
+        while (!queue.isEmpty()) {
+            // 出队
+            PythonComponentDependencyTreeDO node = queue.poll();
+            List<PythonComponentDependencyTreeDO> dependencies = node.getDependencies();
+            if (dependencies != null) {
+                List<PythonComponentDependencyTreeDO> modifiedDependencies = new ArrayList<>();
+                // 遍历组件的依赖
+                for (PythonComponentDependencyTreeDO dependency : dependencies) {
+                    // 跳过已访问的依赖
+                    if (visited.contains(dependency.getName() + ":" + dependency.getVersion()))
+                        continue;
+                    visited.add(dependency.getName() + ":" + dependency.getVersion());
+                    // 没访问过的入队，并添加进更正后的依赖
+                    queue.offer(dependency);
+                    modifiedDependencies.add(dependency);
+                }
+                // 更新当前组件的依赖
+                node.setDependencies(modifiedDependencies);
+            }
+        }
     }
 
     /**
