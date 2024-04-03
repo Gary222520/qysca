@@ -16,8 +16,8 @@ public interface LicenseService {
 
     /**
      * 分页查询应用许可证列表
-     * @param name 许可证名称
-     * @param version 许可证版本
+     * @param name 名称
+     * @param version 版本
      * @return Page<LicenseBriefDTO> 许可证简明信息
      */
     Page<LicenseBriefDTO> getLicenseList(String name, String version, int page, int size);
