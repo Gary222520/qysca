@@ -5,7 +5,6 @@
       <div class="operations">
         <div>
           <a-input-search
-            v-if="!data.accurate"
             v-model:value="data.search.name"
             placeholder="请输入许可证名称"
             style="width: 250px"
@@ -127,9 +126,6 @@ const getLicenses = (page = 1, size = 10) => {
         return
       }
       data.datasource = res.data.content
-      data.datasource.forEach((item) => {
-        if (item.name === '') item.name = '-'
-      })
       pagination.total = res.data.totalElements
       pagination.current = page
     })
@@ -138,7 +134,7 @@ const getLicenses = (page = 1, size = 10) => {
     })
 }
 const showInfo = (record) => {
-  drawer.value.open(record, true)
+  drawer.value.open(record)
 }
 </script>
 

@@ -74,6 +74,8 @@ export const API = {
   // 删除某个应用许可证
   DELETE_LICENSE: '/qysca/license/deleteAppLicense',
 
+  // 查看漏洞库界面
+  ALL_VUL: '/qysca/vulnerability/getCvePage',
   // 获取某个应用的漏洞列表
   VUL_LIST: '/qysca/vulnerability/getCveList',
   // 查看某个漏洞的详细信息

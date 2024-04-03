@@ -76,6 +76,8 @@ export const AddLicense = (params) => request('post', API.ADD_LICENSE, { params 
 // 删除某个应用许可证
 export const DeleteLicense = (params) => request('post', API.DELETE_LICENSE, { params })
 
+// 查看漏洞库界面
+export const GetAllVul = (params) => request('get', API.ALL_VUL, { params })
 // 获取某个应用的漏洞列表
 export const GetVulList = (params) => request('get', API.VUL_LIST, { params })
 // 查看某个漏洞的详细信息

@@ -38,12 +38,12 @@
         </a-descriptions-item>
         <a-descriptions-item label="许可证内容" span="3">
           <div style="position: relative">
-            <span ref="text">{{ data.text }}</span>
+            <span ref="text" v-html="data.text" style="display: inline-block; height: 90px; overflow-y: hidden"></span>
             <div class="text-btn" v-if="data.showBtn" @click="changeText()">{{ data.showTotal ? '收起' : '展开' }}</div>
           </div>
         </a-descriptions-item>
       </a-descriptions>
-      <a-modal v-model:open="data.showTotal" width="800px" @cancel="closeModal()">
+      <a-modal v-model:open="data.showTotal" width="1000px" @cancel="closeModal()">
         <template #title>
           <div style="font-size: 20px">许可证内容</div>
         </template>
@@ -164,7 +164,7 @@ const getLicenseInfo = () => {
       }
       data.detail = res.data
       data.text = handleText(data.detail?.text)
-      cutText(5)
+      // cutText(5)
       data.spinning = false
     })
     .catch((err) => {
@@ -175,12 +175,12 @@ const getLicenseInfo = () => {
 
 const changeText = () => {
   data.showTotal = !data.showTotal
-  if (data.showTotal) text.value.innerHTML = data.text
-  else cutText(5)
+  // if (data.showTotal) text.value.innerHTML = data.text
+  // else cutText(5)
 }
 const closeModal = () => {
-  if (data.showTotal) text.value.innerHTML = data.text
-  else cutText(5)
+  // if (data.showTotal) text.value.innerHTML = data.text
+  // else cutText(5)
 }
 
 const handleText = (text) => {
@@ -193,8 +193,10 @@ const handleText = (text) => {
 }
 const cutText = (line = 5) => {
   if (!text.value) return
+
   if (data.text) text.value.innerHTML = data.text
   else return
+
   nextTick(() => {
     // 文本行数
     let rows = text.value.getClientRects().length
@@ -211,7 +213,7 @@ const cutText = (line = 5) => {
       // 截取字符数
       // 截取至目标行数前，每一次截取更多字符以缩减时间
       let step = rows > line + 1 ? 100 : 1
-      // 遇到换行标签
+      // 遇到标签
       if (/<br\/>$/.test(content)) step = 5
       content = content.slice(0, -step)
       text.value.innerHTML = content
@@ -254,7 +256,7 @@ defineExpose({ open })
 .text-btn {
   position: absolute;
   right: 0;
-  bottom: 0;
+  bottom: -15px;
   cursor: pointer;
   color: #6f005f;
 }
