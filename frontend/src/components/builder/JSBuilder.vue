@@ -1,6 +1,18 @@
 <template>
   <div class="main">
     <div class="content">
+      <a-card class="card" hoverable @click="selectBuilder('package.json')">
+        <div class="card_title">
+          <img class="img" src="@/assets/json.png" />
+          <div class="name">Package.json</div>
+        </div>
+        <div class="card_text">
+          <ul style="margin-bottom: 0">
+            <li class="list_item">package.json文件</li>
+            <li class="list_item">package.json记录的依赖信息</li>
+          </ul>
+        </div>
+      </a-card>
       <a-card class="card" hoverable @click="selectBuilder('zip')">
         <div class="card_title">
           <img class="img" src="@/assets/zip.png" />

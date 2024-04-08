@@ -58,6 +58,9 @@
             </div>
           </div>
           <div class="upload" v-if="componentInfo.language === 'javaScript'">
+            <div v-if="componentInfo.builder === 'package.json'">
+              <Upload ref="uploadRef" :accept="'.json'" :upload-text="'package.json'" @success="handleUpload"></Upload>
+            </div>
             <div v-if="componentInfo.builder === 'zip'">
               <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
             </div>
