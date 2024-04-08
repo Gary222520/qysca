@@ -32,12 +32,28 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
     /**
      * 根据NV爬取python组件
      * @param name 组件名
-     * @param version 组件版本
+     * @param version 组件版本，如果为"-"，则为改包的默认版本
      * @return ComponentDO
      */
     @Override
     public PythonComponentDO crawlByNV(String name, String version){
-        String url = PYPI_REPO_BASE_URL + name + "/" + version + "/json";
+        String url;
+        if (version.equals("-")) {
+            // 当版本为"-"时，先查默认的版本
+            url = PYPI_REPO_BASE_URL + name + "/json";
+            String jsonString = getUrlContent(url);
+            if (jsonString == null || jsonString.isEmpty())
+                return null;
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonNode = objectMapper.readTree(jsonString);
+                version = jsonNode.get("info").get("version").asText();
+            } catch (Exception e){
+                e.printStackTrace();
+                return null;
+            }
+        }
+        url = PYPI_REPO_BASE_URL + name + "/" + version + "/json";
         return crawl(url, name, version);
     }
 
@@ -50,7 +66,7 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
      */
     private PythonComponentDO crawl(String url, String name, String version){
         String jsonString = getUrlContent(url);
-        if (jsonString.isEmpty())
+        if (jsonString == null || jsonString.isEmpty())
             return null;
         PythonComponentDO componentDO = convertToComponentDO(jsonString, name, version);
         return componentDO;
@@ -81,7 +97,12 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
 /*            List<ComponentLicenseDO> componentLicenseDOList = new ArrayList<>();
             componentLicenseDOList.add(new ComponentLicenseDO(jsonNode.get("info").get("license").asText(), null));
             componentDO.setLicenses(componentLicenseDOList);*/
-            componentDO.setLicenses(licenseService.searchLicense(jsonNode.get("info").get("license").asText()).toArray(new String[0]));
+            String license = jsonNode.get("info").get("license").asText();
+            if (license.length()>=100){
+                // 有时候pypi里license会写原内容，此时就先设为无许可证
+                license = "";
+            }
+            componentDO.setLicenses(licenseService.searchLicense(license).toArray(new String[0]));
             componentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(name, version, "python").toArray(new String[0]));
 
             componentDO.setCreator(null);
@@ -124,7 +145,7 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
             }
             in.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            return null;
         }
 
         return content.toString();

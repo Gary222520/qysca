@@ -3,7 +3,7 @@ package nju.edu.cn.qysca.service.spider;
 
 import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
 
-public interface SpiderService {
+public interface JavaSpiderService {
 
     /**
      * 通过gav爬取组件
@@ -21,5 +21,11 @@ public interface SpiderService {
      * @param version 版本号
      * @return pom string
      */
-    String  getPomStrByGav(String groupId, String artifactId, String version);
+    String getPomStrByGav(String groupId, String artifactId, String version);
+
+    /**
+     * 递归地爬取目录url下（带依赖的）所有组件
+     * @param directoryUrl 要爬取的目录
+     */
+    void crawlDirectoryWithDependency(String directoryUrl);
 }

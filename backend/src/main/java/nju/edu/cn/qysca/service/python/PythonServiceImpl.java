@@ -185,7 +185,11 @@ public class PythonServiceImpl implements PythonService {
         // 5. pipdeptree --json-tree获取json形式的依赖树
         String[] command1 = {"python", "-m", "venv", "venv"};
         String[] command3 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
-        String[] command4 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", name+"=="+version};
+        String[] command4;
+        if (version.equals("-"))
+            command4 = new String[]{tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name};
+        else
+            command4 = new String[]{tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name + "==" + version};
         String[] command5 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
 
         executeCommand(command1, tempFile, false);
@@ -348,6 +352,8 @@ public class PythonServiceImpl implements PythonService {
                 componentDependencyTreeDO.setType("opensource");
             } else {
                 componentDependencyTreeDO.setType("opensource");
+                // 如果爬虫没有爬到则打印报错信息，仍继续执行
+                System.err.println("存在未识别组件：" + componentDependencyTreeDO.getName() + ":" + componentDependencyTreeDO.getVersion());
 //                //如果爬虫没有爬到则扫描错误 通过抛出异常处理
 //                throw new PlatformException(500, "存在未识别的组件");
             }
