@@ -366,5 +366,10 @@ CREATE TABLE plt_app_dependency_table(
 );
 
     
-    
+CREATE TABLE plt_maven_visited_urls(
+    id VARCHAR(32) PRIMARY KEY,
+    url VARCHAR(255) NOT NULL UNIQUE,
+    is_success BOOLEAN NOT NULL,
+    is_last_level BOOLEAN NOT NULL
+)
     

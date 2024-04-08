@@ -1,9 +1,13 @@
 package nju.edu.cn.qysca.service.spider;
 
 import nju.edu.cn.qysca.dao.component.JavaComponentDao;
-import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
-import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
+import nju.edu.cn.qysca.dao.component.JavaDependencyTableDao;
+import nju.edu.cn.qysca.dao.component.JavaDependencyTreeDao;
+import nju.edu.cn.qysca.dao.spider.MavenVisitedUrlsDao;
+import nju.edu.cn.qysca.domain.component.dos.*;
+import nju.edu.cn.qysca.domain.spider.dos.MavenVisitedUrlsDO;
 import nju.edu.cn.qysca.service.license.LicenseService;
+import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
 import nju.edu.cn.qysca.utils.HashUtil;
 import nju.edu.cn.qysca.utils.spider.UrlConnector;
@@ -15,10 +19,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,10 +36,19 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
     @Autowired
     private JavaComponentDao javaComponentDao;
     @Autowired
+    private JavaDependencyTreeDao javaDependencyTreeDao;
+    @Autowired
+    private JavaDependencyTableDao javaDependencyTableDao;
+    @Autowired
     private LicenseService licenseService;
-
     @Autowired
     private VulnerabilityService vulnerabilityService;
+    @Autowired
+    private MavenService mavenService;
+    @Autowired
+    private MavenVisitedUrlsDao mavenVisitedUrlsDao;
+    @Value("${tempPomFolder}")
+    private String tempFolder;
 
     /**
      * 通过gav爬取组件
@@ -70,6 +83,72 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         if (document == null)
             return null;
         return document.outerHtml();
+    }
+
+    /**
+     * 递归地爬取目录url下（带依赖的）所有组件
+     * @param directoryUrl 要爬取的目录
+     */
+    @Override
+    public void crawlDirectoryWithDependency(String directoryUrl) {
+        // 如果该url已被访问过，跳过
+        if (mavenVisitedUrlsDao.findByUrl(directoryUrl) != null) {
+            return;
+        }
+
+        Document document = getDocumentByUrl(directoryUrl);
+        if (document == null) {
+            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true));
+            return;
+        }
+
+        boolean isLastLevel = true;
+        Elements links = document.select("a[href]");
+        // 遍历目录下所有链接
+        for (Element link : links) {
+            String fileAbsUrl = link.absUrl("href");
+            // 如果该目录下的链接为目录，说明自身不是最后一层目录，同时递归爬取该链接
+            if (fileAbsUrl.endsWith("/") && fileAbsUrl.length() > directoryUrl.length()) {
+                isLastLevel = false;
+                crawlDirectoryWithDependency(fileAbsUrl);
+            }
+        }
+        // 如果该目录为最后一层，进行爬取
+        if (isLastLevel) {
+            synchronized (this) {
+                System.out.println();
+                System.out.println("开始爬取：" + directoryUrl);
+                //爬取组件
+                JavaComponentDO javaComponentDO = crawl(directoryUrl);
+                if (javaComponentDO == null) {
+                    mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true));
+                    return;
+                }
+                if (javaComponentDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion()) == null)
+                    javaComponentDao.save(javaComponentDO);
+                if (javaDependencyTreeDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion()) != null) {
+                    // 检查是否已有依赖树，有就跳过
+                    mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true));
+                    return;
+                }
+                //创建临时pom文件
+                String pomString = getPomStrByGav(javaComponentDO.getName().split(":")[0], javaComponentDO.getName().split(":")[1], javaComponentDO.getVersion());
+                createPomFile(pomString, tempFolder+"pom.xml");
+
+                //生成并存储依赖树与依赖表
+                JavaDependencyTreeDO javaDependencyTreeDO = mavenService.dependencyTreeAnalysis(tempFolder+"pom.xml", "maven", "opensource");
+                List<JavaDependencyTableDO> javaDependencyTableDOList = mavenService.dependencyTableAnalysis(javaDependencyTreeDO);
+                javaDependencyTreeDao.save(javaDependencyTreeDO);
+                javaDependencyTableDao.saveAll(javaDependencyTableDOList);
+
+                // 记录该url已被访问过
+                mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true));
+            }
+        } else {
+            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true,false));
+        }
+
+
     }
 
     /**
@@ -317,6 +396,21 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         } catch (IOException | XmlPullParserException e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    /**
+     * 创建临时的pom文件（用以调用mvn命令）
+     *
+     * @param pomString pom文件内容
+     * @param filePath 创建临时文件路径
+     */
+    private void createPomFile(String pomString, String filePath) {
+        try (OutputStream outputStream = new FileOutputStream(filePath);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+            writer.write(pomString);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

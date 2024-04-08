@@ -193,8 +193,6 @@ public class MavenServiceImpl implements MavenService {
                     javaComponentDependencyTreeDO.setType("opensource");
                 } else {
                     javaComponentDependencyTreeDO.setType("opensource");
-                    //如果爬虫没有爬到则扫描错误 通过抛出异常处理
-                    throw new PlatformException(500, "存在未识别的组件");
                     // 如果爬虫没有爬到则打印报错信息，仍继续执行
                     System.err.println("存在未识别的组件：" + javaComponentDependencyTreeDO.getName() + ":" + javaComponentDependencyTreeDO.getVersion());
 //                    //如果爬虫没有爬到则扫描错误 通过抛出异常处理
