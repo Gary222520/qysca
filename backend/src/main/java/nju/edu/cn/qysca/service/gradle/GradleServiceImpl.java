@@ -3,7 +3,7 @@ package nju.edu.cn.qysca.service.gradle;
 import nju.edu.cn.qysca.dao.component.JavaComponentDao;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
-import nju.edu.cn.qysca.service.spider.SpiderService;
+import nju.edu.cn.qysca.service.spider.JavaSpiderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +21,7 @@ import java.util.zip.ZipFile;
 public class GradleServiceImpl implements GradleService{
 
     @Autowired
-    private SpiderService spiderService;
+    private JavaSpiderService javaSpiderService;
 
     @Autowired
     private JavaComponentDao javaComponentDao;
@@ -68,7 +68,7 @@ public class GradleServiceImpl implements GradleService{
      */
     @Override
     public JavaDependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String name, String version, String type) {
-        if (builder.equals("zip")){
+        if (builder.equals("gradle")){
             unzip(filePath);
             filePath = filePath.substring(0,filePath.lastIndexOf("."));
         } else {
@@ -191,7 +191,7 @@ public class GradleServiceImpl implements GradleService{
                 if (javaComponentDO == null){
                     String groupId = name.split(":")[0];
                     String artifactId = name.split(":")[1];
-                    javaComponentDO = spiderService.crawlByGav(groupId, artifactId, version);
+                    javaComponentDO = javaSpiderService.crawlByGav(groupId, artifactId, version);
                     if (javaComponentDO != null){
                         componentDependencyTreeDO.setType("opensource");
                         componentDependencyTreeDO.setLicenses(String.join(",",javaComponentDO.getLicenses()));

@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -173,7 +174,11 @@ public class PythonServiceImpl implements PythonService {
     @Override
     public PythonDependencyTreeDO spiderDependency(String name, String version) {
 
-        File tempFile = new File(tempFolder);
+        Date now = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String timeStamp = dateFormat.format(now);
+
+        File tempFile = new File(tempFolder+timeStamp);
         if (!tempFile.exists()){ //如果不存在
             boolean dr = tempFile.mkdirs(); //创建目录
         }
@@ -185,7 +190,11 @@ public class PythonServiceImpl implements PythonService {
         // 5. pipdeptree --json-tree获取json形式的依赖树
         String[] command1 = {"python", "-m", "venv", "venv"};
         String[] command3 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
-        String[] command4 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", name+"=="+version};
+        String[] command4;
+        if (version.equals("-"))
+            command4 = new String[]{tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name};
+        else
+            command4 = new String[]{tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name + "==" + version};
         String[] command5 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
 
         executeCommand(command1, tempFile, false);
@@ -315,6 +324,8 @@ public class PythonServiceImpl implements PythonService {
                 dependencies.add(parseTree(node, 1));
         }
         root.setDependencies(dependencies);
+        // 去除重复组件
+        removeDuplicates(root);
 
         PythonDependencyTreeDO dependencyTreeDO = new PythonDependencyTreeDO();
         dependencyTreeDO.setName(name);
@@ -346,6 +357,8 @@ public class PythonServiceImpl implements PythonService {
                 componentDependencyTreeDO.setType("opensource");
             } else {
                 componentDependencyTreeDO.setType("opensource");
+                // 如果爬虫没有爬到则打印报错信息，仍继续执行
+                System.err.println("存在未识别组件：" + componentDependencyTreeDO.getName() + ":" + componentDependencyTreeDO.getVersion());
 //                //如果爬虫没有爬到则扫描错误 通过抛出异常处理
 //                throw new PlatformException(500, "存在未识别的组件");
             }
@@ -363,6 +376,39 @@ public class PythonServiceImpl implements PythonService {
         }
         componentDependencyTreeDO.setDependencies(dependencies);
         return componentDependencyTreeDO;
+    }
+
+    /**
+     * 去除依赖树中重复的组件
+     * @param root 根节点
+     */
+    private void removeDuplicates(PythonComponentDependencyTreeDO root) {
+        Set<String> visited = new HashSet<>();  // 用于存储已经访问过的组件
+        Queue<PythonComponentDependencyTreeDO> queue = new ArrayDeque<>();
+        // 根节点入队
+        visited.add(root.getName() + ":" + root.getVersion());
+        queue.offer(root);
+        // 使用队列进行BFS
+        while (!queue.isEmpty()) {
+            // 出队
+            PythonComponentDependencyTreeDO node = queue.poll();
+            List<PythonComponentDependencyTreeDO> dependencies = node.getDependencies();
+            if (dependencies != null) {
+                List<PythonComponentDependencyTreeDO> modifiedDependencies = new ArrayList<>();
+                // 遍历组件的依赖
+                for (PythonComponentDependencyTreeDO dependency : dependencies) {
+                    // 跳过已访问的依赖
+                    if (visited.contains(dependency.getName() + ":" + dependency.getVersion()))
+                        continue;
+                    visited.add(dependency.getName() + ":" + dependency.getVersion());
+                    // 没访问过的入队，并添加进更正后的依赖
+                    queue.offer(dependency);
+                    modifiedDependencies.add(dependency);
+                }
+                // 更新当前组件的依赖
+                node.setDependencies(modifiedDependencies);
+            }
+        }
     }
 
     /**
