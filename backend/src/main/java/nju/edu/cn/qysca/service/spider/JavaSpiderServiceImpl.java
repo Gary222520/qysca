@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class SpiderServiceImpl implements SpiderService {
+public class JavaSpiderServiceImpl implements JavaSpiderService {
 
 
     private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
@@ -57,7 +57,7 @@ public class SpiderServiceImpl implements SpiderService {
      * @param groupId    组织id
      * @param artifactId 工件id
      * @param version    版本号
-     * @return pom string
+     * @return pomString pom文件内容
      */
     @Override
     public String getPomStrByGav(String groupId, String artifactId, String version) {

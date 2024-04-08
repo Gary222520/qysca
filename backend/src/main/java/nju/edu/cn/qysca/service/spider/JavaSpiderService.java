@@ -3,7 +3,7 @@ package nju.edu.cn.qysca.service.spider;
 
 import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
 
-public interface SpiderService {
+public interface JavaSpiderService {
 
     /**
      * 通过gav爬取组件
@@ -22,4 +22,5 @@ public interface SpiderService {
      * @return pom string
      */
     String  getPomStrByGav(String groupId, String artifactId, String version);
+    String getPomStrByGav(String groupId, String artifactId, String version);
 }

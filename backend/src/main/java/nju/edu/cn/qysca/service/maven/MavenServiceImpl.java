@@ -9,7 +9,7 @@ import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
-import nju.edu.cn.qysca.service.spider.SpiderService;
+import nju.edu.cn.qysca.service.spider.JavaSpiderService;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
@@ -37,7 +37,7 @@ public class MavenServiceImpl implements MavenService {
 
 
     @Autowired
-    private SpiderService spiderService;
+    private JavaSpiderService javaSpiderService;
 
     @Autowired
     private LicenseService licenseService;
@@ -185,7 +185,7 @@ public class MavenServiceImpl implements MavenService {
 
             // 如果知识库中没有则爬取
             if (javaComponentDO == null) {
-                javaComponentDO = spiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
+                javaComponentDO = javaSpiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 if (javaComponentDO != null) {
                     javaComponentDao.save(javaComponentDO);
                     javaComponentDependencyTreeDO.setLicenses(String.join(",", javaComponentDO.getLicenses()));
@@ -195,6 +195,10 @@ public class MavenServiceImpl implements MavenService {
                     javaComponentDependencyTreeDO.setType("opensource");
                     //如果爬虫没有爬到则扫描错误 通过抛出异常处理
                     throw new PlatformException(500, "存在未识别的组件");
+                    // 如果爬虫没有爬到则打印报错信息，仍继续执行
+                    System.err.println("存在未识别的组件：" + javaComponentDependencyTreeDO.getName() + ":" + javaComponentDependencyTreeDO.getVersion());
+//                    //如果爬虫没有爬到则扫描错误 通过抛出异常处理
+//                    throw new PlatformException(500, "存在未识别的组件");
                 }
             } else {
                 javaComponentDependencyTreeDO.setLicenses(String.join(",", javaComponentDO.getLicenses()));
@@ -266,7 +270,7 @@ public class MavenServiceImpl implements MavenService {
         file.mkdirs();
         String tempPath = tempPomFolder + "/pom.xml";
         try {
-            String xml = spiderService.getPomStrByGav(groupId, artifactId, version);
+            String xml = javaSpiderService.getPomStrByGav(groupId, artifactId, version);
             FileWriter fileWriter = new FileWriter(tempPath);
             fileWriter.write(xml);
             fileWriter.flush();
