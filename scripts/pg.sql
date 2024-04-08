@@ -105,7 +105,7 @@ CREATE TABLE plt_python_component(
     source_url VARCHAR(255),
     p_url VARCHAR(255),
     author VARCHAR(255),
-    author_email varchar(255),
+    author_email TEXT,
     licenses TEXT[],
 	vulnerabilities TEXT[],
     creator VARCHAR(32),
@@ -371,5 +371,14 @@ CREATE TABLE IF NOT EXISTS plt_visited_maven_urls(
     url VARCHAR(255) NOT NULL UNIQUE,
     is_success BOOLEAN NOT NULL,
     is_last_level BOOLEAN NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS plt_visited_python_packages(
+    id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    visited BOOLEAN NOT NULL,
+    is_success BOOLEAN NOT NULL,
+    UNIQUE(name,version)
 )
-    
+

@@ -185,7 +185,11 @@ public class PythonServiceImpl implements PythonService {
         // 5. pipdeptree --json-tree获取json形式的依赖树
         String[] command1 = {"python", "-m", "venv", "venv"};
         String[] command3 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
-        String[] command4 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", name+"=="+version};
+        String[] command4;
+        if (version.equals("-"))
+            command4 = new String[]{tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name};
+        else
+            command4 = new String[]{tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name + "==" + version};
         String[] command5 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
 
         executeCommand(command1, tempFile, false);
