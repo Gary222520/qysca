@@ -196,7 +196,7 @@ public class ComponentServiceImpl implements ComponentService {
             javaComponentDO.setState("RUNNING");
             javaComponentDao.save(javaComponentDO);
         } else if (saveCloseComponentDTO.getLanguage().equals("javaScript")) {
-            JsComponentDO jsComponentDO = npmService.componentAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getType());
+            JsComponentDO jsComponentDO = npmService.componentAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
             JsComponentDO temp = jsComponentDao.findByNameAndVersion(jsComponentDO.getName(), jsComponentDO.getVersion());
             if (temp != null) {
                 throw new PlatformException(500, "该组件已存在");
@@ -254,7 +254,7 @@ public class ComponentServiceImpl implements ComponentService {
             case "javaScript":
                 JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion());
                 try {
-                    JsDependencyTreeDO closeJsDependencyTreeDO = npmService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getType());
+                    JsDependencyTreeDO closeJsDependencyTreeDO = npmService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
                     jsDependencyTreeDao.save(closeJsDependencyTreeDO);
                     List<JsDependencyTableDO> jsDependencyTableDOList = npmService.dependencyTableAnalysis(closeJsDependencyTreeDO);
                     jsDependencyTableDao.saveAll(jsDependencyTableDOList);
@@ -339,7 +339,7 @@ public class ComponentServiceImpl implements ComponentService {
                     throw new PlatformException(500, "您没有权限修改该组件信息");
                 }
                 if (updateCloseComponentDTO.getFilePath() != null) {
-                    JsComponentDO temp = npmService.componentAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getType());
+                    JsComponentDO temp = npmService.componentAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
                     if (!temp.getName().equals(updateCloseComponentDTO.getName()) || !temp.getVersion().equals(updateCloseComponentDTO.getVersion())) {
                         throw new PlatformException(500, "组件信息与文件信息不匹配");
                     }
@@ -401,7 +401,7 @@ public class ComponentServiceImpl implements ComponentService {
                 JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
                 jsComponentDO.setType(updateCloseComponentDTO.getType());
                 jsDependencyTreeDao.deleteByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
-                JsDependencyTreeDO jsDependencyTreeDO = npmService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getType());
+                JsDependencyTreeDO jsDependencyTreeDO = npmService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
                 jsDependencyTreeDao.save(jsDependencyTreeDO);
                 jsDependencyTableDao.deleteAllByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
                 List<JsDependencyTableDO> jsDependencyTableDOList = npmService.dependencyTableAnalysis(jsDependencyTreeDO);

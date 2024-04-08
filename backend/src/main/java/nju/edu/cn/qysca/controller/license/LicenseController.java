@@ -43,4 +43,10 @@ public class LicenseController {
         return new ResponseMsg<>(licenseService.getLicenseInfo(licenseName));
     }
 
+    @ApiOperation("许可证库界面查看许可证列表")
+    @GetMapping("/getLicensePage")
+    public ResponseMsg<Page<LicenseBriefDTO>> getLicensePage(@RequestParam String name, @RequestParam int page, @RequestParam int size) {
+        return new ResponseMsg<>(licenseService.getLicensePage(name, page, size));
+    }
+
 }

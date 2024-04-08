@@ -20,18 +20,18 @@ public class NpmTest {
 
     @Test
     public void test1() {
-        JsComponentDO componentDO = npmService.componentAnalysis("src/main/resources/static/temp/package.json", "opensource");
+        JsComponentDO componentDO = npmService.componentAnalysis("src/main/resources/static/temp/test.zip", "zip", "opensource");
         System.out.println(componentDO);
     }
     @Test
     public void test2() {
-        JsDependencyTreeDO dependencyTreeDO = npmService.dependencyTreeAnalysis("src/main/resources/static/temp/package-lock.json", "opensource");
+        JsDependencyTreeDO dependencyTreeDO = npmService.dependencyTreeAnalysis("src/main/resources/static/temp/package.json", "package.json", "opensource");
         System.out.println(dependencyTreeDO);
     }
 
     @Test
     public void test3(){
-        npmService.spiderComponentInfo("pinkie", "2.0.4");
+        npmService.spiderComponentInfo("colors", "0.6.2");
     }
 
     @Test

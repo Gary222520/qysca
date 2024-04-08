@@ -54,13 +54,16 @@ public class NpmServiceImpl implements NpmService {
      * 根据package.json生成ComponentDO
      *
      * @param filePath zip文件路径
+     * @param builder  构建器
      * @param type     组件类型
      * @return JsComponentDO Js组件信息
      */
     @Override
-    public JsComponentDO componentAnalysis(String filePath, String type) {
+    public JsComponentDO componentAnalysis(String filePath, String builder, String type) {
         try {
-            extractFile(filePath);
+            if(builder.equals("zip")) {
+                extractFile(filePath);
+            }
             File file = new File(filePath);
             PackageJsonDTO packageJsonDTO = parsePackageJson(file.getParent() + FILE_SEPARATOR + "package.json");
             JsComponentDO jsComponentDO = new JsComponentDO();
@@ -70,14 +73,15 @@ public class NpmServiceImpl implements NpmService {
             jsComponentDO.setVersion(packageJsonDTO.getVersion());
             jsComponentDO.setDescription(packageJsonDTO.getDescription());
             List<String> licenses = new ArrayList<>();
-            licenses.addAll(licenseService.searchLicense(packageJsonDTO.getLicense()));
+            if(packageJsonDTO.getLicense() != null) {
+                licenses.addAll(licenseService.searchLicense(packageJsonDTO.getLicense()));
+            }
             jsComponentDO.setLicenses(licenses.toArray(new String[0]));
             jsComponentDO.setType(type);
             return jsComponentDO;
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new PlatformException(500, "解析package.json失败");
         }
-
     }
 
     /**
@@ -86,12 +90,16 @@ public class NpmServiceImpl implements NpmService {
      * @return JsDependencyTreeDO 依赖树信息
      */
     @Override
-    public JsDependencyTreeDO dependencyTreeAnalysis(String filePath, String type) {
+    public JsDependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String type) {
         try {
             File file = new File(filePath);
             File packageLock = new File(file.getParent() + FILE_SEPARATOR + "package-lock.json");
             if (!packageLock.exists()) {
-                extractFile(filePath);
+                if(builder.equals("zip")) {
+                    extractFile(filePath);
+                }else if(builder.equals("package.json")){
+                    generatePackageLock(file.getParent());
+                }
             }
             PackageLockDTO packageLockDTO = parsePackageLock(file.getParent() + FILE_SEPARATOR + "package-lock.json");
             JsDependencyTreeDO jsDependencyTreeDO = new JsDependencyTreeDO();
@@ -100,7 +108,7 @@ public class NpmServiceImpl implements NpmService {
             JsComponentDependencyTreeDO componentDependencyTreeDO = convertNode(packageLockDTO, type);
             jsDependencyTreeDO.setTree(componentDependencyTreeDO);
             return jsDependencyTreeDO;
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new PlatformException(500, "解析依赖树失败");
         }
     }
@@ -146,9 +154,9 @@ public class NpmServiceImpl implements NpmService {
         String filePath = null;
         try {
             filePath = spiderContent(name, version);
-            generatePackageLock(filePath);
-            return dependencyTreeAnalysis(filePath + FILE_SEPARATOR + "package-lock.json", "");
-        }catch (Exception e){
+            return dependencyTreeAnalysis(filePath + FILE_SEPARATOR + "package.json", "package.json", "opensource");
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new PlatformException(500, "未能识别组件信息");
         } finally {
             deleteFolder(filePath);
@@ -158,6 +166,7 @@ public class NpmServiceImpl implements NpmService {
 
     /**
      * 将JsComponentDependencyTreeDO转换为AppComponentDependencyTreeDO
+     *
      * @param jsComponentDependencyTreeDO Js组件依赖信息
      * @return AppComponentDependencyTreeDO App组件依赖信息
      */
@@ -185,6 +194,7 @@ public class NpmServiceImpl implements NpmService {
 
     /**
      * 将Js组件依赖表转换成应用组件依赖表
+     *
      * @param jsDependencyTableDOS js组件依赖表
      * @return List<AppDependencyTableDO> 应用组件依赖表
      */
@@ -208,7 +218,7 @@ public class NpmServiceImpl implements NpmService {
         List<String> lines = new ArrayList<>();
         try {
             File file = new File(filePath);
-            List<String> command = List.of("cmd.exe", "/c", "npm install", "--package-lock-only");
+            List<String> command = List.of("cmd.exe", "/c", "npm install", "--package-lock-only", "--legacy-peer-deps");
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.directory(file);
             Process process = processBuilder.start();
@@ -265,10 +275,9 @@ public class NpmServiceImpl implements NpmService {
     }
 
     /**
-     * 提取上传的zip文件夹中的package.json文件和package-lock.json文件
+     * 解析上传文件
      *
-     * @param filePath zip文件路径
-     * @throws Exception
+     * @param filePath 上传文件路径
      */
     private void extractFile(String filePath) throws Exception {
         File file = new File(filePath);
@@ -417,7 +426,11 @@ public class NpmServiceImpl implements NpmService {
             } else {
                 jsComponentDO.setRepoUrl(jsonObject.getString("repository"));
             }
-            jsComponentDO.setLicenses(licenseService.searchLicense(jsonObject.getString("license")).toArray(new String[0]));
+            if(jsonObject.get("license") != null){
+                jsComponentDO.setLicenses(licenseService.searchLicense(jsonObject.getString("license")).toArray(new String[0]));
+            } else{
+                jsComponentDO.setLicenses(new String[0]);
+            }
             jsComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(name, version, "javaScript").toArray(new String[0]));
             jsComponentDO.setDownloadUrl(jsonObject.getJSONObject("dist") == null ? "" : jsonObject.getJSONObject("dist").getString("tarball"));
             List<String> copyrightStatements = new ArrayList<>();
@@ -467,14 +480,21 @@ public class NpmServiceImpl implements NpmService {
         return null;
     }
 
+    /**
+     * 返回npm包的下载地址
+     *
+     * @param name    组件名称
+     * @param version 组件版本
+     * @return String npm包的下载地址
+     */
     private String spiderContent(String name, String version) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         String tempDirName = dateFormat.format(new Date());
         File tempDir = new File(tempFolder, tempDirName);
-        if(!tempDir.exists()){
+        if (!tempDir.exists()) {
             tempDir.mkdirs();
         }
-        try{
+        try {
             String url = "https://registry.npmjs.org/" + name + FILE_SEPARATOR + version;
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpGet httpGet = new HttpGet(url);
@@ -489,10 +509,10 @@ public class NpmServiceImpl implements NpmService {
             BufferedWriter writer = new BufferedWriter(new FileWriter(file));
             writer.write(content);
             writer.close();
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new PlatformException(500, "存在未识别的组件");
         }
-        return  tempDir.getPath();
+        return tempDir.getPath();
     }
 
     private void deleteFolder(String filePath) {

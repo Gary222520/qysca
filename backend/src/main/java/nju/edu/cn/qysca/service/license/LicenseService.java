@@ -47,4 +47,13 @@ public interface LicenseService {
      * @return LicenseDO 许可证详细信息
      */
     LicenseDO getLicenseInfo(String name);
+
+    /**
+     * 许可证库界面查看详细信息
+     * @param name 名称
+     * @param page 页数
+     * @param size 大小
+     * @return Page<LicenseBriefDTO> 许可证库界面详细信息
+     */
+    Page<LicenseBriefDTO> getLicensePage(String name, int page, int size);
 }
