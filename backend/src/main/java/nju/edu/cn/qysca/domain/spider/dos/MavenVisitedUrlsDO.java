@@ -13,12 +13,15 @@ import org.hibernate.annotations.TypeDefs;
 
 import javax.persistence.*;
 
+/**
+ * 用以记录爬取过的url
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name= "plt_maven_visited_urls")
+@Table(name= "plt_visited_maven_urls")
 public class MavenVisitedUrlsDO {
     @Id
     @Column(name="id",nullable = false)

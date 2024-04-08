@@ -13,6 +13,11 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 批量爬取入口
+ * 在需要调用的方法前添加@PostConstruct标签
+ * 一次只添加一个@PostConstruct
+ */
 @SpringBootApplication
 public class SpiderRunApplication {
 
@@ -27,6 +32,9 @@ public class SpiderRunApplication {
         SpringApplication.run(SpiderRunApplication.class);
     }
 
+    /**
+     * 批量爬取java组件
+     */
     @PostConstruct
     private void executeJavaSpiderTask(){
         List<String> targetUrls = new ArrayList<>();
@@ -50,8 +58,6 @@ public class SpiderRunApplication {
             javaSpiderService.crawlDirectoryWithDependency(targetUrl);
             System.out.println("该目录爬取完毕: " + targetUrl);
         }
-
-
     }
 
 
