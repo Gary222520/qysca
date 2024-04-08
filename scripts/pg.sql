@@ -104,7 +104,7 @@ CREATE TABLE plt_python_component(
     download_url VARCHAR(255),
     source_url VARCHAR(255),
     p_url VARCHAR(255),
-    author VARCHAR(255),
+    author TEXT,
     author_email TEXT,
     licenses TEXT[],
 	vulnerabilities TEXT[],
