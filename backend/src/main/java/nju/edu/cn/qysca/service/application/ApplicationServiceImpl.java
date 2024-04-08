@@ -300,7 +300,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     break;
                 case "javaScript":
                     applicationDO.setLanguage(new String[] {"javaScript"});
-                    JsDependencyTreeDO analyzedJsDependencyTreeDO = npmService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), "");
+                    JsDependencyTreeDO analyzedJsDependencyTreeDO = npmService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
                     if (!analyzedJsDependencyTreeDO.getName().equals(saveApplicationDependencyDTO.getName()) || !analyzedJsDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
                         throw new PlatformException(500, "上传文件非本项目");
                     }
