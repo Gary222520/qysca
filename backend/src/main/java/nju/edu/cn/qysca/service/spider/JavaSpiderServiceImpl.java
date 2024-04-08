@@ -131,12 +131,13 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
                     mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true));
                     return;
                 }
-                //创建临时pom文件
-                String pomString = getPomStrByGav(javaComponentDO.getName().split(":")[0], javaComponentDO.getName().split(":")[1], javaComponentDO.getVersion());
-                createPomFile(pomString, tempFolder+"pom.xml");
-
-                //生成并存储依赖树与依赖表
-                JavaDependencyTreeDO javaDependencyTreeDO = mavenService.dependencyTreeAnalysis(tempFolder+"pom.xml", "maven", "opensource");
+//                //创建临时pom文件
+//                String pomString = getPomStrByGav(javaComponentDO.getName().split(":")[0], javaComponentDO.getName().split(":")[1], javaComponentDO.getVersion());
+//                createPomFile(pomString, tempFolder+"pom.xml");
+//
+//                //生成并存储依赖树与依赖表
+//                JavaDependencyTreeDO javaDependencyTreeDO = mavenService.dependencyTreeAnalysis(tempFolder+"pom.xml", "maven", "opensource");
+                JavaDependencyTreeDO javaDependencyTreeDO = mavenService.spiderDependency(javaComponentDO.getName().split(":")[0], javaComponentDO.getName().split(":")[1], javaComponentDO.getVersion());
                 List<JavaDependencyTableDO> javaDependencyTableDOList = mavenService.dependencyTableAnalysis(javaDependencyTreeDO);
                 javaDependencyTreeDao.save(javaDependencyTreeDO);
                 javaDependencyTableDao.saveAll(javaDependencyTableDOList);
@@ -399,18 +400,18 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         }
     }
 
-    /**
-     * 创建临时的pom文件（用以调用mvn命令）
-     *
-     * @param pomString pom文件内容
-     * @param filePath 创建临时文件路径
-     */
-    private void createPomFile(String pomString, String filePath) {
-        try (OutputStream outputStream = new FileOutputStream(filePath);
-             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
-            writer.write(pomString);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    /**
+//     * 创建临时的pom文件（用以调用mvn命令）
+//     *
+//     * @param pomString pom文件内容
+//     * @param filePath 创建临时文件路径
+//     */
+//    private void createPomFile(String pomString, String filePath) {
+//        try (OutputStream outputStream = new FileOutputStream(filePath);
+//             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+//            writer.write(pomString);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 }

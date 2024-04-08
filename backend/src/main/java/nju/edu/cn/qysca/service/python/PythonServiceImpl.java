@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -173,7 +174,11 @@ public class PythonServiceImpl implements PythonService {
     @Override
     public PythonDependencyTreeDO spiderDependency(String name, String version) {
 
-        File tempFile = new File(tempFolder);
+        Date now = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String timeStamp = dateFormat.format(now);
+
+        File tempFile = new File(tempFolder+timeStamp);
         if (!tempFile.exists()){ //如果不存在
             boolean dr = tempFile.mkdirs(); //创建目录
         }
