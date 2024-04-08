@@ -11,25 +11,20 @@ import nju.edu.cn.qysca.domain.spider.dos.PythonVisitedPackagesDO;
 import nju.edu.cn.qysca.service.python.PythonService;
 import nju.edu.cn.qysca.service.spider.JavaSpiderService;
 import nju.edu.cn.qysca.service.spider.PythonSpiderService;
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.annotation.PostConstruct;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 批量爬取入口
- * 在需要调用的方法前添加@PostConstruct标签
- * 一次只添加一个@PostConstruct
  */
-@SpringBootApplication
-public class SpiderRunApplication {
-
+@SpringBootTest
+public class SpiderRun {
     @Autowired
     private JavaSpiderService javaSpiderService;
     @Autowired
@@ -48,15 +43,11 @@ public class SpiderRunApplication {
     @Value("${targetUrlsPath}")
     private String TARGET_URLS_PATH;
 
-    public static void main(String[] args) {
-        SpringApplication.run(SpiderRunApplication.class);
-    }
-
     /**
      * 批量爬取java组件
      */
-    //@PostConstruct
-    private void executeJavaSpiderTask(){
+    @Test
+    public void executeJavaSpiderTask(){
         List<String> targetUrls = new ArrayList<>();
 
         // 从target_urls.txt文件中读取目标URL
@@ -83,8 +74,8 @@ public class SpiderRunApplication {
     /**
      * 批量爬取python包
      */
-    @PostConstruct
-    private void executePythonSpiderTask(){
+    @Test
+    public void executePythonSpiderTask(){
         List<PythonVisitedPackagesDO> packagesDOList = pythonVisitedPackagesDao.findAll();
         for (PythonVisitedPackagesDO pythonVisitedPackagesDO : packagesDOList){
             synchronized (this) {
@@ -146,6 +137,4 @@ public class SpiderRunApplication {
 
 
     }
-
-
 }
