@@ -300,7 +300,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     break;
                 case "javaScript":
                     applicationDO.setLanguage(new String[] {"javaScript"});
-                    JsDependencyTreeDO analyzedJsDependencyTreeDO = npmService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), "");
+                    JsDependencyTreeDO analyzedJsDependencyTreeDO = npmService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
                     if (!analyzedJsDependencyTreeDO.getName().equals(saveApplicationDependencyDTO.getName()) || !analyzedJsDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
                         throw new PlatformException(500, "上传文件非本项目");
                     }
@@ -480,7 +480,12 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         String[] licenses = null;
         String[] vulnerabilities = null;
-        Set<String> language = new HashSet<>(Arrays.asList(parentApplicationDO.getLanguage()));
+        Set<String> language = null;
+        if(parentApplicationDO.getLanguage() == null){
+            language = new HashSet<>();
+        }else{
+            language = new HashSet<>(Arrays.asList(parentApplicationDO.getLanguage()));
+        }
         //不是应用发布成的组件
         if (applicationDO == null) {
             List<String> childComponent = null;

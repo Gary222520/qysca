@@ -11,9 +11,9 @@ import java.util.List;
 
 public interface NpmService {
 
-    JsComponentDO componentAnalysis(String filePath, String type);
+    JsComponentDO componentAnalysis(String filePath, String builder, String type);
 
-    JsDependencyTreeDO dependencyTreeAnalysis(String filePath, String type);
+    JsDependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String type);
 
     List<JsDependencyTableDO> dependencyTableAnalysis(JsDependencyTreeDO jsDependencyTreeDO);
 

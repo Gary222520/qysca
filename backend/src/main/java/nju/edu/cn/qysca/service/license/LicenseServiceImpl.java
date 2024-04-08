@@ -195,7 +195,9 @@ public class LicenseServiceImpl implements LicenseService{
     public Page<LicenseBriefDTO> getLicenseList(String name, String version, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
-        return licenseDao.getLicenseList(Arrays.asList(applicationDO.getLicenses()), pageable);
+        Page<LicenseDO> temp = licenseDao.getLicenseList(Arrays.asList(applicationDO.getLicenses()), pageable);
+        Page<LicenseBriefDTO> result = temp.map(licenseDO -> new LicenseBriefDTO(licenseDO.getName(), licenseDO.getFullName(), licenseDO.getIsOsiApproved(), licenseDO.getIsFsfApproved(), licenseDO.getIsSpdxApproved(), licenseDO.getRiskLevel(), licenseDO.getGplCompatibility()));
+        return result;
     }
 
     @Override
@@ -241,5 +243,13 @@ public class LicenseServiceImpl implements LicenseService{
     @Override
     public LicenseDO getLicenseInfo(String name) {
         return licenseDao.findByName(name);
+    }
+
+    @Override
+    public Page<LicenseBriefDTO> getLicensePage(String name, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<LicenseDO> temp = licenseDao.getLicensePage(name, pageable);
+        Page<LicenseBriefDTO> result = temp.map(licenseDO -> new LicenseBriefDTO(licenseDO.getName(), licenseDO.getFullName(), licenseDO.getIsOsiApproved(), licenseDO.getIsFsfApproved(), licenseDO.getIsSpdxApproved(), licenseDO.getRiskLevel(), licenseDO.getGplCompatibility()));
+        return result;
     }
 }
