@@ -16,7 +16,7 @@ import nju.edu.cn.qysca.service.gradle.GradleService;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.service.npm.NpmService;
 import nju.edu.cn.qysca.service.python.PythonService;
-import nju.edu.cn.qysca.service.spider.SpiderService;
+import nju.edu.cn.qysca.service.spider.JavaSpiderService;
 import org.springframework.beans.BeanUtils;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.*;
@@ -98,7 +98,7 @@ public class ComponentServiceImpl implements ComponentService {
     private GoService goService;
 
     @Autowired
-    private SpiderService spiderService;
+    private JavaSpiderService javaSpiderService;
 
     @Value("${tempPomFolder}")
     private String tempFolder;
