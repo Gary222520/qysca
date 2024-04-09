@@ -43,7 +43,7 @@ const data = reactive({
 const pagination = reactive({
   current: 1,
   total: 0,
-  pageSize: 8,
+  pageSize: 6,
   showSizeChanger: false,
   onChange: (page, size) => {
     pagination.current = page
@@ -61,13 +61,13 @@ const show = (name, version) => {
 }
 const getCount = async (name, version) => {
   let count = 0
-  await GetProjectTiled({ name, version, number: 1, size: 8 }).then((res) => {
+  await GetProjectTiled({ name, version, number: 1, size: 6 }).then((res) => {
     if (res.code !== 200) return
     count = res.data.totalElements
   })
   return count
 }
-const getProjectTiled = (name, version, number = 1, size = 8) => {
+const getProjectTiled = (name, version, number = 1, size = 6) => {
   GetProjectTiled({ name, version, number, size })
     .then((res) => {
       // console.log('GetProjectTiled', res)

@@ -108,7 +108,7 @@ const app = reactive({
 const pagination = reactive({
   current: 1,
   total: 0,
-  pageSize: 8,
+  pageSize: 6,
   showSizeChanger: false,
   onChange: (page, size) => {
     pagination.current = page
@@ -121,7 +121,7 @@ const show = (name, version) => {
   app.version = version
   getLicenseList()
 }
-const getLicenseList = (name = app.name, version = app.version, page = 1, size = 8) => {
+const getLicenseList = (name = app.name, version = app.version, page = 1, size = 6) => {
   data.spinning = true
   GetLicenseList({ name, version, page, size })
     .then((res) => {

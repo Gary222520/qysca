@@ -54,7 +54,7 @@
               <a-avatar style="color: #ffffff; background-color: #6f005f">
                 <template #icon><UserOutlined /></template>
               </a-avatar>
-              <span style="margin-left: 10px; font-size: 18px">{{ data.username }}</span>
+              <span style="margin-left: 10px; font-size: 16px">{{ data.username }}</span>
             </span>
             <template #overlay>
               <a-menu>
