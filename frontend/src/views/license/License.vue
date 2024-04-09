@@ -104,7 +104,7 @@ const data = reactive({
 const pagination = reactive({
   current: 1,
   total: 0,
-  pageSize: 10,
+  pageSize: 8,
   showSizeChanger: false,
   onChange: (page, size) => {
     pagination.current = page
@@ -112,7 +112,7 @@ const pagination = reactive({
   },
   hideOnSinglePage: true
 })
-const getLicenses = (page = 1, size = 10) => {
+const getLicenses = (page = 1, size = 8) => {
   const params = {
     ...data.search,
     page,
@@ -145,13 +145,13 @@ const showInfo = (record) => {
 }
 .title {
   font-weight: bold;
-  font-size: 24px;
+  font-size: 20px;
   margin-bottom: 15px;
 }
 .content_card {
   position: absolute;
   width: 100%;
-  height: calc(100% - 32px);
+  height: calc(100% - 30px);
   overflow-y: scroll;
 }
 .operations {

@@ -1,7 +1,7 @@
 <template>
   <a-modal v-model:open="data.open" width="800px" :footer="null">
     <template #title>
-      <div style="font-size: 20px">{{ data.add ? '添加项目依赖信息' : '更新项目依赖信息' }}</div>
+      <div style="font-size: 20px">{{ data.add ? '添加应用依赖信息' : '更新应用依赖信息' }}</div>
     </template>
     <div style="display: flex; margin-top: 20px">
       <a-steps class="steps" direction="vertical" :current="data.currentStep" :items="data.steps"></a-steps>

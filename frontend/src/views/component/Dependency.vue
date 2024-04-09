@@ -100,29 +100,36 @@ const filterOption = (input, option) => {
 .header_card {
   position: absolute;
   width: 100%;
-  height: 120px;
+  height: 100px;
 }
 .content_card {
   position: absolute;
   width: 100%;
-  height: calc(100% - 120px);
-  top: 135px;
+  height: calc(100% - 100px);
+  top: 115px;
   overflow-y: scroll;
 }
 .card_header {
   display: flex;
   align-items: center;
   font-size: 18px;
+  margin-top: 15px;
 }
 .card_title {
   display: flex;
   align-items: center;
-  margin-top: 10px;
+  margin-top: 5px;
   font-size: 16px;
+}
+.content {
+  margin-top: 10px;
 }
 .content_header {
   display: flex;
   justify-content: space-between;
+}
+:deep(.ant-card .ant-card-body) {
+  padding: 4px 20px;
 }
 </style>
 <style scoped src="@/atdv/primary-btn.css"></style>

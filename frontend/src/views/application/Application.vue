@@ -208,37 +208,16 @@ const data = reactive({
 const menu = reactive({
   items: []
 })
-const table = reactive({
-  datasource: [],
-  columns: [
-    { title: '组织ID', dataIndex: 'groupId', key: 'groupId', width: 120 },
-    { title: '工件ID', dataIndex: 'artifactId', key: 'artifactId', width: 120 },
-    { title: '项目类型', dataIndex: 'type', key: 'type', width: 120 },
-    { title: '语言', dataIndex: 'language', key: 'language', width: 120 },
-    { title: '构建工具', dataIndex: 'builder', key: 'builder', width: 120 },
-    { title: '扫描对象', dataIndex: 'scanner', key: 'scanner', width: 150 },
-    { title: '最近一次更新时间', dataIndex: 'time', key: 'time', width: 210 },
-    { title: '备注', dataIndex: 'description', key: 'description' },
-    { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
-  ],
-  pagination: {
-    current: 1,
-    total: 0,
-    pageSize: 5,
-    showSizeChanger: false,
-    hideOnSinglePage: true
-  }
-})
 const pagination = reactive({
   current: 1,
   total: 0,
-  pageSize: 5,
+  pageSize: 8,
   showSizeChanger: false,
   hideOnSinglePage: true
 })
 
 const getProjectList = async () => {
-  await GetProjectList({ number: 1, size: 10 })
+  await GetProjectList({ number: 1, size: 8 })
     .then((res) => {
       if (res.code !== 200) {
         message.error(res.message)
@@ -459,13 +438,13 @@ const release = async (app, index, type) => {
 }
 .title {
   font-weight: bold;
-  font-size: 24px;
+  font-size: 20px;
   margin-bottom: 15px;
 }
 .content_card {
   position: absolute;
   width: 100%;
-  height: calc(100% - 32px);
+  height: calc(100% - 30px);
   overflow-y: scroll;
 }
 .operations {

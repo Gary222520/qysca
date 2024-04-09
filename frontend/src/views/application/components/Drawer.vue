@@ -1,101 +1,106 @@
 <template>
   <a-drawer v-model:open="data.open" width="800px" :closable="false" placement="right">
     <template #title>
-      <div style="font-size: 24px">{{ data.isProject ? '应用详情' : '组件详情' }}</div>
+      <div style="font-size: 20px">{{ data.isProject ? '应用详情' : '组件详情' }}</div>
     </template>
-    <div>
-      <span style="font-size: 20px; font-weight: bold; margin-right: 20px">{{ data.detail?.name }}</span>
-      <a-tooltip v-if="data.isProject">
-        <template #title>刷新</template>
-        <RedoOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click.stop="refresh()" />
-      </a-tooltip>
-      <a-button v-if="!data.isProject" class="btn" type="primary" @click="showDetail()">
-        <FileTextOutlined />查看依赖信息
-      </a-button>
-      <a-button type="primary" style="margin-left: 30px" @click="exportSBOM">导出SBOM</a-button>
-    </div>
-    <div class="relative">
-      <div class="drawer_title" style="margin-bottom: 20px">基本信息</div>
-    </div>
-    <a-descriptions>
-      <a-descriptions-item label="应用类型">{{ data.detail?.type }}</a-descriptions-item>
-      <a-descriptions-item label="应用描述">{{ data.detail?.description }}</a-descriptions-item>
-    </a-descriptions>
+    <a-spin :spinning="data.spinning" tip="应用信息加载中，请稍等...">
+      <div>
+        <span style="font-size: 18px; font-weight: bold; margin-right: 20px">{{ data.detail?.name }}</span>
+        <a-tooltip v-if="data.isProject">
+          <template #title>刷新</template>
+          <RedoOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click.stop="refresh()" />
+        </a-tooltip>
+        <a-button v-if="!data.isProject" class="btn" type="primary" @click="showDetail()">
+          <FileTextOutlined />查看依赖信息
+        </a-button>
+        <a-button type="primary" style="margin-left: 30px" @click="exportSBOM">导出SBOM</a-button>
+      </div>
+      <div class="relative">
+        <div class="drawer_title">基本信息</div>
+      </div>
+      <a-descriptions>
+        <a-descriptions-item label="应用类型">{{ data.detail?.type }}</a-descriptions-item>
+        <a-descriptions-item label="应用描述">{{ data.detail?.description }}</a-descriptions-item>
+      </a-descriptions>
 
-    <div class="relative">
-      <div class="drawer_title">扫描信息</div>
-    </div>
-    <a-descriptions>
-      <a-descriptions-item label="语言">{{ arrToString(data.detail?.language) }}</a-descriptions-item>
-      <a-descriptions-item label="构建工具">{{ data.detail?.builder }}</a-descriptions-item>
-      <a-descriptions-item label="扫描对象">{{ data.detail?.scanner }}</a-descriptions-item>
-      <a-descriptions-item label="扫描时间">{{ data.detail?.time }}</a-descriptions-item>
-    </a-descriptions>
+      <div class="relative">
+        <div class="drawer_title">扫描信息</div>
+      </div>
+      <a-descriptions>
+        <a-descriptions-item label="语言">{{ arrToString(data.detail?.language) }}</a-descriptions-item>
+        <a-descriptions-item label="构建工具">{{ data.detail?.builder }}</a-descriptions-item>
+        <a-descriptions-item label="扫描对象">{{ data.detail?.scanner }}</a-descriptions-item>
+        <a-descriptions-item label="扫描时间">{{ data.detail?.time }}</a-descriptions-item>
+      </a-descriptions>
 
-    <div class="relative" v-if="data.isProject">
-      <div class="drawer_title">成员信息</div>
-    </div>
-    <div style="margin-bottom: 10px" v-if="data.isProject">
-      <a-button type="primary" @click="addAppMember()"><PlusOutlined />添加成员</a-button>
-    </div>
-    <div style="margin-bottom: 20px" v-if="data.isProject">
-      <a-table :data-source="table.datasource" :columns="table.columns" bordered :pagination="false">
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'action'">
-            <a-tooltip>
-              <template #title>删除</template>
-              <a-popconfirm v-model:open="record.popconfirm" title="确定删除该成员吗？">
-                <template #cancelButton>
-                  <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
-                </template>
-                <template #okButton>
-                  <a-button danger type="primary" size="small" @click="deleteMember(record)">删除</a-button>
-                </template>
-                <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
-              </a-popconfirm>
-            </a-tooltip>
+      <div class="relative" v-if="data.isProject">
+        <div class="drawer_title">成员信息</div>
+      </div>
+      <div style="margin-bottom: 10px" v-if="data.isProject">
+        <a-button type="primary" @click="addAppMember()"><PlusOutlined />添加成员</a-button>
+      </div>
+      <div style="margin-bottom: 20px" v-if="data.isProject">
+        <a-table :data-source="table.datasource" :columns="table.columns" bordered :pagination="false">
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'action'">
+              <a-tooltip>
+                <template #title>删除</template>
+                <a-popconfirm v-model:open="record.popconfirm" title="确定删除该成员吗？">
+                  <template #cancelButton>
+                    <a-button class="cancel_btn" size="small" @click="record.popconfirm = false">取消</a-button>
+                  </template>
+                  <template #okButton>
+                    <a-button danger type="primary" size="small" @click="deleteMember(record)">删除</a-button>
+                  </template>
+                  <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+                </a-popconfirm>
+              </a-tooltip>
+            </template>
           </template>
-        </template>
-        <template #emptyText>暂无成员</template>
-      </a-table>
-    </div>
+          <template #emptyText>暂无成员</template>
+        </a-table>
+      </div>
 
-    <div class="relative" v-if="data.isProject && !hasChildren">
-      <div class="drawer_title">
-        应用状态
-        <a-tag v-if="data.detail.state === 'CREATED'" color="processing" :bordered="false" class="label">
-          暂未扫描
-        </a-tag>
-        <a-tag v-if="data.detail.state === 'RUNNING'" color="warning" :bordered="false" class="label">扫描中</a-tag>
-        <a-tag v-if="data.detail.state === 'SUCCESS'" color="success" :bordered="false" class="label">扫描成功</a-tag>
-        <a-tag v-if="data.detail.state === 'FAILED'" color="error" :bordered="false" class="label">扫描失败</a-tag>
+      <div class="relative" v-if="data.isProject && !hasChildren">
+        <div class="drawer_title">
+          应用状态
+          <a-tag v-if="data.detail.state === 'CREATED'" color="processing" :bordered="false" class="label">
+            暂未扫描
+          </a-tag>
+          <a-tag v-if="data.detail.state === 'RUNNING'" color="warning" :bordered="false" class="label">扫描中</a-tag>
+          <a-tag v-if="data.detail.state === 'SUCCESS'" color="success" :bordered="false" class="label">扫描成功</a-tag>
+          <a-tag v-if="data.detail.state === 'FAILED'" color="error" :bordered="false" class="label">扫描失败</a-tag>
+        </div>
       </div>
-    </div>
-    <div style="margin-top: 10px" v-if="data.isProject && !hasChildren">
-      <div style="display: flex" v-if="data.detail.state === 'CREATED'">
-        <a-button class="btn" type="primary" @click="addDependency()"> <FileAddOutlined />添加依赖信息 </a-button>
+      <div style="margin-top: 10px" v-if="data.isProject && !hasChildren">
+        <div style="display: flex" v-if="data.detail.state === 'CREATED'">
+          <a-button class="btn" type="primary" @click="addDependency()"> <FileAddOutlined />上传扫描文件</a-button>
+        </div>
+        <div style="display: flex" v-if="data.detail.state === 'SUCCESS'">
+          <a-tooltip placement="bottom">
+            <template #title>组件、漏洞、许可证...</template>
+            <a-button class="btn" type="primary" @click="showDetail()"><FileTextOutlined />查看扫描结果</a-button>
+          </a-tooltip>
+          <a-button class="btn" type="primary" @click="updateDependency()"><SyncOutlined />重新扫描</a-button>
+        </div>
+        <div style="display: flex; align-items: center; height: 32px" v-if="data.detail.state === 'RUNNING'">
+          <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
+          <div style="margin-left: 10px">扫描分析中...</div>
+        </div>
+        <div style="display: flex; align-items: center; height: 32px" v-if="data.detail.state === 'FAILED'">
+          <a-popconfirm v-model:open="data.popconfirm" title="扫描出错，请重试">
+            <template #cancelButton>
+              <a-button class="cancel_btn" size="small" @click="retry()">重试</a-button>
+            </template>
+            <template #okButton></template>
+            <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+            <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
+          </a-popconfirm>
+        </div>
       </div>
-      <div style="display: flex" v-if="data.detail.state === 'SUCCESS'">
-        <a-button class="btn" type="primary" @click="showDetail()"><FileTextOutlined />查看依赖信息</a-button>
-        <a-button class="btn" type="primary" @click="updateDependency()"><SyncOutlined />更新依赖信息</a-button>
-      </div>
-      <div style="display: flex; align-items: center; height: 32px" v-if="data.detail.state === 'RUNNING'">
-        <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
-        <div style="margin-left: 10px">扫描分析中...</div>
-      </div>
-      <div style="display: flex; align-items: center; height: 32px" v-if="data.detail.state === 'FAILED'">
-        <a-popconfirm v-model:open="data.popconfirm" title="扫描出错，请重试">
-          <template #cancelButton>
-            <a-button class="cancel_btn" size="small" @click="retry()">重试</a-button>
-          </template>
-          <template #okButton></template>
-          <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
-          <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
-        </a-popconfirm>
-      </div>
-    </div>
-    <AddDepModal ref="addDepModal" @success="refresh()"></AddDepModal>
-    <AddMember ref="addMember" @success="getAppMember()"></AddMember>
+      <AddDepModal ref="addDepModal" @success="refresh()"></AddDepModal>
+      <AddMember ref="addMember" @success="getAppMember()"></AddMember>
+    </a-spin>
   </a-drawer>
 </template>
 
@@ -125,6 +130,7 @@ const addMember = ref()
 const emit = defineEmits(['refresh'])
 
 const data = reactive({
+  spinning: false,
   open: false,
   detail: {},
   isProject: true,
@@ -265,10 +271,9 @@ defineExpose({ open })
 .drawer_title {
   display: flex;
   align-items: center;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
-  margin-top: 20px;
-  margin-bottom: 10px;
+  margin: 15px 0;
   padding-left: 10px;
 }
 .drawer_title::before {
@@ -297,7 +302,11 @@ defineExpose({ open })
   border-color: #6f005f;
   color: #6f005f;
 }
+:deep(.ant-descriptions .ant-descriptions-item-label) {
+  font-weight: bold;
+}
 </style>
 <style scoped src="@/atdv/pagination.css"></style>
 <style scoped src="@/atdv/primary-btn.css"></style>
 <style scoped src="@/atdv/description.css"></style>
+<style scoped src="@/atdv/spin.css"></style>

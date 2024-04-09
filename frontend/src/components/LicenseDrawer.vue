@@ -1,12 +1,12 @@
 <template>
-  <a-drawer v-model:open="data.open" width="900px" :closable="false" placement="right">
-    <template #title><div style="font-size: 24px">许可证详情</div></template>
+  <a-drawer v-model:open="data.open" width="900px" @close="close()" :closable="false" placement="right">
+    <template #title><div style="font-size: 20px">许可证详情</div></template>
     <a-spin :spinning="data.spinning" tip="许可证信息加载中，请稍等...">
-      <div style="display: flex; align-items: center">
+      <div style="display: flex; align-items: center; margin-bottom: 20px">
         <a-tag v-if="data.detail?.riskLevel === 'high'" color="error">高危</a-tag>
         <a-tag v-if="data.detail?.riskLevel === 'medium'" color="warning">中危</a-tag>
         <a-tag v-if="data.detail?.riskLevel === 'low'" color="processing">低危</a-tag>
-        <span style="font-size: 20px; font-weight: bold; margin-right: 10px">{{ data.detail?.name }}</span>
+        <span style="font-size: 18px; font-weight: bold; margin-right: 10px">{{ data.detail?.name }}</span>
         <a-tag v-if="data.detail?.isOsiApproved" class="flex" color="success">
           <template #icon><img class="tag-img" src="@/assets/osi.png" /></template>
           <div style="color: #48cd7f">OSI认证</div>
@@ -27,34 +27,36 @@
         </a-tag>
       </div>
       <div class="relative">
-        <div class="drawer_title" style="margin-bottom: 20px">基本信息</div>
+        <div class="drawer_title">基本信息</div>
       </div>
       <a-descriptions>
         <a-descriptions-item label="许可证全名" span="3">{{ data.detail?.fullName }}</a-descriptions-item>
         <a-descriptions-item label="许可证链接" span="3">{{ data.detail?.url }}</a-descriptions-item>
         <a-descriptions-item label="风险说明" span="3">{{ data.detail?.riskDisclosure }}</a-descriptions-item>
         <a-descriptions-item label="GPL兼容性说明" span="3">
-          {{ data.detail?.gplCompatibilityDescription }}
-        </a-descriptions-item>
-        <a-descriptions-item label="许可证内容" span="3">
           <div style="position: relative">
-            <span ref="text" v-html="data.text" style="display: inline-block; height: 90px; overflow-y: hidden"></span>
+            <span ref="GPLtext" v-html="data.GPLtext"></span>
             <div class="text-btn" v-if="data.showBtn" @click="changeText()">{{ data.showTotal ? '收起' : '展开' }}</div>
           </div>
         </a-descriptions-item>
+        <a-descriptions-item label="许可证内容" span="3">
+          <a-button type="primary" @click="openModal()">
+            <SearchOutlined :style="{ fontSize: '16px' }" />点击查看
+          </a-button>
+        </a-descriptions-item>
       </a-descriptions>
-      <a-modal v-model:open="data.showTotal" width="1000px" @cancel="closeModal()">
+      <a-modal v-model:open="data.showLicense" width="1000px" @cancel="closeModal()">
         <template #title>
           <div style="font-size: 20px">许可证内容</div>
         </template>
         <span v-html="data.text"></span>
         <template #footer>
-          <a-button class="btn" @click="changeText()">确认</a-button>
+          <a-button class="btn" @click="closeModal()">确认</a-button>
         </template>
       </a-modal>
 
       <div class="relative">
-        <div class="drawer_title" style="margin-bottom: 20px">许可证义务</div>
+        <div class="drawer_title">许可证义务</div>
       </div>
       <div class="list prohibited">
         <a-list size="small" bordered :locale="data.locale" :data-source="data.detail?.obligationsRequired">
@@ -88,7 +90,7 @@
       </div>
 
       <div class="relative">
-        <div class="drawer_title" style="margin-bottom: 20px">许可证权利</div>
+        <div class="drawer_title">许可证权利</div>
       </div>
       <div class="list allowed">
         <a-list size="small" bordered :locale="data.locale" :data-source="data.detail?.rightsAllowed">
@@ -125,6 +127,7 @@
 </template>
 
 <script setup>
+import { SearchOutlined } from '@ant-design/icons-vue'
 import { reactive, ref, defineExpose, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { GetLicenseInfo } from '@/api/frontend'
@@ -132,6 +135,7 @@ import { message } from 'ant-design-vue'
 
 const router = useRouter()
 const text = ref()
+const GPLtext = ref()
 
 const data = reactive({
   open: false,
@@ -139,6 +143,8 @@ const data = reactive({
   license: {},
   detail: {},
   text: '',
+  showLicense: false,
+  GPLtext: '',
   showTotal: false,
   showBtn: true,
   locale: {
@@ -152,6 +158,8 @@ const open = (license) => {
 }
 const close = () => {
   data.open = false
+  data.showTotal = false
+  data.showBtn = true
 }
 const getLicenseInfo = () => {
   data.spinning = true
@@ -164,7 +172,8 @@ const getLicenseInfo = () => {
       }
       data.detail = res.data
       data.text = handleText(data.detail?.text)
-      // cutText(5)
+      data.GPLtext = data.detail?.gplCompatibilityDescription
+      cutText(3)
       data.spinning = false
     })
     .catch((err) => {
@@ -172,17 +181,6 @@ const getLicenseInfo = () => {
       console.error(err)
     })
 }
-
-const changeText = () => {
-  data.showTotal = !data.showTotal
-  // if (data.showTotal) text.value.innerHTML = data.text
-  // else cutText(5)
-}
-const closeModal = () => {
-  // if (data.showTotal) text.value.innerHTML = data.text
-  // else cutText(5)
-}
-
 const handleText = (text) => {
   text = text.replace(/\\n/g, '<br/>')
   text = text.replace(/\\u003c/g, '<')
@@ -191,20 +189,33 @@ const handleText = (text) => {
   text = text.replace(/\\u0026/g, '&')
   return text
 }
-const cutText = (line = 5) => {
-  if (!text.value) return
 
-  if (data.text) text.value.innerHTML = data.text
+const openModal = () => {
+  data.showLicense = true
+}
+const closeModal = () => {
+  data.showLicense = false
+}
+
+const changeText = () => {
+  data.showTotal = !data.showTotal
+  if (data.showTotal) GPLtext.value.innerHTML = data.GPLtext
+  else cutText(3)
+}
+const cutText = (line = 3) => {
+  if (!GPLtext.value) return
+
+  if (data.GPLtext) GPLtext.value.innerHTML = data.GPLtext
   else return
 
   nextTick(() => {
     // 文本行数
-    let rows = text.value.getClientRects().length
+    let rows = GPLtext.value.getClientRects().length
     // 文本内容
-    let content = data.text
+    let content = data.GPLtext
     // 文本小于指定行数则不用截取
-    if (rows < line) {
-      text.value.innerHTML = data.text
+    if (rows <= line) {
+      GPLtext.value.innerHTML = data.GPLtext
       data.showBtn = false
       return
     }
@@ -216,12 +227,12 @@ const cutText = (line = 5) => {
       // 遇到标签
       if (/<br\/>$/.test(content)) step = 5
       content = content.slice(0, -step)
-      text.value.innerHTML = content
-      rows = text.value.getClientRects().length
+      GPLtext.value.innerHTML = content
+      rows = GPLtext.value.getClientRects().length
     }
     // 末尾替换为省略号（中文-3，英文-8）
-    if (content.charCodeAt(content.length - 1) < 255) text.value.innerHTML = content.slice(0, -8) + '...'
-    else text.value.innerHTML = content.slice(0, -3) + '...'
+    if (content.charCodeAt(content.length - 1) < 255) GPLtext.value.innerHTML = content.slice(0, -8) + '...'
+    else GPLtext.value.innerHTML = content.slice(0, -3) + '...'
     data.showBtn = true
   })
 }
@@ -233,10 +244,9 @@ defineExpose({ open })
 .drawer_title {
   display: flex;
   align-items: center;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
-  margin-top: 20px;
-  margin-bottom: 10px;
+  margin: 15px 0;
   padding-left: 10px;
 }
 .drawer_title::before {
@@ -256,7 +266,7 @@ defineExpose({ open })
 .text-btn {
   position: absolute;
   right: 0;
-  bottom: -15px;
+  bottom: 0;
   cursor: pointer;
   color: #6f005f;
 }

@@ -32,7 +32,7 @@
     <div class="button">
       <a-button class="cancel-btn" @click="close">取消</a-button>
       <a-button class="btn" @click="submit(false)">新建</a-button>
-      <a-button class="btn" @click="submit(true)">新建并添加依赖信息</a-button>
+      <a-button class="btn" @click="submit(true)">新建并扫描</a-button>
     </div>
   </a-modal>
 </template>

@@ -3,40 +3,23 @@
     <div class="title">组件管理</div>
     <a-card class="content_card">
       <div class="operations">
-        <a-radio-group v-model:value="data.search.type" @change="(e) => getComponents()">
-          <a-radio-button value="opensource" style="width: 70px">开源</a-radio-button>
-          <a-radio-button value="business" style="width: 70px">商用</a-radio-button>
-          <a-radio-button value="internal" style="width: 100px">内部使用</a-radio-button>
-        </a-radio-group>
         <div>
-          <!-- <a-input
-            v-if="data.accurate"
-            v-model:value="data.search.groupId"
-            addon-before="groupId"
-            placeholder="输入groupId..."
-            style="width: 200px; margin-right: 10px"
-            @change="(e) => getComponents()"></a-input>
-          <a-input
-            v-if="data.accurate"
-            v-model:value="data.search.version"
-            addon-before="version"
-            placeholder="输入版本号..."
-            style="width: 200px; margin-right: 10px"
-            @change="(e) => getComponents()"></a-input>
-          <a-input
-            v-if="data.accurate"
-            v-model:value="data.search.artifactId"
-            addon-before="artifactId"
-            placeholder="输入artifactId..."
-            style="width: 200px; margin-right: 10px"
-            @change="(e) => getComponents()"></a-input> -->
+          <a-radio-group v-model:value="data.search.type" @change="(e) => getComponents()">
+            <a-radio-button value="opensource" style="width: 70px">开源</a-radio-button>
+            <a-radio-button value="business" style="width: 70px">商用</a-radio-button>
+            <a-radio-button value="internal" style="width: 100px">内部使用</a-radio-button>
+          </a-radio-group>
+          <a-button type="primary" @click="addComponent()" style="margin-left: 20px">
+            <PlusOutlined />添加组件
+          </a-button>
+        </div>
+        <div>
           <span v-if="!data.accurate">
             语言：<a-select
               v-model:value="data.search.language"
               placeholder="请选择语言"
               style="width: 200px; margin-right: 10px"
               @change="(value, option) => getComponents()">
-              <!-- <a-select-option value="">All</a-select-option> -->
               <a-select-option value="java">java</a-select-option>
               <a-select-option value="python">python</a-select-option>
               <a-select-option value="golang">golang</a-select-option>
@@ -51,11 +34,8 @@
             style="width: 250px"
             @change="(e) => getComponents()"
             @search="(value, e) => getComponents()"></a-input-search>
-          <!-- <a-button type="primary" v-if="!data.accurate" @click="changeMode(true)">精确查找</a-button>
-          <a-button type="primary" v-if="data.accurate" @click="changeMode(false)"><RollbackOutlined />返回</a-button> -->
         </div>
       </div>
-      <a-button type="primary" @click="addComponent()" style="margin-bottom: 20px"><PlusOutlined />添加组件</a-button>
       <a-table :data-source="data.datasource" :columns="data.columns" bordered :pagination="pagination">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">
@@ -176,7 +156,7 @@ const data = reactive({
 const pagination = reactive({
   current: 1,
   total: 0,
-  pageSize: 10,
+  pageSize: 8,
   showSizeChanger: false,
   onChange: (page, size) => {
     pagination.current = page
@@ -184,7 +164,7 @@ const pagination = reactive({
   },
   hideOnSinglePage: true
 })
-const getComponents = (number = 1, size = 10) => {
+const getComponents = (number = 1, size = 8) => {
   // data.datasource = []
   // if (data.accurate && data.search.groupId === '') return
   // if (!data.accurate && data.search.language === '' && data.search.name === '') return
@@ -262,13 +242,13 @@ const deleteComponent = (record) => {
 }
 .title {
   font-weight: bold;
-  font-size: 24px;
+  font-size: 20px;
   margin-bottom: 15px;
 }
 .content_card {
   position: absolute;
   width: 100%;
-  height: calc(100% - 32px);
+  height: calc(100% - 30px);
   overflow-y: scroll;
 }
 .operations {
