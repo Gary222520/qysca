@@ -1,6 +1,6 @@
 DROP EXTENSION pg_trgm;
 CREATE EXTENSION pg_trgm;
-select set_limit(0.9);
+select set_limit(0.95);
 
 DROP TABLE IF EXISTS plt_vulnerability_cnvd;
 CREATE TABLE plt_vulnerability_cnvd(
@@ -19,6 +19,7 @@ CREATE TABLE plt_vulnerability_cnvd(
 	patch_name TEXT,
 	patch_description TEXT
 );
+CREATE INDEX cnvd_cnvd_id_index ON plt_vulnerability_cnvd(cnvd_id);
 CREATE INDEX cnvd_cve_id_index ON plt_vulnerability_cnvd(cve_id);
 
 DROP TABLE IF EXISTS plt_vulnerability_cnvd_product;
