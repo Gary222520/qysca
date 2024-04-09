@@ -1,3 +1,35 @@
+DROP EXTENSION pg_trgm;
+CREATE EXTENSION pg_trgm;
+select set_limit(0.9);
+
+DROP TABLE IF EXISTS plt_vulnerability_cnvd;
+CREATE TABLE plt_vulnerability_cnvd(
+	id VARCHAR(32) PRIMARY KEY,
+	cnvd_id VARCHAR(255) NOT NULL UNIQUE,
+	cve_id VARCHAR(255),
+	severity VARCHAR(255),
+	title TEXT,
+	type VARCHAR(255),
+	submit_time VARCHAR(255),
+	open_time VARCHAR(255),
+	discoverer TEXT,
+	reference TEXT,
+	suggestion TEXT,
+	description TEXT,
+	patch_name TEXT,
+	patch_description TEXT
+);
+CREATE INDEX cnvd_cve_id_index ON plt_vulnerability_cnvd(cve_id);
+
+DROP TABLE IF EXISTS plt_vulnerability_cnvd_product;
+CREATE TABLE plt_vulnerability_cnvd_product(
+	id VARCHAR(32) PRIMARY KEY,
+	cnvd_id VARCHAR(255) NOT NULL,
+	product TEXT NOT NULL
+);
+CREATE INDEX cp_cnvd_id_index ON plt_vulnerability_cnvd_product(cnvd_id);
+CREATE INDEX cp_product_index ON plt_vulnerability_cnvd_product(product);
+
 DROP TABLE IF EXISTS plt_vulnerability_cwe;
 CREATE TABLE plt_vulnerability_cwe(
 	id VARCHAR(32) PRIMARY KEY,
@@ -23,7 +55,7 @@ CREATE TABLE plt_vulnerability_cve(
 	last_modified_date VARCHAR(255)
 );
 
-DROP TABLE IF EXISTS plt_vulnerability_cve_cpe;
+DROP TABLE IF EXISTS plt_vulnerability_cve_cpe CASCADE;
 CREATE TABLE plt_vulnerability_cve_cpe(
 	id VARCHAR(32) PRIMARY KEY,
 	cve_id VARCHAR(255) NOT NULL,
@@ -33,9 +65,23 @@ CREATE TABLE plt_vulnerability_cve_cpe(
 	version_end VARCHAR(255),
 	start_include BOOLEAN,
 	end_include BOOLEAN
-);
+) PARTITION BY HASH(id);
+
+do language plpgsql $$    
+declare    
+begin    
+  for i in 0..63    
+  loop    
+    execute format('drop table if exists plt_vulnerability_cve_cpe%s', i);
+    execute format('create table plt_vulnerability_cve_cpe%s partition of plt_vulnerability_cve_cpe for values with (modulus 64,remainder %s)', i,i);             
+  end loop;    
+end;    
+$$;
 CREATE INDEX cve_id_index ON plt_vulnerability_cve_cpe(cve_id);
 CREATE INDEX vp_uri_index ON plt_vulnerability_cve_cpe(uri);
+CREATE INDEX cc_gin_uri_index ON plt_vulnerability_cve_cpe USING gin(uri gin_trgm_ops);
+
+select * from plt_vulnerability_cve_cpe where uri % 'cpe:2.3:o:sun:sunos' order by similarity(uri,'cpe:2.3:o:sun:sunos') desc limit 10;
 
 DROP TABLE IF EXISTS plt_vulnerability_cpe_match;
 CREATE TABLE plt_vulnerability_cpe_match(
