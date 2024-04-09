@@ -44,23 +44,6 @@ public class MavenServiceImpl implements MavenService {
     private String tempFolder;
 
     /**
-     * 生成PUrl（仅对maven组件）
-     * 例如：pkg:maven/commons-codec/commons-codec@1.15?type=jar
-     *
-     * @param groupId    组织Id
-     * @param artifactId 工件id
-     * @param version    版本号
-     * @param packaging  打包方式，如pom、jar
-     * @return PUrl
-     */
-    private static String getMavenPUrl(String groupId, String artifactId, String version, String packaging) {
-        String pUrl = "pkg:maven/" + groupId + "/" + artifactId + "@" + version;
-        if (packaging.equals("jar"))
-            pUrl += "?type=jar";
-        return pUrl;
-    }
-
-    /**
      * 解析组件
      *
      * @param filePath 上传文件路径
@@ -146,13 +129,82 @@ public class MavenServiceImpl implements MavenService {
         return closeJavaDependencyTableDOList;
     }
 
+    @Override
+    public JavaDependencyTreeDO spiderDependency(String groupId, String artifactId, String version) {
+        Date now = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String timeStamp = dateFormat.format(now);
+        String tempPomFolder = tempFolder + timeStamp;
+        File file = new File(tempPomFolder);
+        file.mkdirs();
+        String tempPath = tempPomFolder + "/pom.xml";
+        try {
+            String xml = javaSpiderService.getPomStrByGav(groupId, artifactId, version);
+            FileWriter fileWriter = new FileWriter(tempPath);
+            fileWriter.write(xml);
+            fileWriter.flush();
+            fileWriter.close();
+            JavaDependencyTreeDO javaDependencyTreeDO = dependencyTreeAnalysis(tempPath, "maven", "opensource");
+            FolderUtil.deleteFolder(tempPomFolder);
+            return javaDependencyTreeDO;
+        } catch (Exception e) {
+            FolderUtil.deleteFolder(tempPomFolder);
+            throw new PlatformException(500, "识别依赖信息失败");
+        }
+    }
+
+    /**
+     * 将JavaComponentDependencyTreeDO转换为AppComponentDependencyTreeDO
+     *
+     * @param javaComponentDependencyTreeDO Java组件依赖树信息
+     * @return AppComponentDependencyTreeDO App组件依赖树信息
+     */
+    @Override
+    public AppComponentDependencyTreeDO translateComponentDependency(JavaComponentDependencyTreeDO javaComponentDependencyTreeDO) {
+        if (javaComponentDependencyTreeDO == null) {
+            return null;
+        }
+        AppComponentDependencyTreeDO appComponentDependencyTreeDO = new AppComponentDependencyTreeDO();
+        appComponentDependencyTreeDO.setName(javaComponentDependencyTreeDO.getName());
+        appComponentDependencyTreeDO.setVersion(javaComponentDependencyTreeDO.getVersion());
+        appComponentDependencyTreeDO.setType(javaComponentDependencyTreeDO.getType());
+        appComponentDependencyTreeDO.setDepth(javaComponentDependencyTreeDO.getDepth());
+        appComponentDependencyTreeDO.setLicenses(javaComponentDependencyTreeDO.getLicenses());
+        appComponentDependencyTreeDO.setVulnerabilities(javaComponentDependencyTreeDO.getVulnerabilities());
+        appComponentDependencyTreeDO.setLanguage("java");
+        List<AppComponentDependencyTreeDO> dependencyTreeDOS = new ArrayList<>();
+        for (JavaComponentDependencyTreeDO childJavaComponentDependencyTreeDO : javaComponentDependencyTreeDO.getDependencies()) {
+            AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependency(childJavaComponentDependencyTreeDO);
+            dependencyTreeDOS.add(childAppComponentDependencyTreeDO);
+        }
+        appComponentDependencyTreeDO.setDependencies(dependencyTreeDOS);
+        return appComponentDependencyTreeDO;
+    }
+
+    /**
+     * 将List<JavaDependencyTableDO>转化成List<AppDependencyTableDO>
+     *
+     * @param javaDependencyTableDOS java组件依赖关系平铺表
+     * @return List<AppDependencyTableDO> 应用组件依赖关系平铺表
+     */
+    @Override
+    public List<AppDependencyTableDO> translateDependencyTable(List<JavaDependencyTableDO> javaDependencyTableDOS) {
+        List<AppDependencyTableDO> appDependencyTableDOS = new ArrayList<>();
+        for (JavaDependencyTableDO javaDependencyTableDO : javaDependencyTableDOS) {
+            AppDependencyTableDO appDependencyTableDO = new AppDependencyTableDO();
+            BeanUtils.copyProperties(javaDependencyTableDO, appDependencyTableDO);
+            appDependencyTableDOS.add(appDependencyTableDO);
+        }
+        return appDependencyTableDOS;
+    }
+
     /**
      * @param filePath pom文件路径
      * @param builder  构造工具
      * @return Node 封装好的依赖信息树
      * @throws Exception
      */
-    public Node mavenDependencyTreeAnalyzer(String filePath, String builder) {
+    private Node mavenDependencyTreeAnalyzer(String filePath, String builder) {
         try {
             Invoker invoker = new DefaultInvoker();
             invoker.setMavenHome(new File(System.getenv("MAVEN_HOME")));
@@ -270,75 +322,6 @@ public class MavenServiceImpl implements MavenService {
         return null;
     }
 
-    @Override
-    public JavaDependencyTreeDO spiderDependency(String groupId, String artifactId, String version) {
-        Date now = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        String timeStamp = dateFormat.format(now);
-        String tempPomFolder = tempFolder + timeStamp;
-        File file = new File(tempPomFolder);
-        file.mkdirs();
-        String tempPath = tempPomFolder + "/pom.xml";
-        try {
-            String xml = javaSpiderService.getPomStrByGav(groupId, artifactId, version);
-            FileWriter fileWriter = new FileWriter(tempPath);
-            fileWriter.write(xml);
-            fileWriter.flush();
-            fileWriter.close();
-            JavaDependencyTreeDO javaDependencyTreeDO = dependencyTreeAnalysis(tempPath, "maven", "opensource");
-            FolderUtil.deleteFolder(tempPomFolder);
-            return javaDependencyTreeDO;
-        } catch (Exception e) {
-            FolderUtil.deleteFolder(tempPomFolder);
-            throw new PlatformException(500, "识别依赖信息失败");
-        }
-    }
-
-    /**
-     * 将JavaComponentDependencyTreeDO转换为AppComponentDependencyTreeDO
-     *
-     * @param javaComponentDependencyTreeDO Java组件依赖树信息
-     * @return AppComponentDependencyTreeDO App组件依赖树信息
-     */
-    @Override
-    public AppComponentDependencyTreeDO translateComponentDependency(JavaComponentDependencyTreeDO javaComponentDependencyTreeDO) {
-        if (javaComponentDependencyTreeDO == null) {
-            return null;
-        }
-        AppComponentDependencyTreeDO appComponentDependencyTreeDO = new AppComponentDependencyTreeDO();
-        appComponentDependencyTreeDO.setName(javaComponentDependencyTreeDO.getName());
-        appComponentDependencyTreeDO.setVersion(javaComponentDependencyTreeDO.getVersion());
-        appComponentDependencyTreeDO.setType(javaComponentDependencyTreeDO.getType());
-        appComponentDependencyTreeDO.setDepth(javaComponentDependencyTreeDO.getDepth());
-        appComponentDependencyTreeDO.setLicenses(javaComponentDependencyTreeDO.getLicenses());
-        appComponentDependencyTreeDO.setVulnerabilities(javaComponentDependencyTreeDO.getVulnerabilities());
-        appComponentDependencyTreeDO.setLanguage("java");
-        List<AppComponentDependencyTreeDO> dependencyTreeDOS = new ArrayList<>();
-        for (JavaComponentDependencyTreeDO childJavaComponentDependencyTreeDO : javaComponentDependencyTreeDO.getDependencies()) {
-            AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependency(childJavaComponentDependencyTreeDO);
-            dependencyTreeDOS.add(childAppComponentDependencyTreeDO);
-        }
-        appComponentDependencyTreeDO.setDependencies(dependencyTreeDOS);
-        return appComponentDependencyTreeDO;
-    }
-
-    /**
-     * 将List<JavaDependencyTableDO>转化成List<AppDependencyTableDO>
-     *
-     * @param javaDependencyTableDOS java组件依赖关系平铺表
-     * @return List<AppDependencyTableDO> 应用组件依赖关系平铺表
-     */
-    @Override
-    public List<AppDependencyTableDO> translateDependencyTable(List<JavaDependencyTableDO> javaDependencyTableDOS) {
-        List<AppDependencyTableDO> appDependencyTableDOS = new ArrayList<>();
-        for (JavaDependencyTableDO javaDependencyTableDO : javaDependencyTableDOS) {
-            AppDependencyTableDO appDependencyTableDO = new AppDependencyTableDO();
-            BeanUtils.copyProperties(javaDependencyTableDO, appDependencyTableDO);
-            appDependencyTableDOS.add(appDependencyTableDO);
-        }
-        return appDependencyTableDOS;
-    }
-
     /**
      * 根据POM文件路径返回Model
      *
@@ -416,6 +399,23 @@ public class MavenServiceImpl implements MavenService {
         if (model.getParent().getVersion() != null)
             return model.getParent().getVersion();
         return null;
+    }
+
+    /**
+     * 生成PUrl（仅对maven组件）
+     * 例如：pkg:maven/commons-codec/commons-codec@1.15?type=jar
+     *
+     * @param groupId    组织Id
+     * @param artifactId 工件id
+     * @param version    版本号
+     * @param packaging  打包方式，如pom、jar
+     * @return PUrl
+     */
+    private static String getMavenPUrl(String groupId, String artifactId, String version, String packaging) {
+        String pUrl = "pkg:maven/" + groupId + "/" + artifactId + "@" + version;
+        if (packaging.equals("jar"))
+            pUrl += "?type=jar";
+        return pUrl;
     }
 
     /**

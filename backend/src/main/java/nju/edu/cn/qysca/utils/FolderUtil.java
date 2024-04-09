@@ -25,8 +25,9 @@ public class FolderUtil {
         for (File file : files) {
             if (file.isDirectory()) {
                 deleteFolderFile(file);
+            } else {
+                file.delete();
             }
-            file.delete();
         }
         folder.delete();
     }
