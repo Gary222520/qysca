@@ -4,19 +4,19 @@ import nju.edu.cn.qysca.auth.ContextUtil;
 import nju.edu.cn.qysca.dao.application.AppComponentDao;
 import nju.edu.cn.qysca.dao.application.AppDependencyTableDao;
 import nju.edu.cn.qysca.dao.application.AppDependencyTreeDao;
+import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.bu.BuAppDao;
 import nju.edu.cn.qysca.dao.bu.BuDao;
 import nju.edu.cn.qysca.dao.component.*;
-import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.license.LicenseDao;
 import nju.edu.cn.qysca.dao.user.UserRoleDao;
+import nju.edu.cn.qysca.domain.application.dos.*;
+import nju.edu.cn.qysca.domain.application.dtos.*;
 import nju.edu.cn.qysca.domain.bu.dos.BuAppDO;
 import nju.edu.cn.qysca.domain.bu.dos.BuDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentCompareTreeDTO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentDetailDTO;
-import nju.edu.cn.qysca.domain.application.dos.*;
-import nju.edu.cn.qysca.domain.application.dtos.*;
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.domain.user.dos.UserRoleDO;
@@ -27,19 +27,22 @@ import nju.edu.cn.qysca.service.gradle.GradleService;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.service.npm.NpmService;
 import nju.edu.cn.qysca.service.python.PythonService;
+import nju.edu.cn.qysca.utils.FolderUtil;
 import nju.edu.cn.qysca.utils.excel.ExcelUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.io.File;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -111,9 +114,6 @@ public class ApplicationServiceImpl implements ApplicationService {
     private PythonService pythonService;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
-
-    @Value("${tempPomFolder}")
-    private String tempFolder;
 
 
     /**
@@ -299,7 +299,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     appDependencyTableDao.saveAll(mavenService.translateDependencyTable(applicationJavaDependencyTableDOS));
                     break;
                 case "javaScript":
-                    applicationDO.setLanguage(new String[] {"javaScript"});
+                    applicationDO.setLanguage(new String[]{"javaScript"});
                     JsDependencyTreeDO analyzedJsDependencyTreeDO = npmService.dependencyTreeAnalysis(saveApplicationDependencyDTO.getFilePath(), saveApplicationDependencyDTO.getBuilder(), "");
                     if (!analyzedJsDependencyTreeDO.getName().equals(saveApplicationDependencyDTO.getName()) || !analyzedJsDependencyTreeDO.getVersion().equals(saveApplicationDependencyDTO.getVersion())) {
                         throw new PlatformException(500, "上传文件非本项目");
@@ -358,14 +358,14 @@ public class ApplicationServiceImpl implements ApplicationService {
             applicationDao.save(applicationDO);
             File file = new File(saveApplicationDependencyDTO.getFilePath());
             redisTemplate.delete(file.getParentFile().getName());
-            deleteFolder(saveApplicationDependencyDTO.getFilePath().substring(0, saveApplicationDependencyDTO.getFilePath().lastIndexOf("/")));
+            FolderUtil.deleteFolder(new File(saveApplicationDependencyDTO.getFilePath()).getParentFile().getPath());
         } catch (Exception e) {
             ApplicationDO applicationDO = applicationDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
             applicationDO.setState("FAILED");
             applicationDao.save(applicationDO);
             File file = new File(saveApplicationDependencyDTO.getFilePath());
             redisTemplate.delete(file.getParentFile().getName());
-            deleteFolder(saveApplicationDependencyDTO.getFilePath().substring(0, saveApplicationDependencyDTO.getFilePath().lastIndexOf("/")));
+            FolderUtil.deleteFolder(new File(saveApplicationDependencyDTO.getFilePath()).getParentFile().getPath());
         }
     }
 
@@ -481,9 +481,9 @@ public class ApplicationServiceImpl implements ApplicationService {
         String[] licenses = null;
         String[] vulnerabilities = null;
         Set<String> language = null;
-        if(parentApplicationDO.getLanguage() == null){
+        if (parentApplicationDO.getLanguage() == null) {
             language = new HashSet<>();
-        }else{
+        } else {
             language = new HashSet<>(Arrays.asList(parentApplicationDO.getLanguage()));
         }
         //不是应用发布成的组件
@@ -788,7 +788,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                         JsComponentDO tempJsComponentDO = jsComponentDao.findJsComponentDOById(id);
                         JsDependencyTreeDO tempJsDependencyTreeDO = jsDependencyTreeDao.findByNameAndVersion(tempJsComponentDO.getName(), tempJsComponentDO.getVersion());
                         if (tempJsDependencyTreeDO == null) {
-                            tempJsDependencyTreeDO = npmService.spiderDependencyTree(tempJsComponentDO.getName(), tempJsComponentDO.getVersion());
+                            tempJsDependencyTreeDO = npmService.spiderDependency(tempJsComponentDO.getName(), tempJsComponentDO.getVersion());
                         }
                         AppComponentDependencyTreeDO temp = npmService.translateComponentDependencyTree(tempJsDependencyTreeDO.getTree());
                         addDepth(temp);
@@ -908,7 +908,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public void exportTableExcelBrief(ApplicationSearchDTO applicationSearchDTO, HttpServletResponse response) {
         List<TableExcelBriefDTO> resList = appDependencyTableDao.findTableListByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
-        String fileName = applicationSearchDTO.getName().replace(":","-") + "-" + applicationSearchDTO.getVersion() + "-dependencyTable-brief";
+        String fileName = applicationSearchDTO.getName().replace(":", "-") + "-" + applicationSearchDTO.getVersion() + "-dependencyTable-brief";
         try {
             ExcelUtils.export(response, fileName, resList, TableExcelBriefDTO.class);
         } catch (Exception e) {
@@ -925,7 +925,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public void exportTableExcelDetail(ApplicationSearchDTO applicationSearchDTO, HttpServletResponse response) {
         List<TableExcelDetailDTO> resList = new ArrayList<>();
-        String fileName = applicationSearchDTO.getName().replace(":","-") + "-" + applicationSearchDTO.getVersion() + "-dependencyTable-detail";
+        String fileName = applicationSearchDTO.getName().replace(":", "-") + "-" + applicationSearchDTO.getVersion() + "-dependencyTable-detail";
         // 先获取依赖平铺的简明信息
         List<TableExcelBriefDTO> briefList = appDependencyTableDao.findTableListByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
         for (TableExcelBriefDTO brief : briefList) {
@@ -1110,33 +1110,5 @@ public class ApplicationServiceImpl implements ApplicationService {
         List<AppDependencyTableDO> dependencies = appDependencyTableDao.findAllByNameAndVersion(name, version);
         Set<String> uniqueVulnerabilities = dependencies.stream().map(AppDependencyTableDO::getVulnerabilities).filter(vulnerabilities -> !vulnerabilities.equals("-")).flatMap(vulnerabilities -> Arrays.stream(vulnerabilities.split(","))).map(String::trim).collect(Collectors.toSet());
         return uniqueVulnerabilities.toArray(new String[0]);
-    }
-
-    /**
-     * 根据文件路径删除文件夹
-     *
-     * @param filePath 文件路径
-     */
-    private void deleteFolder(String filePath) {
-        File folder = new File(filePath);
-        if (folder.exists()) {
-            deleteFolderFile(folder);
-        }
-    }
-
-    /**
-     * 递归删除文件夹下的文件
-     *
-     * @param folder 文件夹
-     */
-    private void deleteFolderFile(File folder) {
-        File[] files = folder.listFiles();
-        for (File file : files) {
-            if (file.isDirectory()) {
-                deleteFolderFile(file);
-            }
-            file.delete();
-        }
-        folder.delete();
     }
 }
