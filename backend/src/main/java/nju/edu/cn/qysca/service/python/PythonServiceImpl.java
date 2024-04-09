@@ -12,39 +12,38 @@ import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.spider.PythonSpiderService;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import nju.edu.cn.qysca.utils.FolderUtil;
+import nju.edu.cn.qysca.utils.ZipUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.nio.charset.Charset;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 @Service
 public class PythonServiceImpl implements PythonService {
 
-    private final String FILE_SEPARATOR = "/";
+    @Value("${tempPythonFolder}")
+    String tempFolder;
     @Autowired
     private PythonComponentDao componentDao;
     @Autowired
     private PythonSpiderService pythonSpiderService;
-    @Value("${tempPythonFolder}")
-    String tempFolder;
 
     /**
      * 构造python组件
-     * @param name 组件名称
+     *
+     * @param name    组件名称
      * @param version 版本号
-     * @param type 组件类型
+     * @param type    组件类型
      * @return PythonComponentDO
      */
     @Override
@@ -81,10 +80,10 @@ public class PythonServiceImpl implements PythonService {
     public PythonDependencyTreeDO dependencyTreeAnalysis(String filePath, String builder, String name, String version, String type) {
         // 支持zip、tar.gz、txt三种
         if (builder.equals("zip")) {
-            unzip(filePath);
+            ZipUtil.unzip(filePath);
             filePath = filePath.substring(0, filePath.lastIndexOf("."));
-        } else if (builder.equals("tar.gz")){
-            unTarGz(filePath);
+        } else if (builder.equals("tar.gz")) {
+            ZipUtil.unTarGz(filePath);
             filePath = filePath.substring(0, filePath.lastIndexOf("."));
             filePath = filePath.substring(0, filePath.lastIndexOf("."));
         } else if (builder.equals("txt")) {
@@ -108,7 +107,7 @@ public class PythonServiceImpl implements PythonService {
         executeCommand(command2, null, false);
 
         List<String> requirementTxtList = findRequirementFiles(project);
-        if(builder.equals("zip") || builder.equals("tar.gz") || builder.equals("txt")) {
+        if (builder.equals("zip") || builder.equals("tar.gz") || builder.equals("txt")) {
             for (String requirementsTxt : requirementTxtList) {
                 String[] command3 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "-r", requirementsTxt};
                 executeCommand(command3, null, true);
@@ -125,9 +124,9 @@ public class PythonServiceImpl implements PythonService {
 
         // 删除生成的文件
         if (builder.equals("zip") || builder.equals("tar.gz")) {
-            deleteFolder(filePath);
+            FolderUtil.deleteFolder(filePath);
         } else {
-            deleteFolder(filePath + "\\venv");
+            FolderUtil.deleteFolder(filePath + "\\venv");
         }
 
         // 将json形式的依赖树转化为PythonDependencyTreeDO
@@ -174,12 +173,12 @@ public class PythonServiceImpl implements PythonService {
     @Override
     public PythonDependencyTreeDO spiderDependency(String name, String version) {
 
+        // 创建临时文件夹
         Date now = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         String timeStamp = dateFormat.format(now);
-
-        File tempFile = new File(tempFolder+timeStamp);
-        if (!tempFile.exists()){ //如果不存在
+        File tempFile = new File(tempFolder, timeStamp);
+        if (!tempFile.exists()) { //如果不存在
             boolean dr = tempFile.mkdirs(); //创建目录
         }
 
@@ -189,19 +188,20 @@ public class PythonServiceImpl implements PythonService {
         // 3. 安装要查询的包
         // 5. pipdeptree --json-tree获取json形式的依赖树
         String[] command1 = {"python", "-m", "venv", "venv"};
-        String[] command3 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
+        String[] command3 = {tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
         String[] command4;
         if (version.equals("-"))
             command4 = new String[]{tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name};
         else
             command4 = new String[]{tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name + "==" + version};
-        String[] command5 = {tempFile.getAbsolutePath() +"\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
+        String[] command5 = {tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
 
         executeCommand(command1, tempFile, false);
         executeCommand(command3, null, true);
         executeCommand(command4, null, true);
         String jsonString = executeCommand(command5, null, true);
-        deleteFolder(tempFile.getPath());
+        //删除临时文件夹
+        FolderUtil.deleteFolder(tempFile.getPath());
 
         PythonDependencyTreeDO dependencyTreeDO = parseJsonDependencyTree(jsonString, name, version, "opensource");
         return dependencyTreeDO;
@@ -210,12 +210,13 @@ public class PythonServiceImpl implements PythonService {
 
     /**
      * 将python依赖信息转换成应用依赖信息
-     * @param pythonComponentDependencyTreeDO  python依赖信息
+     *
+     * @param pythonComponentDependencyTreeDO python依赖信息
      * @return AppComponentDependencyTreeDO 应用依赖信息
      */
     @Override
     public AppComponentDependencyTreeDO translateComponentDependency(PythonComponentDependencyTreeDO pythonComponentDependencyTreeDO) {
-        if(pythonComponentDependencyTreeDO == null){
+        if (pythonComponentDependencyTreeDO == null) {
             return null;
         }
         AppComponentDependencyTreeDO appComponentDependencyTreeDO = new AppComponentDependencyTreeDO();
@@ -227,7 +228,7 @@ public class PythonServiceImpl implements PythonService {
         appComponentDependencyTreeDO.setVulnerabilities(pythonComponentDependencyTreeDO.getVulnerabilities());
         appComponentDependencyTreeDO.setLanguage("python");
         List<AppComponentDependencyTreeDO> children = new ArrayList<>();
-        for(PythonComponentDependencyTreeDO childPythonComponentDependencyTreeDO : pythonComponentDependencyTreeDO.getDependencies()) {
+        for (PythonComponentDependencyTreeDO childPythonComponentDependencyTreeDO : pythonComponentDependencyTreeDO.getDependencies()) {
             AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependency(childPythonComponentDependencyTreeDO);
             children.add(childAppComponentDependencyTreeDO);
         }
@@ -237,13 +238,14 @@ public class PythonServiceImpl implements PythonService {
 
     /**
      * 将Python依赖表转换为App依赖表
+     *
      * @param pythonDependencyTableDOS python依赖表信息
      * @return List<AppDependencyTableDO> App依赖表
      */
     @Override
     public List<AppDependencyTableDO> translateDependencyTable(List<PythonDependencyTableDO> pythonDependencyTableDOS) {
         List<AppDependencyTableDO> appDependencyTableDOS = new ArrayList<>();
-        for(PythonDependencyTableDO pythonDependencyTableDO : pythonDependencyTableDOS){
+        for (PythonDependencyTableDO pythonDependencyTableDO : pythonDependencyTableDOS) {
             AppDependencyTableDO appDependencyTableDO = new AppDependencyTableDO();
             BeanUtils.copyProperties(pythonDependencyTableDO, appDependencyTableDO);
             appDependencyTableDOS.add(appDependencyTableDO);
@@ -316,7 +318,7 @@ public class PythonServiceImpl implements PythonService {
             if (node.get("key").asText().equals("pipdeptree") || node.get("key").asText().equals("setuptools") || node.get("key").asText().equals("pip"))
                 continue;
             // 有时候树中会重复自己，跳过
-            if (node.get("key").asText().equals(name) && node.get("installed_version").asText().equals(version)){
+            if (node.get("key").asText().equals(name) && node.get("installed_version").asText().equals(version)) {
                 for (JsonNode subNode : node.get("dependencies")) {
                     dependencies.add(parseTree(subNode, 1));
                 }
@@ -380,6 +382,7 @@ public class PythonServiceImpl implements PythonService {
 
     /**
      * 去除依赖树中重复的组件
+     *
      * @param root 根节点
      */
     private void removeDuplicates(PythonComponentDependencyTreeDO root) {
@@ -413,6 +416,7 @@ public class PythonServiceImpl implements PythonService {
 
     /**
      * 获取目录下的所有requirements文件
+     *
      * @param dir 目录
      */
     private List<String> findRequirementFiles(File dir) {
@@ -436,121 +440,5 @@ public class PythonServiceImpl implements PythonService {
             }
         }
         return requirements;
-    }
-
-    /**
-     * 解压zip文件
-     *
-     * @param filePath zip文件路径
-     */
-    private void unzip(String filePath) {
-        try {
-            File file = new File(filePath);
-            File dir = new File(file.getParent());
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-            ZipFile zipFile = new ZipFile(filePath, Charset.forName("GBK"));
-            Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
-            while (zipEntries.hasMoreElements()) {
-                ZipEntry zipEntry = zipEntries.nextElement();
-                String entryName = zipEntry.getName();
-                String fileDestPath = dir + FILE_SEPARATOR + entryName;
-                if (!zipEntry.isDirectory()) {
-                    File destFile = new File(fileDestPath);
-                    destFile.getParentFile().mkdirs();
-                    InputStream inputStream = zipFile.getInputStream(zipEntry);
-                    FileOutputStream outputStream = new FileOutputStream(destFile);
-                    byte[] buffer = new byte[1024];
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) > 0) {
-                        outputStream.write(buffer, 0, bytesRead);
-                    }
-                    outputStream.close();
-                    inputStream.close();
-                } else {
-                    File dirToCreate = new File(fileDestPath);
-                    dirToCreate.mkdirs();
-                }
-            }
-            zipFile.close();
-        } catch (Exception e) {
-            throw new PlatformException(500, "解压zip文件失败");
-        }
-    }
-
-    /**
-     * 解压tar.gz文件
-     * @param filePath tar.gz文件路径
-     */
-    private void unTarGz(String filePath) {
-        // 获取输出目录路径
-        String outputDirPath = new File(filePath).getParentFile().getPath();
-        // 创建输出目录
-        File outputDir = new File(outputDirPath);
-        if (!outputDir.exists()) {
-            outputDir.mkdirs();
-        }
-        try (FileInputStream fis = new FileInputStream(filePath);
-             GZIPInputStream gzis = new GZIPInputStream(fis);
-             TarArchiveInputStream taris = new TarArchiveInputStream(gzis)) {
-            // 循环遍历 Tar 文件中的条目，并解压到指定目录
-            TarArchiveEntry entry;
-            while ((entry = taris.getNextTarEntry()) != null) {
-                // 获取条目文件名
-                String entryName = entry.getName();
-                // 构建实际解压后文件的路径
-                File entryFile = new File(outputDir, entryName);
-                if (entry.isDirectory()) {
-                    // 如果是目录，创建目录
-                    entryFile.mkdirs();
-                } else {
-                    // 如果是文件，创建父目录并解压文件
-                    File parent = entryFile.getParentFile();
-                    if (!parent.exists()) {
-                        parent.mkdirs();
-                    }
-                    // 创建文件输出流
-                    try (FileOutputStream fos = new FileOutputStream(entryFile)) {
-                        // 读取 Tar 输入流并写入文件输出流
-                        byte[] buffer = new byte[1024];
-                        int len;
-                        while ((len = taris.read(buffer)) != -1) {
-                            fos.write(buffer, 0, len);
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
-            throw new PlatformException(500, "解压tar.gz文件失败");
-        }
-    }
-
-    /**
-     * 删除文件夹
-     *
-     * @param filePath 文件夹
-     */
-    private void deleteFolder(String filePath) {
-        File folder = new File(filePath);
-        if (folder.exists()) {
-            deleteFolderFile(folder);
-        }
-    }
-
-    /**
-     * 递归删除文件夹下的文件
-     *
-     * @param folder 文件夹
-     */
-    private void deleteFolderFile(File folder) {
-        File[] files = folder.listFiles();
-        for (File file : files) {
-            if (file.isDirectory()) {
-                deleteFolderFile(file);
-            }
-            file.delete();
-        }
-        folder.delete();
     }
 }

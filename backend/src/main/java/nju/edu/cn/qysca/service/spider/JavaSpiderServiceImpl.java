@@ -4,7 +4,10 @@ import nju.edu.cn.qysca.dao.component.JavaComponentDao;
 import nju.edu.cn.qysca.dao.component.JavaDependencyTableDao;
 import nju.edu.cn.qysca.dao.component.JavaDependencyTreeDao;
 import nju.edu.cn.qysca.dao.spider.MavenVisitedUrlsDao;
-import nju.edu.cn.qysca.domain.component.dos.*;
+import nju.edu.cn.qysca.domain.component.dos.DeveloperDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTableDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTreeDO;
 import nju.edu.cn.qysca.domain.spider.dos.MavenVisitedUrlsDO;
 import nju.edu.cn.qysca.service.license.LicenseService;
 import nju.edu.cn.qysca.service.maven.MavenService;
@@ -19,10 +22,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,8 +50,6 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
     private MavenService mavenService;
     @Autowired
     private MavenVisitedUrlsDao mavenVisitedUrlsDao;
-    @Value("${tempPomFolder}")
-    private String tempFolder;
 
     /**
      * 通过gav爬取组件
@@ -87,6 +88,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
 
     /**
      * 递归地爬取目录url下（带依赖的）所有组件
+     *
      * @param directoryUrl 要爬取的目录
      */
     @Override
@@ -131,12 +133,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
                     mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true));
                     return;
                 }
-//                //创建临时pom文件
-//                String pomString = getPomStrByGav(javaComponentDO.getName().split(":")[0], javaComponentDO.getName().split(":")[1], javaComponentDO.getVersion());
-//                createPomFile(pomString, tempFolder+"pom.xml");
-//
-//                //生成并存储依赖树与依赖表
-//                JavaDependencyTreeDO javaDependencyTreeDO = mavenService.dependencyTreeAnalysis(tempFolder+"pom.xml", "maven", "opensource");
+
                 JavaDependencyTreeDO javaDependencyTreeDO = mavenService.spiderDependency(javaComponentDO.getName().split(":")[0], javaComponentDO.getName().split(":")[1], javaComponentDO.getVersion());
                 List<JavaDependencyTableDO> javaDependencyTableDOList = mavenService.dependencyTableAnalysis(javaDependencyTreeDO);
                 javaDependencyTreeDao.save(javaDependencyTreeDO);
@@ -146,7 +143,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
                 mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true));
             }
         } else {
-            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true,false));
+            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, false));
         }
 
 
@@ -310,7 +307,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         javaComponentDO.setDevelopers(getDevelopers(model));
         List<String> licenses = new ArrayList<>();
         List<String> license = getLicense(model);
-        for(String licenseName : license){
+        for (String licenseName : license) {
             licenses.addAll(licenseService.searchLicense(licenseName));
         }
         javaComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(groupId + ":" + artifactId, version, "java").toArray(new String[0]));
@@ -376,7 +373,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
     private List<String> getLicense(Model model) {
         List<org.apache.maven.model.License> mavenLicenses = model.getLicenses();
         List<String> result = new ArrayList<>();
-        for(org.apache.maven.model.License mavenLicense : mavenLicenses) {
+        for (org.apache.maven.model.License mavenLicense : mavenLicenses) {
             result.add(mavenLicense.getName());
         }
         return result;
@@ -399,19 +396,4 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
             return null;
         }
     }
-
-//    /**
-//     * 创建临时的pom文件（用以调用mvn命令）
-//     *
-//     * @param pomString pom文件内容
-//     * @param filePath 创建临时文件路径
-//     */
-//    private void createPomFile(String pomString, String filePath) {
-//        try (OutputStream outputStream = new FileOutputStream(filePath);
-//             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
-//            writer.write(pomString);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
 }

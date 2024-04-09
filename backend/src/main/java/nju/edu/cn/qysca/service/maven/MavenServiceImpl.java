@@ -10,6 +10,8 @@ import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
 import nju.edu.cn.qysca.service.spider.JavaSpiderService;
+import nju.edu.cn.qysca.utils.FolderUtil;
+import nju.edu.cn.qysca.utils.ZipUtil;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
@@ -22,7 +24,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,29 +33,39 @@ import java.util.zip.ZipFile;
 @Service
 public class MavenServiceImpl implements MavenService {
 
+    private final String FILE_SEPARATOR = "/";
     @Autowired
     private JavaComponentDao javaComponentDao;
-
-
     @Autowired
     private JavaSpiderService javaSpiderService;
-
     @Autowired
     private LicenseService licenseService;
-
-
-    private final String FILE_SEPARATOR = "/";
-
     @Value("${tempPomFolder}")
     private String tempFolder;
 
+    /**
+     * 生成PUrl（仅对maven组件）
+     * 例如：pkg:maven/commons-codec/commons-codec@1.15?type=jar
+     *
+     * @param groupId    组织Id
+     * @param artifactId 工件id
+     * @param version    版本号
+     * @param packaging  打包方式，如pom、jar
+     * @return PUrl
+     */
+    private static String getMavenPUrl(String groupId, String artifactId, String version, String packaging) {
+        String pUrl = "pkg:maven/" + groupId + "/" + artifactId + "@" + version;
+        if (packaging.equals("jar"))
+            pUrl += "?type=jar";
+        return pUrl;
+    }
 
     /**
      * 解析组件
      *
      * @param filePath 上传文件路径
-     * @param builder    构建器
-     * @param type       组件类型
+     * @param builder  构建器
+     * @param type     组件类型
      * @return JavaComponentDO 组件信息
      */
     @Override
@@ -73,7 +84,7 @@ public class MavenServiceImpl implements MavenService {
         javaComponentDO.setSourceUrl(model.getScm() == null ? "-" : model.getScm().getUrl());
         javaComponentDO.setPUrl(getMavenPUrl(getGroupIdFromPomModel(model), getArtifactIdFromPomModel(model), model.getVersion(), model.getPackaging()));
         List<String> licenses = new ArrayList<>();
-        for(String license : getLicense(model)) {
+        for (String license : getLicense(model)) {
             licenses.addAll(licenseService.searchLicense(license));
         }
         javaComponentDO.setLicenses(licenses.toArray(new String[0]));
@@ -86,9 +97,10 @@ public class MavenServiceImpl implements MavenService {
 
     /**
      * 解析依赖树
+     *
      * @param filePath 上传文件路径
-     * @param builder 构建器
-     * @param type 组件类型
+     * @param builder  构建器
+     * @param type     组件类型
      * @return JavaDependencyTreeDO 依赖树信息
      */
     @Override
@@ -107,6 +119,7 @@ public class MavenServiceImpl implements MavenService {
 
     /**
      * 根据依赖树信息生成依赖平铺信息
+     *
      * @param javaDependencyTreeDO 依赖树信息
      * @return List<JavaDependencyTableDO> 依赖平铺信息表
      */
@@ -159,7 +172,7 @@ public class MavenServiceImpl implements MavenService {
             Parser parser = type.newParser();
             Node node = parser.parse(reader);
             return node;
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new PlatformException(500, "pom文件解析失败");
         }
     }
@@ -224,7 +237,7 @@ public class MavenServiceImpl implements MavenService {
         if (builder.equals("maven")) {
             return filePath;
         } else if (builder.equals("zip")) {
-            unzip(filePath);
+            ZipUtil.unzip(filePath);
             return filePath.substring(0, filePath.lastIndexOf('/')) + FILE_SEPARATOR + "pom.xml";
         } else if (builder.equals("jar")) {
             File file = new File(filePath);
@@ -257,7 +270,6 @@ public class MavenServiceImpl implements MavenService {
         return null;
     }
 
-
     @Override
     public JavaDependencyTreeDO spiderDependency(String groupId, String artifactId, String version) {
         Date now = new Date();
@@ -274,22 +286,23 @@ public class MavenServiceImpl implements MavenService {
             fileWriter.flush();
             fileWriter.close();
             JavaDependencyTreeDO javaDependencyTreeDO = dependencyTreeAnalysis(tempPath, "maven", "opensource");
-            deleteFolder(tempPomFolder);
+            FolderUtil.deleteFolder(tempPomFolder);
             return javaDependencyTreeDO;
         } catch (Exception e) {
-            deleteFolder(tempPomFolder);
+            FolderUtil.deleteFolder(tempPomFolder);
             throw new PlatformException(500, "识别依赖信息失败");
         }
     }
 
     /**
      * 将JavaComponentDependencyTreeDO转换为AppComponentDependencyTreeDO
+     *
      * @param javaComponentDependencyTreeDO Java组件依赖树信息
      * @return AppComponentDependencyTreeDO App组件依赖树信息
      */
     @Override
     public AppComponentDependencyTreeDO translateComponentDependency(JavaComponentDependencyTreeDO javaComponentDependencyTreeDO) {
-        if(javaComponentDependencyTreeDO == null){
+        if (javaComponentDependencyTreeDO == null) {
             return null;
         }
         AppComponentDependencyTreeDO appComponentDependencyTreeDO = new AppComponentDependencyTreeDO();
@@ -301,8 +314,8 @@ public class MavenServiceImpl implements MavenService {
         appComponentDependencyTreeDO.setVulnerabilities(javaComponentDependencyTreeDO.getVulnerabilities());
         appComponentDependencyTreeDO.setLanguage("java");
         List<AppComponentDependencyTreeDO> dependencyTreeDOS = new ArrayList<>();
-        for(JavaComponentDependencyTreeDO childJavaComponentDependencyTreeDO : javaComponentDependencyTreeDO.getDependencies()) {
-            AppComponentDependencyTreeDO childAppComponentDependencyTreeDO  = translateComponentDependency(childJavaComponentDependencyTreeDO);
+        for (JavaComponentDependencyTreeDO childJavaComponentDependencyTreeDO : javaComponentDependencyTreeDO.getDependencies()) {
+            AppComponentDependencyTreeDO childAppComponentDependencyTreeDO = translateComponentDependency(childJavaComponentDependencyTreeDO);
             dependencyTreeDOS.add(childAppComponentDependencyTreeDO);
         }
         appComponentDependencyTreeDO.setDependencies(dependencyTreeDOS);
@@ -311,13 +324,14 @@ public class MavenServiceImpl implements MavenService {
 
     /**
      * 将List<JavaDependencyTableDO>转化成List<AppDependencyTableDO>
+     *
      * @param javaDependencyTableDOS java组件依赖关系平铺表
      * @return List<AppDependencyTableDO> 应用组件依赖关系平铺表
      */
     @Override
     public List<AppDependencyTableDO> translateDependencyTable(List<JavaDependencyTableDO> javaDependencyTableDOS) {
         List<AppDependencyTableDO> appDependencyTableDOS = new ArrayList<>();
-        for(JavaDependencyTableDO javaDependencyTableDO : javaDependencyTableDOS) {
+        for (JavaDependencyTableDO javaDependencyTableDO : javaDependencyTableDOS) {
             AppDependencyTableDO appDependencyTableDO = new AppDependencyTableDO();
             BeanUtils.copyProperties(javaDependencyTableDO, appDependencyTableDO);
             appDependencyTableDOS.add(appDependencyTableDO);
@@ -342,16 +356,17 @@ public class MavenServiceImpl implements MavenService {
 
     /**
      * 从pom Model中获取groupId
+     *
      * @param model pom Model
      * @return groupId
      */
-    private String getGroupIdFromPomModel(Model model){
+    private String getGroupIdFromPomModel(Model model) {
         // ${xxx}形式的，在<property>中找
-        if (model.getGroupId() != null){
-            if (model.getGroupId().startsWith("${") && model.getGroupId().endsWith("}")){
-                String propertyValue = model.getGroupId().substring(2,model.getGroupId().length()-1);
+        if (model.getGroupId() != null) {
+            if (model.getGroupId().startsWith("${") && model.getGroupId().endsWith("}")) {
+                String propertyValue = model.getGroupId().substring(2, model.getGroupId().length() - 1);
                 return model.getProperties().getProperty(propertyValue);
-            } else{
+            } else {
                 return model.getGroupId();
             }
         }
@@ -363,16 +378,17 @@ public class MavenServiceImpl implements MavenService {
 
     /**
      * 从pom Model中获取artifactId
+     *
      * @param model pom Model
      * @return artifactId
      */
-    private String getArtifactIdFromPomModel(Model model){
+    private String getArtifactIdFromPomModel(Model model) {
         // ${xxx}形式的，在<property>中找
-        if (model.getArtifactId() != null){
-            if (model.getArtifactId().startsWith("${") && model.getArtifactId().endsWith("}")){
-                String propertyValue = model.getArtifactId().substring(2,model.getArtifactId().length()-1);
+        if (model.getArtifactId() != null) {
+            if (model.getArtifactId().startsWith("${") && model.getArtifactId().endsWith("}")) {
+                String propertyValue = model.getArtifactId().substring(2, model.getArtifactId().length() - 1);
                 return model.getProperties().getProperty(propertyValue);
-            } else{
+            } else {
                 return model.getArtifactId();
             }
         }
@@ -383,38 +399,23 @@ public class MavenServiceImpl implements MavenService {
 
     /**
      * 从pom Model中获取version
+     *
      * @param model pom Model
      * @return version
      */
-    private String getVersionFromPomModel(Model model){
+    private String getVersionFromPomModel(Model model) {
         // ${xxx}形式的，在<property>中找
-        if (model.getVersion() != null){
-            if (model.getVersion().startsWith("${") && model.getVersion().endsWith("}")){
-                String propertyValue = model.getVersion().substring(2,model.getVersion().length()-1);
+        if (model.getVersion() != null) {
+            if (model.getVersion().startsWith("${") && model.getVersion().endsWith("}")) {
+                String propertyValue = model.getVersion().substring(2, model.getVersion().length() - 1);
                 return model.getProperties().getProperty(propertyValue);
-            } else{
+            } else {
                 return model.getVersion();
             }
         }
         if (model.getParent().getVersion() != null)
             return model.getParent().getVersion();
         return null;
-    }
-
-    /**
-     * 生成PUrl（仅对maven组件）
-     * 例如：pkg:maven/commons-codec/commons-codec@1.15?type=jar
-     * @param groupId 组织Id
-     * @param artifactId 工件id
-     * @param version 版本号
-     * @param packaging 打包方式，如pom、jar
-     * @return PUrl
-     */
-    private static String getMavenPUrl(String groupId, String artifactId, String version, String packaging){
-        String pUrl = "pkg:maven/" + groupId + "/" + artifactId + "@" + version;
-        if (packaging.equals("jar"))
-            pUrl += "?type=jar";
-        return pUrl;
     }
 
     /**
@@ -426,7 +427,7 @@ public class MavenServiceImpl implements MavenService {
     private List<String> getLicense(Model model) {
         List<org.apache.maven.model.License> mavenLicenses = model.getLicenses();
         List<String> result = new ArrayList<>();
-        for(org.apache.maven.model.License license : mavenLicenses) {
+        for (org.apache.maven.model.License license : mavenLicenses) {
             result.add(license.getName());
         }
         return result;
@@ -451,68 +452,4 @@ public class MavenServiceImpl implements MavenService {
                 .collect(Collectors.toList());
     }
 
-
-    /**
-     * 解压zip文件
-     *
-     * @param filePath zip文件路径
-     */
-    private void unzip(String filePath) {
-        try {
-            File file = new File(filePath);
-            File dir = new File(file.getParent());
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-            ZipFile zipFile = new ZipFile(filePath, Charset.forName("GBK"));
-            Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
-            while (zipEntries.hasMoreElements()) {
-                ZipEntry zipEntry = zipEntries.nextElement();
-                String entryName = zipEntry.getName();
-                String fileDestPath = dir + FILE_SEPARATOR + entryName;
-                if (!zipEntry.isDirectory()) {
-                    File destFile = new File(fileDestPath);
-                    destFile.getParentFile().mkdirs();
-                    InputStream inputStream = zipFile.getInputStream(zipEntry);
-                    FileOutputStream outputStream = new FileOutputStream(destFile);
-                    byte[] buffer = new byte[1024];
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) > 0) {
-                        outputStream.write(buffer, 0, bytesRead);
-                    }
-                    outputStream.close();
-                    inputStream.close();
-                } else {
-                    File dirToCreate = new File(fileDestPath);
-                    dirToCreate.mkdirs();
-                }
-            }
-            zipFile.close();
-        } catch (Exception e) {
-            throw new PlatformException(500, "解压zip文件失败");
-        }
-    }
-
-    private void deleteFolder(String filePath) {
-        File folder = new File(filePath);
-        if (folder.exists()) {
-            deleteFolderFile(folder);
-        }
-    }
-
-    /**
-     * 递归删除文件夹下的文件
-     *
-     * @param folder 文件夹
-     */
-    private void deleteFolderFile(File folder) {
-        File[] files = folder.listFiles();
-        for (File file : files) {
-            if (file.isDirectory()) {
-                deleteFolderFile(file);
-            }
-            file.delete();
-        }
-        folder.delete();
-    }
 }

@@ -7,13 +7,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.dao.component.JsComponentDao;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
-import nju.edu.cn.qysca.domain.component.dos.*;
+import nju.edu.cn.qysca.domain.component.dos.JsComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.JsComponentDependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.JsDependencyTableDO;
+import nju.edu.cn.qysca.domain.component.dos.JsDependencyTreeDO;
 import nju.edu.cn.qysca.domain.npm.PackageJsonDTO;
 import nju.edu.cn.qysca.domain.npm.PackageLockDTO;
 import nju.edu.cn.qysca.domain.npm.PackageLockDependencyDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
 import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
+import nju.edu.cn.qysca.utils.FolderUtil;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -35,18 +39,14 @@ import java.util.zip.ZipFile;
 @Service
 public class NpmServiceImpl implements NpmService {
 
+    private final String FILE_SEPARATOR = "/";
     @Autowired
     private JsComponentDao jsComponentDao;
-
     @Autowired
     private LicenseService licenseService;
-
     @Autowired
     private VulnerabilityService vulnerabilityService;
-
-    private final String FILE_SEPARATOR = "/";
-
-    @Value("${tempPomFolder}")
+    @Value("${tempNpmFolder}")
     private String tempFolder;
 
 
@@ -61,7 +61,7 @@ public class NpmServiceImpl implements NpmService {
     @Override
     public JsComponentDO componentAnalysis(String filePath, String builder, String type) {
         try {
-            if(builder.equals("zip")) {
+            if (builder.equals("zip")) {
                 extractFile(filePath);
             }
             File file = new File(filePath);
@@ -73,7 +73,7 @@ public class NpmServiceImpl implements NpmService {
             jsComponentDO.setVersion(packageJsonDTO.getVersion());
             jsComponentDO.setDescription(packageJsonDTO.getDescription());
             List<String> licenses = new ArrayList<>();
-            if(packageJsonDTO.getLicense() != null) {
+            if (packageJsonDTO.getLicense() != null) {
                 licenses.addAll(licenseService.searchLicense(packageJsonDTO.getLicense()));
             }
             jsComponentDO.setLicenses(licenses.toArray(new String[0]));
@@ -95,9 +95,9 @@ public class NpmServiceImpl implements NpmService {
             File file = new File(filePath);
             File packageLock = new File(file.getParent() + FILE_SEPARATOR + "package-lock.json");
             if (!packageLock.exists()) {
-                if(builder.equals("zip")) {
+                if (builder.equals("zip")) {
                     extractFile(filePath);
-                }else if(builder.equals("package.json")){
+                } else if (builder.equals("package.json")) {
                     generatePackageLock(file.getParent());
                 }
             }
@@ -159,7 +159,7 @@ public class NpmServiceImpl implements NpmService {
             e.printStackTrace();
             throw new PlatformException(500, "未能识别组件信息");
         } finally {
-            deleteFolder(filePath);
+            FolderUtil.deleteFolder(filePath);
         }
     }
 
@@ -426,9 +426,9 @@ public class NpmServiceImpl implements NpmService {
             } else {
                 jsComponentDO.setRepoUrl(jsonObject.getString("repository"));
             }
-            if(jsonObject.get("license") != null){
+            if (jsonObject.get("license") != null) {
                 jsComponentDO.setLicenses(licenseService.searchLicense(jsonObject.getString("license")).toArray(new String[0]));
-            } else{
+            } else {
                 jsComponentDO.setLicenses(new String[0]);
             }
             jsComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(name, version, "javaScript").toArray(new String[0]));
@@ -513,28 +513,5 @@ public class NpmServiceImpl implements NpmService {
             throw new PlatformException(500, "存在未识别的组件");
         }
         return tempDir.getPath();
-    }
-
-    private void deleteFolder(String filePath) {
-        File folder = new File(filePath);
-        if (folder.exists()) {
-            deleteFolderFile(folder);
-        }
-    }
-
-    /**
-     * 递归删除文件夹下的文件
-     *
-     * @param folder 文件夹
-     */
-    private void deleteFolderFile(File folder) {
-        File[] files = folder.listFiles();
-        for (File file : files) {
-            if (file.isDirectory()) {
-                deleteFolderFile(file);
-            }
-            file.delete();
-        }
-        folder.delete();
     }
 }

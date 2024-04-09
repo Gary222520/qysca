@@ -36,7 +36,8 @@ spring:
         max-wait: -1ms
 
 uploadFolder: src/main/resources/static/upload/
-tempPomFolder: src/main/resources/static/temp/
+tempPomFolder: src/main/resources/static/temp/pom/
+tempNpmFolder: src/main/resources/static/temp/npm/
 tempGoFolder: src/main/resources/static/temp/go/
 tempPythonFolder: src/main/resources/static/temp/python/
 targetUrlsPath: src/main/resources/static/target_urls.txt
