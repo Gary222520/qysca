@@ -88,6 +88,51 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         return document.outerHtml();
     }
 
+    @Override
+    public void crawlDirectory(String directoryUrl) {
+        // 如果该url已被访问过，跳过
+        if (mavenVisitedUrlsDao.findByUrl(directoryUrl) != null) {
+            return;
+        }
+
+        Document document = getDocumentByUrl(directoryUrl);
+        if (document == null) {
+            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true));
+            return;
+        }
+
+        boolean isLastLevel = true;
+        Elements links = document.select("a[href]");
+        // 遍历目录下所有链接
+        for (Element link : links) {
+            String fileAbsUrl = link.absUrl("href");
+            // 如果该目录下的链接为目录，说明自身不是最后一层目录，同时递归爬取该链接
+            if (fileAbsUrl.endsWith("/") && fileAbsUrl.length() > directoryUrl.length()) {
+                isLastLevel = false;
+                crawlDirectory(fileAbsUrl);
+            }
+        }
+        // 如果该目录为最后一层，进行爬取
+        if (isLastLevel) {
+            synchronized (this) {
+                //爬取组件
+                JavaComponentDO javaComponentDO = crawl(directoryUrl);
+                if (javaComponentDO == null) {
+                    mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true));
+                    return;
+                }
+                if (javaComponentDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion()) == null)
+                    javaComponentDao.save(javaComponentDO);
+                // 记录该url已被访问过
+                mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true));
+            }
+        } else {
+            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, false));
+        }
+
+
+    }
+
     /**
      * 递归地爬取目录url下（带依赖的）所有组件
      *
