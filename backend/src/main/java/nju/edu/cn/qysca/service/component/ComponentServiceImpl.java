@@ -537,7 +537,7 @@ public class ComponentServiceImpl implements ComponentService {
             case "javaScript":
                 dependencyTreeDO = jsDependencyTreeDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
                 if (dependencyTreeDO == null) {
-                    dependencyTreeDO = npmService.spiderDependencyTree(componentGavDTO.getName(), componentGavDTO.getVersion());
+                    dependencyTreeDO = npmService.spiderDependency(componentGavDTO.getName(), componentGavDTO.getVersion());
                     jsDependencyTreeDao.save((JsDependencyTreeDO) dependencyTreeDO);
                     List<JsDependencyTableDO> jsDependencyTableDOList = npmService.dependencyTableAnalysis((JsDependencyTreeDO) dependencyTreeDO);
                     jsDependencyTableDao.saveAll(jsDependencyTableDOList);

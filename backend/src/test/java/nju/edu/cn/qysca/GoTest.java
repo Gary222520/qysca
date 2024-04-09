@@ -11,6 +11,7 @@ import nju.edu.cn.qysca.domain.user.dos.RoleDO;
 import nju.edu.cn.qysca.domain.user.dos.RolePermissionDO;
 import nju.edu.cn.qysca.service.go.GoService;
 import nju.edu.cn.qysca.service.go.GoServiceImpl;
+import nju.edu.cn.qysca.service.spider.GoSpiderService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +23,8 @@ import java.util.List;
 @SpringBootTest
 public class GoTest {
     @Autowired
+    private GoSpiderService goSpiderService;
+    @Autowired
     private GoService goService;
 
 
@@ -30,7 +33,7 @@ public class GoTest {
         // special case for spiderComponentInfo
         String name="golang.org/x/mobile";
         String version="v0.0.0-20210901025245-1fde1d6c3ca1";
-        GoComponentDO goComponentDO=goService.spiderComponentInfo(name,version);
+        GoComponentDO goComponentDO=goSpiderService.crawlComponentInfoByNV(name,version);
         System.out.println("ok");
     }
 

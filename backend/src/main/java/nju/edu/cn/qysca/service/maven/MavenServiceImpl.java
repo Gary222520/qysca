@@ -131,25 +131,38 @@ public class MavenServiceImpl implements MavenService {
 
     @Override
     public JavaDependencyTreeDO spiderDependency(String groupId, String artifactId, String version) {
+        // 先检查组件库中是否有对应信息，若无，爬取对应信息
+        JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(groupId+":"+artifactId, version);
+        if (null == javaComponentDO){
+            javaComponentDO = javaSpiderService.crawlByGav(groupId, artifactId, version);
+            if (null == javaComponentDO){
+                throw new PlatformException(500, "无法识别的组件：" + groupId + ":" + artifactId + ":" + version);
+            }
+            javaComponentDao.save(javaComponentDO);
+        }
+
         Date now = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         String timeStamp = dateFormat.format(now);
-        String tempPomFolder = tempFolder + timeStamp;
-        File file = new File(tempPomFolder);
-        file.mkdirs();
-        String tempPath = tempPomFolder + "/pom.xml";
+        File tempDir = new File(tempFolder, timeStamp);
+        if (!tempDir.exists()) {
+            tempDir.mkdirs();
+        }
+
         try {
+            String tempPomPath = tempDir + FILE_SEPARATOR + "pom.xml";
             String xml = javaSpiderService.getPomStrByGav(groupId, artifactId, version);
-            FileWriter fileWriter = new FileWriter(tempPath);
+            FileWriter fileWriter = new FileWriter(tempPomPath);
             fileWriter.write(xml);
             fileWriter.flush();
             fileWriter.close();
-            JavaDependencyTreeDO javaDependencyTreeDO = dependencyTreeAnalysis(tempPath, "maven", "opensource");
-            FolderUtil.deleteFolder(tempPomFolder);
+            JavaDependencyTreeDO javaDependencyTreeDO = dependencyTreeAnalysis(tempPomPath, "maven", "opensource");
             return javaDependencyTreeDO;
         } catch (Exception e) {
-            FolderUtil.deleteFolder(tempPomFolder);
+            e.printStackTrace();
             throw new PlatformException(500, "识别依赖信息失败");
+        } finally {
+            FolderUtil.deleteFolder(tempDir.getPath());
         }
     }
 

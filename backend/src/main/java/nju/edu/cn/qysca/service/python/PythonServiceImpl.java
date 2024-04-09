@@ -34,7 +34,7 @@ public class PythonServiceImpl implements PythonService {
     @Value("${tempPythonFolder}")
     String tempFolder;
     @Autowired
-    private PythonComponentDao componentDao;
+    private PythonComponentDao pythonComponentDao;
     @Autowired
     private PythonSpiderService pythonSpiderService;
 
@@ -172,39 +172,54 @@ public class PythonServiceImpl implements PythonService {
      */
     @Override
     public PythonDependencyTreeDO spiderDependency(String name, String version) {
+        // 先检查组件库中是否有对应信息，若无，爬取对应信息
+        PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(name, version);
+        if (null == pythonComponentDO){
+            pythonComponentDO = pythonSpiderService.crawlByNV(name, version);
+            if (null == pythonComponentDO){
+                throw new PlatformException(500, "无法识别的组件： " + name + ":" + version);
+            }
+            pythonComponentDao.save(pythonComponentDO);
+        }
 
         // 创建临时文件夹
         Date now = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         String timeStamp = dateFormat.format(now);
-        File tempFile = new File(tempFolder, timeStamp);
-        if (!tempFile.exists()) { //如果不存在
-            boolean dr = tempFile.mkdirs(); //创建目录
+        File tempDir = new File(tempFolder, timeStamp);
+        if (!tempDir.exists()) { //如果不存在
+            tempDir.mkdirs(); //创建目录
         }
 
-        // 调用以下命令，获取json形式的依赖树
-        // 1. 创建虚拟环境venv
-        // 2. 安装pipdeptree
-        // 3. 安装要查询的包
-        // 5. pipdeptree --json-tree获取json形式的依赖树
-        String[] command1 = {"python", "-m", "venv", "venv"};
-        String[] command3 = {tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
-        String[] command4;
-        if (version.equals("-"))
-            command4 = new String[]{tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name};
-        else
-            command4 = new String[]{tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name + "==" + version};
-        String[] command5 = {tempFile.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
+        try {
+            // 调用以下命令，获取json形式的依赖树
+            // 1. 创建虚拟环境venv
+            // 2. 安装pipdeptree
+            // 3. 安装要查询的包
+            // 5. pipdeptree --json-tree获取json形式的依赖树
+            String[] command1 = {"python", "-m", "venv", "venv"};
+            String[] command3 = {tempDir.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
+            String[] command4;
+            if (version.equals("-"))
+                command4 = new String[]{tempDir.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name};
+            else
+                command4 = new String[]{tempDir.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name + "==" + version};
+            String[] command5 = {tempDir.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
 
-        executeCommand(command1, tempFile, false);
-        executeCommand(command3, null, true);
-        executeCommand(command4, null, true);
-        String jsonString = executeCommand(command5, null, true);
-        //删除临时文件夹
-        FolderUtil.deleteFolder(tempFile.getPath());
-
-        PythonDependencyTreeDO dependencyTreeDO = parseJsonDependencyTree(jsonString, name, version, "opensource");
-        return dependencyTreeDO;
+            executeCommand(command1, tempDir, false);
+            executeCommand(command3, null, true);
+            executeCommand(command4, null, true);
+            String jsonString = executeCommand(command5, null, true);
+            //删除临时文件夹
+            FolderUtil.deleteFolder(tempDir.getPath());
+            PythonDependencyTreeDO dependencyTreeDO = parseJsonDependencyTree(jsonString, name, version, "opensource");
+            return dependencyTreeDO;
+        } catch (Exception e){
+            e.printStackTrace();
+            throw new PlatformException(500, "识别依赖信息失败");
+        } finally {
+            FolderUtil.deleteFolder(tempDir.getPath());
+        }
     }
 
 
@@ -348,12 +363,12 @@ public class PythonServiceImpl implements PythonService {
         componentDependencyTreeDO.setName(tree.get("key").asText());
         componentDependencyTreeDO.setVersion(tree.get("installed_version").asText());
         // 从知识库中查找
-        PythonComponentDO componentDO = componentDao.findByNameAndVersion(componentDependencyTreeDO.getName(), componentDependencyTreeDO.getVersion());
+        PythonComponentDO componentDO = pythonComponentDao.findByNameAndVersion(componentDependencyTreeDO.getName(), componentDependencyTreeDO.getVersion());
         if (componentDO == null) {
             // 如果知识库中没有则爬取
             componentDO = pythonSpiderService.crawlByNV(componentDependencyTreeDO.getName(), componentDependencyTreeDO.getVersion());
             if (componentDO != null) {
-                componentDao.save(componentDO);
+                pythonComponentDao.save(componentDO);
                 componentDependencyTreeDO.setLicenses(String.join(",", componentDO.getLicenses()));
                 componentDependencyTreeDO.setVulnerabilities(String.join(",", componentDO.getVulnerabilities()));
                 componentDependencyTreeDO.setType("opensource");

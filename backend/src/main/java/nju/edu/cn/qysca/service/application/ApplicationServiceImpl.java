@@ -788,7 +788,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                         JsComponentDO tempJsComponentDO = jsComponentDao.findJsComponentDOById(id);
                         JsDependencyTreeDO tempJsDependencyTreeDO = jsDependencyTreeDao.findByNameAndVersion(tempJsComponentDO.getName(), tempJsComponentDO.getVersion());
                         if (tempJsDependencyTreeDO == null) {
-                            tempJsDependencyTreeDO = npmService.spiderDependencyTree(tempJsComponentDO.getName(), tempJsComponentDO.getVersion());
+                            tempJsDependencyTreeDO = npmService.spiderDependency(tempJsComponentDO.getName(), tempJsComponentDO.getVersion());
                         }
                         AppComponentDependencyTreeDO temp = npmService.translateComponentDependencyTree(tempJsDependencyTreeDO.getTree());
                         addDepth(temp);

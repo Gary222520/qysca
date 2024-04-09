@@ -11,6 +11,7 @@ import nju.edu.cn.qysca.domain.component.dos.GoDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.GoDependencyTreeDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
+import nju.edu.cn.qysca.service.spider.GoSpiderService;
 import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
 import nju.edu.cn.qysca.utils.FolderUtil;
 import nju.edu.cn.qysca.utils.ZipUtil;
@@ -35,6 +36,8 @@ import java.util.*;
 public class GoServiceImpl implements GoService {
 
     private final String FILE_SEPARATOR = "/";
+    @Autowired
+    private GoSpiderService goSpiderService;
     @Autowired
     private GoComponentDao goComponentDao;
     @Autowired
@@ -151,123 +154,41 @@ public class GoServiceImpl implements GoService {
      */
     @Override
     public GoDependencyTreeDO spiderDependency(String name, String version) {
+        // 先检查组件库中是否有对应信息，若无，爬取对应信息
+        GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(name, version);
+        if (null == goComponentDO) {
+            goComponentDO = goSpiderService.crawlComponentInfoByNV(name, version);
+            if (null == goComponentDO) {
+                throw new PlatformException(500, "无法识别的组件：" + name + ":" + version);
+            }
+            goComponentDao.save(goComponentDO);
+        }
+
         // 设置爬取存储的临时文件夹
         Date now = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         String timeStamp = dateFormat.format(now);
-        String tempGoFolder = tempFolder + timeStamp;
-        File file = new File(tempGoFolder);
-        file.mkdirs();
-        String tmpZipPath = tempGoFolder + FILE_SEPARATOR + "gotmp.zip";
-        // 爬取对应组件的zip文件，下载到指定路径
+        File tempDir = new File(tempFolder, timeStamp);
+        if (!tempDir.exists()) {
+            tempDir.mkdirs();
+        }
+
         try {
-            // 先检查组件库中是否有对应信息，若无，爬取对应信息
-            GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(name, version);
-            if (null == goComponentDO) {
-                goComponentDO = spiderComponentInfo(name, version);
-                if (null == goComponentDO) {
-                    throw new RuntimeException();
-                }
-                goComponentDao.save(goComponentDO);
-            }
-            // 通过url下载对应的zip文件
-            URL url = new URL(goComponentDO.getDownloadUrl());
-            URLConnection connection = url.openConnection();
-            HttpURLConnection httpURLConnection = (HttpURLConnection) connection;
-            httpURLConnection.setConnectTimeout(10000);
-            httpURLConnection.setRequestMethod("GET");
-            httpURLConnection.setRequestProperty("Charset", "UTF-8");
-            httpURLConnection.connect();
-            BufferedInputStream bin = new BufferedInputStream(httpURLConnection.getInputStream());
-            OutputStream out = new FileOutputStream(tmpZipPath);
-            int size = 0;
-            byte[] b = new byte[2048];
-            while ((size = bin.read(b)) != -1) {
-                out.write(b, 0, size);
-            }
-            bin.close();
-            out.close();
+            // 爬取对应组件的zip文件，下载到指定路径
+            goSpiderService.spiderContent(goComponentDO.getDownloadUrl(), tempDir.getPath());
+            String tmpZipPath = tempDir.getPath() + FILE_SEPARATOR + "gotmp.zip";
             // 解压zip文件
             ZipUtil.unzip(tmpZipPath);
             // 定位go.mod路径
             String realPath = tmpZipPath.substring(0, tmpZipPath.lastIndexOf('/')) + FILE_SEPARATOR + name + "@" + version + FILE_SEPARATOR + "go.mod";
             // 调用依赖树分析方法
-            GoDependencyTreeDO goDependencyTreeDO = dependencyTreeAnalysis(name, version, "opensource", realPath, "go.mod");
-            // 删除下载的内容
-            FolderUtil.deleteFolder(tempGoFolder);
-            return goDependencyTreeDO;
+            return dependencyTreeAnalysis(name, version, "opensource", realPath, "go.mod");
         } catch (Exception e) {
-            FolderUtil.deleteFolder(tempGoFolder);
+            e.printStackTrace();
             throw new PlatformException(500, "识别依赖信息失败");
+        } finally {
+            FolderUtil.deleteFolder(tempDir.getPath());
         }
-    }
-
-    /**
-     * 爬虫获取并填充Go组件信息
-     *
-     * @param name    组件名称
-     * @param version 组件版本
-     * @return Go组件信息
-     */
-    @Override
-    public GoComponentDO spiderComponentInfo(String name, String version) {
-        GoComponentDO goComponentDO = new GoComponentDO();
-        // 配置基本信息
-        goComponentDO.setName(name);
-        goComponentDO.setVersion(version);
-        goComponentDO.setLanguage("golang");
-        goComponentDO.setType("opensource");
-        goComponentDO.setUrl("https://pkg.go.dev/" + name + "@" + version);
-        goComponentDO.setDownloadUrl("https://goproxy.cn/" + name + "/@v/" + version + ".zip");
-        goComponentDO.setSourceUrl("https://" + name);
-        goComponentDO.setPUrl("pkg:golang/" + name + "@" + version);
-        goComponentDO.setCreator(null);
-        goComponentDO.setState("SUCCESS");
-        // 利用github api获取组件信息（description, licenses），非github组件暂不支持
-        if (!name.startsWith("github.com/")) {
-            goComponentDO.setDescription("-");
-            return goComponentDO;
-        }
-        try {
-            String url = "https://api.github.com/repos/" + name.substring(11);
-            // 创建HttpClient对象
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            // 声明访问地址
-            HttpGet httpGet = new HttpGet(url);
-            // 设置请求头
-            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.101.76 Safari/537.36");
-            httpGet.addHeader("Authorization", "Bearer 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");
-            httpGet.addHeader("Accept", "application/vnd.github+json");
-            httpGet.addHeader("X-GitHub-Api-Version", "2022-11-28");
-            // 发起请求
-            CloseableHttpResponse response = httpClient.execute(httpGet);
-            // 判断响应码是否为200
-            if (response.getStatusLine().getStatusCode() != 200) {
-                throw new RuntimeException();
-            }
-            // 获取内容，解析成json，填充组件信息
-            String content = EntityUtils.toString(response.getEntity(), "UTF-8");
-            JSONObject jsonObject = JSON.parseObject(content);
-            String description = jsonObject.getString("description");
-            if (null != description && description.length() != 0) {
-                goComponentDO.setDescription(description);
-            }
-            List<String> licenses = new ArrayList<>();
-            JSONObject license = jsonObject.getJSONObject("license");
-            if (null != license) {
-                String lname = license.getString("spdx_id");
-                String lurl = license.getString("url");
-                if (null != lname && lname.length() != 0 && null != lurl && lurl.length() != 0) {
-                    licenses.addAll(licenseService.searchLicense(lname));
-                }
-            }
-            goComponentDO.setLicenses(licenses.toArray(new String[0]));
-            goComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(name, version, "golang").toArray(new String[0]));
-        } catch (Exception e) {
-            System.err.println("通过github api获取组件信息失败: " + name + "@" + version);
-            goComponentDO.setDescription("-");
-        }
-        return goComponentDO;
     }
 
 
@@ -393,11 +314,13 @@ public class GoServiceImpl implements GoService {
                     // 检查知识库中是否已有子组件信息，若无，则爬取写入知识库中
                     GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(child.getName(), child.getVersion());
                     if (null == goComponentDO) {
-                        goComponentDO = spiderComponentInfo(child.getName(), child.getVersion());
-                        if (null == goComponentDO) {
-                            throw new PlatformException(500, "存在无法识别的组件");
+                        goComponentDO = goSpiderService.crawlComponentInfoByNV(child.getName(), child.getVersion());
+                        if (goComponentDO != null){
+                            goComponentDao.save(goComponentDO);
+                        } else {
+                            // 如果爬虫没有爬到则打印报错信息，仍继续执行
+                            System.err.println("存在未识别的组件：" + child.getName() + ":" + child.getVersion());
                         }
-                        goComponentDao.save(goComponentDO);
                     }
                     child.setLicenses(String.join(",", goComponentDO.getLicenses()));
                     child.setVulnerabilities(String.join(",", goComponentDO.getVulnerabilities()));
