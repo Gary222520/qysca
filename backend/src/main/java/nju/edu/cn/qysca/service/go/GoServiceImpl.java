@@ -1,7 +1,5 @@
 package nju.edu.cn.qysca.service.go;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import nju.edu.cn.qysca.dao.component.GoComponentDao;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
@@ -15,20 +13,12 @@ import nju.edu.cn.qysca.service.spider.GoSpiderService;
 import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
 import nju.edu.cn.qysca.utils.FolderUtil;
 import nju.edu.cn.qysca.utils.ZipUtil;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -157,7 +147,7 @@ public class GoServiceImpl implements GoService {
         // 先检查组件库中是否有对应信息，若无，爬取对应信息
         GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(name, version);
         if (null == goComponentDO) {
-            goComponentDO = goSpiderService.crawlComponentInfoByNV(name, version);
+            goComponentDO = goSpiderService.crawlByNV(name, version);
             if (null == goComponentDO) {
                 throw new PlatformException(500, "无法识别的组件：" + name + ":" + version);
             }
@@ -314,7 +304,7 @@ public class GoServiceImpl implements GoService {
                     // 检查知识库中是否已有子组件信息，若无，则爬取写入知识库中
                     GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(child.getName(), child.getVersion());
                     if (null == goComponentDO) {
-                        goComponentDO = goSpiderService.crawlComponentInfoByNV(child.getName(), child.getVersion());
+                        goComponentDO = goSpiderService.crawlByNV(child.getName(), child.getVersion());
                         if (goComponentDO != null){
                             goComponentDao.save(goComponentDO);
                         } else {

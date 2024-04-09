@@ -22,6 +22,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -35,7 +36,8 @@ import java.util.stream.Collectors;
 public class JavaSpiderServiceImpl implements JavaSpiderService {
 
 
-    private final static String MAVEN_REPO_BASE_URL = "https://repo1.maven.org/maven2/";
+    @Value("${MAVEN_REPO_BASE_URL}")
+    private String MAVEN_REPO_BASE_URL;
     @Autowired
     private JavaComponentDao javaComponentDao;
     @Autowired

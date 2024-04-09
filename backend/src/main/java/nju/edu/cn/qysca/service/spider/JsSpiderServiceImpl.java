@@ -37,6 +37,8 @@ public class JsSpiderServiceImpl implements JsSpiderService {
     private VulnerabilityService vulnerabilityService;
     @Value("${tempNpmFolder}")
     private String tempFolder;
+    @Value("${NPM_REPO_BASE_URL}")
+    private String NPM_REPO_BASE_URL;
 
 
     /**
@@ -63,7 +65,7 @@ public class JsSpiderServiceImpl implements JsSpiderService {
                     version = temp[1];
                 }
             }
-            String url = "https://registry.npmjs.org/" + name + FILE_SEPARATOR + version;
+            String url = NPM_REPO_BASE_URL + name + FILE_SEPARATOR + version;
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpGet httpGet = new HttpGet(url);
             httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
@@ -128,7 +130,7 @@ public class JsSpiderServiceImpl implements JsSpiderService {
     @Override
     public void spiderContent(String name, String version, String filePath) {
         try {
-            String url = "https://registry.npmjs.org/" + name + FILE_SEPARATOR + version;
+            String url = NPM_REPO_BASE_URL + name + FILE_SEPARATOR + version;
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpGet httpGet = new HttpGet(url);
             httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");

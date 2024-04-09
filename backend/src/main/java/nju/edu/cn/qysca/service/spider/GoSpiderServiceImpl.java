@@ -27,13 +27,14 @@ import java.util.List;
 
 @Service
 public class GoSpiderServiceImpl implements GoSpiderService{
-    private final String FILE_SEPARATOR = "/";
     @Autowired
     private LicenseService licenseService;
     @Autowired
     private VulnerabilityService vulnerabilityService;
     @Value("${tempGoFolder}")
     private String tempFolder;
+    @Value("${GO_REPO_BASE_URL}")
+    private String GO_REPO_BASE_URL;
 
     /**
      * 爬虫获取并填充Go组件信息
@@ -43,7 +44,7 @@ public class GoSpiderServiceImpl implements GoSpiderService{
      * @return Go组件信息
      */
     @Override
-    public GoComponentDO crawlComponentInfoByNV(String name, String version) {
+    public GoComponentDO crawlByNV(String name, String version) {
         GoComponentDO goComponentDO = new GoComponentDO();
         // 配置基本信息
         goComponentDO.setName(name);
@@ -62,7 +63,7 @@ public class GoSpiderServiceImpl implements GoSpiderService{
             return goComponentDO;
         }
         try {
-            String url = "https://api.github.com/repos/" + name.substring(11);
+            String url = GO_REPO_BASE_URL + name.substring(11);
             // 创建HttpClient对象
             CloseableHttpClient httpClient = HttpClients.createDefault();
             // 声明访问地址
@@ -104,6 +105,7 @@ public class GoSpiderServiceImpl implements GoSpiderService{
     }
 
     /**
+     * 下载url的zip文件到指定存储目录
      *
      * @param downloadUrl 下载地址
      * @param filePath 存储目录地址
