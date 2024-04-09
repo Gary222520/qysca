@@ -2,6 +2,7 @@ package nju.edu.cn.qysca.service.license;
 
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
 import nju.edu.cn.qysca.domain.license.dtos.LicenseBriefDTO;
+import nju.edu.cn.qysca.domain.license.dtos.LicenseConflictInfoDTO;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -13,6 +14,14 @@ public interface LicenseService {
      * @return List<String> 匹配到的许可证名称，当精确匹配到时，只会返回一个许可证
      */
     List<String> searchLicense(String queryName);
+
+    /**
+     * 获取许可证冲突信息
+     *
+     * @param licenses 许可证列表
+     * @return 许可证冲突信息
+     */
+    LicenseConflictInfoDTO getLicenseConflictInformation(List<LicenseDO> licenses);
 
     /**
      * 分页查询应用许可证列表

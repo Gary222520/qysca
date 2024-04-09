@@ -5,10 +5,12 @@ import nju.edu.cn.qysca.dao.application.AppDependencyTableDao;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.license.LicenseDao;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDO;
-import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
+import nju.edu.cn.qysca.domain.license.dos.LicenseTermDO;
 import nju.edu.cn.qysca.domain.license.dtos.LicenseBriefDTO;
+import nju.edu.cn.qysca.domain.license.dtos.LicenseConflictInfoDTO;
+import nju.edu.cn.qysca.domain.license.dtos.LicenseConflictInfoTermDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -59,6 +61,80 @@ public class LicenseServiceImpl implements LicenseService{
                 .map(LicenseDO::getName)
                 .collect(Collectors.toList());
         return results;
+    }
+
+    /**
+     * 获取许可证冲突信息
+     *
+     * @param licenses 许可证列表
+     * @return 许可证冲突信息
+     */
+    @Override
+    public LicenseConflictInfoDTO getLicenseConflictInformation(List<LicenseDO> licenses) {
+
+        Set<String> obligationsSet = new HashSet<>();
+        Set<String> rightsSet = new HashSet<>();
+
+        // 先记录一共有那些权利和义务条目
+        for (LicenseDO license : licenses) {
+            license.getObligationsRequired().stream().map(LicenseTermDO::getTitle).forEach(obligationsSet::add);
+            license.getObligationsNotRequired().stream().map(LicenseTermDO::getTitle).forEach(obligationsSet::add);
+            license.getRightsAllowed().stream().map(LicenseTermDO::getTitle).forEach(rightsSet::add);
+            license.getRightsProhibited().stream().map(LicenseTermDO::getTitle).forEach(rightsSet::add);
+        }
+
+        List<LicenseConflictInfoTermDTO> obligations_terms = new ArrayList<>();
+        List<LicenseConflictInfoTermDTO> rights_terms = new ArrayList<>();
+
+        // 记录每种义务有哪些许可证必须，哪些许可证无需
+        for (String obligation : obligationsSet){
+            LicenseConflictInfoTermDTO conflictInfoTerm = new LicenseConflictInfoTermDTO();
+            conflictInfoTerm.setPos_licenses(new ArrayList<>());
+            conflictInfoTerm.setNeg_licenses(new ArrayList<>());
+
+            for (LicenseDO license : licenses) {
+                if (containTitle(license.getObligationsRequired(), obligation))
+                    conflictInfoTerm.getPos_licenses().add(license);
+                if (containTitle(license.getObligationsNotRequired(), obligation))
+                    conflictInfoTerm.getNeg_licenses().add(license);
+            }
+            obligations_terms.add(conflictInfoTerm);
+        }
+
+        // 记录每种权利有哪些许可证允许，哪些许可证禁止
+        for (String right : rightsSet){
+            LicenseConflictInfoTermDTO conflictInfoTerm = new LicenseConflictInfoTermDTO();
+            conflictInfoTerm.setPos_licenses(new ArrayList<>());
+            conflictInfoTerm.setNeg_licenses(new ArrayList<>());
+
+            for (LicenseDO license : licenses) {
+                if (containTitle(license.getRightsAllowed(), right))
+                    conflictInfoTerm.getPos_licenses().add(license);
+                if (containTitle(license.getRightsProhibited(), right))
+                    conflictInfoTerm.getNeg_licenses().add(license);
+            }
+            rights_terms.add(conflictInfoTerm);
+        }
+
+        return new LicenseConflictInfoDTO(obligations_terms, rights_terms);
+    }
+
+    /**
+     * 判断terms是否有该title
+     *
+     * @param terms List<LicenseTermDO>
+     * @param title Title
+     * @return boolean
+     */
+    private boolean containTitle(List<LicenseTermDO> terms, String title) {
+        if (terms != null) {
+            for (LicenseTermDO term : terms) {
+                if (term.getTitle().equals(title)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
