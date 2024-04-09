@@ -7,6 +7,7 @@ import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
 import nju.edu.cn.qysca.service.license.LicenseService;
 import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -18,10 +19,8 @@ import java.util.List;
 
 @Service
 public class PythonSpiderServiceImpl implements PythonSpiderService{
-    /**
-     * pypi仓库根地址
-     */
-    private final static String PYPI_REPO_BASE_URL = "https://pypi.org/pypi/";
+    @Value("${PYPI_REPO_BASE_URL}")
+    private String PYPI_REPO_BASE_URL;
 
     @Autowired
     private LicenseService licenseService;

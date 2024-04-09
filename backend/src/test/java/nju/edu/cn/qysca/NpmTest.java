@@ -3,6 +3,7 @@ package nju.edu.cn.qysca;
 import nju.edu.cn.qysca.domain.component.dos.JsComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.JsDependencyTreeDO;
 import nju.edu.cn.qysca.service.npm.NpmServiceImpl;
+import nju.edu.cn.qysca.service.spider.JsSpiderService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +13,8 @@ public class NpmTest {
 
     @Autowired
     private NpmServiceImpl npmService;
+    @Autowired
+    private JsSpiderService jsSpiderService;
 
     @Test
     public void test() {
@@ -31,11 +34,11 @@ public class NpmTest {
 
     @Test
     public void test3(){
-        npmService.spiderComponentInfo("colors", "0.6.2");
+        jsSpiderService.crawlByNV("colors", "0.6.2");
     }
 
     @Test
     public void test4(){
-        npmService.spiderDependencyTree("pinkie", "2.0.4");
+        npmService.spiderDependency("pinkie", "2.0.4");
     }
 }

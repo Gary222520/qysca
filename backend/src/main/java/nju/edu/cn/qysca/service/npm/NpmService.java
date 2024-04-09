@@ -17,7 +17,7 @@ public interface NpmService {
 
     List<JsDependencyTableDO> dependencyTableAnalysis(JsDependencyTreeDO jsDependencyTreeDO);
 
-    JsDependencyTreeDO spiderDependencyTree(String name, String version);
+    JsDependencyTreeDO spiderDependency(String name, String version);
 
     AppComponentDependencyTreeDO translateComponentDependencyTree(JsComponentDependencyTreeDO jsComponentDependencyTreeDO);
 

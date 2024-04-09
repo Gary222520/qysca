@@ -24,6 +24,12 @@ public interface JavaSpiderService {
     String getPomStrByGav(String groupId, String artifactId, String version);
 
     /**
+     * 递归地爬取目录url下所有组件
+     * @param directoryUrl 要爬取的目录
+     */
+    void crawlDirectory(String directoryUrl);
+
+    /**
      * 递归地爬取目录url下（带依赖的）所有组件
      * @param directoryUrl 要爬取的目录
      */

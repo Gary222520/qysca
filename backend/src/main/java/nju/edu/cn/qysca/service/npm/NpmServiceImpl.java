@@ -1,8 +1,5 @@
 package nju.edu.cn.qysca.service.npm;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.dao.component.JsComponentDao;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
@@ -13,12 +10,9 @@ import nju.edu.cn.qysca.domain.npm.PackageLockDTO;
 import nju.edu.cn.qysca.domain.npm.PackageLockDependencyDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
+import nju.edu.cn.qysca.service.spider.JsSpiderService;
 import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
+import nju.edu.cn.qysca.utils.FolderUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,18 +29,16 @@ import java.util.zip.ZipFile;
 @Service
 public class NpmServiceImpl implements NpmService {
 
+    private final String FILE_SEPARATOR = "/";
+    @Autowired
+    private JsSpiderService jsSpiderService;
     @Autowired
     private JsComponentDao jsComponentDao;
-
     @Autowired
     private LicenseService licenseService;
-
     @Autowired
     private VulnerabilityService vulnerabilityService;
-
-    private final String FILE_SEPARATOR = "/";
-
-    @Value("${tempPomFolder}")
+    @Value("${tempNpmFolder}")
     private String tempFolder;
 
 
@@ -61,7 +53,7 @@ public class NpmServiceImpl implements NpmService {
     @Override
     public JsComponentDO componentAnalysis(String filePath, String builder, String type) {
         try {
-            if(builder.equals("zip")) {
+            if (builder.equals("zip")) {
                 extractFile(filePath);
             }
             File file = new File(filePath);
@@ -73,7 +65,7 @@ public class NpmServiceImpl implements NpmService {
             jsComponentDO.setVersion(packageJsonDTO.getVersion());
             jsComponentDO.setDescription(packageJsonDTO.getDescription());
             List<String> licenses = new ArrayList<>();
-            if(packageJsonDTO.getLicense() != null) {
+            if (packageJsonDTO.getLicense() != null) {
                 licenses.addAll(licenseService.searchLicense(packageJsonDTO.getLicense()));
             }
             jsComponentDO.setLicenses(licenses.toArray(new String[0]));
@@ -95,9 +87,9 @@ public class NpmServiceImpl implements NpmService {
             File file = new File(filePath);
             File packageLock = new File(file.getParent() + FILE_SEPARATOR + "package-lock.json");
             if (!packageLock.exists()) {
-                if(builder.equals("zip")) {
+                if (builder.equals("zip")) {
                     extractFile(filePath);
-                }else if(builder.equals("package.json")){
+                } else if (builder.equals("package.json")) {
                     generatePackageLock(file.getParent());
                 }
             }
@@ -150,16 +142,36 @@ public class NpmServiceImpl implements NpmService {
      * @return JsDependencyTreeDO 组件依赖信息
      */
     @Override
-    public JsDependencyTreeDO spiderDependencyTree(String name, String version) {
-        String filePath = null;
+    public JsDependencyTreeDO spiderDependency(String name, String version) {
+        // 先检查组件库中是否有对应信息，若无，爬取对应信息
+        JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(name, version);
+        if (null == jsComponentDO){
+            jsComponentDO = jsSpiderService.crawlByNV(name, version);
+            if (null == jsComponentDO){
+                throw new PlatformException(500, "无法识别的组件： " + name + ":" + version);
+            }
+            jsComponentDao.save(jsComponentDO);
+        }
+
+        // 设置爬取存储的临时文件夹
+        Date now = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String timestamp = dateFormat.format(now);
+        File tempDir = new File(tempFolder, timestamp);
+        if (!tempDir.exists()) {
+            tempDir.mkdirs();
+        }
+
         try {
-            filePath = spiderContent(name, version);
-            return dependencyTreeAnalysis(filePath + FILE_SEPARATOR + "package.json", "package.json", "opensource");
+            // 爬取对应组件的package.json文件，下载到指定路径
+            jsSpiderService.spiderContent(name, version, tempDir.getPath());
+            String tmpNpmPath = tempDir.getPath() + FILE_SEPARATOR + "package.json";
+            return dependencyTreeAnalysis(tmpNpmPath, "package.json", "opensource");
         } catch (Exception e) {
             e.printStackTrace();
-            throw new PlatformException(500, "未能识别组件信息");
+            throw new PlatformException(500, "识别依赖信息失败");
         } finally {
-            deleteFolder(filePath);
+            FolderUtil.deleteFolder(tempDir.getPath());
         }
     }
 
@@ -365,14 +377,16 @@ public class NpmServiceImpl implements NpmService {
             JsComponentDO jsComponentDO = null;
             jsComponentDO = jsComponentDao.findByNameAndVersion(entry.getKey(), entry.getValue().getVersion());
             if (jsComponentDO == null) {
-                jsComponentDO = spiderComponentInfo(entry.getKey(), entry.getValue().getVersion());
+                jsComponentDO = jsSpiderService.crawlByNV(entry.getKey(), entry.getValue().getVersion());
                 if (jsComponentDO != null) {
                     child.setType("opensource");
                     child.setLicenses(String.join(",", jsComponentDO.getLicenses()));
                     child.setVulnerabilities(String.join(",", jsComponentDO.getVulnerabilities()));
                     jsComponentDao.save(jsComponentDO);
                 } else {
+                    // 如果爬虫没有爬到则打印报错信息，仍继续执行
                     child.setType("opensource");
+                    System.err.println("存在未识别的组件：" + entry.getKey() + ":" + entry.getValue().getVersion());
                 }
             } else {
                 child.setLicenses(String.join(",", jsComponentDO.getLicenses()));
@@ -384,157 +398,5 @@ public class NpmServiceImpl implements NpmService {
             children.add(child);
         }
         return children;
-    }
-
-    /**
-     * 利用爬虫获取组件信息
-     *
-     * @param name    组件名称
-     * @param version 组件版本
-     * @return JsComponentDO 组件信息
-     */
-    public JsComponentDO spiderComponentInfo(String name, String version) {
-        JsComponentDO jsComponentDO = new JsComponentDO();
-        jsComponentDO.setName(name);
-        jsComponentDO.setVersion(version);
-        jsComponentDO.setPurl("pkg:npm/" + name + "@" + version);
-        jsComponentDO.setLanguage("javaScript");
-        jsComponentDO.setType("opensource");
-        jsComponentDO.setCreator("-");
-        try {
-            if (version.contains("npm")) {
-                String[] temp = parsePackageNameAndVersion(version);
-                if (temp != null) {
-                    name = temp[0];
-                    version = temp[1];
-                }
-            }
-            String url = "https://registry.npmjs.org/" + name + FILE_SEPARATOR + version;
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            HttpGet httpGet = new HttpGet(url);
-            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
-            CloseableHttpResponse response = httpClient.execute(httpGet);
-            if (response.getStatusLine().getStatusCode() != 200) {
-                return null;
-            }
-            String content = EntityUtils.toString(response.getEntity(), "UTF-8");
-            JSONObject jsonObject = JSON.parseObject(content);
-            jsComponentDO.setDescription(jsonObject.getString("description"));
-            jsComponentDO.setWebsite(jsonObject.getString("homepage"));
-            if (jsonObject.get("repository") instanceof JSONObject) {
-                jsComponentDO.setRepoUrl(jsonObject.getJSONObject("repository").getString("url"));
-            } else {
-                jsComponentDO.setRepoUrl(jsonObject.getString("repository"));
-            }
-            if(jsonObject.get("license") != null){
-                jsComponentDO.setLicenses(licenseService.searchLicense(jsonObject.getString("license")).toArray(new String[0]));
-            } else{
-                jsComponentDO.setLicenses(new String[0]);
-            }
-            jsComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(name, version, "javaScript").toArray(new String[0]));
-            jsComponentDO.setDownloadUrl(jsonObject.getJSONObject("dist") == null ? "" : jsonObject.getJSONObject("dist").getString("tarball"));
-            List<String> copyrightStatements = new ArrayList<>();
-            if (jsonObject.get("author") instanceof JSONObject) {
-                if (jsonObject.getJSONObject("author") != null) {
-                    copyrightStatements.add(jsonObject.getJSONObject("author").getString("name") + " ," + jsonObject.getJSONObject("author").getString("email"));
-                }
-            }
-            if (jsonObject.get("contributors") instanceof JSONArray) {
-                JSONArray jsonArray = jsonObject.getJSONArray("contributors");
-                if (jsonArray != null) {
-                    for (int i = 0; i < jsonArray.size(); i++) {
-                        JSONObject contributor = jsonArray.getJSONObject(i);
-                        StringBuilder contributorStr = new StringBuilder();
-                        contributorStr.append(contributor.getString("name"));
-                        if (contributor.containsKey("email")) {
-                            contributorStr.append(" ,").append(contributor.getString("email"));
-                        }
-                        if (contributor.containsKey("url")) {
-                            contributorStr.append(" ,").append(contributor.getString("url"));
-                        }
-                        copyrightStatements.add(contributorStr.toString());
-                    }
-                }
-            }
-            jsComponentDO.setCopyrightStatements(copyrightStatements.toArray(new String[0]));
-            jsComponentDO.setState("SUCCESS");
-        } catch (Exception e) {
-            return null;
-        }
-        return jsComponentDO;
-    }
-
-
-    /**
-     * 解析版本号
-     *
-     * @param version 版本号
-     * @return String[] 组件名称和版本
-     */
-    private String[] parsePackageNameAndVersion(String version) {
-        Pattern pattern = Pattern.compile("npm:(.+)@(.+)");
-        Matcher matcher = pattern.matcher(version);
-        if (matcher.find()) {
-            return new String[]{matcher.group(1), matcher.group(2)};
-        }
-        return null;
-    }
-
-    /**
-     * 返回npm包的下载地址
-     *
-     * @param name    组件名称
-     * @param version 组件版本
-     * @return String npm包的下载地址
-     */
-    private String spiderContent(String name, String version) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        String tempDirName = dateFormat.format(new Date());
-        File tempDir = new File(tempFolder, tempDirName);
-        if (!tempDir.exists()) {
-            tempDir.mkdirs();
-        }
-        try {
-            String url = "https://registry.npmjs.org/" + name + FILE_SEPARATOR + version;
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            HttpGet httpGet = new HttpGet(url);
-            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
-            CloseableHttpResponse response = httpClient.execute(httpGet);
-            if (response.getStatusLine().getStatusCode() != 200) {
-                System.out.println(response.getStatusLine().getStatusCode());
-                throw new PlatformException(500, "存在未识别的组件");
-            }
-            String content = EntityUtils.toString(response.getEntity(), "UTF-8");
-            File file = new File(tempDir, "package.json");
-            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-            writer.write(content);
-            writer.close();
-        } catch (Exception e) {
-            throw new PlatformException(500, "存在未识别的组件");
-        }
-        return tempDir.getPath();
-    }
-
-    private void deleteFolder(String filePath) {
-        File folder = new File(filePath);
-        if (folder.exists()) {
-            deleteFolderFile(folder);
-        }
-    }
-
-    /**
-     * 递归删除文件夹下的文件
-     *
-     * @param folder 文件夹
-     */
-    private void deleteFolderFile(File folder) {
-        File[] files = folder.listFiles();
-        for (File file : files) {
-            if (file.isDirectory()) {
-                deleteFolderFile(file);
-            }
-            file.delete();
-        }
-        folder.delete();
     }
 }
