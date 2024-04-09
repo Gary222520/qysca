@@ -39,9 +39,9 @@ public class SpiderRun {
     private PythonDependencyTreeDao pythonDependencyTreeDao;
     @Autowired
     private PythonDependencyTableDao pythonDependencyTableDao;
-
     @Value("${targetUrlsPath}")
     private String TARGET_URLS_PATH;
+
 
     /**
      * 批量爬取java组件
@@ -66,16 +66,95 @@ public class SpiderRun {
             if (targetUrl.isEmpty() || targetUrl.startsWith("//"))
                 continue;
             System.out.println("开始按目录爬取：" + targetUrl);
-            javaSpiderService.crawlDirectoryWithDependency(targetUrl);
+            javaSpiderService.crawlDirectory(targetUrl);
             System.out.println("该目录爬取完毕: " + targetUrl);
         }
     }
+
 
     /**
      * 批量爬取python包
      */
     @Test
     public void executePythonSpiderTask(){
+        List<PythonVisitedPackagesDO> packagesDOList = pythonVisitedPackagesDao.findAll();
+        for (PythonVisitedPackagesDO pythonVisitedPackagesDO : packagesDOList){
+            synchronized (this) {
+                // 如果该包被成功访问过，则跳过
+                if (pythonVisitedPackagesDO.getVisited() && pythonVisitedPackagesDO.getIsSuccess())
+                    continue;
+
+                // 爬取组件信息
+                PythonComponentDO pythonComponentDO = pythonSpiderService.crawlByNV(pythonVisitedPackagesDO.getName(), pythonVisitedPackagesDO.getVersion());
+                if (pythonComponentDO == null) {
+                    pythonVisitedPackagesDO.setVisited(true);
+                    pythonVisitedPackagesDO.setIsSuccess(false);
+                    pythonVisitedPackagesDao.deleteById(pythonVisitedPackagesDO.getId());
+                    pythonVisitedPackagesDao.save(pythonVisitedPackagesDO);
+                    continue;
+                }
+
+                if (pythonComponentDao.findByNameAndVersion(pythonComponentDO.getName(), pythonComponentDO.getVersion()) == null)
+                    pythonComponentDao.save(pythonComponentDO);
+
+                System.out.println("成功爬取：" + pythonComponentDO.getName() + ":" + pythonComponentDO.getVersion());
+            }
+        }
+    }
+
+
+    /**
+     * 批量爬取js组件
+     */
+    @Test
+    public void executeJsSpiderTask(){
+        // todo
+    }
+
+
+    /**
+     * 批量爬取go组件
+     */
+    @Test
+    public void executeGoSpiderTask(){
+        // todo
+    }
+
+
+    /**
+     * 批量爬取java组件（还会构造并存储该组件的依赖树、依赖表，并爬取该组件的所以依赖）
+     */
+    @Test
+    public void executeJavaSpiderWithDependencyTask(){
+        List<String> targetUrls = new ArrayList<>();
+
+        // 从target_urls.txt文件中读取目标URL
+        try (InputStream inputStream = new FileInputStream(TARGET_URLS_PATH);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                targetUrls.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // 开始爬取
+        for (String targetUrl : targetUrls) {
+            if (targetUrl.isEmpty() || targetUrl.startsWith("//"))
+                continue;
+            System.out.println("开始按目录爬取：" + targetUrl);
+            javaSpiderService.crawlDirectoryWithDependency(targetUrl);
+            System.out.println("该目录爬取完毕: " + targetUrl);
+        }
+    }
+
+
+    /**
+     * 批量爬取python包（还会构造并存储该组件的依赖树、依赖表，并爬取该组件的所以依赖）
+     */
+    @Test
+    public void executePythonSpiderWithDependencyTask(){
         List<PythonVisitedPackagesDO> packagesDOList = pythonVisitedPackagesDao.findAll();
         for (PythonVisitedPackagesDO pythonVisitedPackagesDO : packagesDOList){
             synchronized (this) {
