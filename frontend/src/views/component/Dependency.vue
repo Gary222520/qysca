@@ -8,12 +8,10 @@
       <div class="card_title">
         组件名称：
         <div style="font-weight: bold; margin-right: 30px">{{ data.component.name }}</div>
-        组织ID：
-        <div style="margin-right: 30px">{{ data.component.groupId }}</div>
-        工件ID：
-        <div style="margin-right: 30px">{{ data.component.artifactId }}</div>
         版本：
-        <div>{{ data.component.version }}</div>
+        <div style="margin-right: 30px">{{ data.component.version }}</div>
+        语言：
+        <div style="margin-right: 30px">{{ data.component.language }}</div>
       </div>
     </a-card>
     <a-card class="content_card">
@@ -102,29 +100,36 @@ const filterOption = (input, option) => {
 .header_card {
   position: absolute;
   width: 100%;
-  height: 120px;
+  height: 100px;
 }
 .content_card {
   position: absolute;
   width: 100%;
-  height: calc(100% - 120px);
-  top: 135px;
+  height: calc(100% - 100px);
+  top: 115px;
   overflow-y: scroll;
 }
 .card_header {
   display: flex;
   align-items: center;
   font-size: 18px;
+  margin-top: 15px;
 }
 .card_title {
   display: flex;
   align-items: center;
-  margin-top: 10px;
+  margin-top: 5px;
   font-size: 16px;
+}
+.content {
+  margin-top: 10px;
 }
 .content_header {
   display: flex;
   justify-content: space-between;
+}
+:deep(.ant-card .ant-card-body) {
+  padding: 4px 20px;
 }
 </style>
 <style scoped src="@/atdv/primary-btn.css"></style>

@@ -14,6 +14,7 @@ router.beforeEach((to, from, next) => {
     const permission = JSON.parse(sessionStorage.getItem('user'))?.userBuAppRoles
     if (!permission) {
       sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
       next('/login')
       return
     }

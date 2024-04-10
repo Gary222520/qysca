@@ -3,10 +3,10 @@
     <a-card class="header_card">
       <div class="card_header">
         <LeftOutlined :style="{ fontSize: '18px' }" @click="back" />
-        <div style="margin-left: 10px; font-weight: bold">项目详情</div>
+        <div style="margin-left: 10px; font-weight: bold">应用详情</div>
       </div>
       <div class="card_title">
-        项目名称：
+        应用名称：
         <div style="font-weight: bold; margin-right: 30px">{{ data.versionInfo.name }}</div>
         版本编号：
         <div style="margin-right: 30px">
@@ -24,38 +24,48 @@
       </div>
     </a-card>
     <a-card class="content_card">
-      <div class="content">
-        <div class="content_header">
-          <a-radio-group v-model:value="data.mode">
-            <a-tooltip>
-              <template #title>树形展示</template>
-              <a-radio-button value="tree" @click="changeMode('tree')" style="width: 60px">
-                <ApartmentOutlined :style="{ fontSize: '16px' }" />
-              </a-radio-button>
-            </a-tooltip>
-            <a-tooltip>
-              <template #title>平铺展示</template>
-              <a-radio-button value="tiled" @click="changeMode('tiled')" style="width: 60px">
-                <UnorderedListOutlined :style="{ fontSize: '16px' }" />
-              </a-radio-button>
-            </a-tooltip>
-          </a-radio-group>
-          <div v-if="data.mode === 'tiled'">
-            <!-- <a-input-search
-              v-model:value="data.search.name"
-              placeholder="请输入组件名称"
-              style="width: 250px"></a-input-search> -->
-            <a-checkbox v-model:checked="data.detail">详细导出</a-checkbox>
-            <a-button type="primary" style="margin-left: 10px" @click="exportExcel">
-              <ExportOutlined />导出Excel
-            </a-button>
+      <a-tabs v-model:activeKey="data.activeKey">
+        <a-tab-pane key="1" :tab="`组件（${count.component}）`" forceRender>
+          <div class="content">
+            <div class="content_header">
+              <a-radio-group v-model:value="data.mode">
+                <a-tooltip>
+                  <template #title>树形展示</template>
+                  <a-radio-button value="tree" @click="changeMode('tree')" style="width: 60px">
+                    <ApartmentOutlined :style="{ fontSize: '16px' }" />
+                  </a-radio-button>
+                </a-tooltip>
+                <a-tooltip>
+                  <template #title>平铺展示</template>
+                  <a-radio-button value="tiled" @click="changeMode('tiled')" style="width: 60px">
+                    <UnorderedListOutlined :style="{ fontSize: '16px' }" />
+                  </a-radio-button>
+                </a-tooltip>
+              </a-radio-group>
+              <div v-if="data.mode === 'tiled'">
+                <a-checkbox v-model:checked="data.detail">详细导出</a-checkbox>
+                <a-button type="primary" style="margin-left: 10px" @click="exportExcel">
+                  <ExportOutlined />导出Excel
+                </a-button>
+              </div>
+            </div>
+            <div style="margin-top: 20px">
+              <TreeList ref="treeList"></TreeList>
+              <TiledList ref="tiledList"></TiledList>
+            </div>
           </div>
-        </div>
-        <div style="margin-top: 20px">
-          <TreeList ref="treeList"></TreeList>
-          <TiledList ref="tiledList"></TiledList>
-        </div>
-      </div>
+        </a-tab-pane>
+        <a-tab-pane key="2" :tab="`漏洞（${count.vulnerability}）`" forceRender>
+          <div class="content">
+            <Vulnerablity ref="vulnerablity" @setCount="(data) => setCount(data)"></Vulnerablity>
+          </div>
+        </a-tab-pane>
+        <a-tab-pane key="3" :tab="`许可证（${count.license}）`" forceRender>
+          <div class="content">
+            <License ref="license" @setCount="(data) => setCount(data)"></License>
+          </div>
+        </a-tab-pane>
+      </a-tabs>
     </a-card>
   </div>
 </template>
@@ -67,21 +77,29 @@ import { LeftOutlined, ApartmentOutlined, UnorderedListOutlined, ExportOutlined 
 import { GetVersionList, GetVersionInfo, ExportBrief, ExportDetail } from '@/api/frontend'
 import TreeList from './components/TreeList.vue'
 import TiledList from './components/TiledList.vue'
+import Vulnerablity from './components/Vulnerability.vue'
+import License from './components/License.vue'
 import { message } from 'ant-design-vue'
 
 onMounted(async () => {
-  // const groupId = route.query.groupId
-  // const artifactId = route.query.artifactId
-  const name = route.query.name
-  const version = route.query.version
-  await getVersionInfo(name, version)
+  app.name = route.query.name
+  app.version = route.query.version
+  await getVersionInfo(app.name, app.version)
 })
 
 const router = useRouter()
 const route = useRoute()
 const treeList = ref()
 const tiledList = ref()
+const vulnerablity = ref()
+const license = ref()
+
+const app = reactive({
+  name: '',
+  version: ''
+})
 const data = reactive({
+  activeKey: '1',
   versionInfo: {},
   selectedVersion: '',
   versionOptions: [],
@@ -91,11 +109,27 @@ const data = reactive({
   },
   detail: false
 })
+const count = reactive({
+  component: 0,
+  vulnerability: 0,
+  license: 0
+})
 const back = () => {
   router.back()
 }
+const getCount = async (name, version) => {
+  await tiledList.value.getCount(name, version).then((res) => {
+    count.component = res
+  })
+  vulnerablity.value.show(name, version)
+  license.value.show(name, version)
+}
+const setCount = ({ type, value }) => {
+  count[type] = value
+}
 const getVersionInfo = async (name, version) => {
   data.selectedVersion = version
+  getCount(name, version)
   await GetVersionList({ name })
     .then((res) => {
       // console.log('GetVersionList', res)
@@ -108,7 +142,7 @@ const getVersionInfo = async (name, version) => {
       })
       GetVersionInfo({ name, version })
         .then((res) => {
-          console.log('GetVersionInfo', res)
+          // console.log('GetVersionInfo', res)
           if (res.code !== 200) {
             message.error(res.message)
             return
@@ -238,29 +272,36 @@ const downloadExcel = (data, fileName) => {
 .header_card {
   position: absolute;
   width: 100%;
-  height: 120px;
+  height: 100px;
 }
 .content_card {
   position: absolute;
   width: 100%;
-  height: calc(100% - 120px);
-  top: 135px;
+  height: calc(100% - 100px);
+  top: 115px;
   overflow-y: scroll;
 }
 .card_header {
   display: flex;
   align-items: center;
   font-size: 18px;
+  margin-top: 15px;
 }
 .card_title {
   display: flex;
   align-items: center;
-  margin-top: 10px;
+  margin-top: 5px;
   font-size: 16px;
+}
+.content {
+  margin-top: 10px;
 }
 .content_header {
   display: flex;
   justify-content: space-between;
+}
+:deep(.ant-card .ant-card-body) {
+  padding: 4px 20px;
 }
 </style>
 <style scoped src="@/atdv/primary-btn.css"></style>
@@ -269,3 +310,4 @@ const downloadExcel = (data, fileName) => {
 <style scoped src="@/atdv/radio-btn.css"></style>
 <style scoped src="@/atdv/select.css"></style>
 <style scoped src="@/atdv/checkbox.css"></style>
+<style scoped src="@/atdv/tab.css"></style>

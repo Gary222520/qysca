@@ -12,7 +12,7 @@
             @change="() => getNameList()"
             @search="() => findProject()"></a-input-search>
           <template #overlay>
-            <a-menu v-if="menu.items.length">
+            <a-menu v-if="menu.items.length" style="max-height: 300px; width: 250px; overflow-y: scroll">
               <a-menu-item v-for="(item, index) in menu.items" :key="index" @click="() => chooseName(item)">
                 {{ item }}
               </a-menu-item>
@@ -61,13 +61,13 @@
                       @click.stop="lock(app, index)"
                       :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
                   </a-tooltip>
-                  <a-tooltip v-if="app.release">
+                  <a-tooltip v-if="app.release && !app.releaseStatus">
                     <template #title>取消发布</template>
                     <a-tag color="success" @click="release(app, index)" style="margin-right: 10px; cursor: pointer">
                       <template #icon><EyeOutlined /></template>已发布
                     </a-tag>
                   </a-tooltip>
-                  <a-tooltip v-else>
+                  <a-tooltip v-if="!app.release && !app.releaseStatus">
                     <template #title>点击发布</template>
                     <a-popconfirm v-model:open="app.popconfirm" title="选择发布类型">
                       <template #cancelButton></template>
@@ -79,6 +79,10 @@
                       <CloudUploadOutlined :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
                     </a-popconfirm>
                   </a-tooltip>
+                  <div v-if="app.releaseStatus" style="display: flex; align-items: center">
+                    <LoadingOutlined :style="{ fontSize: '20px', color: '#6f005f' }" />
+                    <div style="margin-left: 10px">{{ app.releaseStatus }}</div>
+                  </div>
                 </div>
               </div>
               <div style="display: flex; align-items: center">
@@ -128,7 +132,7 @@
           @change="init" />
       </div>
     </a-card>
-    <AddAppModal ref="addAppModal" @success="(dep) => addAppComplete(dep)"></AddAppModal>
+    <AddAppModal ref="addAppModal" @success="(app) => addAppComplete(app)"></AddAppModal>
     <AddDepModal ref="addDepModal" @success="refresh(data.currentKey)"></AddDepModal>
     <AddComModal ref="addComModal" @success="refresh(data.currentKey)"></AddComModal>
     <UpgradeAppModal ref="upgradeAppModal" @success="refresh(data.currentKey, true)"></UpgradeAppModal>
@@ -204,37 +208,16 @@ const data = reactive({
 const menu = reactive({
   items: []
 })
-const table = reactive({
-  datasource: [],
-  columns: [
-    { title: '组织ID', dataIndex: 'groupId', key: 'groupId', width: 120 },
-    { title: '工件ID', dataIndex: 'artifactId', key: 'artifactId', width: 120 },
-    { title: '项目类型', dataIndex: 'type', key: 'type', width: 120 },
-    { title: '语言', dataIndex: 'language', key: 'language', width: 120 },
-    { title: '构建工具', dataIndex: 'builder', key: 'builder', width: 120 },
-    { title: '扫描对象', dataIndex: 'scanner', key: 'scanner', width: 150 },
-    { title: '最近一次更新时间', dataIndex: 'time', key: 'time', width: 210 },
-    { title: '备注', dataIndex: 'description', key: 'description' },
-    { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
-  ],
-  pagination: {
-    current: 1,
-    total: 0,
-    pageSize: 5,
-    showSizeChanger: false,
-    hideOnSinglePage: true
-  }
-})
 const pagination = reactive({
   current: 1,
   total: 0,
-  pageSize: 5,
+  pageSize: 8,
   showSizeChanger: false,
   hideOnSinglePage: true
 })
 
 const getProjectList = async () => {
-  await GetProjectList({ number: 1, size: 10 })
+  await GetProjectList({ number: 1, size: 8 })
     .then((res) => {
       if (res.code !== 200) {
         message.error(res.message)
@@ -300,7 +283,10 @@ const changeVersion = async (app, version) => {
   if (version === undefined) {
     app.selection = {}
     await getVersionList(app, app.name)
-    if (app.versions.length === 0) return
+    if (app.versions.length === 0) {
+      getProjectList()
+      return
+    }
     version = app.versions[0]
   }
   await GetVersionInfo({ name: app.name, version })
@@ -364,6 +350,10 @@ const findSubProject = async (app) => {
 }
 
 const refresh = async (index, versionChange = false) => {
+  if (index === undefined || index === null || index === '') {
+    getProjectList()
+    return
+  }
   data.currentKey = index
   const app = data.appList[index]
   if (versionChange) await changeVersion(app)
@@ -379,9 +369,9 @@ const addApplication = () => {
   addAppModal.value.open()
 }
 
-const addAppComplete = async (dep) => {
+const addAppComplete = async (app) => {
   await getProjectList()
-  if (dep) addDepModal.value.open(data.currentApp, true)
+  if (app) addDepModal.value.open(app, true)
 }
 
 const addComponent = (app, index) => {
@@ -422,16 +412,20 @@ const lock = async (app, index) => {
 
 const release = async (app, index, type) => {
   data.currentKey = index
+  app.releaseStatus = app.release ? '取消发布中...' : '发布中...'
   ChangeRelease({ name: app.name, version: app.version, type })
     .then((res) => {
       if (res.code !== 200) {
+        app.releaseStatus = null
         message.error(res.message)
         return
       }
       // console.log('ChangeRelease', res)
+      app.releaseStatus = null
       refresh(index)
     })
     .catch((err) => {
+      app.releaseStatus = null
       console.error(err)
     })
 }
@@ -444,13 +438,13 @@ const release = async (app, index, type) => {
 }
 .title {
   font-weight: bold;
-  font-size: 24px;
+  font-size: 20px;
   margin-bottom: 15px;
 }
 .content_card {
   position: absolute;
   width: 100%;
-  height: calc(100% - 32px);
+  height: calc(100% - 30px);
   overflow-y: scroll;
 }
 .operations {

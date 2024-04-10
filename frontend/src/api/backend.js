@@ -63,6 +63,32 @@ export const API = {
   // 删除闭源组件
   DELETE_COMPONENT: '/qysca/component/deleteCloseComponent',
 
+  // 许可证库界面查看许可证列表
+  ALL_LICENSE: '/qysca/license/getLicensePage',
+  // 获取某个应用的许可证列表
+  LICENSE_LIST: '/qysca/license/getLicenseList',
+  // 查看许可证详细内容
+  LICENSE_INFO: '/qysca/license/getLicenseInfo',
+  // 在某个应用中增加许可证
+  ADD_LICENSE: '/qysca/license/addAppLicense',
+  // 删除某个应用许可证
+  DELETE_LICENSE: '/qysca/license/deleteAppLicense',
+  // 查看应用的许可证冲突信息
+  LICENSE_CONFLICT: '/qysca/license/getLicenseConflict',
+
+  // 查看漏洞库界面
+  ALL_VUL: '/qysca/vulnerability/getVulnerabilityPage',
+  // 获取某个应用的漏洞列表
+  VUL_LIST: '/qysca/vulnerability/getVulnerabilityList',
+  // 查看某个漏洞的详细信息
+  VUL_INFO: '/qysca/vulnerability/getVulnerabilityById',
+  // 查看某个漏洞类型的详细信息
+  VUL_TYPE_INFO: '/qysca/vulnerability/getCweById',
+  // 在某个应用中增加漏洞信息
+  ADD_VUL: '/qysca/vulnerability/addAppVulnerability',
+  // 在某个应用中删除漏洞信息
+  DELETE_VUL: '/qysca/vulnerability/deleteAppVulnerability',
+
   // 文件上传
   FILE_UPLOAD: '/qysca/file/chunk',
   // 文件合并

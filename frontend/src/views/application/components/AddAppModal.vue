@@ -6,7 +6,7 @@
     <div style="display: flex; margin-top: 20px">
       <a-form :model="formState" ref="formRef" name="application" :label-col="{ span: 8 }">
         <a-form-item label="应用名称" name="name" :rules="[{ required: true, message: '请输入应用名称' }]">
-          <a-input v-model:value="formState.name" :placeholder="formState.artifactId" style="width: 300px" />
+          <a-input v-model:value="formState.name" style="width: 300px" />
         </a-form-item>
         <a-form-item
           label="版本编号"
@@ -32,7 +32,7 @@
     <div class="button">
       <a-button class="cancel-btn" @click="close">取消</a-button>
       <a-button class="btn" @click="submit(false)">新建</a-button>
-      <a-button class="btn" @click="submit(true)">新建并添加依赖信息</a-button>
+      <a-button class="btn" @click="submit(true)">新建并扫描</a-button>
     </div>
   </a-modal>
 </template>
@@ -97,7 +97,8 @@ const submit = (dep) => {
           }
           message.success('新增应用成功')
           data.open = false
-          emit('success', dep)
+          if (dep) emit('success', params)
+          else emit('success')
           setTimeout(() => {
             clear()
           }, 500)
