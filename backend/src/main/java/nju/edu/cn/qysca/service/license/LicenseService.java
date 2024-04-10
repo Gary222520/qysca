@@ -2,6 +2,7 @@ package nju.edu.cn.qysca.service.license;
 
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
 import nju.edu.cn.qysca.domain.license.dtos.LicenseBriefDTO;
+import nju.edu.cn.qysca.domain.license.dtos.LicenseConflictInfoDTO;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -56,4 +57,13 @@ public interface LicenseService {
      * @return Page<LicenseBriefDTO> 许可证库界面详细信息
      */
     Page<LicenseBriefDTO> getLicensePage(String name, int page, int size);
+
+    /**
+     * 获取应用的许可证冲突信息
+     *
+     * @param name 名称
+     * @param version 版本
+     * @return 许可证冲突信息
+     */
+    LicenseConflictInfoDTO getLicenseConflictInformation(String name, String version);
 }
