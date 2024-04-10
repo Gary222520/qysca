@@ -68,90 +68,118 @@ public class SBOMServiceImpl implements SBOMService {
             throw new PlatformException(500, "应用不存在: name= " + applicationSearchDTO.getName() + " ;version= " + applicationSearchDTO.getVersion());
         }
 
-        List<SbomDTO> sbomDTOS = new ArrayList<>();
-        if (applicationDO.getChildApplication() == null && applicationDO.getChildComponent() == null){
-            for (Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()){
-                for (String id: entry.getValue())
-                    sbomDTOS.add(exportSBOM(entry.getKey(),id));
-            }
-            for (String appId : applicationDO.getChildApplication()){
-                ApplicationDO sonAppDO = applicationDao.findOneById(appId);
-                String appComponentId = appComponentDao.findByNameAndVersion(sonAppDO.getName(), sonAppDO.getVersion()).getId();
-                sbomDTOS.add(exportSBOM("app", appComponentId));
-            }
-        } else {
-            // todo
+        // 生成临时文件夹
+        Date now = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String timeStamp = dateFormat.format(now);
+        File tempDir = new File(tempFolder, timeStamp);
+        if (!tempDir.exists()) {
+            tempDir.mkdirs();
         }
 
-        if (sbomDTOS.size() > 1){
-            Date now = new Date();
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-            String timeStamp = dateFormat.format(now);
-            File tempDir = new File(tempFolder, timeStamp);
-            if (!tempDir.exists()) {
-                tempDir.mkdirs();
-            }
-
+        try {
+            // 生成sbom文件
             File dir = new File(tempDir, "SBOM");
-            for (SbomDTO sbomDTO: sbomDTOS){
-                File file = new File(dir, sbomDTO.getName() + "-" + sbomDTO.getVersion() + ".json");
-                try {
-                    // 将sbomDTO变为json
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    String json = objectMapper.writeValueAsString(sbomDTO);
+            exportSBOM(applicationDO.getId(), dir);
 
-                    // 将 SBOM JSON 写入临时文件
-                    FileWriter writer = new FileWriter(file);
-                    writer.write(json);
-                    writer.close();
-
-                } catch (IOException e) {
-                    file.delete();
-                    throw new PlatformException(500, "SBOM导出失败");
+            // todo 打包文件夹
+            ZipUtil.zipDirectory(tempDir, dir);
+            File zip = new File(tempDir,dir.getName() + ".zip");
+            // 写入HttpServletResponse请求
+            response.setContentType("application/octet-stream");
+            response.setHeader("Content-Disposition", "attachment; filename=" + zip.getName());
+            try (InputStream inputStream = new FileInputStream(zip);
+                 OutputStream outputStream = response.getOutputStream()) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
                 }
+                outputStream.flush();
             }
-
-            try {
-                // todo
-                ZipUtil.zipDirectory(tempDir, dir);
-                File zip = new File(tempDir,dir.getName() + ".zip");
-                response.setContentType("application/octet-stream");
-                response.setHeader("Content-Disposition", "attachment; filename=" + zip.getName());
-                try (InputStream inputStream = new FileInputStream(zip);
-                     OutputStream outputStream = response.getOutputStream()) {
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        outputStream.write(buffer, 0, bytesRead);
-                    }
-                    outputStream.flush();
-                }
-            } catch (IOException e){
-                throw new PlatformException(500, "SBOM导出失败");
-            }
-        } else if (sbomDTOS.size()==1){
-            //todo
+        } catch (IOException e){
+            throw new PlatformException(500, "SBOM导出失败");
         }
     }
 
-    private SbomDTO exportSBOM(String language, String componentId){
+    /**
+     * 在指定dir下，导出SBOM（递归的）
+     * @param appId 应用id
+     * @param dir 目录
+     */
+    private void exportSBOM(String appId, File dir){
+        ApplicationDO applicationDO = applicationDao.findOneById(appId);
+        if (applicationDO.getChildApplication() == null && applicationDO.getChildComponent() == null) {
+            // 如果应用没有子组件和子应用了，那么生成一个json文件
+            AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
+            SbomDTO sbomDTO = getSbomDTO("app", appComponentDO.getId());
+            File file = new File(dir, sbomDTO.getName() + "-" + sbomDTO.getVersion() + ".json");
+            try {
+                // 将sbomDTO变为json
+                ObjectMapper objectMapper = new ObjectMapper();
+                String json = objectMapper.writeValueAsString(sbomDTO);
+
+                // 将 SBOM JSON 写入临时文件
+                FileWriter writer = new FileWriter(file);
+                writer.write(json);
+                writer.close();
+            } catch (IOException e) {
+                file.delete();
+                throw new PlatformException(500, "SBOM导出失败");
+            }
+        } else {
+            // 如果应用还有子组件和子应用，那么先生成一个文件夹
+            File sonDir = new File(dir, applicationDO.getName());
+            // 为每个子组件生成一个json
+            for (Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()){
+                for (String childComponentId: entry.getValue()){
+                   SbomDTO sbomDTO =  getSbomDTO(entry.getKey(), childComponentId);
+
+                    File file = new File(sonDir, sbomDTO.getName() + "-" + sbomDTO.getVersion() + ".json");
+                    try {
+                        // 将sbomDTO变为json
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        String json = objectMapper.writeValueAsString(sbomDTO);
+
+                        // 将 SBOM JSON 写入临时文件
+                        FileWriter writer = new FileWriter(file);
+                        writer.write(json);
+                        writer.close();
+                    } catch (IOException e) {
+                        file.delete();
+                        throw new PlatformException(500, "SBOM导出失败");
+                    }
+                }
+            }
+            // 继续递归导出子应用
+            for (String childAppId : applicationDO.getChildApplication()){
+                exportSBOM(childAppId, sonDir);
+            }
+        }
+    }
+
+    /**
+     * 生成SbomDTO， 相当于一个json文件
+     * @param language 语言
+     * @param componentId 组件id
+     * @return SbomDTO
+     */
+    private SbomDTO getSbomDTO(String language, String componentId){
         SbomDTO sbomDTO = new SbomDTO();
         List<SbomComponentDTO> sbomComponentDTOList = new ArrayList<>();
 
 
         switch (language){
             case "app":{
+                // 在这里认为，能进入这里的都是单一语言app，并且已经发布过，能在appComponentDao中找到
                 AppComponentDO appComponentDO = appComponentDao.getById(componentId);
                 sbomDTO.setName(appComponentDO.getName());
                 sbomDTO.setVersion(appComponentDO.getVersion());
-
                 List<AppDependencyTableDO> appDependencyTableDOS = appDependencyTableDao.findAllByNameAndVersion(appComponentDO.getName(), appComponentDO.getVersion());
-                for (AppDependencyTableDO dependencyTable : appDependencyTableDOS){
 
-                    // todo
-                    SbomAppComponentDTO sbomComponentDTO = new SbomAppComponentDTO();
-                    sbomComponentDTO.setName(dependencyTable.getCName());
-                    sbomComponentDTO.setVersion(dependencyTable.getCVersion());
+                for (AppDependencyTableDO dependencyTable : appDependencyTableDOS){
+                    // todo 语言问题
+                    sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), dependencyTable.getLanguage()));
                 }
                 break;
             }
@@ -209,10 +237,18 @@ public class SBOMServiceImpl implements SBOMService {
         return sbomDTO;
     }
 
-    private SbomComponentDTO getComponentDTO(String name, String version, boolean direct, String language){
-        switch (language){
+    /**
+     * 生成ComponentDTO，相当于json文件中的一个component
+     * @param cName 组件名
+     * @param cVersion 组件版本
+     * @param direct 是否直接依赖
+     * @param cLanguage 组件语言
+     * @return SbomComponentDTO
+     */
+    private SbomComponentDTO getComponentDTO(String cName, String cVersion, boolean direct, String cLanguage){
+        switch (cLanguage){
             case "java": {
-                JavaComponentDO component = javaComponentDao.findByNameAndVersion(name, version);
+                JavaComponentDO component = javaComponentDao.findByNameAndVersion(cName, cVersion);
 
                 SbomJavaComponentDTO sbomJavaComponentDTO = new SbomJavaComponentDTO();
                 sbomJavaComponentDTO.setGroup(component.getName().split(":")[0]);
@@ -234,7 +270,7 @@ public class SBOMServiceImpl implements SBOMService {
                 return sbomJavaComponentDTO;
             }
             case "golang": {
-                GoComponentDO component = goComponentDao.findByNameAndVersion(name, version);
+                GoComponentDO component = goComponentDao.findByNameAndVersion(cName, cVersion);
 
                 SbomGoComponentDTO sbomGoComponentDTO = new SbomGoComponentDTO();
                 sbomGoComponentDTO.setNamespace(component.getName().split("/")[0]);
@@ -252,7 +288,7 @@ public class SBOMServiceImpl implements SBOMService {
                 return sbomGoComponentDTO;
             }
             case "javaScript": {
-                JsComponentDO component = jsComponentDao.findByNameAndVersion(name, version);
+                JsComponentDO component = jsComponentDao.findByNameAndVersion(cName, cVersion);
 
                 SbomJsComponentDTO sbomJsComponentDTO = new SbomJsComponentDTO();
                 sbomJsComponentDTO.setNamespace(component.getName().split("/")[0]);
@@ -271,7 +307,7 @@ public class SBOMServiceImpl implements SBOMService {
 
             }
             case "python": {
-                PythonComponentDO component = pythonComponentDao.findByNameAndVersion(name, version);
+                PythonComponentDO component = pythonComponentDao.findByNameAndVersion(cName, cVersion);
 
                 SbomPythonComponentDTO sbomPythonComponentDTO = new SbomPythonComponentDTO();
                 sbomPythonComponentDTO.setName(component.getName());
