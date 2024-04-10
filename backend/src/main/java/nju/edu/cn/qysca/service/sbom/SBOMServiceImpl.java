@@ -1,5 +1,6 @@
 package nju.edu.cn.qysca.service.sbom;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.dao.application.AppComponentDao;
 import nju.edu.cn.qysca.dao.application.AppDependencyTableDao;
 import nju.edu.cn.qysca.dao.application.AppDependencyTreeDao;
@@ -12,15 +13,15 @@ import nju.edu.cn.qysca.domain.application.dtos.ApplicationSearchDTO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.sbom.*;
 import nju.edu.cn.qysca.exception.PlatformException;
+import nju.edu.cn.qysca.utils.ZipUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,6 +59,8 @@ public class SBOMServiceImpl implements SBOMService {
     private PythonDependencyTreeDao pythonDependencyTreeDao;
     @Autowired
     private PythonDependencyTableDao pythonDependencyTableDao;
+    @Value("${tempSBOMPath}")
+    private String tempFolder;
 
     public void exportSBOM(ApplicationSearchDTO applicationSearchDTO, HttpServletResponse response) {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(applicationSearchDTO.getName(), applicationSearchDTO.getVersion());
@@ -65,12 +68,70 @@ public class SBOMServiceImpl implements SBOMService {
             throw new PlatformException(500, "应用不存在: name= " + applicationSearchDTO.getName() + " ;version= " + applicationSearchDTO.getVersion());
         }
 
+        List<SbomDTO> sbomDTOS = new ArrayList<>();
         if (applicationDO.getChildApplication() == null && applicationDO.getChildComponent() == null){
-
+            for (Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()){
+                for (String id: entry.getValue())
+                    sbomDTOS.add(exportSBOM(entry.getKey(),id));
+            }
+            for (String appId : applicationDO.getChildApplication()){
+                ApplicationDO sonAppDO = applicationDao.findOneById(appId);
+                String appComponentId = appComponentDao.findByNameAndVersion(sonAppDO.getName(), sonAppDO.getVersion()).getId();
+                sbomDTOS.add(exportSBOM("app", appComponentId));
+            }
         } else {
-
+            // todo
         }
 
+        if (sbomDTOS.size() > 1){
+            Date now = new Date();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+            String timeStamp = dateFormat.format(now);
+            File tempDir = new File(tempFolder, timeStamp);
+            if (!tempDir.exists()) {
+                tempDir.mkdirs();
+            }
+
+            File dir = new File(tempDir, "SBOM");
+            for (SbomDTO sbomDTO: sbomDTOS){
+                File file = new File(dir, sbomDTO.getName() + "-" + sbomDTO.getVersion() + ".json");
+                try {
+                    // 将sbomDTO变为json
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    String json = objectMapper.writeValueAsString(sbomDTO);
+
+                    // 将 SBOM JSON 写入临时文件
+                    FileWriter writer = new FileWriter(file);
+                    writer.write(json);
+                    writer.close();
+
+                } catch (IOException e) {
+                    file.delete();
+                    throw new PlatformException(500, "SBOM导出失败");
+                }
+            }
+
+            try {
+                // todo
+                ZipUtil.zipDirectory(tempDir, dir);
+                File zip = new File(tempDir,dir.getName() + ".zip");
+                response.setContentType("application/octet-stream");
+                response.setHeader("Content-Disposition", "attachment; filename=" + zip.getName());
+                try (InputStream inputStream = new FileInputStream(zip);
+                     OutputStream outputStream = response.getOutputStream()) {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+                    outputStream.flush();
+                }
+            } catch (IOException e){
+                throw new PlatformException(500, "SBOM导出失败");
+            }
+        } else if (sbomDTOS.size()==1){
+            //todo
+        }
     }
 
     private SbomDTO exportSBOM(String language, String componentId){
@@ -87,7 +148,7 @@ public class SBOMServiceImpl implements SBOMService {
                 List<AppDependencyTableDO> appDependencyTableDOS = appDependencyTableDao.findAllByNameAndVersion(appComponentDO.getName(), appComponentDO.getVersion());
                 for (AppDependencyTableDO dependencyTable : appDependencyTableDOS){
 
-
+                    // todo
                     SbomAppComponentDTO sbomComponentDTO = new SbomAppComponentDTO();
                     sbomComponentDTO.setName(dependencyTable.getCName());
                     sbomComponentDTO.setVersion(dependencyTable.getCVersion());
