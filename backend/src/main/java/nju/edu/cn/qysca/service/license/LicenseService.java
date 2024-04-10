@@ -16,14 +16,6 @@ public interface LicenseService {
     List<String> searchLicense(String queryName);
 
     /**
-     * 获取许可证冲突信息
-     *
-     * @param licenses 许可证列表
-     * @return 许可证冲突信息
-     */
-    LicenseConflictInfoDTO getLicenseConflictInformation(List<LicenseDO> licenses);
-
-    /**
      * 分页查询应用许可证列表
      * @param name 名称
      * @param version 版本
@@ -65,4 +57,13 @@ public interface LicenseService {
      * @return Page<LicenseBriefDTO> 许可证库界面详细信息
      */
     Page<LicenseBriefDTO> getLicensePage(String name, int page, int size);
+
+    /**
+     * 获取应用的许可证冲突信息
+     *
+     * @param name 名称
+     * @param version 版本
+     * @return 许可证冲突信息
+     */
+    LicenseConflictInfoDTO getLicenseConflictInformation(String name, String version);
 }

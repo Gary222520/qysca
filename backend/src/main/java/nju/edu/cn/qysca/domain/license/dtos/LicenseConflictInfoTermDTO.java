@@ -16,7 +16,7 @@ import java.util.List;
 @ApiModel(description = "许可证冲突信息条目")
 public class LicenseConflictInfoTermDTO {
 
-    @ApiModelProperty(value = "许可证条款题目", example = "保留许可信息")
+    @ApiModelProperty(value = "许可证条款名", example = "保留许可信息")
     private String title;
 
     @ApiModelProperty(value = "符合该条款的许可证列表", notes = "对于义务，表示这些许可证必须满足该条款; 对于权利，表示这些许可证允许行使该条款的权利")

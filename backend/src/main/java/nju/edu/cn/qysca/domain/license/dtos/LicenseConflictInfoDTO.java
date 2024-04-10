@@ -14,10 +14,10 @@ import java.util.List;
 @ApiModel(description = "许可证冲突信息")
 public class LicenseConflictInfoDTO {
 
-    @ApiModelProperty(value = "义务条目信息")
+    @ApiModelProperty(value = "义务冲突信息条目")
     private List<LicenseConflictInfoTermDTO> obligations_terms;
 
-    @ApiModelProperty(value = "权利条目信息")
+    @ApiModelProperty(value = "权利冲突信息条目")
     private List<LicenseConflictInfoTermDTO> rights_terms;
 
 }

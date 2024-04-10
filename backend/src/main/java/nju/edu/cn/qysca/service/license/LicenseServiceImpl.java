@@ -64,13 +64,111 @@ public class LicenseServiceImpl implements LicenseService{
     }
 
     /**
-     * 获取许可证冲突信息
-     *
-     * @param licenses 许可证列表
-     * @return 许可证冲突信息
+     * 分页查询应用许可证列表
+     * @param name 名称
+     * @param version 版本
+     * @return Page<LicenseBriefDTO> 许可证简明信息
      */
     @Override
-    public LicenseConflictInfoDTO getLicenseConflictInformation(List<LicenseDO> licenses) {
+    public Page<LicenseBriefDTO> getLicenseList(String name, String version, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
+        Page<LicenseDO> temp = licenseDao.getLicenseList(Arrays.asList(applicationDO.getLicenses()), pageable);
+        Page<LicenseBriefDTO> result = temp.map(licenseDO -> new LicenseBriefDTO(licenseDO.getName(), licenseDO.getFullName(), licenseDO.getIsOsiApproved(), licenseDO.getIsFsfApproved(), licenseDO.getIsSpdxApproved(), licenseDO.getRiskLevel(), licenseDO.getGplCompatibility()));
+        return result;
+    }
+
+    /**
+     * 添加应用许可证
+     * @param name 名称
+     * @param version 版本
+     * @param licenseName 许可证名称
+     * @return 添加应用许可证是否成功
+     */
+    @Override
+    @Transactional
+    public Boolean addAppLicense(String name, String version, String licenseName) {
+        // 已经发布或锁定的禁止更新
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
+        if(applicationDO.getRelease() || applicationDO.getLock()){
+            throw new PlatformException(500, "组件已经发布或锁定，禁止更新");
+        }
+        List<String> licenses = searchLicense(licenseName);
+        Set<String> licenseSet = new HashSet<>(Arrays.asList(applicationDO.getLicenses()));
+        licenseSet.addAll(licenses);
+        applicationDO.setLicenses(licenseSet.toArray(new String[0]));
+        applicationDao.save(applicationDO);
+        AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(name, version);
+        if(appComponentDO != null) {
+            appComponentDO.setLicenses(licenseSet.toArray(new String[0]));
+            appComponentDao.save(appComponentDO);
+        }
+        return true;
+    }
+
+    /**
+     * 删除应用许可证
+     * @param name 名称
+     * @param version 版本
+     * @param licenseName 许可证名称
+     * @return 删除许可证是否成功
+     */
+    @Override
+    @Transactional
+    public Boolean deleteAppLicense(String name, String version, String licenseName) {
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
+        if(applicationDO.getRelease() || applicationDO.getLock()){
+            throw new PlatformException(500, "组件已经发布或锁定，禁止更新");
+        }
+        List<String> temp = new ArrayList<>(Arrays.asList(applicationDO.getLicenses()));
+        temp.remove(licenseName);
+        applicationDO.setLicenses(temp.toArray(new String[0]));
+        applicationDao.save(applicationDO);
+        AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(name, version);
+        if(appComponentDO != null) {
+            appComponentDO.setLicenses(temp.toArray(new String[0]));
+            appComponentDao.save(appComponentDO);
+        }
+        return true;
+    }
+
+    /**
+     * 获取许可证详细信息
+     * @param name 许可证名称
+     * @return LicenseDO 许可证详细信息
+     */
+    @Override
+    public LicenseDO getLicenseInfo(String name) {
+        return licenseDao.findByName(name);
+    }
+
+    /**
+     * 许可证库界面查看详细信息
+     * @param name 名称
+     * @param page 页数
+     * @param size 大小
+     * @return Page<LicenseBriefDTO> 许可证库界面详细信息
+     */
+    @Override
+    public Page<LicenseBriefDTO> getLicensePage(String name, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<LicenseDO> temp = licenseDao.getLicensePage(name, pageable);
+        Page<LicenseBriefDTO> result = temp.map(licenseDO -> new LicenseBriefDTO(licenseDO.getName(), licenseDO.getFullName(), licenseDO.getIsOsiApproved(), licenseDO.getIsFsfApproved(), licenseDO.getIsSpdxApproved(), licenseDO.getRiskLevel(), licenseDO.getGplCompatibility()));
+        return result;
+    }
+
+    /**
+     * 获取应用的许可证冲突信息
+     *
+     * @param name 名称
+     * @param version 版本
+     * @return 许可证冲突信息
+     */
+    public LicenseConflictInfoDTO getLicenseConflictInformation(String name, String version) {
+
+        // 获取应用的许可证列表
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
+        List<LicenseDO> licenses = licenseDao.findLicenseList(Arrays.asList(applicationDO.getLicenses()));
 
         Set<String> obligationsSet = new HashSet<>();
         Set<String> rightsSet = new HashSet<>();
@@ -89,6 +187,7 @@ public class LicenseServiceImpl implements LicenseService{
         // 记录每种义务有哪些许可证必须，哪些许可证无需
         for (String obligation : obligationsSet){
             LicenseConflictInfoTermDTO conflictInfoTerm = new LicenseConflictInfoTermDTO();
+            conflictInfoTerm.setTitle(obligation);
             conflictInfoTerm.setPos_licenses(new ArrayList<>());
             conflictInfoTerm.setNeg_licenses(new ArrayList<>());
 
@@ -104,6 +203,7 @@ public class LicenseServiceImpl implements LicenseService{
         // 记录每种权利有哪些许可证允许，哪些许可证禁止
         for (String right : rightsSet){
             LicenseConflictInfoTermDTO conflictInfoTerm = new LicenseConflictInfoTermDTO();
+            conflictInfoTerm.setTitle(right);
             conflictInfoTerm.setPos_licenses(new ArrayList<>());
             conflictInfoTerm.setNeg_licenses(new ArrayList<>());
 
@@ -267,65 +367,4 @@ public class LicenseServiceImpl implements LicenseService{
         }
     }
 
-    @Override
-    public Page<LicenseBriefDTO> getLicenseList(String name, String version, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
-        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
-        Page<LicenseDO> temp = licenseDao.getLicenseList(Arrays.asList(applicationDO.getLicenses()), pageable);
-        Page<LicenseBriefDTO> result = temp.map(licenseDO -> new LicenseBriefDTO(licenseDO.getName(), licenseDO.getFullName(), licenseDO.getIsOsiApproved(), licenseDO.getIsFsfApproved(), licenseDO.getIsSpdxApproved(), licenseDO.getRiskLevel(), licenseDO.getGplCompatibility()));
-        return result;
-    }
-
-    @Override
-    @Transactional
-    public Boolean addAppLicense(String name, String version, String licenseName) {
-        // 已经发布或锁定的禁止更新
-        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
-        if(applicationDO.getRelease() || applicationDO.getLock()){
-            throw new PlatformException(500, "组件已经发布或锁定，禁止更新");
-        }
-        List<String> licenses = searchLicense(licenseName);
-        Set<String> licenseSet = new HashSet<>(Arrays.asList(applicationDO.getLicenses()));
-        licenseSet.addAll(licenses);
-        applicationDO.setLicenses(licenseSet.toArray(new String[0]));
-        applicationDao.save(applicationDO);
-        AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(name, version);
-        if(appComponentDO != null) {
-            appComponentDO.setLicenses(licenseSet.toArray(new String[0]));
-            appComponentDao.save(appComponentDO);
-        }
-        return true;
-    }
-
-    @Override
-    @Transactional
-    public Boolean deleteAppLicense(String name, String version, String licenseName) {
-        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
-        if(applicationDO.getRelease() || applicationDO.getLock()){
-            throw new PlatformException(500, "组件已经发布或锁定，禁止更新");
-        }
-        List<String> temp = new ArrayList<>(Arrays.asList(applicationDO.getLicenses()));
-        temp.remove(licenseName);
-        applicationDO.setLicenses(temp.toArray(new String[0]));
-        applicationDao.save(applicationDO);
-        AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(name, version);
-        if(appComponentDO != null) {
-            appComponentDO.setLicenses(temp.toArray(new String[0]));
-            appComponentDao.save(appComponentDO);
-        }
-        return true;
-    }
-
-    @Override
-    public LicenseDO getLicenseInfo(String name) {
-        return licenseDao.findByName(name);
-    }
-
-    @Override
-    public Page<LicenseBriefDTO> getLicensePage(String name, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
-        Page<LicenseDO> temp = licenseDao.getLicensePage(name, pageable);
-        Page<LicenseBriefDTO> result = temp.map(licenseDO -> new LicenseBriefDTO(licenseDO.getName(), licenseDO.getFullName(), licenseDO.getIsOsiApproved(), licenseDO.getIsFsfApproved(), licenseDO.getIsSpdxApproved(), licenseDO.getRiskLevel(), licenseDO.getGplCompatibility()));
-        return result;
-    }
 }
