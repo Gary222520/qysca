@@ -1,7 +1,11 @@
 <template>
   <div>
     <div class="operation">
-      <a-popconfirm v-model:open="data.popconfirm" placement="right">
+      <a-radio-group v-model:value="data.showConflict" style="margin-right: 20px">
+        <a-radio-button :value="false" @click="showLicenseList()" style="width: 90px">许可证</a-radio-button>
+        <a-radio-button :value="true" @click="showLicenseConflict()" style="width: 90px">冲突信息</a-radio-button>
+      </a-radio-group>
+      <a-popconfirm v-if="!data.showConflict" v-model:open="data.popconfirm" placement="right">
         <template #title>
           <div style="font-size: 16px">添加许可证</div>
         </template>
@@ -19,7 +23,12 @@
       </a-popconfirm>
     </div>
     <a-spin :spinning="data.spinning" tip="许可证信息加载中，请稍等...">
-      <a-table :data-source="data.datasource" :columns="data.columns" bordered :pagination="pagination">
+      <a-table
+        v-if="!data.showConflict"
+        :data-source="data.datasource"
+        :columns="data.columns"
+        bordered
+        :pagination="pagination">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">
             <div class="column_name" @click="showInfo(record)">{{ record.name }}</div>
@@ -68,15 +77,71 @@
         </template>
         <template #emptyText>暂无数据</template>
       </a-table>
+      <div v-else>
+        <a-table
+          size="small"
+          :data-source="conflict.datasource?.obligations_terms"
+          :columns="conflict.obligations"
+          :pagination="false"
+          bordered
+          style="margin-bottom: 10px">
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'title'">
+              <a-tooltip v-if="hasConflict(record)" placement="left">
+                <template #title>存在冲突</template>
+                <div style="display: flex; align-items: center">
+                  <ExclamationCircleOutlined :style="{ color: '#ff4d4f' }" />
+                  <div style="color: #ff4d4f; margin-left: 5px">{{ record.title }}</div>
+                </div>
+              </a-tooltip>
+              <div v-else>{{ record.title }}</div>
+            </template>
+            <template v-if="column.key === 'pos_licenses'">
+              <div>{{ arrToString(record.pos_licenses) }}</div>
+            </template>
+            <template v-if="column.key === 'neg_licenses'">
+              <div>{{ arrToString(record.neg_licenses) }}</div>
+            </template>
+          </template>
+          <template #emptyText>暂无数据</template>
+        </a-table>
+        <a-table
+          size="small"
+          :data-source="conflict.datasource?.rights_terms"
+          :columns="conflict.rights"
+          :pagination="false"
+          bordered
+          style="margin-bottom: 10px">
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'title'">
+              <div>{{ record.title }}</div>
+            </template>
+            <template v-if="column.key === 'pos_licenses'">
+              <div>{{ arrToString(record.pos_licenses) }}</div>
+            </template>
+            <template v-if="column.key === 'neg_licenses'">
+              <div>{{ arrToString(record.neg_licenses) }}</div>
+            </template>
+          </template>
+          <template #emptyText>暂无数据</template>
+        </a-table>
+      </div>
     </a-spin>
     <Drawer ref="drawer"></Drawer>
   </div>
 </template>
 
 <script setup>
-import { PlusOutlined, CheckOutlined, CloseOutlined, FileTextOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import {
+  PlusOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  FileTextOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined
+} from '@ant-design/icons-vue'
 import { reactive, ref, defineExpose, defineEmits, defineProps, onMounted } from 'vue'
-import { GetLicenseList, AddLicense, DeleteLicense } from '@/api/frontend'
+import { GetLicenseList, AddLicense, DeleteLicense, GetLicenseConflict } from '@/api/frontend'
 import Drawer from '@/components/LicenseDrawer.vue'
 import { message } from 'ant-design-vue'
 
@@ -86,7 +151,7 @@ const emit = defineEmits(['setCount'])
 const data = reactive({
   visible: false,
   spinning: false,
-  component: {},
+  showConflict: false,
   datasource: [],
   columns: [
     { title: '许可证', dataIndex: 'name', key: 'name' },
@@ -99,7 +164,23 @@ const data = reactive({
     { title: '操作', dataIndex: 'action', key: 'action', width: 120 }
   ],
   popconfirm: false,
-  input: ''
+  input: '',
+  locale: {
+    emptyText: '暂无内容'
+  }
+})
+const conflict = reactive({
+  datasource: [],
+  obligations: [
+    { title: '许可证义务', dataIndex: 'title', key: 'title', width: 100 },
+    { title: '必须', dataIndex: 'pos_licenses', key: 'pos_licenses', width: 200 },
+    { title: '无需', dataIndex: 'neg_licenses', key: 'neg_licenses', width: 200 }
+  ],
+  rights: [
+    { title: '许可证权利', dataIndex: 'title', key: 'title', width: 100 },
+    { title: '允许', dataIndex: 'pos_licenses', key: 'pos_licenses', width: 200 },
+    { title: '禁止', dataIndex: 'neg_licenses', key: 'neg_licenses', width: 200 }
+  ]
 })
 const app = reactive({
   name: '',
@@ -119,7 +200,15 @@ const pagination = reactive({
 const show = (name, version) => {
   app.name = name
   app.version = version
+  showLicenseList()
+}
+const showLicenseList = () => {
+  data.showConflict = false
   getLicenseList()
+}
+const showLicenseConflict = () => {
+  data.showConflict = true
+  getLicenseConflict()
 }
 const getLicenseList = (name = app.name, version = app.version, page = 1, size = 6) => {
   data.spinning = true
@@ -135,6 +224,23 @@ const getLicenseList = (name = app.name, version = app.version, page = 1, size =
       pagination.total = res.data.totalElements
       // pagination.current = page
       emit('setCount', { type: 'license', value: pagination.total })
+    })
+    .catch((err) => {
+      data.spinning = false
+      console.error(err)
+    })
+}
+const getLicenseConflict = () => {
+  data.spinning = true
+  GetLicenseConflict({ name: app.name, version: app.version })
+    .then((res) => {
+      // console.log('GetLicenseConflict', res)
+      data.spinning = false
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      conflict.datasource = res.data
     })
     .catch((err) => {
       data.spinning = false
@@ -186,11 +292,26 @@ const deleteLicense = (record) => {
 const showInfo = (record) => {
   drawer.value.open(record)
 }
+
+const hasConflict = (record) => {
+  return record.pos_licenses.length > 0 && record.neg_licenses.length > 0
+}
+const arrToString = (arr) => {
+  if (!arr) return
+  if (arr?.length === 0) return '-'
+  return arr
+    .reduce((pre, curr) => {
+      return `${pre}; ${curr.name}`
+    }, '')
+    .substring(1)
+}
 defineExpose({ show })
 </script>
 
 <style scoped>
 .operation {
+  display: flex;
+  align-items: center;
   margin-bottom: 20px;
 }
 .column_name {
@@ -246,6 +367,11 @@ defineExpose({ show })
 :deep(.ant-popconfirm .ant-popconfirm-description) {
   margin-inline-start: 0;
 }
+:deep(.ant-table-wrapper .ant-table.ant-table-small .ant-table-tbody > tr > td),
+:deep(.ant-table-wrapper .ant-table.ant-table-small .ant-table-thead > tr > th) {
+  padding: 8px 12px;
+}
 </style>
 <style scoped src="@/atdv/pagination.css"></style>
 <style scoped src="@/atdv/spin.css"></style>
+<style scoped src="@/atdv/radio-btn.css"></style>

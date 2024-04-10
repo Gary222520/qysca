@@ -73,13 +73,15 @@ export const API = {
   ADD_LICENSE: '/qysca/license/addAppLicense',
   // 删除某个应用许可证
   DELETE_LICENSE: '/qysca/license/deleteAppLicense',
+  // 查看应用的许可证冲突信息
+  LICENSE_CONFLICT: '/qysca/license/getLicenseConflict',
 
   // 查看漏洞库界面
-  ALL_VUL: '/qysca/vulnerability/getCvePage',
+  ALL_VUL: '/qysca/vulnerability/getVulnerabilityPage',
   // 获取某个应用的漏洞列表
-  VUL_LIST: '/qysca/vulnerability/getCveList',
+  VUL_LIST: '/qysca/vulnerability/getVulnerabilityList',
   // 查看某个漏洞的详细信息
-  VUL_INFO: '/qysca/vulnerability/getCveById',
+  VUL_INFO: '/qysca/vulnerability/getVulnerabilityById',
   // 查看某个漏洞类型的详细信息
   VUL_TYPE_INFO: '/qysca/vulnerability/getCweById',
   // 在某个应用中增加漏洞信息

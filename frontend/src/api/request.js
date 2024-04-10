@@ -33,6 +33,11 @@ instance.interceptors.response.use(
     return response.data
   },
   (error) => {
+    if (error.response.data.message === '登录认证失败') {
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
+      router.push('/login')
+    }
     return Promise.reject(error)
   }
 )
