@@ -6,10 +6,11 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
 
 import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,5 +22,5 @@ public class SubApplicationDTO {
     private List<ApplicationDO> subApplication;
 
     @ApiModelProperty(value = "子组件信息",example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
-    private List<ComponentDO> subComponent;
+    private Map<String, List<? extends ComponentDO>> subComponent;
 }

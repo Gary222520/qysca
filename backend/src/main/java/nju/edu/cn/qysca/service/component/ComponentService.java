@@ -3,7 +3,6 @@ package nju.edu.cn.qysca.service.component;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.*;
-import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -14,23 +13,22 @@ public interface ComponentService {
      * 分页查询组件
      *
      * @param searchComponentDTO 查询条件
-     * @return Page<ComponentDO> 查询结果
+     * @return Page<JavaComponentDO> 查询结果
      */
-    Page<ComponentDO> findComponentsPage(ComponentSearchDTO searchComponentDTO);
+    Page<? extends ComponentDO> findComponentsPage(ComponentSearchDTO searchComponentDTO);
 
     /**
      * 保存闭源组件信息
      * @param saveCloseComponentDTO 保存闭源组件接口信息
-     * @return 返回保存闭源组件是否成功
      */
-    Boolean saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO);
+    void saveCloseComponent(SaveCloseComponentDTO saveCloseComponentDTO);
 
     /**
      * 更新闭源组件信息
      * @param updateCloseComponentDTO 更新闭源组件接口信息
      * @return 更新闭源组件是否成功
      */
-    Boolean updateCloseComponent(UpdateCloseComponentDTO updateCloseComponentDTO);
+    void updateCloseComponent(UpdateCloseComponentDTO updateCloseComponentDTO);
 
     /**
      * 删除闭源组件
@@ -44,7 +42,7 @@ public interface ComponentService {
      * 查询组件依赖树信息
      *
      * @param componentGavDTO 组件gav
-     * @return DependencyTreeDO 依赖树信息
+     * @return JavaDependencyTreeDO 依赖树信息
      */
     DependencyTreeDO findComponentDependencyTree(ComponentGavDTO componentGavDTO);
 
@@ -69,15 +67,15 @@ public interface ComponentService {
     /**
      * 模糊查询组件名称
      * @param name 组件名称
+     * @param language 语言
      */
-    List<ComponentSearchNameDTO> searchComponentName(String name);
+    List<ComponentSearchNameDTO> searchComponentName(String name, String language);
 
     /**
      * 保存闭源组件依赖信息
      * @param saveCloseComponentDTO 保存闭源组件信息
-     * @return Boolean 保存闭源组件信息是否成功
      */
-    Boolean saveCloseComponentDependency(SaveCloseComponentDTO saveCloseComponentDTO);
+    void saveCloseComponentDependency(SaveCloseComponentDTO saveCloseComponentDTO);
 
     /**
      * 将闭源组件状态设置为RUNNING

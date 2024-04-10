@@ -24,15 +24,15 @@ public class ComponentController {
     @ApiOperation("分页查询组件")
     @PostMapping("/findComponentsPage")
     @PreAuthorize("@my.checkAuth('/qysca/component/findComponentsPage')")
-    public ResponseMsg<Page<ComponentDO>> findComponentsPage(@RequestBody ComponentSearchDTO dto) {
+    public ResponseMsg<Page<? extends ComponentDO>> findComponentsPage(@RequestBody ComponentSearchDTO dto) {
         return new ResponseMsg<>(componentService.findComponentsPage(dto));
     }
 
     @ApiOperation("模糊查询组件名称")
     @GetMapping("/searchComponentName")
     @PreAuthorize("@my.checkAuth('/qysca/component/searchComponentName')")
-    public ResponseMsg<List<ComponentSearchNameDTO>>  searchComponentName(@RequestParam String name) {
-        return new ResponseMsg<>(componentService.searchComponentName(name));
+    public ResponseMsg<List<ComponentSearchNameDTO>>  searchComponentName(@RequestParam String name, @RequestParam String language) {
+        return new ResponseMsg<>(componentService.searchComponentName(name, language));
     }
 
     @ApiOperation("新增闭源组件")

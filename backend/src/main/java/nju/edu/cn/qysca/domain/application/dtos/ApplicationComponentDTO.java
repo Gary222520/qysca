@@ -17,13 +17,13 @@ public class ApplicationComponentDTO {
     @ApiModelProperty(value = "父应用版本号", example = "1.0.0")
     private String parentVersion;
 
-    @ApiModelProperty(value = "组织Id", example = "nju.edu.cn")
-    private String groupId;
-
-    @ApiModelProperty(value = "工件Id", example = "qysca")
-    private String artifactId;
+    @ApiModelProperty(value = "名称", example = "qysca")
+    private String name;
 
     @ApiModelProperty(value= "版本号", example = "1.0.0")
     private String version;
+
+    @ApiModelProperty(value = "语言", example = "java")
+    private String language;
 
 }

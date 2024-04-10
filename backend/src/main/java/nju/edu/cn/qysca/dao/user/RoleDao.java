@@ -13,7 +13,7 @@ public interface RoleDao extends JpaRepository<RoleDO, String> {
      * @param id 角色Id
      * @return 角色名
      */
-    @Query("select name from RoleDO where id=?1")
+    @Query("select name from RoleDO where id=:id")
     String findNameById(String id);
 
     /**

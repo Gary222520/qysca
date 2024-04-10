@@ -14,6 +14,6 @@ public interface RolePermissionDao extends JpaRepository<RolePermissionDO,String
      * @param pid 权限Id
      * @return List<String> 角色信息
      */
-    @Query("select rid from RolePermissionDO where pid = ?1")
+    @Query("select rid from RolePermissionDO where pid = :pid")
     List<String> findRidsByPid(String pid);
 }

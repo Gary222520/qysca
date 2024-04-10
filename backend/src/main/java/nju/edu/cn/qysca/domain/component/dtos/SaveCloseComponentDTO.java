@@ -12,6 +12,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @ApiModel("保存闭源组件DTO")
 public class SaveCloseComponentDTO {
+
+    @ApiModelProperty(value = "名称", example = "my-component")
+    private String name;
+
+    @ApiModelProperty(value = "版本", example = "1.0.0")
+    private String version;
+
     @ApiModelProperty(value = "文件存储路径", example = "resources/static/upload/")
     private String filePath;
 

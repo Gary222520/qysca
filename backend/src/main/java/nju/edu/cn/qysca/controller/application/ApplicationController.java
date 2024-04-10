@@ -4,8 +4,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import nju.edu.cn.qysca.controller.ResponseMsg;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
-import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.*;
 import nju.edu.cn.qysca.service.application.ApplicationService;
@@ -115,20 +116,6 @@ public class ApplicationController {
     }
 
 
-/*    @ApiOperation("分页获取指定应用的版本信息")
-    @GetMapping("/findApplicationVersionPage")
-    public ResponseMsg<Page<ApplicationDO>> findApplicationVersionPage(@ApiParam(value = "应用名称", required = true) @RequestParam String name,
-                                                                   @ApiParam(value = "页码", required = true) @RequestParam int number,
-                                                                   @ApiParam(value = "页大小", required = true) @RequestParam int size) {
-        return new ResponseMsg<>(applicationService.findApplicationVersionPage(name, number, size));
-    }
-
-    @ApiOperation("检查指定应用扫描中组件的个数")
-    @GetMapping("/checkRunningApplication")
-    public ResponseMsg<Integer> checkRunningApplication(@ApiParam(value = "应用名称", required = true) @RequestParam String groupId, @RequestParam String artifactId) {
-        return new ResponseMsg<>(applicationService.checkRunningApplication(groupId, artifactId));
-    }*/
-
     @ApiOperation("获取指定应用的所有版本列表")
     @GetMapping("/getVersionsList")
     @PreAuthorize("@my.checkAuth('/qysca/application/getVersionsList')")
@@ -146,14 +133,14 @@ public class ApplicationController {
     @ApiOperation("查询应用依赖树信息")
     @PostMapping("/findApplicationDependencyTree")
     @PreAuthorize("@my.checkAuth('/qysca/application/findApplicationDependencyTree')")
-    public ResponseMsg<DependencyTreeDO> findApplicationDependencyTree(@RequestBody ApplicationSearchDTO dto) {
+    public ResponseMsg<AppDependencyTreeDO> findApplicationDependencyTree(@RequestBody ApplicationSearchDTO dto) {
         return new ResponseMsg<>(applicationService.findApplicationDependencyTree(dto));
     }
 
     @ApiOperation("分页查询应用依赖平铺信息")
     @PostMapping("/findApplicationDependencyTable")
     @PreAuthorize("@my.checkAuth('/qysca/application/findApplicationDependencyTable')")
-    public ResponseMsg<Page<ComponentTableDTO>> findApplicationDependencyTable(@RequestBody ApplicationSearchPageDTO dto) {
+    public ResponseMsg<Page<AppComponentTableDTO>> findApplicationDependencyTable(@RequestBody ApplicationSearchPageDTO dto) {
         return new ResponseMsg<>(applicationService.findApplicationDependencyTable(dto));
     }
 
@@ -189,9 +176,8 @@ public class ApplicationController {
     @ApiOperation("改变应用发布状态")
     @PostMapping("/changeReleaseState")
     @PreAuthorize("@my.checkAuth('/qysca/application/changeReleaseState')")
-    public ResponseMsg<Void> changeReleaseState(@RequestBody ChangeReleaseStateDTO changeReleaseStateDTO) {
-        applicationService.changeReleaseState(changeReleaseStateDTO);
-        return new ResponseMsg<>(null);
+    public ResponseMsg<List<ApplicationDO>> changeReleaseState(@RequestBody ChangeReleaseStateDTO changeReleaseStateDTO) {
+        return new ResponseMsg<>(applicationService.changeReleaseState(changeReleaseStateDTO));
     }
 
     @ApiOperation("导出应用SBOM")

@@ -1,17 +1,23 @@
 package nju.edu.cn.qysca.domain.application.dos;
 
 import com.vladmihalcea.hibernate.type.array.StringArrayType;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nju.edu.cn.qysca.domain.bu.dos.BuDO;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 @AllArgsConstructor
@@ -19,7 +25,8 @@ import javax.persistence.*;
 @Entity
 @Table(name = "plt_application", uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "version"})})
 @TypeDefs({
-        @TypeDef(name = "string-array", typeClass = StringArrayType.class)
+        @TypeDef(name = "string-array", typeClass = StringArrayType.class),
+        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
 })
 public class ApplicationDO {
     @Id
@@ -41,9 +48,11 @@ public class ApplicationDO {
     @ApiModelProperty(value = "应用描述", example = "backend of sca system")
     private String description;
 
-    @Column(name = "language", nullable = false)
-    @ApiModelProperty(value = "应用语言", example = "java")
-    private String language;
+    @Column(name="language", nullable = false)
+    @ApiModelProperty(value = "语言", example = "[\"java\",]")
+    @Type(type = "string-array")
+    private String[] language;
+
 
     @Column(name = "type", nullable = false)
     @ApiModelProperty(value = "类型", example = "UI")
@@ -56,6 +65,16 @@ public class ApplicationDO {
     @Column(name = "scanner", nullable = false)
     @ApiModelProperty(value = "扫描对象", example = "zip")
     private String scanner;
+
+    @Column(name = "licenses")
+    @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")
+    @Type(type = "string-array")
+    private String[] licenses = {};
+
+    @Column(name = "vulnerabilities")
+    @ApiModelProperty(value = "漏洞", example = "[\"CVE-2020-1234\",]")
+    @Type(type = "string-array")
+    private String[] vulnerabilities = {};
 
     @Column(name = "state", nullable = false)
     @ApiModelProperty(value = "扫描状态", example = "SUCCESS,FAILED,RUNNING,CREATED")
@@ -83,8 +102,7 @@ public class ApplicationDO {
     private String[] childApplication = {};
 
     @Column(name = "childComponent")
-    @ApiModelProperty(value = "子组件", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
-    @Type(type = "string-array")
-    private String[] childComponent = {};
-
+    @ApiModelProperty(value = "子组件", example = "{'java':['123e456-e74-b37-4d7a-9421d59bf3b',]}")
+    @Type(type = "jsonb")
+    private Map<String, List<String>> childComponent = new HashMap<>();
 }

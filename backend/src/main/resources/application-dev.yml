@@ -5,17 +5,17 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
-    url: jdbc:postgresql://127.0.0.1:5432/sca
-    username: postgres
-    password: 2002jiale
-    show-sql: true
+    url: jdbc:postgresql://172.29.7.168:35432/qysca
+    username: qysca
+    password: qysca
+    show-sql: false
   jpa:
     database: postgresql
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQL9Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         temp:
           use-jdbc-metadata-defaults: false
   redis:
@@ -36,7 +36,15 @@ spring:
         max-wait: -1ms
 
 uploadFolder: src/main/resources/static/upload/
-tempPomFolder: src/main/resources/static/temp/
+tempPomFolder: src/main/resources/static/temp/pom/
+tempNpmFolder: src/main/resources/static/temp/npm/
+tempGoFolder: src/main/resources/static/temp/go/
+tempPythonFolder: src/main/resources/static/temp/python/
+targetUrlsPath: src/main/resources/static/target_urls.txt
+MAVEN_REPO_BASE_URL: https://repo1.maven.org/maven2/
+PYPI_REPO_BASE_URL: https://pypi.org/pypi/
+NPM_REPO_BASE_URL: https://registry.npmjs.org/
+GO_REPO_BASE_URL: https://api.github.com/repos/
 # maxFileSize 单个数据大小
 spring.servlet.multipart.maxFileSize: 10MB
 # maxRequestSize 是总数据大小

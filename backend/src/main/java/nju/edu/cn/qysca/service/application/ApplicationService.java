@@ -1,10 +1,8 @@
 package nju.edu.cn.qysca.service.application;
 
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
-import nju.edu.cn.qysca.domain.component.dos.DependencyTreeDO;
-import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.*;
-import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import org.springframework.data.domain.Page;
 
 import javax.servlet.http.HttpServletResponse;
@@ -99,24 +97,6 @@ public interface ApplicationService {
      */
     Boolean deleteApplicationComponent(ApplicationComponentDTO applicationComponentDTO);
 
-    /**
-     * 分页获取指定应用的版本信息
-     *
-     * @param name  应用名称
-     * @param number  页码
-     * @param size    页大小
-     * @return Page<ApplicationDO> 应用版本信息分页结果
-     */
-    //Page<ApplicationDO> findApplicationVersionPage(String name, int number, int size);
-
-    /**
-     * 检查指定应用扫描中组件的个数
-     *
-     * @param groupId    组织Id
-     * @param artifactId 工件Id
-     * @return Integer 扫描中组件的个数
-     */
-    //Integer checkRunningApplication(String groupId, String artifactId);
 
     /**
      * 获取指定应用的所有版本列表
@@ -138,9 +118,9 @@ public interface ApplicationService {
      * 查询应用依赖树信息
      *
      * @param applicationSearchDTO 应用版本搜索信息
-     * @return DependencyTreeDO 应用依赖树信息
+     * @return JavaDependencyTreeDO 应用依赖树信息
      */
-    DependencyTreeDO findApplicationDependencyTree(ApplicationSearchDTO applicationSearchDTO);
+    AppDependencyTreeDO findApplicationDependencyTree(ApplicationSearchDTO applicationSearchDTO);
 
     /**
      * 分页查询应用依赖平铺信息
@@ -148,7 +128,7 @@ public interface ApplicationService {
      * @param applicationSearchPageDTO 带分页应用版本搜索信息
      * @return Page<ComponentTableDTO> 依赖平铺信息分页
      */
-    Page<ComponentTableDTO> findApplicationDependencyTable(ApplicationSearchPageDTO applicationSearchPageDTO);
+    Page<AppComponentTableDTO> findApplicationDependencyTable(ApplicationSearchPageDTO applicationSearchPageDTO);
 
     /**
      * 导出应用依赖平铺信息（简明）Excel
@@ -185,14 +165,14 @@ public interface ApplicationService {
      * 改变应用发布状态
      * @param changeReleaseStateDTO 应用发布状态
      */
-    void changeReleaseState(ChangeReleaseStateDTO changeReleaseStateDTO);
+    List<ApplicationDO> changeReleaseState(ChangeReleaseStateDTO changeReleaseStateDTO);
 
     /**
      * 根据结构生成依赖信息
      *
      * @param applicationDO 项目信息
      * @param type          组件类型
-     * @return DependencyTreeDO 依赖树信息
+     * @return JavaDependencyTreeDO 依赖树信息
      */
-    DependencyTreeDO generateDependencyTree(ApplicationDO applicationDO, String type);
+    AppDependencyTreeDO generateDependencyTree(ApplicationDO applicationDO, String type);
 }
