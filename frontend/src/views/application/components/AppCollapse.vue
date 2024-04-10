@@ -7,32 +7,6 @@
             <div style="display: flex; align-items: center">
               <div style="margin-right: 20px; font-size: 18px; font-weight: bold">{{ app.name }}</div>
               <a-tag>{{ app.version }}</a-tag>
-              <!-- <a-tooltip v-if="app.selection">
-                <template #title>刷新</template>
-                <RedoOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click.stop="refresh(index)" />
-              </a-tooltip> -->
-              <!-- <div v-if="app.selection" style="font-size: 18px; margin-left: 20px">
-                <a-input-group compact>
-                  <a-input
-                    value="版本选择"
-                    style="width: 90px; cursor: default; background-color: #6f005f; color: white; text-align: center"
-                    readonly></a-input>
-                  <a-select
-                    v-model:value="app.selection.current"
-                    :options="app.selection.options"
-                    style="width: 100px"
-                    @change="() => changeVersion(app, app.selection.current)">
-                  </a-select>
-                </a-input-group>
-              </div> -->
-              <!-- <div style="margin-left: 20px; margin-right: 20px">
-                <a-tag v-if="app.lock" color="warning">
-                  <template #icon><LockOutlined /></template>已上锁
-                </a-tag>
-                <a-tag v-if="app.release" color="success">
-                  <template #icon><EyeOutlined /></template>已发布
-                </a-tag>
-              </div> -->
             </div>
             <div style="display: flex; align-items: center">
               <a-tooltip>
@@ -41,18 +15,6 @@
                   @click.stop="showAppDetail(app, false, index)"
                   :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
               </a-tooltip>
-              <!-- <a-tooltip>
-                <template #title>添加组件</template>
-                <PlusOutlined
-                  @click.stop="addComponent(app, index)"
-                  :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
-              </a-tooltip> -->
-              <!-- <a-tooltip>
-                <template #title>应用升级</template>
-                <RocketOutlined
-                  @click.stop="upgradeProject(app, index)"
-                  :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
-              </a-tooltip> -->
               <a-tooltip v-if="!props.parentApp.groupId">
                 <template #title>删除组件</template>
                 <DeleteOutlined
@@ -69,12 +31,13 @@
           :com-list="app.subComList"
           @refresh="refresh(data.currentKey)"></AppCollapse>
       </a-collapse-panel>
-      <a-collapse-panel :showArrow="false" v-for="(com, index) in props.comList" :key="props.appList.length + index">
+      <a-collapse-panel :showArrow="false" v-for="(com, index) in allComList" :key="props.appList.length + index">
         <template #header>
           <div class="collapse_header">
             <div style="display: flex; align-items: center">
               <div style="margin: 0 20px; font-size: 18px; font-weight: bold">{{ com.name }}</div>
               <a-tag>{{ com.version }}</a-tag>
+              <a-tag>{{ com.language }}</a-tag>
             </div>
             <div style="display: flex; align-items: center">
               <a-tooltip>
@@ -125,7 +88,7 @@ import {
 } from '@ant-design/icons-vue'
 import { GetSubProject, GetVersionList, GetVersionInfo } from '@/api/frontend'
 import { message } from 'ant-design-vue'
-import { reactive, ref, defineEmits, defineProps, defineExpose } from 'vue'
+import { reactive, ref, defineEmits, defineProps, defineExpose, computed } from 'vue'
 import AppCollapse from '@/views/application/components/AppCollapse.vue'
 import AddAppModal from './AddAppModal.vue'
 import AddComModal from './AddComModal.vue'
@@ -148,9 +111,17 @@ const props = defineProps({
     default: () => []
   },
   comList: {
-    type: Array,
-    default: () => []
+    type: Object,
+    default: () => {}
   }
+})
+const allComList = computed(() => {
+  let res = []
+  if (props.comList?.java) res = res.concat(props.comList.java)
+  if (props.comList?.python) res = res.concat(props.comList.python)
+  if (props.comList?.go) res = res.concat(props.comList.go)
+  if (props.comList?.javaScript) res = res.concat(props.comList.javaScript)
+  return res
 })
 
 const appCollapse = ref()
@@ -313,7 +284,6 @@ const showComDetail = (com) => {
 }
 
 const deleteComponent = (com) => {
-  console.log(com)
   deleteComModal.value.open(com, props.parentApp)
 }
 

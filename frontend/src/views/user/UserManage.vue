@@ -69,7 +69,7 @@ const table = reactive({
 const pagination = reactive({
   current: 1,
   total: 0,
-  pageSize: 10,
+  pageSize: 8,
   showSizeChanger: false,
   onChange: (page, size) => {
     pagination.current = page
@@ -78,7 +78,7 @@ const pagination = reactive({
   hideOnSinglePage: true
 })
 
-const getUserList = (number = 1, size = 10) => {
+const getUserList = (number = 1, size = 8) => {
   GetUserList({ number, size })
     .then((res) => {
       // console.log('GetUserList', res)
@@ -125,13 +125,13 @@ const deleteUser = (record) => {
 }
 .title {
   font-weight: bold;
-  font-size: 24px;
+  font-size: 20px;
   margin-bottom: 15px;
 }
 .content_card {
   position: absolute;
   width: 100%;
-  height: calc(100% - 32px);
+  height: calc(100% - 30px);
   overflow-y: scroll;
 }
 .operations {
