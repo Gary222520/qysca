@@ -1,14 +1,16 @@
 const Home = () => import('@/views/Home.vue')
 const Login = () => import('@/views/user/Login.vue')
-const Summary = () => import('@/views/summary/Summary.vue')
-const Scan = () => import('@/views/scan/Scan.vue')
 
 const Application = () => import('@/views/application/Application.vue')
-const Project = () => import('@/views/project/Project.vue')
 const AppDetail = () => import('@/views/project/AppDetail.vue')
 const Compare = () => import('@/views/project/Compare.vue')
+
 const Component = () => import('@/views/component/Component.vue')
 const Dependency = () => import('@/views/component/Dependency.vue')
+
+const Vulnerability = () => import('@/views/vulnerability/Vulnerability.vue')
+
+const License = () => import('@/views/license/License.vue')
 
 const BuManage = () => import('@/views/bu/BuManage.vue')
 
@@ -24,28 +26,10 @@ const routes = [
     component: Home,
     children: [
       {
-        path: 'summary',
-        name: 'summary',
-        meta: { menu: 'summary', title: '统计概览' },
-        component: Summary
-      },
-      {
-        path: 'scan',
-        name: 'scan',
-        meta: { menu: 'scan', title: '扫描分析' },
-        component: Scan
-      },
-      {
         path: 'application',
         name: 'application',
         meta: { menu: 'application', title: '应用管理' },
         component: Application
-      },
-      {
-        path: 'project',
-        name: 'project',
-        meta: { menu: 'project', title: '项目管理' },
-        component: Project
       },
       {
         path: 'appDetail',
@@ -70,6 +54,18 @@ const routes = [
         name: 'dependency',
         meta: { menu: 'component', title: '组件依赖' },
         component: Dependency
+      },
+      {
+        path: 'vulnerability',
+        name: 'vulnerability',
+        meta: { menu: 'vulnerability', title: '漏洞管理' },
+        component: Vulnerability
+      },
+      {
+        path: 'license',
+        name: 'license',
+        meta: { menu: 'license', title: '许可证管理' },
+        component: License
       },
       {
         path: 'buManage',
