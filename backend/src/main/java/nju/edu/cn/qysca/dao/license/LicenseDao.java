@@ -31,9 +31,15 @@ public interface LicenseDao extends JpaRepository<LicenseDO, String> {
      */
     LicenseDO findByNameIgnoreCase(String name);
 
-    List<LicenseDO> findAllByNameLike(String name);
 
-
+    /**
+     * 查询应用的license
+     * @param licenses 应用的license信息
+     * @return List<LicenseDO> 许可证信息
+     */
+    @Query(value = "select * from plt_license where name in (:licenses) ORDER BY name asc",
+            nativeQuery = true)
+    List<LicenseDO> findLicenseList(List<String> licenses);
     /**
      * 查询应用的license
      * @param licenses 应用的license信息

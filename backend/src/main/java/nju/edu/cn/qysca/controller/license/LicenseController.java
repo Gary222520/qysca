@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiOperation;
 import nju.edu.cn.qysca.controller.ResponseMsg;
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
 import nju.edu.cn.qysca.domain.license.dtos.LicenseBriefDTO;
+import nju.edu.cn.qysca.domain.license.dtos.LicenseConflictInfoDTO;
 import nju.edu.cn.qysca.service.license.LicenseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -47,6 +48,12 @@ public class LicenseController {
     @GetMapping("/getLicensePage")
     public ResponseMsg<Page<LicenseBriefDTO>> getLicensePage(@RequestParam String name, @RequestParam int page, @RequestParam int size) {
         return new ResponseMsg<>(licenseService.getLicensePage(name, page, size));
+    }
+
+    @ApiOperation("查看应用的许可证冲突信息")
+    @GetMapping("/getLicenseConflict")
+    public ResponseMsg<LicenseConflictInfoDTO> getLicenseConflict(@RequestParam String name, @RequestParam String version) {
+        return new ResponseMsg<>(licenseService.getLicenseConflictInformation(name, version));
     }
 
 }
