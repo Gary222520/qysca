@@ -24,13 +24,6 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      */
     ApplicationDO findByNameAndVersion(String name, String version);
 
-    /**
-     * 根据name查找应用
-     * @param name 名称
-     * @param pageable 分页信息
-     * @return Page<ApplicationDO> 应用信息列表
-     */
-    Page<ApplicationDO> findAllByName(String name, Pageable pageable);
 
 
     /**
@@ -110,4 +103,15 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      */
     @Query(value = "select * from plt_application where child_component -> ?1 @> ?2", nativeQuery = true)
     List<ApplicationDO> findParentApplication(String language, String id);
+
+    /**
+     * 查询所在部门的应用总数
+     * @param bid 部门Id
+     * @return Integer 所在部门的应用总数
+     */
+    @Query(value = "select count(*) from plt_application where id = any (select aid from plt_bu_app where bid = :bid)", nativeQuery = true)
+    Integer getApplicationCount(String bid);
+
+    @Query(value = "select * from plt_application where id = any (select aid from plt_bu_app where id = :bid)", nativeQuery = true)
+    List<ApplicationDO> getApplicationList(String bid);
 }
