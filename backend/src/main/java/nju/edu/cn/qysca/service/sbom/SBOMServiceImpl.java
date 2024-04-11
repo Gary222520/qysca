@@ -87,6 +87,9 @@ public class SBOMServiceImpl implements SBOMService {
         try {
             // 底层应用时，生成一个json文件
             if (applicationDO.getChildApplication().length==0 && applicationDO.getChildComponent().isEmpty()) {
+                AppDependencyTreeDO appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
+                if (appDependencyTreeDO == null)
+                    throw new PlatformException(500, "应用缺少组件信息");
                 // 准备sbomDTO
                 SbomDTO sbomDTO = new SbomDTO();
                 List<SbomComponentDTO> sbomComponentDTOList = new ArrayList<>();
@@ -96,7 +99,7 @@ public class SBOMServiceImpl implements SBOMService {
                     // 最底层的app的依赖组件应该都是四张语言表里的
                     sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), dependencyTable.getLanguage()));
                 }
-                AppDependencyTreeDO appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
+
                 AppComponentDependencyTreeDO root = appDependencyTreeDO.getTree();
                 Queue<AppComponentDependencyTreeDO> queue = new LinkedList<>();
                 queue.offer(root);
@@ -145,6 +148,8 @@ public class SBOMServiceImpl implements SBOMService {
                 // 写入HttpServletResponse请求
                 export(response, zip);
             }
+        } catch (PlatformException e){
+            throw e;
         } catch (IOException e) {
             throw new PlatformException(500, "SBOM导出失败");
         } finally {
@@ -247,6 +252,9 @@ public class SBOMServiceImpl implements SBOMService {
             case "app": {
                 // 在这里认为，能进入这里的都是单一语言app(并且是最底层），并且已经发布过，能在appComponentDao中找到
                 AppComponentDO appComponentDO = appComponentDao.getById(componentId);
+                AppDependencyTreeDO appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(appComponentDO.getName(), appComponentDO.getVersion());
+                if (appDependencyTreeDO == null)
+                    throw new PlatformException(500, "应用缺少组件信息");
                 sbomDTO.setName(appComponentDO.getName());
                 sbomDTO.setVersion(appComponentDO.getVersion());
                 List<AppDependencyTableDO> appDependencyTableDOS = appDependencyTableDao.findAllByNameAndVersion(appComponentDO.getName(), appComponentDO.getVersion());
@@ -256,7 +264,6 @@ public class SBOMServiceImpl implements SBOMService {
                     sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), dependencyTable.getLanguage()));
                 }
 
-                AppDependencyTreeDO appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(appComponentDO.getName(), appComponentDO.getVersion());
                 AppComponentDependencyTreeDO root = appDependencyTreeDO.getTree();
                 Queue<AppComponentDependencyTreeDO> queue = new LinkedList<>();
                 queue.offer(root);
@@ -278,6 +285,8 @@ public class SBOMServiceImpl implements SBOMService {
             }
             case "java": {
                 JavaComponentDO javaComponentDO = javaComponentDao.getById(componentId);
+                JavaDependencyTreeDO javaDependencyTreeDO = javaDependencyTreeDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion());
+
                 sbomDTO.setName(javaComponentDO.getName());
                 sbomDTO.setVersion(javaComponentDO.getVersion());
 
@@ -286,7 +295,6 @@ public class SBOMServiceImpl implements SBOMService {
                     sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), "java"));
                 }
 
-                JavaDependencyTreeDO javaDependencyTreeDO = javaDependencyTreeDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion());
                 JavaComponentDependencyTreeDO root = javaDependencyTreeDO.getTree();
                 Queue<JavaComponentDependencyTreeDO> queue = new LinkedList<>();
                 queue.offer(root);
@@ -306,6 +314,8 @@ public class SBOMServiceImpl implements SBOMService {
             }
             case "golang": {
                 GoComponentDO goComponentDO = goComponentDao.getById(componentId);
+                GoDependencyTreeDO goDependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(goComponentDO.getName(), goComponentDO.getVersion());
+
                 sbomDTO.setName(goComponentDO.getName());
                 sbomDTO.setVersion(goComponentDO.getVersion());
 
@@ -314,7 +324,6 @@ public class SBOMServiceImpl implements SBOMService {
                     sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), "golang"));
                 }
 
-                GoDependencyTreeDO goDependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(goComponentDO.getName(), goComponentDO.getVersion());
                 GoComponentDependencyTreeDO root = goDependencyTreeDO.getTree();
                 Queue<GoComponentDependencyTreeDO> queue = new LinkedList<>();
                 queue.offer(root);
@@ -334,6 +343,8 @@ public class SBOMServiceImpl implements SBOMService {
             }
             case "javaScript": {
                 JsComponentDO jsComponentDO = jsComponentDao.getById(componentId);
+                JsDependencyTreeDO jsDependencyTreeDO = jsDependencyTreeDao.findByNameAndVersion(jsComponentDO.getName(), jsComponentDO.getVersion());
+
                 sbomDTO.setName(jsComponentDO.getName());
                 sbomDTO.setVersion(jsComponentDO.getVersion());
 
@@ -342,7 +353,6 @@ public class SBOMServiceImpl implements SBOMService {
                     sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), "javaScript"));
                 }
 
-                JsDependencyTreeDO jsDependencyTreeDO = jsDependencyTreeDao.findByNameAndVersion(jsComponentDO.getName(), jsComponentDO.getVersion());
                 JsComponentDependencyTreeDO root = jsDependencyTreeDO.getTree();
                 Queue<JsComponentDependencyTreeDO> queue = new LinkedList<>();
                 queue.offer(root);
@@ -362,6 +372,8 @@ public class SBOMServiceImpl implements SBOMService {
             }
             case "python": {
                 PythonComponentDO pythonComponentDO = pythonComponentDao.getById(componentId);
+                PythonDependencyTreeDO pythonDependencyTreeDO = pythonDependencyTreeDao.findByNameAndVersion(pythonComponentDO.getName(), pythonComponentDO.getVersion());
+
                 sbomDTO.setName(pythonComponentDO.getName());
                 sbomDTO.setVersion(pythonComponentDO.getVersion());
 
@@ -370,7 +382,6 @@ public class SBOMServiceImpl implements SBOMService {
                     sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), "python"));
                 }
 
-                PythonDependencyTreeDO pythonDependencyTreeDO = pythonDependencyTreeDao.findByNameAndVersion(pythonComponentDO.getName(), pythonComponentDO.getVersion());
                 PythonComponentDependencyTreeDO root = pythonDependencyTreeDO.getTree();
                 Queue<PythonComponentDependencyTreeDO> queue = new LinkedList<>();
                 queue.offer(root);
