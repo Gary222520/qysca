@@ -131,6 +131,12 @@ public class ZipUtil {
         return models;
     }
 
+    /**
+     * zip压缩文件夹
+     * @param sourceDir 需要压缩的目录
+     * @param zipFile 压缩后的zip文件
+     * @throws IOException
+     */
     public static void zipDirectory(File sourceDir, File zipFile) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(zipFile);
              ZipOutputStream zos = new ZipOutputStream(fos)) {

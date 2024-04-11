@@ -11,17 +11,18 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel(description = "应用级别SBOM")
-public class SbomApplicationDTO {
-    @ApiModelProperty(value = "组织Id", example = "nju.edu.cn")
-    private String groupId;
+@ApiModel(description = "SBOM，每一个SbomDTO生成一个json文件")
+public class SbomDTO {
 
-    @ApiModelProperty(value = "工件Id", example = "com.example:example-application")
-    private String artifactId;
+    @ApiModelProperty(value = "名称", example = "qysca")
+    private String name;
 
     @ApiModelProperty(value = "版本号", example = "1.0.0")
     private String version;
 
-    @ApiModelProperty(value = "直接依赖组件")
+    @ApiModelProperty(value = "生成时间", example = "2023-11-10 06:05:02 UTC")
+    private String timestamp;
+
+    @ApiModelProperty(value = "组件列表")
     private List<SbomComponentDTO> components;
 }

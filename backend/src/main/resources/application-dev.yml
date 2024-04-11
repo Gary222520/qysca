@@ -41,6 +41,7 @@ tempNpmFolder: src/main/resources/static/temp/npm/
 tempGoFolder: src/main/resources/static/temp/go/
 tempPythonFolder: src/main/resources/static/temp/python/
 targetUrlsPath: src/main/resources/static/target_urls.txt
+tempSBOMPath: src/main/resources/static/temp/sbom/
 MAVEN_REPO_BASE_URL: https://repo1.maven.org/maven2/
 PYPI_REPO_BASE_URL: https://pypi.org/pypi/
 NPM_REPO_BASE_URL: https://registry.npmjs.org/
