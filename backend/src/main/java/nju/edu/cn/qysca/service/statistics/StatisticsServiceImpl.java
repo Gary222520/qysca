@@ -101,48 +101,66 @@ public class StatisticsServiceImpl implements StatisticsService {
             vulnerabilityCompareDTO.setName(applicationDO.getName());
             vulnerabilityCompareDTO.setVersion(applicationDO.getVersion());
             for (String cveId : applicationDO.getVulnerabilities()) {
-                CveDO cveDO = cveDao.findOneByCveId(cveId);
-                if (cveDO.getCvss3().getBaseSeverity() != null) {
-                    map.put(cveDO.getCvss3().getBaseSeverity(), map.get(cveDO.getCvss3().getBaseSeverity()) + 1);
-                } else if (cveDO.getCvss3().getImpactScore() != null) {
-                    Double score = cveDO.getCvss3().getImpactScore();
-                    String key = score > 7.5 ? "HIGH" : score > 5 ? "MEDIUM" : score > 2.5 ? "LOW" : "NONE";
-                    switch (key) {
-                        case "HIGH":
-                            vulnerabilityCompareDTO.setHIGH(vulnerabilityCompareDTO.getHIGH() + 1);
-                            break;
-                        case "MEDIUM":
-                            vulnerabilityCompareDTO.setMEDIUM(vulnerabilityCompareDTO.getMEDIUM() + 1);
-                            break;
-                        case "LOW":
-                            vulnerabilityCompareDTO.setLOW(vulnerabilityCompareDTO.getLOW() + 1);
-                            break;
-                        case "NONE":
-                            vulnerabilityCompareDTO.setNONE(vulnerabilityCompareDTO.getNONE() + 1);
-                            break;
+                if (!cveId.equals("")) {
+                    CveDO cveDO = cveDao.findOneByCveId(cveId);
+                    if (cveDO.getCvss3().getBaseSeverity() != null) {
+                        if(map.containsKey(cveDO.getCvss3().getBaseSeverity())){
+                            map.put(cveDO.getCvss3().getBaseSeverity(), map.get(cveDO.getCvss3().getBaseSeverity()) + 1);
+                        }else {
+                            map.put(cveDO.getCvss3().getBaseSeverity(), 1);
+                        }
+                    } else if (cveDO.getCvss3().getImpactScore() != null) {
+                        Double score = cveDO.getCvss3().getImpactScore();
+                        String key = score > 7.5 ? "HIGH" : score > 5 ? "MEDIUM" : score > 2.5 ? "LOW" : "NONE";
+                        switch (key) {
+                            case "HIGH":
+                                vulnerabilityCompareDTO.setHIGH(vulnerabilityCompareDTO.getHIGH() + 1);
+                                break;
+                            case "MEDIUM":
+                                vulnerabilityCompareDTO.setMEDIUM(vulnerabilityCompareDTO.getMEDIUM() + 1);
+                                break;
+                            case "LOW":
+                                vulnerabilityCompareDTO.setLOW(vulnerabilityCompareDTO.getLOW() + 1);
+                                break;
+                            case "NONE":
+                                vulnerabilityCompareDTO.setNONE(vulnerabilityCompareDTO.getNONE() + 1);
+                                break;
+                        }
+                        if(map.containsKey(key)){
+                            map.put(key, map.get(key) + 1);
+                        }else {
+                            map.put(key, 1);
+                        }
+                    } else if (cveDO.getCvss2().getImpactScore() != null) {
+                        Double score = cveDO.getCvss2().getImpactScore();
+                        String key = score > 7.5 ? "HIGH" : score > 5 ? "MEDIUM" : score > 2.5 ? "LOW" : "NONE";
+                        switch (key) {
+                            case "HIGH":
+                                vulnerabilityCompareDTO.setHIGH(vulnerabilityCompareDTO.getHIGH() + 1);
+                                break;
+                            case "MEDIUM":
+                                vulnerabilityCompareDTO.setMEDIUM(vulnerabilityCompareDTO.getMEDIUM() + 1);
+                                break;
+                            case "LOW":
+                                vulnerabilityCompareDTO.setLOW(vulnerabilityCompareDTO.getLOW() + 1);
+                                break;
+                            case "NONE":
+                                vulnerabilityCompareDTO.setNONE(vulnerabilityCompareDTO.getNONE() + 1);
+                                break;
+                        }
+                        if(map.containsKey(key)) {
+                            map.put(key, map.get(key) + 1);
+                        } else{
+                            map.put(key, 1);
+                        }
+                    } else {
+                        vulnerabilityCompareDTO.setUNKNOWN(vulnerabilityCompareDTO.getUNKNOWN() + 1);
+                        if(map.containsKey("UNKNOWN")) {
+                            map.put("UNKNOWN", map.get("UNKNOWN") + 1);
+                        } else {
+                            map.put("UNKNOWN", 1);
+                        }
                     }
-                    map.put(key, map.get(key) + 1);
-                } else if (cveDO.getCvss2().getImpactScore() != null) {
-                    Double score = cveDO.getCvss3().getImpactScore();
-                    String key = score > 7.5 ? "HIGH" : score > 5 ? "MEDIUM" : score > 2.5 ? "LOW" : "NONE";
-                    switch (key) {
-                        case "HIGH":
-                            vulnerabilityCompareDTO.setHIGH(vulnerabilityCompareDTO.getHIGH() + 1);
-                            break;
-                        case "MEDIUM":
-                            vulnerabilityCompareDTO.setMEDIUM(vulnerabilityCompareDTO.getMEDIUM() + 1);
-                            break;
-                        case "LOW":
-                            vulnerabilityCompareDTO.setLOW(vulnerabilityCompareDTO.getLOW() + 1);
-                            break;
-                        case "NONE":
-                            vulnerabilityCompareDTO.setNONE(vulnerabilityCompareDTO.getNONE() + 1);
-                            break;
-                    }
-                    map.put(key, map.get(key) + 1);
-                } else {
-                    vulnerabilityCompareDTO.setUNKNOWN(vulnerabilityCompareDTO.getUNKNOWN() + 1);
-                    map.put("UNKNOWN", map.get("UNKNOWN") + 1);
                 }
             }
             vulnerabilityCompareDTOS.add(vulnerabilityCompareDTO);
@@ -178,16 +196,18 @@ public class StatisticsServiceImpl implements StatisticsService {
             licenseCompareDTO.setName(applicationDO.getName());
             licenseCompareDTO.setVersion(applicationDO.getVersion());
             for(String license : applicationDO.getLicenses()) {
-                if (map.containsKey("license")) {
-                    map.put(license, map.get(license) + 1);
-                } else {
-                    map.put(license, 1);
-                }
-                LicenseDO licenseDO = licenseDao.findByName(license);
-                if(licenseDO.getRiskLevel().equals("high") || licenseDO.getRiskLevel().equals("medium")){
-                    licenseCompareDTO.setRisk(licenseCompareDTO.getRisk() + 1);
-                }else if(licenseDO.getRiskLevel().equals("low")) {
-                    licenseCompareDTO.setSecure(licenseCompareDTO.getSecure() + 1);
+                if(!license.equals("")) {
+                    if (map.containsKey(license)) {
+                        map.put(license, map.get(license) + 1);
+                    } else {
+                        map.put(license, 1);
+                    }
+                    LicenseDO licenseDO = licenseDao.findByName(license);
+                    if (licenseDO.getRiskLevel().equals("high") || licenseDO.getRiskLevel().equals("medium")) {
+                        licenseCompareDTO.setRisk(licenseCompareDTO.getRisk() + 1);
+                    } else if (licenseDO.getRiskLevel().equals("low")) {
+                        licenseCompareDTO.setSecure(licenseCompareDTO.getSecure() + 1);
+                    }
                 }
             }
             licenseCompareDTOS.add(licenseCompareDTO);

@@ -112,6 +112,6 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
     @Query(value = "select count(*) from plt_application where id = any (select aid from plt_bu_app where bid = :bid)", nativeQuery = true)
     Integer getApplicationCount(String bid);
 
-    @Query(value = "select * from plt_application where id = any (select aid from plt_bu_app where id = :bid)", nativeQuery = true)
+    @Query(value = "select * from plt_application where id = any (select aid from plt_bu_app where bid = :bid)", nativeQuery = true)
     List<ApplicationDO> getApplicationList(String bid);
 }
