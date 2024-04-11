@@ -86,29 +86,97 @@ public class SBOMServiceImpl implements SBOMService {
         }
 
         try {
-            // 生成sbom
-            File dir = new File(tempDir, applicationDO.getName() + "-SBOM");
-            exportSBOM(applicationDO.getId(), dir);
-            // 打包文件夹
-            ZipUtil.zipDirectory(tempDir, dir);
-            File zip = new File(tempDir, dir.getName() + ".zip");
-            // 写入HttpServletResponse请求
-            response.setContentType("application/octet-stream");
-            response.setHeader("Content-Disposition", "attachment; filename=" + zip.getName());
-            try (InputStream inputStream = new FileInputStream(zip);
-                 OutputStream outputStream = response.getOutputStream()) {
-                byte[] buffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
+            // 底层应用时，生成一个json文件
+            if (applicationDO.getChildApplication().length==0 && applicationDO.getChildComponent().isEmpty()) {
+                // 准备sbomDTO
+                SbomDTO sbomDTO = new SbomDTO();
+                List<SbomComponentDTO> sbomComponentDTOList = new ArrayList<>();
+                List<AppDependencyTableDO> appDependencyTableDOS = appDependencyTableDao.findAllByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
+                for (AppDependencyTableDO dependencyTable : appDependencyTableDOS) {
+                    // 最底层的app的依赖组件应该都是四张语言表里的
+                    sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), dependencyTable.getLanguage()));
                 }
-                outputStream.flush();
+                sbomDTO.setName(applicationDO.getName());
+                sbomDTO.setVersion(applicationDO.getVersion());
+                sbomDTO.setComponents(sbomComponentDTOList);
+
+                Date now2 = new Date();
+                SimpleDateFormat dateFormat2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                dateFormat2.setTimeZone(TimeZone.getTimeZone("UTC"));
+                String timeStamp2 = dateFormat2.format(now2) + " UTC";
+                sbomDTO.setTimestamp(timeStamp2);
+
+                // 生成json文件
+                File file = makeSbomFile(tempDir, sbomDTO);
+                // 写入HttpServletResponse请求
+                export(response, file);
+            } else {
+                // 非底层应用，打包为zip
+                // 生成sbom
+                File dir = new File(tempDir, "SBOM");
+                if (!dir.exists()){
+                    dir.mkdirs();
+                }
+
+                exportSBOM(applicationDO.getId(), dir);
+                // 打包文件夹
+                File zip = new File(tempDir, dir.getName() + ".zip");
+                ZipUtil.zipDirectory(dir, zip);
+
+                // 写入HttpServletResponse请求
+                export(response, zip);
             }
         } catch (IOException e) {
             throw new PlatformException(500, "SBOM导出失败");
         } finally {
             FolderUtil.deleteFolder(tempDir.getPath());
         }
+    }
+
+    /**
+     * 将文件写入请求中
+     *
+     * @param response HttpServletResponse
+     * @param file 待传输的文件
+     * @throws IOException
+     */
+    private void export(HttpServletResponse response, File file) throws IOException {
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition", "attachment; filename=" + file.getName());
+        try (InputStream inputStream = new FileInputStream(file);
+             OutputStream outputStream = response.getOutputStream()) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            outputStream.flush();
+        }
+    }
+
+    /**
+     * 根据sbomDTO在指定目录下生成json文件
+     *
+     * @param dir 指定目录
+     * @param sbomDTO
+     * @return 生成的json文件
+     */
+    private File makeSbomFile(File dir, SbomDTO sbomDTO) {
+        File file = new File(dir, sbomDTO.getName().replaceAll(":","-") + "-" + sbomDTO.getVersion() + ".json");
+        try {
+            // 将sbomDTO变为json
+            ObjectMapper objectMapper = new ObjectMapper();
+            String json = objectMapper.writeValueAsString(sbomDTO);
+
+            // 将 SBOM JSON 写入临时文件
+            FileWriter writer = new FileWriter(file);
+            writer.write(json);
+            writer.close();
+        } catch (IOException e) {
+            file.delete();
+            throw new PlatformException(500, "SBOM导出失败");
+        }
+        return file;
     }
 
     /**
@@ -119,46 +187,22 @@ public class SBOMServiceImpl implements SBOMService {
      */
     private void exportSBOM(String appId, File dir) {
         ApplicationDO applicationDO = applicationDao.findOneById(appId);
-        if (applicationDO.getChildApplication() == null && applicationDO.getChildComponent() == null) {
+        if (applicationDO.getChildApplication().length==0 && applicationDO.getChildComponent().isEmpty()) {
             // 如果应用没有子组件和子应用了，那么生成一个json文件
             AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
             SbomDTO sbomDTO = getSbomDTO("app", appComponentDO.getId());
-            File file = new File(dir, sbomDTO.getName() + "-" + sbomDTO.getVersion() + ".json");
-            try {
-                // 将sbomDTO变为json
-                ObjectMapper objectMapper = new ObjectMapper();
-                String json = objectMapper.writeValueAsString(sbomDTO);
-
-                // 将 SBOM JSON 写入临时文件
-                FileWriter writer = new FileWriter(file);
-                writer.write(json);
-                writer.close();
-            } catch (IOException e) {
-                file.delete();
-                throw new PlatformException(500, "SBOM导出失败");
-            }
+            makeSbomFile(dir, sbomDTO);
         } else {
             // 如果应用还有子组件和子应用，那么先生成一个文件夹
-            File sonDir = new File(dir, applicationDO.getName());
+            File sonDir = new File(dir, applicationDO.getName().replaceAll(":","-"));
+            if (!sonDir.exists()){
+                sonDir.mkdirs();
+            }
             // 为每个子组件生成一个json
             for (Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()) {
                 for (String childComponentId : entry.getValue()) {
                     SbomDTO sbomDTO = getSbomDTO(entry.getKey(), childComponentId);
-
-                    File file = new File(sonDir, sbomDTO.getName() + "-" + sbomDTO.getVersion() + ".json");
-                    try {
-                        // 将sbomDTO变为json
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        String json = objectMapper.writeValueAsString(sbomDTO);
-
-                        // 将 SBOM JSON 写入临时文件
-                        FileWriter writer = new FileWriter(file);
-                        writer.write(json);
-                        writer.close();
-                    } catch (IOException e) {
-                        file.delete();
-                        throw new PlatformException(500, "SBOM导出失败");
-                    }
+                    makeSbomFile(sonDir, sbomDTO);
                 }
             }
             // 继续递归导出子应用
@@ -178,7 +222,6 @@ public class SBOMServiceImpl implements SBOMService {
     private SbomDTO getSbomDTO(String language, String componentId) {
         SbomDTO sbomDTO = new SbomDTO();
         List<SbomComponentDTO> sbomComponentDTOList = new ArrayList<>();
-
 
         switch (language) {
             case "app": {
@@ -241,8 +284,9 @@ public class SBOMServiceImpl implements SBOMService {
         }
         sbomDTO.setComponents(sbomComponentDTOList);
         Date now = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss UTC");
-        String timeStamp = dateFormat.format(now);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String timeStamp = dateFormat.format(now) + " UTC";
         sbomDTO.setTimestamp(timeStamp);
 
         return sbomDTO;
