@@ -1,9 +1,23 @@
 package nju.edu.cn.qysca.service.license;
 
+import nju.edu.cn.qysca.dao.application.AppComponentDao;
+import nju.edu.cn.qysca.dao.application.AppDependencyTableDao;
+import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.license.LicenseDao;
+import nju.edu.cn.qysca.domain.application.dos.AppComponentDO;
+import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
+import nju.edu.cn.qysca.domain.license.dos.LicenseTermDO;
+import nju.edu.cn.qysca.domain.license.dtos.LicenseBriefDTO;
+import nju.edu.cn.qysca.domain.license.dtos.LicenseConflictInfoDTO;
+import nju.edu.cn.qysca.domain.license.dtos.LicenseConflictInfoTermDTO;
+import nju.edu.cn.qysca.exception.PlatformException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,6 +29,15 @@ public class LicenseServiceImpl implements LicenseService{
 
     @Autowired
     private LicenseDao licenseDao;
+
+    @Autowired
+    private ApplicationDao applicationDao;
+
+    @Autowired
+    private AppComponentDao appComponentDao;
+
+    @Autowired
+    private AppDependencyTableDao appDependencyTableDao;
 
     /**
      * 查询许可证
@@ -38,6 +61,180 @@ public class LicenseServiceImpl implements LicenseService{
                 .map(LicenseDO::getName)
                 .collect(Collectors.toList());
         return results;
+    }
+
+    /**
+     * 分页查询应用许可证列表
+     * @param name 名称
+     * @param version 版本
+     * @return Page<LicenseBriefDTO> 许可证简明信息
+     */
+    @Override
+    public Page<LicenseBriefDTO> getLicenseList(String name, String version, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
+        Page<LicenseDO> temp = licenseDao.getLicenseList(Arrays.asList(applicationDO.getLicenses()), pageable);
+        Page<LicenseBriefDTO> result = temp.map(licenseDO -> new LicenseBriefDTO(licenseDO.getName(), licenseDO.getFullName(), licenseDO.getIsOsiApproved(), licenseDO.getIsFsfApproved(), licenseDO.getIsSpdxApproved(), licenseDO.getRiskLevel(), licenseDO.getGplCompatibility()));
+        return result;
+    }
+
+    /**
+     * 添加应用许可证
+     * @param name 名称
+     * @param version 版本
+     * @param licenseName 许可证名称
+     * @return 添加应用许可证是否成功
+     */
+    @Override
+    @Transactional
+    public Boolean addAppLicense(String name, String version, String licenseName) {
+        // 已经发布或锁定的禁止更新
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
+        if(applicationDO.getRelease() || applicationDO.getLock()){
+            throw new PlatformException(500, "组件已经发布或锁定，禁止更新");
+        }
+        List<String> licenses = searchLicense(licenseName);
+        Set<String> licenseSet = new HashSet<>(Arrays.asList(applicationDO.getLicenses()));
+        licenseSet.addAll(licenses);
+        applicationDO.setLicenses(licenseSet.toArray(new String[0]));
+        applicationDao.save(applicationDO);
+        AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(name, version);
+        if(appComponentDO != null) {
+            appComponentDO.setLicenses(licenseSet.toArray(new String[0]));
+            appComponentDao.save(appComponentDO);
+        }
+        return true;
+    }
+
+    /**
+     * 删除应用许可证
+     * @param name 名称
+     * @param version 版本
+     * @param licenseName 许可证名称
+     * @return 删除许可证是否成功
+     */
+    @Override
+    @Transactional
+    public Boolean deleteAppLicense(String name, String version, String licenseName) {
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
+        if(applicationDO.getRelease() || applicationDO.getLock()){
+            throw new PlatformException(500, "组件已经发布或锁定，禁止更新");
+        }
+        List<String> temp = new ArrayList<>(Arrays.asList(applicationDO.getLicenses()));
+        temp.remove(licenseName);
+        applicationDO.setLicenses(temp.toArray(new String[0]));
+        applicationDao.save(applicationDO);
+        AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(name, version);
+        if(appComponentDO != null) {
+            appComponentDO.setLicenses(temp.toArray(new String[0]));
+            appComponentDao.save(appComponentDO);
+        }
+        return true;
+    }
+
+    /**
+     * 获取许可证详细信息
+     * @param name 许可证名称
+     * @return LicenseDO 许可证详细信息
+     */
+    @Override
+    public LicenseDO getLicenseInfo(String name) {
+        return licenseDao.findByName(name);
+    }
+
+    /**
+     * 许可证库界面查看详细信息
+     * @param name 名称
+     * @param page 页数
+     * @param size 大小
+     * @return Page<LicenseBriefDTO> 许可证库界面详细信息
+     */
+    @Override
+    public Page<LicenseBriefDTO> getLicensePage(String name, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<LicenseDO> temp = licenseDao.getLicensePage(name, pageable);
+        Page<LicenseBriefDTO> result = temp.map(licenseDO -> new LicenseBriefDTO(licenseDO.getName(), licenseDO.getFullName(), licenseDO.getIsOsiApproved(), licenseDO.getIsFsfApproved(), licenseDO.getIsSpdxApproved(), licenseDO.getRiskLevel(), licenseDO.getGplCompatibility()));
+        return result;
+    }
+
+    /**
+     * 获取应用的许可证冲突信息
+     *
+     * @param name 名称
+     * @param version 版本
+     * @return 许可证冲突信息
+     */
+    public LicenseConflictInfoDTO getLicenseConflictInformation(String name, String version) {
+
+        // 获取应用的许可证列表
+        ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
+        List<LicenseDO> licenses = licenseDao.findLicenseList(Arrays.asList(applicationDO.getLicenses()));
+
+        Set<String> obligationsSet = new HashSet<>();
+        Set<String> rightsSet = new HashSet<>();
+
+        // 先记录一共有那些权利和义务条目
+        for (LicenseDO license : licenses) {
+            license.getObligationsRequired().stream().map(LicenseTermDO::getTitle).forEach(obligationsSet::add);
+            license.getObligationsNotRequired().stream().map(LicenseTermDO::getTitle).forEach(obligationsSet::add);
+            license.getRightsAllowed().stream().map(LicenseTermDO::getTitle).forEach(rightsSet::add);
+            license.getRightsProhibited().stream().map(LicenseTermDO::getTitle).forEach(rightsSet::add);
+        }
+
+        List<LicenseConflictInfoTermDTO> obligations_terms = new ArrayList<>();
+        List<LicenseConflictInfoTermDTO> rights_terms = new ArrayList<>();
+
+        // 记录每种义务有哪些许可证必须，哪些许可证无需
+        for (String obligation : obligationsSet){
+            LicenseConflictInfoTermDTO conflictInfoTerm = new LicenseConflictInfoTermDTO();
+            conflictInfoTerm.setTitle(obligation);
+            conflictInfoTerm.setPos_licenses(new ArrayList<>());
+            conflictInfoTerm.setNeg_licenses(new ArrayList<>());
+
+            for (LicenseDO license : licenses) {
+                if (containTitle(license.getObligationsRequired(), obligation))
+                    conflictInfoTerm.getPos_licenses().add(license);
+                if (containTitle(license.getObligationsNotRequired(), obligation))
+                    conflictInfoTerm.getNeg_licenses().add(license);
+            }
+            obligations_terms.add(conflictInfoTerm);
+        }
+
+        // 记录每种权利有哪些许可证允许，哪些许可证禁止
+        for (String right : rightsSet){
+            LicenseConflictInfoTermDTO conflictInfoTerm = new LicenseConflictInfoTermDTO();
+            conflictInfoTerm.setTitle(right);
+            conflictInfoTerm.setPos_licenses(new ArrayList<>());
+            conflictInfoTerm.setNeg_licenses(new ArrayList<>());
+
+            for (LicenseDO license : licenses) {
+                if (containTitle(license.getRightsAllowed(), right))
+                    conflictInfoTerm.getPos_licenses().add(license);
+                if (containTitle(license.getRightsProhibited(), right))
+                    conflictInfoTerm.getNeg_licenses().add(license);
+            }
+            rights_terms.add(conflictInfoTerm);
+        }
+
+        return new LicenseConflictInfoDTO(obligations_terms, rights_terms);
+    }
+
+    /**
+     * 判断terms是否有该title
+     *
+     * @param terms List<LicenseTermDO>
+     * @param title Title
+     * @return boolean
+     */
+    private boolean containTitle(List<LicenseTermDO> terms, String title) {
+        if (terms != null) {
+            for (LicenseTermDO term : terms) {
+                if (term.getTitle().equals(title)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

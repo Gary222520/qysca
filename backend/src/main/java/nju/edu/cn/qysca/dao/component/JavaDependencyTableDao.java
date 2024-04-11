@@ -35,4 +35,11 @@ public interface JavaDependencyTableDao extends JpaRepository<JavaDependencyTabl
      * @param version 版本号
      */
     void deleteAllByNameAndVersion(String name, String version);
+
+    /**
+     * 根据名称和版本号搜索
+     * @param name 名称
+     * @param version 版本号
+     */
+    List<JavaDependencyTableDO> findAllByNameAndVersion(String name, String version);
 }

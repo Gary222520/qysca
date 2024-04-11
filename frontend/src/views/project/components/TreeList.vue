@@ -37,7 +37,8 @@ const data = reactive({
   visible: true,
   treeData: [],
   expandedKeys: ['0-0'],
-  selectedKeys: []
+  selectedKeys: [],
+  language: ''
 })
 const show = (name, version) => {
   data.visible = true
@@ -65,7 +66,7 @@ const createTree = (arr, preKey) => {
     const key = `${preKey}-${index}`
     const data = {
       ...item,
-      title: item?.artifactId,
+      title: item?.name,
       key,
       children: createTree(item?.dependencies, key)
     }

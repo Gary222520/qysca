@@ -71,6 +71,11 @@ public class GoComponentDO extends ComponentDO{
     @Type(type = "string-array")
     private String[] licenses = {};
 
+    @Column(name  = "vulnerabilities")
+    @ApiModelProperty(value = "漏洞", example = "[\"CVE-2020-1197\",]")
+    @Type(type= "string-array")
+    private String[] vulnerabilities = {};
+
     @Column(name = "creator")
     @ApiModelProperty(value = "创建者", example = "000000000")
     private String creator;

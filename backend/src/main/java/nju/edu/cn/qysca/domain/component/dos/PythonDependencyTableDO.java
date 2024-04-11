@@ -24,11 +24,11 @@ public class PythonDependencyTableDO extends DependencyTableDO{
     private String id;
 
     @Column(name = "name", nullable = false)
-    @ApiModelProperty(value = "名称", example = "websocket-extensions")
+    @ApiModelProperty(value = "名称", example = "kafka-counter")
     private String name;
 
     @Column(name = "version", nullable = false)
-    @ApiModelProperty(value = "版本", example = "0.1.0")
+    @ApiModelProperty(value = "版本", example = "0.0.2")
     private String version;
 
     @Column(name = "c_name", nullable = false)
@@ -52,10 +52,14 @@ public class PythonDependencyTableDO extends DependencyTableDO{
     private String type;
 
     @Column(name="language",nullable = false)
-    @ApiModelProperty(value = "语言", example = "java")
+    @ApiModelProperty(value = "语言", example = "python")
     private String language;
 
     @Column(name="licenses", nullable = false)
     @ApiModelProperty(value = "许可证", example = "Apache License 2.0")
     private String licenses;
+
+    @Column(name="vulnerabilities", nullable = false)
+    @ApiModelProperty(value = "漏洞", example = "CVE-2020-1197")
+    private String vulnerabilities;
 }

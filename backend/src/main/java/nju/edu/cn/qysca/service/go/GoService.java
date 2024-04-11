@@ -42,14 +42,6 @@ public interface GoService {
      */
     GoDependencyTreeDO spiderDependency(String name, String version);
 
-    /**
-     * 爬虫获取并填充Go组件信息
-     * @param name 组件名称
-     * @param version 组件版本
-     * @return Go组件信息
-     */
-    GoComponentDO spiderComponentInfo(String name,String version);
-
     AppComponentDependencyTreeDO translateComponentDependency(GoComponentDependencyTreeDO goComponentDependencyTreeDO);
 
     List<AppDependencyTableDO> translateDependencyTable(List<GoDependencyTableDO> goDependencyTableDOS);

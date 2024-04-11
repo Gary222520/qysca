@@ -9,6 +9,8 @@ import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.component.dos.*;
+import nju.edu.cn.qysca.domain.component.dtos.*;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.go.GoService;
@@ -16,19 +18,20 @@ import nju.edu.cn.qysca.service.gradle.GradleService;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.service.npm.NpmService;
 import nju.edu.cn.qysca.service.python.PythonService;
-import nju.edu.cn.qysca.service.spider.SpiderService;
+import nju.edu.cn.qysca.utils.FolderUtil;
 import org.springframework.beans.BeanUtils;
-import nju.edu.cn.qysca.domain.component.dos.*;
-import nju.edu.cn.qysca.domain.component.dtos.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class ComponentServiceImpl implements ComponentService {
@@ -96,12 +99,6 @@ public class ComponentServiceImpl implements ComponentService {
 
     @Autowired
     private GoService goService;
-
-    @Autowired
-    private SpiderService spiderService;
-
-    @Value("${tempPomFolder}")
-    private String tempFolder;
 
     /**
      * 分页查询组件
@@ -196,7 +193,7 @@ public class ComponentServiceImpl implements ComponentService {
             javaComponentDO.setState("RUNNING");
             javaComponentDao.save(javaComponentDO);
         } else if (saveCloseComponentDTO.getLanguage().equals("javaScript")) {
-            JsComponentDO jsComponentDO = npmService.componentAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getType());
+            JsComponentDO jsComponentDO = npmService.componentAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
             JsComponentDO temp = jsComponentDao.findByNameAndVersion(jsComponentDO.getName(), jsComponentDO.getVersion());
             if (temp != null) {
                 throw new PlatformException(500, "该组件已存在");
@@ -254,7 +251,7 @@ public class ComponentServiceImpl implements ComponentService {
             case "javaScript":
                 JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion());
                 try {
-                    JsDependencyTreeDO closeJsDependencyTreeDO = npmService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getType());
+                    JsDependencyTreeDO closeJsDependencyTreeDO = npmService.dependencyTreeAnalysis(saveCloseComponentDTO.getFilePath(), saveCloseComponentDTO.getBuilder(), saveCloseComponentDTO.getType());
                     jsDependencyTreeDao.save(closeJsDependencyTreeDO);
                     List<JsDependencyTableDO> jsDependencyTableDOList = npmService.dependencyTableAnalysis(closeJsDependencyTreeDO);
                     jsDependencyTableDao.saveAll(jsDependencyTableDOList);
@@ -295,7 +292,7 @@ public class ComponentServiceImpl implements ComponentService {
                 break;
         }
         File file = new File(saveCloseComponentDTO.getFilePath());
-        deleteFolder(file.getParent());
+        FolderUtil.deleteFolder(file.getParent());
     }
 
 
@@ -339,7 +336,7 @@ public class ComponentServiceImpl implements ComponentService {
                     throw new PlatformException(500, "您没有权限修改该组件信息");
                 }
                 if (updateCloseComponentDTO.getFilePath() != null) {
-                    JsComponentDO temp = npmService.componentAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getType());
+                    JsComponentDO temp = npmService.componentAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
                     if (!temp.getName().equals(updateCloseComponentDTO.getName()) || !temp.getVersion().equals(updateCloseComponentDTO.getVersion())) {
                         throw new PlatformException(500, "组件信息与文件信息不匹配");
                     }
@@ -401,7 +398,7 @@ public class ComponentServiceImpl implements ComponentService {
                 JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
                 jsComponentDO.setType(updateCloseComponentDTO.getType());
                 jsDependencyTreeDao.deleteByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
-                JsDependencyTreeDO jsDependencyTreeDO = npmService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getType());
+                JsDependencyTreeDO jsDependencyTreeDO = npmService.dependencyTreeAnalysis(updateCloseComponentDTO.getFilePath(), updateCloseComponentDTO.getBuilder(), updateCloseComponentDTO.getType());
                 jsDependencyTreeDao.save(jsDependencyTreeDO);
                 jsDependencyTableDao.deleteAllByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
                 List<JsDependencyTableDO> jsDependencyTableDOList = npmService.dependencyTableAnalysis(jsDependencyTreeDO);
@@ -435,7 +432,7 @@ public class ComponentServiceImpl implements ComponentService {
                 break;
         }
         File file = new File(updateCloseComponentDTO.getFilePath());
-        deleteFolder(file.getParent());
+        FolderUtil.deleteFolder(file.getParent());
     }
 
 
@@ -452,11 +449,11 @@ public class ComponentServiceImpl implements ComponentService {
         switch (deleteCloseComponentDTO.getLanguage()) {
             case "java":
                 JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                if(javaComponentDO.getCreator().equals("")){
+                if (javaComponentDO.getCreator().equals("")) {
                     throw new PlatformException(500, "开源组件不可删除");
                 }
                 parentApplicationDOList = applicationDao.findParentApplication("java", javaComponentDO.getId());
-                if(!parentApplicationDOList.isEmpty()){
+                if (!parentApplicationDOList.isEmpty()) {
                     return parentApplicationDOList;
                 }
                 javaComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
@@ -465,11 +462,11 @@ public class ComponentServiceImpl implements ComponentService {
                 break;
             case "javaScript":
                 JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                if(jsComponentDO.getCreator().equals("")) {
+                if (jsComponentDO.getCreator().equals("")) {
                     throw new PlatformException(500, "开源组件不可删除");
                 }
                 parentApplicationDOList = applicationDao.findParentApplication("javaScript", jsComponentDO.getId());
-                if(!parentApplicationDOList.isEmpty()) {
+                if (!parentApplicationDOList.isEmpty()) {
                     return parentApplicationDOList;
                 }
                 jsComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
@@ -478,11 +475,11 @@ public class ComponentServiceImpl implements ComponentService {
                 break;
             case "golang":
                 GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                if(goComponentDO.getCreator().equals("")) {
+                if (goComponentDO.getCreator().equals("")) {
                     throw new PlatformException(500, "开源组件不可删除");
                 }
-                parentApplicationDOList =  applicationDao.findParentApplication("go", goComponentDO.getId());
-                if(!parentApplicationDOList.isEmpty()){
+                parentApplicationDOList = applicationDao.findParentApplication("go", goComponentDO.getId());
+                if (!parentApplicationDOList.isEmpty()) {
                     return parentApplicationDOList;
                 }
                 goComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
@@ -491,11 +488,11 @@ public class ComponentServiceImpl implements ComponentService {
                 break;
             case "python":
                 PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
-                if(pythonComponentDO.getCreator().equals("")){
+                if (pythonComponentDO.getCreator().equals("")) {
                     throw new PlatformException(500, "开源组件不可删除");
                 }
-                parentApplicationDOList =  applicationDao.findParentApplication("python", pythonComponentDO.getId());
-                if(!parentApplicationDOList.isEmpty()){
+                parentApplicationDOList = applicationDao.findParentApplication("python", pythonComponentDO.getId());
+                if (!parentApplicationDOList.isEmpty()) {
                     return parentApplicationDOList;
                 }
                 pythonComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
@@ -505,7 +502,7 @@ public class ComponentServiceImpl implements ComponentService {
             case "app":
                 ApplicationDO applicationDO = applicationDao.findByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
                 parentApplicationDOList = applicationDao.findParentApplication(applicationDO.getId());
-                if(!parentApplicationDOList.isEmpty()){
+                if (!parentApplicationDOList.isEmpty()) {
                     return parentApplicationDOList;
                 }
                 appComponentDao.deleteByNameAndVersion(deleteCloseComponentDTO.getName(), deleteCloseComponentDTO.getVersion());
@@ -540,7 +537,7 @@ public class ComponentServiceImpl implements ComponentService {
             case "javaScript":
                 dependencyTreeDO = jsDependencyTreeDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
                 if (dependencyTreeDO == null) {
-                    dependencyTreeDO = npmService.spiderDependencyTree(componentGavDTO.getName(), componentGavDTO.getVersion());
+                    dependencyTreeDO = npmService.spiderDependency(componentGavDTO.getName(), componentGavDTO.getVersion());
                     jsDependencyTreeDao.save((JsDependencyTreeDO) dependencyTreeDO);
                     List<JsDependencyTableDO> jsDependencyTableDOList = npmService.dependencyTableAnalysis((JsDependencyTreeDO) dependencyTreeDO);
                     jsDependencyTableDao.saveAll(jsDependencyTableDOList);
@@ -635,21 +632,5 @@ public class ComponentServiceImpl implements ComponentService {
                 break;
         }
         return componentDetailDTO;
-    }
-
-    /**
-     * 根据文件路径删除文件夹
-     *
-     * @param filePath 文件路径
-     */
-    private void deleteFolder(String filePath) {
-        File folder = new File(filePath);
-        if (folder.exists()) {
-            File[] files = folder.listFiles();
-            for (File file : files) {
-                file.delete();
-            }
-        }
-        folder.delete();
     }
 }

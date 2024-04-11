@@ -31,9 +31,9 @@ const data = reactive({
 })
 const open = (com, parentApp) => {
   data.open = true
-  data.com.groupId = com.groupId || ''
-  data.com.artifactId = com.artifactId || com.name
+  data.com.name = com.name
   data.com.version = com.version
+  data.com.language = com.language
   if (parentApp) {
     data.parentApp.parentName = parentApp.name
     data.parentApp.parentVersion = parentApp.version

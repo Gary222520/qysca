@@ -48,9 +48,11 @@ public class ApplicationDO {
     @ApiModelProperty(value = "应用描述", example = "backend of sca system")
     private String description;
 
-    @Column(name = "language", nullable = false)
-    @ApiModelProperty(value = "应用语言", example = "java")
-    private String language;
+    @Column(name="language", nullable = false)
+    @ApiModelProperty(value = "语言", example = "[\"java\",]")
+    @Type(type = "string-array")
+    private String[] language;
+
 
     @Column(name = "type", nullable = false)
     @ApiModelProperty(value = "类型", example = "UI")
@@ -68,6 +70,11 @@ public class ApplicationDO {
     @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")
     @Type(type = "string-array")
     private String[] licenses = {};
+
+    @Column(name = "vulnerabilities")
+    @ApiModelProperty(value = "漏洞", example = "[\"CVE-2020-1234\",]")
+    @Type(type = "string-array")
+    private String[] vulnerabilities = {};
 
     @Column(name = "state", nullable = false)
     @ApiModelProperty(value = "扫描状态", example = "SUCCESS,FAILED,RUNNING,CREATED")

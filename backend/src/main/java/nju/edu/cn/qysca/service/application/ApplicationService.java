@@ -2,8 +2,6 @@ package nju.edu.cn.qysca.service.application;
 
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
-import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTreeDO;
-import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.*;
 import org.springframework.data.domain.Page;
 

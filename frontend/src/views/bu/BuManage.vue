@@ -111,13 +111,13 @@ const deleteBu = (record) => {
 }
 .title {
   font-weight: bold;
-  font-size: 24px;
+  font-size: 20px;
   margin-bottom: 15px;
 }
 .content_card {
   position: absolute;
   width: 100%;
-  height: calc(100% - 32px);
+  height: calc(100% - 30px);
   overflow-y: scroll;
 }
 .operations {

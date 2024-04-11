@@ -1,3 +1,36 @@
+DROP EXTENSION pg_trgm;
+CREATE EXTENSION pg_trgm;
+select set_limit(0.95);
+
+DROP TABLE IF EXISTS plt_vulnerability_cnvd;
+CREATE TABLE plt_vulnerability_cnvd(
+	id VARCHAR(32) PRIMARY KEY,
+	cnvd_id VARCHAR(255) NOT NULL UNIQUE,
+	cve_id VARCHAR(255),
+	severity VARCHAR(255),
+	title TEXT,
+	type VARCHAR(255),
+	submit_time VARCHAR(255),
+	open_time VARCHAR(255),
+	discoverer TEXT,
+	reference TEXT,
+	suggestion TEXT,
+	description TEXT,
+	patch_name TEXT,
+	patch_description TEXT
+);
+CREATE INDEX cnvd_cnvd_id_index ON plt_vulnerability_cnvd(cnvd_id);
+CREATE INDEX cnvd_cve_id_index ON plt_vulnerability_cnvd(cve_id);
+
+DROP TABLE IF EXISTS plt_vulnerability_cnvd_product;
+CREATE TABLE plt_vulnerability_cnvd_product(
+	id VARCHAR(32) PRIMARY KEY,
+	cnvd_id VARCHAR(255) NOT NULL,
+	product TEXT NOT NULL
+);
+CREATE INDEX cp_cnvd_id_index ON plt_vulnerability_cnvd_product(cnvd_id);
+CREATE INDEX cp_product_index ON plt_vulnerability_cnvd_product(product);
+
 DROP TABLE IF EXISTS plt_vulnerability_cwe;
 CREATE TABLE plt_vulnerability_cwe(
 	id VARCHAR(32) PRIMARY KEY,
@@ -23,7 +56,7 @@ CREATE TABLE plt_vulnerability_cve(
 	last_modified_date VARCHAR(255)
 );
 
-DROP TABLE IF EXISTS plt_vulnerability_cve_cpe;
+DROP TABLE IF EXISTS plt_vulnerability_cve_cpe CASCADE;
 CREATE TABLE plt_vulnerability_cve_cpe(
 	id VARCHAR(32) PRIMARY KEY,
 	cve_id VARCHAR(255) NOT NULL,
@@ -33,9 +66,21 @@ CREATE TABLE plt_vulnerability_cve_cpe(
 	version_end VARCHAR(255),
 	start_include BOOLEAN,
 	end_include BOOLEAN
-);
+) PARTITION BY HASH(id);
+
+do language plpgsql $$    
+declare    
+begin    
+  for i in 0..63    
+  loop    
+    execute format('drop table if exists plt_vulnerability_cve_cpe%s', i);
+    execute format('create table plt_vulnerability_cve_cpe%s partition of plt_vulnerability_cve_cpe for values with (modulus 64,remainder %s)', i,i);             
+  end loop;    
+end;    
+$$;
 CREATE INDEX cve_id_index ON plt_vulnerability_cve_cpe(cve_id);
 CREATE INDEX vp_uri_index ON plt_vulnerability_cve_cpe(uri);
+CREATE INDEX cc_gin_uri_index ON plt_vulnerability_cve_cpe USING gin(uri gin_trgm_ops);
 
 DROP TABLE IF EXISTS plt_vulnerability_cpe_match;
 CREATE TABLE plt_vulnerability_cpe_match(
@@ -63,6 +108,7 @@ CREATE TABLE plt_go_component(
 	p_url VARCHAR(255),
     creator VARCHAR(32),
 	licenses TEXT[],
+    vulnerabilities TEXT[],
 	state VARCHAR(32) NOT NULL,
 	UNIQUE(name,version)
 );
@@ -87,7 +133,8 @@ CREATE TABLE plt_go_dependency_table(
 	direct BOOLEAN NOT NULL,
 	type VARCHAR(255) NOT NULL,
 	language VARCHAR(255) NOT NULL,
-    licenses VARCHAR(255) NOT NULL
+    licenses VARCHAR(255) NOT NULL,
+    vulnerabilities VARCHAR(255) NOT NULL
 );
 
 DROP TABLE IF EXISTS plt_python_component;
@@ -102,9 +149,10 @@ CREATE TABLE plt_python_component(
     download_url VARCHAR(255),
     source_url VARCHAR(255),
     p_url VARCHAR(255),
-    author VARCHAR(255),
-    author_email varchar(255),
+    author TEXT,
+    author_email TEXT,
     licenses TEXT[],
+	vulnerabilities TEXT[],
     creator VARCHAR(32),
     state VARCHAR(32) NOT NULL,
     UNIQUE(name,version)
@@ -131,7 +179,8 @@ CREATE TABLE plt_python_dependency_table(
     direct BOOLEAN NOT NULL,
     type VARCHAR(255) NOT NULL,
     language VARCHAR(255) NOT NULL,
-	licenses VARCHAR(255) NOT NULL
+	licenses VARCHAR(255) NOT NULL,
+    vulnerabilities VARCHAR(255) NOT NULL
 );
 
 DROP TABLE IF EXISTS plt_bu;
@@ -161,6 +210,7 @@ CREATE TABLE plt_application(
 	scanner VARCHAR(255),
 	state VARCHAR(255) NOT NULL,
     licenses TEXT[],
+	vulnerabilities TEXT[],
 	time VARCHAR(255) NOT NULL,
     lock Boolean NOT NULL,
 	release Boolean NOT NULL,
@@ -186,6 +236,7 @@ CREATE TABLE plt_java_component(
     creator VARCHAR(32),
 	developers JSONB,
 	licenses TEXT[],
+    vulnerabilities TEXT[],
 	hashes JSONB,
 	state VARCHAR(32) NOT NULL,
 	UNIQUE(name,version)
@@ -253,7 +304,8 @@ CREATE TABLE plt_java_dependency_table(
 	direct BOOLEAN NOT NULL,
 	type VARCHAR(255) NOT NULL,
 	language VARCHAR(255) NOT NULL,
-	licenses VARCHAR(255) NOT NULL
+	licenses VARCHAR(255) NOT NULL,
+    vulnerabilities VARCHAR(255) NOT NULL
 );
 
 DROP TABLE IF EXISTS plt_license;
@@ -287,6 +339,7 @@ create table plt_js_component (
     copyright_statements text[],
     purl VARCHAR(255),
     licenses TEXT[],
+    vulnerabilities TEXT[],
     download_url VARCHAR(255),
     language VARCHAR(255) NOT NULL,
     type VARCHAR(255) NOT NULL,
@@ -314,7 +367,8 @@ CREATE TABLE plt_js_dependency_table (
     direct BOOLEAN NOT NULL,
     type VARCHAR(255) NOT NULL,
     language VARCHAR(255) NOT NULL,
-	licenses VARCHAR(255) NOT NULL
+	licenses VARCHAR(255) NOT NULL,
+    vulnerabilities VARCHAR(255) NOT NULL
 );
 
 DROP TABLE IF EXISTS plt_app_component;
@@ -327,6 +381,7 @@ CREATE TABLE plt_app_component(
     description VARCHAR(255),
     developers JSONB,
     licenses TEXT[],
+    vulnerabilities TEXT[],
     creator VARCHAR(32),
     UNIQUE(name, version)
 );
@@ -351,9 +406,24 @@ CREATE TABLE plt_app_dependency_table(
     direct BOOLEAN NOT NULL,
     type VARCHAR(255) NOT NULL,
     language VARCHAR(255) NOT NULL,
-	licenses VARCHAR(255) NOT NULL
+	licenses VARCHAR(255) NOT NULL,
+    vulnerabilities VARCHAR(255) NOT NULL
 );
 
     
-    
-    
+CREATE TABLE IF NOT EXISTS plt_visited_maven_urls(
+    id VARCHAR(32) PRIMARY KEY,
+    url VARCHAR(255) NOT NULL UNIQUE,
+    is_success BOOLEAN NOT NULL,
+    is_last_level BOOLEAN NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS plt_visited_python_packages(
+    id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    visited BOOLEAN NOT NULL,
+    is_success BOOLEAN NOT NULL,
+    UNIQUE(name,version)
+)
+
