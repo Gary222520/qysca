@@ -14,8 +14,10 @@ import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.application.dtos.ApplicationSearchDTO;
 import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
+import nju.edu.cn.qysca.domain.license.dtos.LicenseConflictInfoDTO;
 import nju.edu.cn.qysca.domain.vulnerability.dtos.VulnerabilityBriefDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
+import nju.edu.cn.qysca.service.license.LicenseService;
 import nju.edu.cn.qysca.utils.FolderUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,6 +53,8 @@ public class ReportServiceImpl implements ReportService {
     private PythonComponentDao pythonComponentDao;
     @Autowired
     private LicenseDao licenseDao;
+    @Autowired
+    private LicenseService licenseService;
     @Value("${tempReportFolder}")
     private String tempFolder;
 
@@ -144,13 +148,15 @@ public class ReportServiceImpl implements ReportService {
             licenseDOList.add(licenseDao.findByName(licenseName));
         }
 
+        LicenseConflictInfoDTO licenseConflictInfoDTO = licenseService.getLicenseConflictInformation(appName, appVersion);
+
         List<VulnerabilityBriefDTO> vulnerabilityBriefDTOList = new ArrayList<>();
         for (String vulnerability : applicationDO.getVulnerabilities()) {
 
         }
 
         // 生成html文件
-        String filePath = makeHtml(dir, "report-template", applicationDO, componentDOList, licenseDOList, vulnerabilityBriefDTOList);
+        String filePath = makeHtml(dir, "report-template", applicationDO, componentDOList, licenseDOList, licenseConflictInfoDTO, vulnerabilityBriefDTOList);
         return filePath;
     }
 
@@ -165,11 +171,12 @@ public class ReportServiceImpl implements ReportService {
      * @param vulnerabilityBriefDTOList  List<VulnerabilityBriefDTO>
      * @return html报告地址
      */
-    private String makeHtml(File dir, String template, ApplicationDO applicationDO, List<ComponentDO> componentDOList, List<LicenseDO> licenseDOList, List<VulnerabilityBriefDTO>  vulnerabilityBriefDTOList) {
+    private String makeHtml(File dir, String template, ApplicationDO applicationDO, List<ComponentDO> componentDOList, List<LicenseDO> licenseDOList, LicenseConflictInfoDTO licenseConflictInfoDTO, List<VulnerabilityBriefDTO>  vulnerabilityBriefDTOList) {
         Context context = new Context();
         context.setVariable("application", applicationDO);
         context.setVariable("components", componentDOList);
         context.setVariable("licenses", licenseDOList);
+        context.setVariable("licensesConflict", licenseConflictInfoDTO);
         context.setVariable("vulnerabilities", vulnerabilityBriefDTOList);
 
 
