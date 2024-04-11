@@ -5,11 +5,10 @@
         <a-radio-button :value="false" @click="showLicenseList()" style="width: 90px">许可证</a-radio-button>
         <a-radio-button :value="true" @click="showLicenseConflict()" style="width: 90px">冲突信息</a-radio-button>
       </a-radio-group>
-      <a-popconfirm v-if="!data.showConflict" v-model:open="data.popconfirm" placement="right">
+      <!-- <a-popconfirm v-if="!data.showConflict" v-model:open="data.popconfirm" placement="right">
         <template #title>
           <div style="font-size: 16px">添加许可证</div>
         </template>
-        <!-- <template #icon></template> -->
         <template #description>
           <a-input class="input" v-model:value="data.input" placeholder="输入许可证名称以添加..."></a-input>
         </template>
@@ -20,7 +19,7 @@
           <a-button class="btn" @click="addLicense()">添加</a-button>
         </template>
         <a-button type="primary" @click="data.popconfirm = true"><PlusOutlined />添加许可证</a-button>
-      </a-popconfirm>
+      </a-popconfirm> -->
     </div>
     <a-spin :spinning="data.spinning" tip="许可证信息加载中，请稍等...">
       <a-table
@@ -29,6 +28,28 @@
         :columns="data.columns"
         bordered
         :pagination="pagination">
+        <template #headerCell="{ title, column }">
+          <template v-if="column.key === 'name'">
+            {{ title }}
+            <a-popconfirm v-model:open="data.popconfirm" placement="right">
+              <template #title>
+                <div style="font-size: 16px">添加许可证</div>
+              </template>
+              <template #description>
+                <a-input class="input" v-model:value="data.input" placeholder="输入许可证名称以添加..."></a-input>
+              </template>
+              <template #cancelButton>
+                <a-button class="cancel_btn" @click="data.popconfirm = false">取消</a-button>
+              </template>
+              <template #okButton>
+                <a-button class="btn" @click="addLicense()">添加</a-button>
+              </template>
+              <a-tooltip title="添加许可证">
+                <PlusOutlined :style="{ fontSize: '16px', color: '#6f005f', marginLeft: '5px' }" />
+              </a-tooltip>
+            </a-popconfirm>
+          </template>
+        </template>
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">
             <div class="column_name" @click="showInfo(record)">{{ record.name }}</div>
@@ -97,10 +118,24 @@
               <div v-else>{{ record.title }}</div>
             </template>
             <template v-if="column.key === 'pos_licenses'">
-              <div>{{ arrToString(record.pos_licenses) }}</div>
+              <a-tag
+                v-for="(item, index) in record.pos_licenses"
+                :key="index"
+                :color="hasConflict(record) ? 'error' : ''"
+                @click="showInfo(item)"
+                style="cursor: pointer">
+                {{ item.name }}
+              </a-tag>
             </template>
             <template v-if="column.key === 'neg_licenses'">
-              <div>{{ arrToString(record.neg_licenses) }}</div>
+              <a-tag
+                v-for="(item, index) in record.neg_licenses"
+                :key="index"
+                :color="hasConflict(record) ? 'error' : ''"
+                @click="showInfo(item)"
+                style="cursor: pointer">
+                {{ item.name }}
+              </a-tag>
             </template>
           </template>
           <template #emptyText>暂无数据</template>
@@ -117,10 +152,24 @@
               <div>{{ record.title }}</div>
             </template>
             <template v-if="column.key === 'pos_licenses'">
-              <div>{{ arrToString(record.pos_licenses) }}</div>
+              <a-tag
+                v-for="(item, index) in record.pos_licenses"
+                :key="index"
+                :color="hasConflict(record) ? 'error' : ''"
+                @click="showInfo(item)"
+                style="cursor: pointer">
+                {{ item.name }}
+              </a-tag>
             </template>
             <template v-if="column.key === 'neg_licenses'">
-              <div>{{ arrToString(record.neg_licenses) }}</div>
+              <a-tag
+                v-for="(item, index) in record.neg_licenses"
+                :key="index"
+                :color="hasConflict(record) ? 'error' : ''"
+                @click="showInfo(item)"
+                style="cursor: pointer">
+                {{ item.name }}
+              </a-tag>
             </template>
           </template>
           <template #emptyText>暂无数据</template>

@@ -27,7 +27,9 @@
         <div class="drawer_title">扫描信息</div>
       </div>
       <a-descriptions>
-        <a-descriptions-item label="语言">{{ arrToString(data.detail?.language) }}</a-descriptions-item>
+        <a-descriptions-item label="语言">
+          <a-tag v-for="(item, index) in data.detail?.language" :key="index">{{ item }}</a-tag>
+        </a-descriptions-item>
         <a-descriptions-item label="构建工具">{{ data.detail?.builder }}</a-descriptions-item>
         <a-descriptions-item label="扫描对象">{{ data.detail?.scanner }}</a-descriptions-item>
         <a-descriptions-item label="扫描时间">{{ data.detail?.time }}</a-descriptions-item>
@@ -236,7 +238,23 @@ const refresh = () => {
 const exportSBOM = () => {
   ExportSBOM({ name: data.detail.name, version: data.detail.version })
     .then((res) => {
-      downloadSBOM(res.data, `${data.detail.name}-${data.detail.version}-SBOM`)
+      // console.log('ExportSBOM', res)
+      const reader = new FileReader()
+      reader.readAsText(res.data, 'utf-8')
+      reader.onload = () => {
+        try {
+          const result = JSON.parse(reader.result)
+          console.log(result)
+          if (result.code && result.code !== 200) {
+            message.error(result.message)
+          } else {
+            downloadSBOM(res.data, `${data.detail.name}-${data.detail.version}-SBOM`)
+            message.success('导出成功')
+          }
+        } catch (e) {
+          message.error(e)
+        }
+      }
     })
     .catch((e) => {
       message.error(e)
@@ -247,7 +265,8 @@ const downloadSBOM = (data, fileName) => {
   const a = document.createElement('a')
   a.style.display = 'none'
   a.href = URL.createObjectURL(blob)
-  a.download = `${fileName}.json`
+  if (hasChildren.value) a.download = `${fileName}.zip`
+  else a.download = `${fileName}.json`
   a.click()
   a.remove()
 }
