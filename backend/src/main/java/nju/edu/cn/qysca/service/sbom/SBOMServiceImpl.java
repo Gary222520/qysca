@@ -6,11 +6,10 @@ import nju.edu.cn.qysca.dao.application.AppDependencyTableDao;
 import nju.edu.cn.qysca.dao.application.AppDependencyTreeDao;
 import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
-import nju.edu.cn.qysca.domain.application.dos.AppComponentDO;
-import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
-import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.application.dos.*;
 import nju.edu.cn.qysca.domain.application.dtos.ApplicationSearchDTO;
 import nju.edu.cn.qysca.domain.component.dos.*;
+import nju.edu.cn.qysca.domain.component.dtos.ComponentSearchNameDTO;
 import nju.edu.cn.qysca.domain.sbom.*;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.utils.FolderUtil;
@@ -91,14 +90,34 @@ public class SBOMServiceImpl implements SBOMService {
                 // 准备sbomDTO
                 SbomDTO sbomDTO = new SbomDTO();
                 List<SbomComponentDTO> sbomComponentDTOList = new ArrayList<>();
+                List<SbomDependencyDTO> sbomDependencyDTOList= new ArrayList<>();
                 List<AppDependencyTableDO> appDependencyTableDOS = appDependencyTableDao.findAllByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
                 for (AppDependencyTableDO dependencyTable : appDependencyTableDOS) {
                     // 最底层的app的依赖组件应该都是四张语言表里的
                     sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), dependencyTable.getLanguage()));
                 }
+                AppDependencyTreeDO appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
+                AppComponentDependencyTreeDO root = appDependencyTreeDO.getTree();
+                Queue<AppComponentDependencyTreeDO> queue = new LinkedList<>();
+                queue.offer(root);
+                while (!queue.isEmpty()) {
+                    AppComponentDependencyTreeDO node = queue.poll();
+                    if (!node.equals(root)) {
+                        ComponentSearchNameDTO component = new ComponentSearchNameDTO(node.getName(), node.getVersion());
+                        List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
+                                .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
+                                .collect(Collectors.toList());
+                        sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, node.getLanguage()));
+                    }
+                    for (AppComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
+                        queue.offer(dependencyNode);
+                    }
+                }
+
                 sbomDTO.setName(applicationDO.getName());
                 sbomDTO.setVersion(applicationDO.getVersion());
                 sbomDTO.setComponents(sbomComponentDTOList);
+                sbomDTO.setDependencies(sbomDependencyDTOList);
 
                 Date now2 = new Date();
                 SimpleDateFormat dateFormat2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -222,6 +241,7 @@ public class SBOMServiceImpl implements SBOMService {
     private SbomDTO getSbomDTO(String language, String componentId) {
         SbomDTO sbomDTO = new SbomDTO();
         List<SbomComponentDTO> sbomComponentDTOList = new ArrayList<>();
+        List<SbomDependencyDTO> sbomDependencyDTOList = new ArrayList<>();
 
         switch (language) {
             case "app": {
@@ -235,54 +255,142 @@ public class SBOMServiceImpl implements SBOMService {
                     // 最底层的app的依赖组件应该都是四张语言表里的
                     sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), dependencyTable.getLanguage()));
                 }
+
+                AppDependencyTreeDO appDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(appComponentDO.getName(), appComponentDO.getVersion());
+                AppComponentDependencyTreeDO root = appDependencyTreeDO.getTree();
+                Queue<AppComponentDependencyTreeDO> queue = new LinkedList<>();
+                queue.offer(root);
+                while (!queue.isEmpty()) {
+                    AppComponentDependencyTreeDO node = queue.poll();
+                    if (!node.equals(root)) {
+                        ComponentSearchNameDTO component = new ComponentSearchNameDTO(node.getName(), node.getVersion());
+                        List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
+                                .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
+                                .collect(Collectors.toList());
+                        sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, node.getLanguage()));
+                    }
+                    for (AppComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
+                        queue.offer(dependencyNode);
+                    }
+                }
+
                 break;
             }
             case "java": {
                 JavaComponentDO javaComponentDO = javaComponentDao.getById(componentId);
                 sbomDTO.setName(javaComponentDO.getName());
                 sbomDTO.setVersion(javaComponentDO.getVersion());
-                List<JavaDependencyTableDO> javaDependencyTableDOS = javaDependencyTableDao.findAllByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion());
 
+                List<JavaDependencyTableDO> javaDependencyTableDOS = javaDependencyTableDao.findAllByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion());
                 for (JavaDependencyTableDO dependencyTable : javaDependencyTableDOS) {
                     sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), "java"));
                 }
+
+                JavaDependencyTreeDO javaDependencyTreeDO = javaDependencyTreeDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion());
+                JavaComponentDependencyTreeDO root = javaDependencyTreeDO.getTree();
+                Queue<JavaComponentDependencyTreeDO> queue = new LinkedList<>();
+                queue.offer(root);
+                while (!queue.isEmpty()) {
+                    JavaComponentDependencyTreeDO node = queue.poll();
+                    ComponentSearchNameDTO component = new ComponentSearchNameDTO(node.getName(), node.getVersion());
+                    List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
+                            .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
+                            .collect(Collectors.toList());
+                    sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, "java"));
+                    for (JavaComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
+                        queue.offer(dependencyNode);
+                    }
+                }
+
                 break;
             }
             case "golang": {
                 GoComponentDO goComponentDO = goComponentDao.getById(componentId);
                 sbomDTO.setName(goComponentDO.getName());
                 sbomDTO.setVersion(goComponentDO.getVersion());
-                List<GoDependencyTableDO> goDependencyTableDOS = goDependencyTableDao.findAllByNameAndVersion(goComponentDO.getName(), goComponentDO.getVersion());
 
+                List<GoDependencyTableDO> goDependencyTableDOS = goDependencyTableDao.findAllByNameAndVersion(goComponentDO.getName(), goComponentDO.getVersion());
                 for (GoDependencyTableDO dependencyTable : goDependencyTableDOS) {
                     sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), "golang"));
                 }
+
+                GoDependencyTreeDO goDependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(goComponentDO.getName(), goComponentDO.getVersion());
+                GoComponentDependencyTreeDO root = goDependencyTreeDO.getTree();
+                Queue<GoComponentDependencyTreeDO> queue = new LinkedList<>();
+                queue.offer(root);
+                while (!queue.isEmpty()) {
+                    GoComponentDependencyTreeDO node = queue.poll();
+                    ComponentSearchNameDTO component = new ComponentSearchNameDTO(node.getName(), node.getVersion());
+                    List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
+                            .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
+                            .collect(Collectors.toList());
+                    sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, "golang"));
+                    for (GoComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
+                        queue.offer(dependencyNode);
+                    }
+                }
+
                 break;
             }
             case "javaScript": {
                 JsComponentDO jsComponentDO = jsComponentDao.getById(componentId);
                 sbomDTO.setName(jsComponentDO.getName());
                 sbomDTO.setVersion(jsComponentDO.getVersion());
-                List<JsDependencyTableDO> jsDependencyTableDOS = jsDependencyTableDao.findAllByNameAndVersion(jsComponentDO.getName(), jsComponentDO.getVersion());
 
+                List<JsDependencyTableDO> jsDependencyTableDOS = jsDependencyTableDao.findAllByNameAndVersion(jsComponentDO.getName(), jsComponentDO.getVersion());
                 for (JsDependencyTableDO dependencyTable : jsDependencyTableDOS) {
                     sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), "javaScript"));
                 }
+
+                JsDependencyTreeDO jsDependencyTreeDO = jsDependencyTreeDao.findByNameAndVersion(jsComponentDO.getName(), jsComponentDO.getVersion());
+                JsComponentDependencyTreeDO root = jsDependencyTreeDO.getTree();
+                Queue<JsComponentDependencyTreeDO> queue = new LinkedList<>();
+                queue.offer(root);
+                while (!queue.isEmpty()) {
+                    JsComponentDependencyTreeDO node = queue.poll();
+                    ComponentSearchNameDTO component = new ComponentSearchNameDTO(node.getName(), node.getVersion());
+                    List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
+                            .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
+                            .collect(Collectors.toList());
+                    sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, "javaScript"));
+                    for (JsComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
+                        queue.offer(dependencyNode);
+                    }
+                }
+
                 break;
             }
             case "python": {
                 PythonComponentDO pythonComponentDO = pythonComponentDao.getById(componentId);
                 sbomDTO.setName(pythonComponentDO.getName());
                 sbomDTO.setVersion(pythonComponentDO.getVersion());
-                List<PythonDependencyTableDO> pythonDependencyTableDOS = pythonDependencyTableDao.findAllByNameAndVersion(pythonComponentDO.getName(), pythonComponentDO.getVersion());
 
+                List<PythonDependencyTableDO> pythonDependencyTableDOS = pythonDependencyTableDao.findAllByNameAndVersion(pythonComponentDO.getName(), pythonComponentDO.getVersion());
                 for (PythonDependencyTableDO dependencyTable : pythonDependencyTableDOS) {
                     sbomComponentDTOList.add(getComponentDTO(dependencyTable.getCName(), dependencyTable.getCVersion(), dependencyTable.getDirect(), "python"));
                 }
+
+                PythonDependencyTreeDO pythonDependencyTreeDO = pythonDependencyTreeDao.findByNameAndVersion(pythonComponentDO.getName(), pythonComponentDO.getVersion());
+                PythonComponentDependencyTreeDO root = pythonDependencyTreeDO.getTree();
+                Queue<PythonComponentDependencyTreeDO> queue = new LinkedList<>();
+                queue.offer(root);
+                while (!queue.isEmpty()) {
+                    PythonComponentDependencyTreeDO node = queue.poll();
+                    ComponentSearchNameDTO component = new ComponentSearchNameDTO(node.getName(), node.getVersion());
+                    List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
+                            .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
+                            .collect(Collectors.toList());
+                    sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, "python"));
+                    for (PythonComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
+                        queue.offer(dependencyNode);
+                    }
+                }
+
                 break;
             }
         }
         sbomDTO.setComponents(sbomComponentDTOList);
+        sbomDTO.setDependencies(sbomDependencyDTOList);
         Date now = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -383,5 +491,49 @@ public class SBOMServiceImpl implements SBOMService {
             }
         }
         return null;
+    }
+
+
+    /**
+     * 生成DependencyDTO，相当于json文件中的一个dependency
+     *
+     * @param component 组件
+     * @param dependencies 依赖列表
+     * @param language 语言
+     * @return SbomComponentDTO
+     */
+    private SbomDependencyDTO getDependencyDTO(ComponentSearchNameDTO component, List<ComponentSearchNameDTO> dependencies, String language){
+        SbomDependencyDTO sbomDependencyDTO = new SbomDependencyDTO();
+        switch (language) {
+            case "java": {
+                sbomDependencyDTO.setRef(javaComponentDao.findByNameAndVersion(component.getName(), component.getVersion()).getPUrl());
+                sbomDependencyDTO.setDependsOn(new ArrayList<>());
+                for (ComponentSearchNameDTO dependency : dependencies){
+                    sbomDependencyDTO.getDependsOn().add(javaComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion()).getPUrl());                }
+                break;
+            }
+            case "golang": {
+                sbomDependencyDTO.setRef(goComponentDao.findByNameAndVersion(component.getName(), component.getVersion()).getPUrl());
+                sbomDependencyDTO.setDependsOn(new ArrayList<>());
+                for (ComponentSearchNameDTO dependency : dependencies){
+                    sbomDependencyDTO.getDependsOn().add(goComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion()).getPUrl());                }
+                break;
+            }
+            case "javaScript": {
+                sbomDependencyDTO.setRef(jsComponentDao.findByNameAndVersion(component.getName(), component.getVersion()).getPurl());
+                sbomDependencyDTO.setDependsOn(new ArrayList<>());
+                for (ComponentSearchNameDTO dependency : dependencies){
+                    sbomDependencyDTO.getDependsOn().add(jsComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion()).getPurl());                }
+                break;
+            }
+            case "python": {
+                sbomDependencyDTO.setRef(pythonComponentDao.findByNameAndVersion(component.getName(), component.getVersion()).getPUrl());
+                sbomDependencyDTO.setDependsOn(new ArrayList<>());
+                for (ComponentSearchNameDTO dependency : dependencies){
+                    sbomDependencyDTO.getDependsOn().add(pythonComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion()).getPUrl());                }
+                break;
+            }
+        }
+        return sbomDependencyDTO;
     }
 }
