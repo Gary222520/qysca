@@ -48,4 +48,14 @@ public interface AppDependencyTableDao extends JpaRepository<AppDependencyTableD
      * @return List<AppDependencyTableDO> 应用依赖信息
      */
     List<AppDependencyTableDO> findAllByNameAndVersion(String name, String version);
+
+
+    /**
+     * 查询依赖的组件数量
+     * @param name 名称
+     * @param version 版本
+     * @return Integer 依赖的组件数量
+     */
+    @Query(value = "select count(*) from plt_app_dependency_table where name = :name and version = :version", nativeQuery = true)
+    Integer getDependencyCount(String name, String version);
 }
