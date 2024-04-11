@@ -82,7 +82,7 @@ const createTree = (arr, preKey) => {
     const key = `${preKey}-${index}`
     const data = {
       ...item,
-      title: item?.artifactId,
+      title: item?.name,
       key,
       children: createTree(item?.dependencies, key)
     }

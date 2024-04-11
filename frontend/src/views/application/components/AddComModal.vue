@@ -1,15 +1,24 @@
 <template>
-  <a-modal v-model:open="data.open" :footer="null">
+  <a-modal v-model:open="data.open" @cancel="close()" :footer="null">
     <template #title>
       <div style="font-size: 20px">添加组件</div>
     </template>
     <div style="display: flex; margin-top: 20px">
       <a-form :model="formState" ref="formRef" name="application" :label-col="{ span: 8 }">
+        <a-form-item label="语言" name="language" :rules="[{ required: true, message: '请选择语言' }]">
+          <a-select v-model:value="formState.language" style="width: 300px">
+            <a-select-option value="java">java</a-select-option>
+            <a-select-option value="python">python</a-select-option>
+            <a-select-option value="golang">golang</a-select-option>
+            <a-select-option value="javaScript">javaScript</a-select-option>
+            <a-select-option value="app">mixed</a-select-option>
+          </a-select>
+        </a-form-item>
         <a-form-item label="组件名称" name="name" :rules="[{ required: true, message: '请输入组件名称' }]">
-          <a-dropdown>
+          <a-dropdown placement="bottom">
             <a-input v-model:value="formState.name" @change="() => getNameList()" style="width: 300px" />
             <template #overlay>
-              <a-menu v-if="selection.componentList.length">
+              <a-menu v-if="selection.componentList.length" style="max-height: 300px; width: 300px; overflow-y: scroll">
                 <a-menu-item
                   v-for="(item, index) in selection.componentList"
                   :key="index"
@@ -55,16 +64,17 @@ const selection = reactive({
 const formRef = ref()
 const formState = reactive({
   name: '',
-  version: ''
+  version: '',
+  language: 'java'
 })
 const parentInfo = reactive({
   parentName: '',
   parentVersion: ''
 })
 const componentInfo = reactive({
-  groupId: '',
-  artifactId: '',
-  version: ''
+  name: '',
+  version: '',
+  language: ''
 })
 const open = (parent) => {
   data.open = true
@@ -73,12 +83,21 @@ const open = (parent) => {
 }
 const close = () => {
   data.open = false
+  clear()
 }
 const clear = () => {
   formRef.value.resetFields()
+  selection.componentList = []
+  selection.options = []
+  componentInfo.name = ''
+  componentInfo.version = ''
+  componentInfo.language = ''
 }
 const getNameList = async () => {
-  await GetComponentNameList({ name: formState.name })
+  formState.version = ''
+  selection.options = []
+  if (formState.name === '') return
+  await GetComponentNameList({ name: formState.name, language: formState.language })
     .then((res) => {
       if (res.code !== 200) {
         message.error(res.message)
@@ -95,24 +114,26 @@ const getNameList = async () => {
         })
         if (!exsist) {
           pre.push({
-            groupId: curr.groupId,
-            artifactId: curr.artifactId,
             name: curr.name,
             versions: [{ label: curr.version, value: curr.version }]
           })
         }
         return pre
       }, [])
+      componentInfo.name = formState.name
+      componentInfo.language = formState.language
+      if (selection.componentList.length === 1) selection.options = selection.componentList[0].versions
     })
     .catch((err) => {
       console.error(err)
     })
 }
-const chooseName = (item) => {
-  console.log('chooseName', item)
+const chooseName = async (item) => {
+  // console.log('chooseName', item)
   formState.name = item.name
-  componentInfo.groupId = item.groupId
-  componentInfo.artifactId = item.artifactId
+  await getNameList()
+  componentInfo.name = item.name
+  componentInfo.language = formState.language
   selection.options = item.versions
 }
 const chooseVersion = (version) => {
@@ -134,11 +155,8 @@ const submit = () => {
             return
           }
           message.success('添加组件成功')
-          data.open = false
           emit('success')
-          setTimeout(() => {
-            clear()
-          }, 500)
+          close()
         })
         .catch((e) => {
           message.error(e)

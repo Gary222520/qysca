@@ -82,8 +82,6 @@ CREATE INDEX cve_id_index ON plt_vulnerability_cve_cpe(cve_id);
 CREATE INDEX vp_uri_index ON plt_vulnerability_cve_cpe(uri);
 CREATE INDEX cc_gin_uri_index ON plt_vulnerability_cve_cpe USING gin(uri gin_trgm_ops);
 
-select * from plt_vulnerability_cve_cpe where uri % 'cpe:2.3:o:sun:sunos' order by similarity(uri,'cpe:2.3:o:sun:sunos') desc limit 10;
-
 DROP TABLE IF EXISTS plt_vulnerability_cpe_match;
 CREATE TABLE plt_vulnerability_cpe_match(
 	id VARCHAR(32) PRIMARY KEY,

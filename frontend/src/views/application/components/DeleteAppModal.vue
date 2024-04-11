@@ -11,18 +11,21 @@
       <a-button class="cancel_btn" @click="close">取消</a-button>
       <a-button class="delete_btn" @click="deleteProject()">删除</a-button>
     </template>
+    <WarnModal ref="warnModal" @ok="close()"></WarnModal>
   </a-modal>
 </template>
 
 <script setup>
-import { reactive, defineExpose, defineEmits } from 'vue'
+import { reactive, ref, defineExpose, defineEmits } from 'vue'
 import { DeleteProject } from '@/api/frontend'
 import { WarningOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useStore } from 'vuex'
+import WarnModal from '@/components/WarnModal.vue'
 
 const emit = defineEmits(['success'])
 const store = useStore()
+const warnModal = ref()
 
 const data = reactive({
   open: false,
@@ -40,6 +43,7 @@ const open = (app, parentApp) => {
 }
 const close = () => {
   data.open = false
+  emit('success')
 }
 const deleteProject = () => {
   DeleteProject({
@@ -52,19 +56,17 @@ const deleteProject = () => {
         message.error(res.message)
         return
       }
-      if (res.data.length === 0) message.success('删除版本成功')
-      else {
-        let text = '无法删除！有以下应用依赖该版本：'
-        res.data.forEach((item) => {
-          text += item.name + '-' + item.version + ';'
-        })
-        message.error(text)
+      if (!res.data || res.data.length === 0) {
+        data.open = false
+        message.success('删除版本成功')
+        emit('success')
+      } else {
+        data.open = false
+        warnModal.value.open(res.data, '有以下应用依赖该版本：')
       }
-      data.open = false
-      emit('success')
     })
     .catch((e) => {
-      message.error(e)
+      console.error(e)
     })
 }
 defineExpose({ open })

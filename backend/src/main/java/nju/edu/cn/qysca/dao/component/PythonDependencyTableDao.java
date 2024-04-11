@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface PythonDependencyTableDao extends JpaRepository<PythonDependencyTableDO, String> {
 
@@ -29,4 +31,11 @@ public interface PythonDependencyTableDao extends JpaRepository<PythonDependency
      */
     @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(d.cName, d.cVersion, d.depth, d.type, d.language, d.direct) from PythonDependencyTableDO d where d.name = :name and d.version = :version")
     Page<ComponentTableDTO> findByNameAndVersion(@Param("name") String name, @Param("version") String version, Pageable pageable);
+
+    /**
+     * 根据名称和版本号查找
+     * @param name 名称
+     * @param version 版本号
+     */
+    List<PythonDependencyTableDO> findAllByNameAndVersion(String name, String version);
 }
