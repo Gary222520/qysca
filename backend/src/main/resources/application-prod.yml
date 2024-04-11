@@ -42,11 +42,10 @@ uploadFolder: src/main/resources/static/upload/
 tempPomFolder: src/main/resources/static/temp/pom/
 tempNpmFolder: src/main/resources/static/temp/npm/
 tempGoFolder: src/main/resources/static/temp/go/
-tempReportFolder: src/main/resources/static/temp/report/
-tempPythonFolder: src/main/resources/static/temp/python
 tempPythonFolder: src/main/resources/static/temp/python/
 targetUrlsPath: src/main/resources/static/target_urls.txt
 tempSBOMPath: src/main/resources/static/temp/sbom/
+tempReportFolder: src/main/resources/static/temp/report/
 MAVEN_REPO_BASE_URL: https://repo1.maven.org/maven2/
 PYPI_REPO_BASE_URL: https://pypi.org/pypi/
 NPM_REPO_BASE_URL: https://registry.npmjs.org/
