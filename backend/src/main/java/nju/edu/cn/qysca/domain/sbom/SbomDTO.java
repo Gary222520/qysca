@@ -25,4 +25,7 @@ public class SbomDTO {
 
     @ApiModelProperty(value = "组件列表")
     private List<SbomComponentDTO> components;
+
+    @ApiModelProperty(value = "依赖列表")
+    private List<SbomDependencyDTO> dependencies;
 }
