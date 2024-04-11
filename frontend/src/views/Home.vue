@@ -6,22 +6,14 @@
         <div class="title_text" v-if="!data.collapsed">SCA</div>
       </div>
       <a-menu v-model:selectedKeys="data.selectedKeys" theme="light" mode="inline" @click="handleMenu">
-        <!-- <a-menu-item key="summary">
+        <a-menu-item v-if="permit('summary')" key="summary">
           <PieChartOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('summary') }}</span>
         </a-menu-item>
-        <a-menu-item key="scan">
-          <SearchOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ getTitle('scan') }}</span>
-        </a-menu-item> -->
         <a-menu-item v-if="permit('application')" key="application">
           <ScheduleOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('application') }}</span>
         </a-menu-item>
-        <!-- <a-menu-item key="project">
-          <LayoutOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ getTitle('project') }}</span>
-        </a-menu-item> -->
         <a-menu-item v-if="permit('component')" key="component">
           <AppstoreOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('component') }}</span>
@@ -116,6 +108,7 @@ const permit = (menu) => {
   const permission = JSON.parse(sessionStorage.getItem('user')).userBuAppRoles
   let res = true
   switch (menu) {
+    case 'summary':
     case 'application':
     case 'component':
     case 'vulnerability':

@@ -1,6 +1,8 @@
 const Home = () => import('@/views/Home.vue')
 const Login = () => import('@/views/user/Login.vue')
 
+const Summary = () => import('@/views/summary/Summary.vue')
+
 const Application = () => import('@/views/application/Application.vue')
 const AppDetail = () => import('@/views/project/AppDetail.vue')
 const Compare = () => import('@/views/project/Compare.vue')
@@ -25,6 +27,12 @@ const routes = [
     meta: { title: '首页' },
     component: Home,
     children: [
+      {
+        path: 'summary',
+        name: 'summary',
+        meta: { menu: 'summary', title: '统计概览' },
+        component: Summary
+      },
       {
         path: 'application',
         name: 'application',

@@ -345,15 +345,6 @@ const showInfo = (record) => {
 const hasConflict = (record) => {
   return record.pos_licenses.length > 0 && record.neg_licenses.length > 0
 }
-const arrToString = (arr) => {
-  if (!arr) return
-  if (arr?.length === 0) return '-'
-  return arr
-    .reduce((pre, curr) => {
-      return `${pre}; ${curr.name}`
-    }, '')
-    .substring(1)
-}
 defineExpose({ show })
 </script>
 

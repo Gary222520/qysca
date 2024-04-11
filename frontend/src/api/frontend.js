@@ -91,6 +91,15 @@ export const AddVul = (params) => request('post', API.ADD_VUL, { params })
 // 在某个应用中删除漏洞信息
 export const DeleteVul = (params) => request('post', API.DELETE_VUL, { params })
 
+// 查询用户所在部门的应用总数
+export const AppStatistic = () => request('get', API.STATISTIC_APP, {})
+// 查询用户所在部门的应用的组件总数
+export const ComStatistic = () => request('get', API.STATISTIC_COM, {})
+// 查询用户所在部门的应用的漏洞统计
+export const VulStatistic = () => request('get', API.STATISTIC_VUL, {})
+// 查询用户所在部门的应用的许可证统计
+export const LicenseStatistic = () => request('get', API.STATISTIC_LICENSE, {})
+
 // 文件合并
 export const FileMerge = (data) => request('post', API.FILE_MERGE, { data })
 
