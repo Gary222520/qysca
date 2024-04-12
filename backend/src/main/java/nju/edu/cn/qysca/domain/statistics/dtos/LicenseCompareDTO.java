@@ -26,13 +26,23 @@ public class LicenseCompareDTO implements Comparable<LicenseCompareDTO>{
 
     @Override
     public int compareTo(LicenseCompareDTO licenseCompareDTO) {
-        double thisRatio = this.risk / (double) (this.secure + this.risk);
-        double otherRatio = licenseCompareDTO.getRisk() / (double) (licenseCompareDTO.getSecure() + licenseCompareDTO.getRisk());
+        double thisRatio;
+        if(this.risk == 0 &&this.secure == 0) {
+            thisRatio = Double.NEGATIVE_INFINITY;
+        }else{
+            thisRatio = this.risk / (double) (this.secure + this.risk);
+        }
+        double otherRatio;
+        if(licenseCompareDTO.getRisk() == 0 && licenseCompareDTO.getSecure() == 0) {
+            otherRatio = Double.NEGATIVE_INFINITY;
+        }else{
+            otherRatio = licenseCompareDTO.getRisk() / (double) (licenseCompareDTO.getSecure() + licenseCompareDTO.getRisk());
+        }
         int ratioCompare = Double.compare(otherRatio, thisRatio);
         if(ratioCompare != 0){
             return ratioCompare;
         } else{
-            return Integer.compare(licenseCompareDTO.getRisk(), this.risk);
+            return Integer.compare(licenseCompareDTO.risk, this.risk);
         }
     }
 }
