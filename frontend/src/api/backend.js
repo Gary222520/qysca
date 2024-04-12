@@ -109,6 +109,8 @@ export const API = {
   EXPORT_DETAIL: '/qysca/application/exportTableExcelDetail',
   // 导出SBOM
   EXPORT_SBOM: '/qysca/application/exportSBOM',
+  // 导出报告
+  EXPORT_REPORT: '/qysca/application/exportHtml',
 
   // 新增部门
   CREATE_BU: '/qysca/bu/addBu',

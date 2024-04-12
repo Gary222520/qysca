@@ -67,6 +67,7 @@ const getComponentTiled = (component, number = 1, size = 8) => {
     number,
     size
   }
+  if (params.language instanceof Array) params.language = 'app'
   data.spinning = true
   GetComponentTiled(params)
     .then((res) => {

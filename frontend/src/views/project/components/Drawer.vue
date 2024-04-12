@@ -17,8 +17,15 @@
       </div>
       <a-descriptions>
         <a-descriptions-item label="名称">{{ data.detail?.name }}</a-descriptions-item>
-        <a-descriptions-item label="版本">{{ data.detail?.version }}</a-descriptions-item>
-        <a-descriptions-item label="语言">{{ data.detail?.language }}</a-descriptions-item>
+        <a-descriptions-item label="版本" span="2">{{ data.detail?.version }}</a-descriptions-item>
+        <a-descriptions-item label="语言" span="3">
+          <div v-if="data.detail?.language instanceof Array">
+            <a-tag v-for="(item, index) in data.detail?.language" :key="index">{{ item }}</a-tag>
+          </div>
+          <div v-else>
+            <a-tag>{{ data.detail?.language }}</a-tag>
+          </div>
+        </a-descriptions-item>
         <a-descriptions-item label="组件描述" span="3">{{ data.detail?.description }}</a-descriptions-item>
 
         <a-descriptions-item label="主页地址" span="3">{{ data.detail?.url }}</a-descriptions-item>
@@ -34,7 +41,12 @@
       <template #emptyText>暂无数据</template>
     </a-table> -->
       <a-descriptions>
-        <a-descriptions-item label="许可证">{{ arrToString(data.detail?.licenses) }}</a-descriptions-item>
+        <a-descriptions-item label="许可证" span="3">
+          <div>
+            <a-tag v-for="(item, index) in data.detail?.licenses" :key="index">{{ item }}</a-tag>
+          </div>
+          <!-- {{ arrToString(data.detail?.licenses) }} -->
+        </a-descriptions-item>
       </a-descriptions>
 
       <div class="relative">
@@ -98,8 +110,8 @@ const getComponentInfo = () => {
         return
       }
       data.detail = res.data
+      data.detail.licenses = data.detail.licenses.filter((item) => item !== '')
       data.spinning = false
-      if (data.detail?.language instanceof Array) data.detail.language = arrToString(data.detail.language)
     })
     .catch((err) => {
       data.spinning = false

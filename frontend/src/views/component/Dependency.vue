@@ -11,7 +11,14 @@
         版本：
         <div style="margin-right: 30px">{{ data.component.version }}</div>
         语言：
-        <div style="margin-right: 30px">{{ data.component.language }}</div>
+        <div style="margin-right: 30px">
+          <div v-if="data.component.language instanceof Array">
+            <a-tag v-for="(item, index) in data.component.language" :key="index">{{ item }}</a-tag>
+          </div>
+          <div v-else>
+            <a-tag>{{ data.component.language }}</a-tag>
+          </div>
+        </div>
       </div>
     </a-card>
     <a-card class="content_card">

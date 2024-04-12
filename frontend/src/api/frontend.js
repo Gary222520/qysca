@@ -109,6 +109,8 @@ export const ExportBrief = (data) => request('post', API.EXPORT_BRIEF, { data, r
 export const ExportDetail = (data) => request('post', API.EXPORT_DETAIL, { data, responseType: 'blob' })
 // 导出SBOM
 export const ExportSBOM = (data) => request('post', API.EXPORT_SBOM, { data, responseType: 'blob' })
+// 导出报告
+export const ExportReport = (data) => request('post', API.EXPORT_REPORT, { data, responseType: 'blob' })
 
 // 新增部门
 export const CreateBu = (params) => request('get', API.CREATE_BU, { params })

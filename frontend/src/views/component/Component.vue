@@ -47,8 +47,8 @@
             <div v-if="record.type === 'internal'">内部使用</div>
           </template>
           <template v-if="column.key === 'language'">
-            <div v-if="!record.language instanceof Array">{{ record.language }}</div>
             <div v-if="record.language instanceof Array">{{ arrToString(record.language) }}</div>
+            <div v-else>{{ record.language }}</div>
           </template>
           <template v-if="column.key === 'action'">
             <div
