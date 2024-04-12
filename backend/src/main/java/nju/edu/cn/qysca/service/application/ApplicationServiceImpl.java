@@ -689,18 +689,9 @@ public class ApplicationServiceImpl implements ApplicationService {
             AppComponentDO appComponentDO = new AppComponentDO();
             BeanUtils.copyProperties(applicationDO, appComponentDO);
             appComponentDO.setType(changeReleaseStateDTO.getType());
-            Set<String> language = new HashSet<>();
-            for (String id : applicationDO.getChildApplication()) {
-                ApplicationDO child = applicationDao.findApplicationDOById(id);
-                language.addAll(Arrays.asList(child.getLanguage()));
-            }
-            for (Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()) {
-                if (entry.getValue().size() > 0) {
-                    language.add(entry.getKey());
-                }
-            }
             appComponentDO.setLicenses(applicationDO.getLicenses());
-            appComponentDO.setLanguage(language.toArray(new String[0]));
+            // 应用本身已经具备language 不用再重新构建language
+            appComponentDO.setLanguage(applicationDO.getLanguage());
             appComponentDao.save(appComponentDO);
             AppDependencyTreeDO temp = appDependencyTreeDao.findByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
             //根据结构生成依赖信息并保存
