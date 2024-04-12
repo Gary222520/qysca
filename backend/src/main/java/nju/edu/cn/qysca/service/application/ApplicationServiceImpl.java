@@ -700,6 +700,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             appComponentDO.setLicenses(applicationDO.getLicenses());
             // 应用本身已经具备language 不用再重新构建language
             appComponentDO.setLanguage(applicationDO.getLanguage());
+            appComponentDO.setState("SUCCESS");
             appComponentDao.save(appComponentDO);
             //根据结构生成依赖信息并保存
             if (temp == null) {
