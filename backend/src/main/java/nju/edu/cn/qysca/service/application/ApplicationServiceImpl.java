@@ -17,6 +17,7 @@ import nju.edu.cn.qysca.domain.bu.dos.BuDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentCompareTreeDTO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentDetailDTO;
+import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.domain.user.dos.UserRoleDO;
@@ -681,9 +682,16 @@ public class ApplicationServiceImpl implements ApplicationService {
             }
             applicationDO.setRelease(false);
             appComponentDao.deleteByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
-            appDependencyTreeDao.deleteByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
-            appDependencyTableDao.deleteAllByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
+            // 上传特征文件形成的不能删除
+            if(applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().size() > 0) {
+                appDependencyTreeDao.deleteByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
+                appDependencyTableDao.deleteAllByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
+            }
         } else {
+            AppDependencyTreeDO temp = appDependencyTreeDao.findByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
+            if(applicationDO.getChildApplication().length == 0 && applicationDO.getChildComponent().size() == 0 && temp == null){
+                throw new PlatformException(500, "该应用没有依赖，不能发布");
+            }
             //发布应用成组件
             applicationDO.setRelease(true);
             AppComponentDO appComponentDO = new AppComponentDO();
@@ -693,7 +701,6 @@ public class ApplicationServiceImpl implements ApplicationService {
             // 应用本身已经具备language 不用再重新构建language
             appComponentDO.setLanguage(applicationDO.getLanguage());
             appComponentDao.save(appComponentDO);
-            AppDependencyTreeDO temp = appDependencyTreeDao.findByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
             //根据结构生成依赖信息并保存
             if (temp == null) {
                 temp = generateDependencyTree(applicationDO, changeReleaseStateDTO.getType());
@@ -877,7 +884,7 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @return Page<ComponentTableDTO> 依赖平铺信息分页
      */
     @Override
-    public Page<AppComponentTableDTO> findApplicationDependencyTable(ApplicationSearchPageDTO applicationSearchPageDTO) {
+    public Page<ComponentTableDTO> findApplicationDependencyTable(ApplicationSearchPageDTO applicationSearchPageDTO) {
         // 设置排序规则
         List<Sort.Order> orders = new ArrayList<>();
         orders.add(new Sort.Order(Sort.Direction.ASC, "depth").nullsLast());

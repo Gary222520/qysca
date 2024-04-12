@@ -561,6 +561,9 @@ public class ComponentServiceImpl implements ComponentService {
                     pythonDependencyTableDao.saveAll(pythonDependencyTableDOList);
                 }
                 break;
+            case "app":
+                dependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
+                break;
         }
         return dependencyTreeDO;
     }
@@ -594,6 +597,9 @@ public class ComponentServiceImpl implements ComponentService {
                 break;
             case "python":
                 result = pythonDependencyTableDao.findByNameAndVersion(componentGavPageDTO.getName(), componentGavPageDTO.getVersion(), pageable);
+                break;
+            case "app":
+                result = appDependencyTableDao.findByNameAndVersion(componentGavPageDTO.getName(), componentGavPageDTO.getVersion(), pageable);
                 break;
         }
         return result;
