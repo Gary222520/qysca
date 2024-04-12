@@ -10,6 +10,7 @@ import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.*;
 import nju.edu.cn.qysca.service.application.ApplicationService;
+import nju.edu.cn.qysca.service.report.ReportService;
 import nju.edu.cn.qysca.service.sbom.SBOMService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -30,6 +31,8 @@ public class ApplicationController {
 
     @Autowired
     private SBOMService sbomService;
+    @Autowired
+    private ReportService reportService;
 
 
     @ApiOperation("分页获取应用信息")
@@ -185,5 +188,12 @@ public class ApplicationController {
     @PreAuthorize("@my.checkAuth('/qysca/application/exportSBOM')")
     public void exportSBOM(@RequestBody ApplicationSearchDTO dto, HttpServletResponse response){
         sbomService.exportSBOM(dto, response);
+    }
+
+    @ApiOperation("导出应用html报告")
+    @PostMapping("/exportHtml")
+    @PreAuthorize("@my.checkAuth('/qysca/application/exportHtml')")
+    public void exportHtml(@RequestBody ApplicationSearchDTO dto, HttpServletResponse response){
+        reportService.exportHtml(dto, response);
     }
 }

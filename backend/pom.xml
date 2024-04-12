@@ -201,6 +201,28 @@
 			<artifactId>jackson-annotations</artifactId>
 			<version>2.13.0</version>
 		</dependency>
+		<!-- 生成html -->
+		<dependency>
+			<groupId>ognl</groupId>
+			<artifactId>ognl</artifactId>
+			<version>3.1.15</version>
+		</dependency>
+		<!-- html转pdf -->
+		<dependency>
+			<groupId>org.xhtmlrenderer</groupId>
+			<artifactId>flying-saucer-core</artifactId>
+			<version>9.1.22</version>
+		</dependency>
+		<dependency>
+			<groupId>org.xhtmlrenderer</groupId>
+			<artifactId>flying-saucer-pdf</artifactId>
+			<version>9.1.22</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>html2pdf</artifactId>
+			<version>3.0.0</version>
+		</dependency>
 		<!-- 格式规范 -->
 		<dependency>
 			<groupId>cn.hutool</groupId>
