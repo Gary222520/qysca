@@ -143,7 +143,7 @@ public class ApplicationController {
     @ApiOperation("分页查询应用依赖平铺信息")
     @PostMapping("/findApplicationDependencyTable")
     @PreAuthorize("@my.checkAuth('/qysca/application/findApplicationDependencyTable')")
-    public ResponseMsg<Page<AppComponentTableDTO>> findApplicationDependencyTable(@RequestBody ApplicationSearchPageDTO dto) {
+    public ResponseMsg<Page<ComponentTableDTO>> findApplicationDependencyTable(@RequestBody ApplicationSearchPageDTO dto) {
         return new ResponseMsg<>(applicationService.findApplicationDependencyTable(dto));
     }
 
