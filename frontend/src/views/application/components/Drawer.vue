@@ -244,7 +244,6 @@ const exportSBOM = () => {
       reader.onload = () => {
         try {
           const result = JSON.parse(reader.result)
-          console.log(result)
           if (result.code && result.code !== 200) {
             message.error(result.message)
           } else {
@@ -252,7 +251,8 @@ const exportSBOM = () => {
             message.success('导出成功')
           }
         } catch (e) {
-          message.error(e)
+          downloadSBOM(res.data, `${data.detail.name}-${data.detail.version}-SBOM`)
+          message.success('导出成功')
         }
       }
     })
