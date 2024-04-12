@@ -18,6 +18,7 @@ import nju.edu.cn.qysca.domain.license.dtos.LicenseConflictInfoDTO;
 import nju.edu.cn.qysca.domain.vulnerability.dtos.VulnerabilityBriefDTO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
+import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
 import nju.edu.cn.qysca.utils.FolderUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,6 +56,8 @@ public class ReportServiceImpl implements ReportService {
     private LicenseDao licenseDao;
     @Autowired
     private LicenseService licenseService;
+    @Autowired
+    private VulnerabilityService vulnerabilityService;
     @Value("${tempReportFolder}")
     private String tempFolder;
 
@@ -119,6 +122,10 @@ public class ReportServiceImpl implements ReportService {
     public String makeHtml(File dir, String appName, String appVersion) {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(appName, appVersion);
 
+        if (applicationDO == null){
+            throw new PlatformException(500, "应用不存在！");
+        }
+
         if (applicationDO.getChildApplication().length != 0 || !applicationDO.getChildComponent().isEmpty()) {
             throw new PlatformException(500, "暂时只能导出底层应用的html报告");
         }
@@ -150,10 +157,7 @@ public class ReportServiceImpl implements ReportService {
 
         LicenseConflictInfoDTO licenseConflictInfoDTO = licenseService.getLicenseConflictInformation(appName, appVersion);
 
-        List<VulnerabilityBriefDTO> vulnerabilityBriefDTOList = new ArrayList<>();
-        for (String vulnerability : applicationDO.getVulnerabilities()) {
-
-        }
+        List<VulnerabilityBriefDTO> vulnerabilityBriefDTOList = vulnerabilityService.getVulnerabilityList(appName, appVersion);
 
         // 生成html文件
         String filePath = makeHtml(dir, "report-template", applicationDO, componentDOList, licenseDOList, licenseConflictInfoDTO, vulnerabilityBriefDTOList);
