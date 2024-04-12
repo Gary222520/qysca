@@ -58,6 +58,7 @@
             <a-tag v-if="record.riskLevel === 'high'" color="error">高危</a-tag>
             <a-tag v-if="record.riskLevel === 'medium'" color="warning">中危</a-tag>
             <a-tag v-if="record.riskLevel === 'low'" color="processing">低危</a-tag>
+            <div v-else>-</div>
           </template>
           <template v-if="column.key === 'isOsiApproved'">
             <CheckOutlined v-if="record.isOsiApproved" :style="{ color: '#52c41a' }" />

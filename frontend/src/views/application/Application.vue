@@ -138,6 +138,7 @@
     <UpgradeAppModal ref="upgradeAppModal" @success="refresh(data.currentKey, true)"></UpgradeAppModal>
     <DeleteAppModal ref="deleteAppModal" @success="refresh(data.currentKey, true)"></DeleteAppModal>
     <Drawer ref="drawer" @refresh="refreshDrawer()"></Drawer>
+    <WarnModal ref="warnModal" @ok="refresh(data.currentKey)"></WarnModal>
   </div>
 </template>
 
@@ -178,6 +179,7 @@ import UpgradeAppModal from './components/UpgradeAppModal.vue'
 import DeleteAppModal from './components/DeleteAppModal.vue'
 import Drawer from './components/Drawer.vue'
 import AppCollapse from '@/views/application/components/AppCollapse.vue'
+import WarnModal from '@/components/WarnModal.vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 
@@ -192,6 +194,7 @@ const upgradeAppModal = ref()
 const deleteAppModal = ref()
 const drawer = ref()
 const appCollapse = ref()
+const warnModal = ref()
 
 const router = useRouter()
 const store = useStore()
@@ -417,15 +420,26 @@ const release = async (app, index, type) => {
     .then((res) => {
       if (res.code !== 200) {
         app.releaseStatus = null
+        refresh(index)
         message.error(res.message)
         return
       }
       // console.log('ChangeRelease', res)
+      if (app.release) {
+        if (!res.data || res.data.length === 0) {
+          message.success('取消发布成功')
+        } else {
+          warnModal.value.open(res.data, '有以下应用依赖该版本：')
+        }
+      } else {
+        message.success('发布成功')
+      }
       app.releaseStatus = null
       refresh(index)
     })
     .catch((err) => {
       app.releaseStatus = null
+      refresh(index)
       console.error(err)
     })
 }
