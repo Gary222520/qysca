@@ -87,6 +87,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         String bid = userRoleDao.findUserBu(userDO.getUid());
         Set<String> set = new HashSet<>();
         Map<String, Integer> map = new HashMap<>() {{
+            put("CRITICAL", 0);
             put("HIGH", 0);
             put("MEDIUM", 0);
             put("LOW", 0);
@@ -100,69 +101,37 @@ public class StatisticsServiceImpl implements StatisticsService {
             VulnerabilityCompareDTO vulnerabilityCompareDTO = new VulnerabilityCompareDTO();
             vulnerabilityCompareDTO.setName(applicationDO.getName());
             vulnerabilityCompareDTO.setVersion(applicationDO.getVersion());
+            Map<String, Integer> currentMap = new HashMap<>() {{
+                put("CRITICAL", 0);
+                put("HIGH", 0);
+                put("MEDIUM", 0);
+                put("LOW", 0);
+                put("NONE", 0);
+                put("UNKNOWN", 0);
+            }};
             for (String cveId : applicationDO.getVulnerabilities()) {
                 if (!cveId.equals("")) {
                     CveDO cveDO = cveDao.findOneByCveId(cveId);
                     if (cveDO.getCvss3().getBaseSeverity() != null) {
-                        if(map.containsKey(cveDO.getCvss3().getBaseSeverity())){
-                            map.put(cveDO.getCvss3().getBaseSeverity(), map.get(cveDO.getCvss3().getBaseSeverity()) + 1);
-                        }else {
-                            map.put(cveDO.getCvss3().getBaseSeverity(), 1);
-                        }
+                        map.put(cveDO.getCvss3().getBaseSeverity(), map.get(cveDO.getCvss3().getBaseSeverity()) + 1);
+                        currentMap.put(cveDO.getCvss3().getBaseSeverity(), currentMap.get(cveDO.getCvss3().getBaseSeverity()) + 1);
                     } else if (cveDO.getCvss3().getImpactScore() != null) {
                         Double score = cveDO.getCvss3().getImpactScore();
                         String key = score > 7.5 ? "HIGH" : score > 5 ? "MEDIUM" : score > 2.5 ? "LOW" : "NONE";
-                        switch (key) {
-                            case "HIGH":
-                                vulnerabilityCompareDTO.setHIGH(vulnerabilityCompareDTO.getHIGH() + 1);
-                                break;
-                            case "MEDIUM":
-                                vulnerabilityCompareDTO.setMEDIUM(vulnerabilityCompareDTO.getMEDIUM() + 1);
-                                break;
-                            case "LOW":
-                                vulnerabilityCompareDTO.setLOW(vulnerabilityCompareDTO.getLOW() + 1);
-                                break;
-                            case "NONE":
-                                vulnerabilityCompareDTO.setNONE(vulnerabilityCompareDTO.getNONE() + 1);
-                                break;
-                        }
-                        if(map.containsKey(key)){
-                            map.put(key, map.get(key) + 1);
-                        }else {
-                            map.put(key, 1);
-                        }
+                        map.put(key, map.get(key) + 1);
+                        currentMap.put(key, currentMap.get(key) + 1);
                     } else if (cveDO.getCvss2().getImpactScore() != null) {
                         Double score = cveDO.getCvss2().getImpactScore();
                         String key = score > 7.5 ? "HIGH" : score > 5 ? "MEDIUM" : score > 2.5 ? "LOW" : "NONE";
-                        switch (key) {
-                            case "HIGH":
-                                vulnerabilityCompareDTO.setHIGH(vulnerabilityCompareDTO.getHIGH() + 1);
-                                break;
-                            case "MEDIUM":
-                                vulnerabilityCompareDTO.setMEDIUM(vulnerabilityCompareDTO.getMEDIUM() + 1);
-                                break;
-                            case "LOW":
-                                vulnerabilityCompareDTO.setLOW(vulnerabilityCompareDTO.getLOW() + 1);
-                                break;
-                            case "NONE":
-                                vulnerabilityCompareDTO.setNONE(vulnerabilityCompareDTO.getNONE() + 1);
-                                break;
-                        }
-                        if(map.containsKey(key)) {
-                            map.put(key, map.get(key) + 1);
-                        } else{
-                            map.put(key, 1);
-                        }
+                        map.put(key, map.get(key) + 1);
+                        currentMap.put(key, currentMap.get(key) + 1);
                     } else {
-                        vulnerabilityCompareDTO.setUNKNOWN(vulnerabilityCompareDTO.getUNKNOWN() + 1);
-                        if(map.containsKey("UNKNOWN")) {
-                            map.put("UNKNOWN", map.get("UNKNOWN") + 1);
-                        } else {
-                            map.put("UNKNOWN", 1);
-                        }
+                        map.put("UNKNOWN", map.get("UNKNOWN") + 1);
+                        currentMap.put("UNKNOWN", currentMap.get("UNKNOWN") + 1);
                     }
                 }
             }
+            vulnerabilityCompareDTO.setMap(currentMap);
             vulnerabilityCompareDTOS.add(vulnerabilityCompareDTO);
             set.addAll(Arrays.asList(applicationDO.getVulnerabilities()));
         }
@@ -221,7 +190,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         List<Map.Entry<String, Integer>> sortedEntries = map.entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())) // 从高到低排序
-                .limit(10)
+                .limit(8)
                 .collect(Collectors.toList());
         Map<String, Integer> resultMap = new HashMap<>();
         sortedEntries.forEach(entry -> resultMap.put(entry.getKey(), entry.getValue()));
