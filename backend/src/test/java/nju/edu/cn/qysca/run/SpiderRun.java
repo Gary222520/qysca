@@ -1,9 +1,13 @@
-package nju.edu.cn.qysca;
+package nju.edu.cn.qysca.run;
 
+import nju.edu.cn.qysca.dao.application.AppDependencyTableDao;
+import nju.edu.cn.qysca.dao.component.JavaComponentDao;
 import nju.edu.cn.qysca.dao.component.PythonComponentDao;
 import nju.edu.cn.qysca.dao.component.PythonDependencyTableDao;
 import nju.edu.cn.qysca.dao.component.PythonDependencyTreeDao;
 import nju.edu.cn.qysca.dao.spider.PythonVisitedPackagesDao;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTableDO;
 import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTreeDO;
@@ -26,11 +30,15 @@ import java.util.List;
 @SpringBootTest
 public class SpiderRun {
     @Autowired
+    private AppDependencyTableDao appDependencyTableDao;
+    @Autowired
     private JavaSpiderService javaSpiderService;
     @Autowired
     private PythonSpiderService pythonSpiderService;
     @Autowired
     private PythonVisitedPackagesDao pythonVisitedPackagesDao;
+    @Autowired
+    private JavaComponentDao javaComponentDao;
     @Autowired
     private PythonService pythonService;
     @Autowired
@@ -213,7 +221,17 @@ public class SpiderRun {
                 System.out.println("成功爬取：" + pythonComponentDO.getName() + ":" + pythonComponentDO.getVersion());
             }
         }
-
-
     }
+
+//    @Test
+//    public void tempFix(){
+//        // 用来爬缺失的组件的，请勿调用
+//        List<AppDependencyTableDO> appDependencyTableDOList = appDependencyTableDao.findAllByNameAndVersion("bu:java-app","1.0.0");
+//        for (AppDependencyTableDO tableDO : appDependencyTableDOList){
+//            if (javaComponentDao.findByNameAndVersion(tableDO.getCName(), tableDO.getCVersion()) == null){
+//                JavaComponentDO javaComponentDO = javaSpiderService.crawlByGav(tableDO.getCName().split(":")[0], tableDO.getCName().split(":")[1], tableDO.getCVersion());
+//                javaComponentDao.save(javaComponentDO);
+//            }
+//        }
+//    }
 }

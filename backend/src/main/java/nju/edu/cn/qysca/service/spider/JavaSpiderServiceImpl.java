@@ -27,8 +27,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -97,7 +99,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
 
         Document document = getDocumentByUrl(directoryUrl);
         if (document == null) {
-            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true));
+            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true, false));
             return;
         }
 
@@ -112,22 +114,33 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
                 crawlDirectory(fileAbsUrl);
             }
         }
-        // 如果该目录为最后一层，进行爬取
+
         if (isLastLevel) {
+            // 如果该目录为最后一层，进行爬取
             synchronized (this) {
-                //爬取组件
-                JavaComponentDO javaComponentDO = crawl(directoryUrl);
-                if (javaComponentDO == null) {
-                    mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true));
+
+                String[] parts = directoryUrl.substring(MAVEN_REPO_BASE_URL.length()).split("/");
+                String groupId = String.join(".", Arrays.copyOfRange(parts, 0, parts.length-2));
+                String artifactId = parts[parts.length - 2];
+                String version = parts[parts.length - 1];
+                if (javaComponentDao.findByNameAndVersion(groupId+":"+artifactId, version)!=null) {
+                    // 数据库已有，跳过
+                    mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true, false));
                     return;
                 }
-                if (javaComponentDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion()) == null)
-                    javaComponentDao.save(javaComponentDO);
+                // 数据库没有，爬取
+                JavaComponentDO javaComponentDO = crawl(directoryUrl);
+                if (javaComponentDO == null) {
+                    // 爬取失败
+                    mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true, false));
+                    return;
+                }
+                javaComponentDao.save(javaComponentDO);
                 // 记录该url已被访问过
-                mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true));
+                mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true, false));
             }
         } else {
-            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, false));
+            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, false, false));
         }
 
 
@@ -147,7 +160,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
 
         Document document = getDocumentByUrl(directoryUrl);
         if (document == null) {
-            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true));
+            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true, true));
             return;
         }
 
@@ -170,14 +183,14 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
                 //爬取组件
                 JavaComponentDO javaComponentDO = crawl(directoryUrl);
                 if (javaComponentDO == null) {
-                    mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true));
+                    mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true, true));
                     return;
                 }
                 if (javaComponentDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion()) == null)
                     javaComponentDao.save(javaComponentDO);
                 if (javaDependencyTreeDao.findByNameAndVersion(javaComponentDO.getName(), javaComponentDO.getVersion()) != null) {
                     // 检查是否已有依赖树，有就跳过
-                    mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true));
+                    mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true, true));
                     return;
                 }
 
@@ -187,10 +200,10 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
                 javaDependencyTableDao.saveAll(javaDependencyTableDOList);
 
                 // 记录该url已被访问过
-                mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true));
+                mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true, true));
             }
         } else {
-            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, false));
+            mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, false, true));
         }
 
 
@@ -204,7 +217,10 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
      * @return JavaComponentDO
      */
     private JavaComponentDO crawl(String url) {
-        System.out.println("crawling :" + url);
+        Date date = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        String timeStamp = dateFormat.format(date);
+        System.out.println(timeStamp + " crawling :" + url);
         // 爬取pom文件中的组件信息
         String pomUrl = findPomUrlInDirectory(url);
         if (pomUrl == null) {

@@ -479,7 +479,7 @@ public class SBOMServiceImpl implements SBOMService {
                 sbomJsComponentDTO.setDownloadUrl(component.getDownloadUrl());
                 sbomJsComponentDTO.setRepoUrl(component.getRepoUrl());
                 sbomJsComponentDTO.setCopyrightStatements(component.getCopyrightStatements());
-
+                return sbomJsComponentDTO;
             }
             case "python": {
                 PythonComponentDO component = pythonComponentDao.findByNameAndVersion(cName, cVersion);
@@ -499,6 +499,7 @@ public class SBOMServiceImpl implements SBOMService {
                         )
                         .filter(dto -> dto.getUrl() != null) // 过滤掉为空的外部链接
                         .collect(Collectors.toList()));
+                return sbomPythonComponentDTO;
             }
         }
         return null;

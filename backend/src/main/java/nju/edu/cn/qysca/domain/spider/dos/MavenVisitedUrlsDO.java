@@ -39,6 +39,10 @@ public class MavenVisitedUrlsDO {
     private Boolean isSuccess;
 
     @Column(name = "is_last_level",nullable = false)
-    @ApiModelProperty(value = "是否是底层目录", example = "true")
+    @ApiModelProperty(value = "是否是底层目录", notes = "如果是，则认为该url对应了一个java组件", example = "true")
     private Boolean isLastLevel;
+
+    @Column(name = "is_dependencies_crawled",nullable = false)
+    @ApiModelProperty(value = "该组件是否生成了依赖树并爬取了依赖", example = "true")
+    private Boolean isDependenciesCrawled;
 }
