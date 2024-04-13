@@ -305,7 +305,7 @@ CREATE TABLE plt_java_dependency_table(
 	type VARCHAR(255) NOT NULL,
 	language VARCHAR(255) NOT NULL,
 	licenses VARCHAR(255) NOT NULL,
-    vulnerabilities VARCHAR(255) NOT NULL
+    vulnerabilities TEXT NOT NULL
 );
 
 DROP TABLE IF EXISTS plt_license;
@@ -334,10 +334,10 @@ create table plt_js_component (
     name VARCHAR(255) NOT NULL,
     version VARCHAR(255) NOT NULL,
     description VARCHAR(255),
-    website VARCHAR(255),
-    repo_url VARCHAR(255),
+    url VARCHAR(255),
+    source_url VARCHAR(255),
     copyright_statements text[],
-    purl VARCHAR(255),
+    p_url VARCHAR(255),
     licenses TEXT[],
     vulnerabilities TEXT[],
     download_url VARCHAR(255),
@@ -379,6 +379,10 @@ CREATE TABLE plt_app_component(
     language text[],
     type VARCHAR(255) NOT NULL,
     description VARCHAR(255),
+	url VARCHAR(255),
+	download_url VARCHAR(255),
+	source_url VARCHAR(255),
+	p_url VARCHAR(255),
     developers JSONB,
     licenses TEXT[],
     vulnerabilities TEXT[],
@@ -407,7 +411,7 @@ CREATE TABLE plt_app_dependency_table(
     type VARCHAR(255) NOT NULL,
     language VARCHAR(255) NOT NULL,
 	licenses VARCHAR(255) NOT NULL,
-    vulnerabilities VARCHAR(255) NOT NULL
+    vulnerabilities TEXT NOT NULL
 );
 
     

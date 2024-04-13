@@ -81,4 +81,11 @@ public class ComponentController {
     public ResponseMsg<ComponentDetailDTO> findComponentDetail(@RequestBody ComponentGavDTO dto) {
         return new ResponseMsg<>(componentService.findComponentDetail(dto));
     }
+
+    @ApiOperation("改变发布组件的详细信息")
+    @PostMapping("/changeComponentDetail")
+    public ResponseMsg<Void> changeComponentDetail(@RequestBody ChangeComponentDetailDTO dto) {
+        componentService.changeComponentDetail(dto);
+        return new ResponseMsg<>();
+    }
 }

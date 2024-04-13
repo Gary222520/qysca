@@ -13,7 +13,6 @@ import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
 import javax.persistence.*;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -46,22 +45,22 @@ public class JsComponentDO extends ComponentDO{
     @ApiModelProperty(value = "组件描述", example = "The iconic font, CSS, and SVG framework")
     private String description;
 
-    @Column(name = "website")
-    @ApiModelProperty(value = "官网", example = "https://fontawesome.com/")
-    private String website;
+    @Column(name = "url")
+    @ApiModelProperty(value = "主页地址", example = "https://fontawesome.com/")
+    private String url;
 
-    @Column(name = "repo_url")
-    @ApiModelProperty(value = "仓库地址", example = "https://github.com/FortAwesome/Font-Awesome")
-    private String repoUrl;
+    @Column(name = "source_url")
+    @ApiModelProperty(value = "源码地址", example = "https://github.com/FortAwesome/Font-Awesome")
+    private String sourceUrl;
 
     @Column(name = "copyright_statements")
     @ApiModelProperty(value = "版权声明", example = "[\"The Font Awesome Team, https://github.com/orgs/FortAwesome/people\"]")
     @Type(type = "string-array")
     private String[] copyrightStatements;
 
-    @Column(name = "purl")
+    @Column(name = "p_url")
     @ApiModelProperty(value = "purl地址", example = "pkg:npm/fontawesome-free@2.5.15")
-    private String purl;
+    private String pUrl;
 
     @Column(name = "licenses")
     @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")

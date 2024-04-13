@@ -9,6 +9,7 @@ import nju.edu.cn.qysca.dao.bu.BuAppDao;
 import nju.edu.cn.qysca.dao.bu.BuDao;
 import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.dao.license.LicenseDao;
+import nju.edu.cn.qysca.dao.user.UserDao;
 import nju.edu.cn.qysca.dao.user.UserRoleDao;
 import nju.edu.cn.qysca.domain.application.dos.*;
 import nju.edu.cn.qysca.domain.application.dtos.*;
@@ -50,67 +51,56 @@ import java.util.stream.Collectors;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
-
     @Autowired
     private ApplicationDao applicationDao;
-
     @Autowired
     private BuDao buDao;
-
     @Autowired
     private BuAppDao buAppDao;
-
     @Autowired
     private UserRoleDao userRoleDao;
-
     @Autowired
     private JavaDependencyTreeDao javaDependencyTreeDao;
-
     @Autowired
     private JsDependencyTreeDao jsDependencyTreeDao;
-
     @Autowired
     private GoDependencyTreeDao goDependencyTreeDao;
-
     @Autowired
     private PythonDependencyTreeDao pythonDependencyTreeDao;
-
+    @Autowired
+    private JavaDependencyTableDao javaDependencyTableDao;
+    @Autowired
+    private JsDependencyTableDao jsDependencyTableDao;
+    @Autowired
+    private GoDependencyTableDao goDependencyTableDao;
+    @Autowired
+    private PythonDependencyTableDao pythonDependencyTableDao;;
     @Autowired
     private AppDependencyTreeDao appDependencyTreeDao;
-
     @Autowired
     private AppDependencyTableDao appDependencyTableDao;
-
     @Autowired
     private JavaComponentDao javaComponentDao;
-
     @Autowired
     private JsComponentDao jsComponentDao;
-
     @Autowired
     private GoComponentDao goComponentDao;
-
     @Autowired
     private PythonComponentDao pythonComponentDao;
-
     @Autowired
     private AppComponentDao appComponentDao;
-
     @Autowired
     private LicenseDao licenseDao;
-
+    @Autowired
+    private UserDao userDao;
     @Autowired
     private MavenService mavenService;
-
     @Autowired
     private NpmService npmService;
-
     @Autowired
     private GoService goService;
-
     @Autowired
     private GradleService gradleService;
-
     @Autowired
     private PythonService pythonService;
     @Autowired
@@ -706,6 +696,21 @@ public class ApplicationServiceImpl implements ApplicationService {
             appComponentDO.setLicenses(applicationDO.getLicenses());
             // 应用本身已经具备language 不用再重新构建language
             appComponentDO.setLanguage(applicationDO.getLanguage());
+            appComponentDO.setUrl(changeReleaseStateDTO.getUrl());
+            appComponentDO.setPUrl(changeReleaseStateDTO.getPUrl());
+            appComponentDO.setSourceUrl(changeReleaseStateDTO.getSourceUrl());
+            appComponentDO.setDownloadUrl(changeReleaseStateDTO.getDownloadUrl());
+            // 构造创建者信息
+            List<UserRoleDO> userRoleDOS = userRoleDao.findAllByAid(applicationDO.getId());
+            List<DeveloperDO> developerDOS = new ArrayList<>();
+            for(UserRoleDO userRoleDO : userRoleDOS) {
+                DeveloperDO developerDO = new DeveloperDO();
+                UserDO userDO = userDao.findByUid(userRoleDO.getUid());
+                developerDO.setName(userDO.getName());
+                developerDO.setEmail(userDO.getEmail());
+                developerDOS.add(developerDO);
+            }
+            appComponentDO.setDevelopers(developerDOS);
             appComponentDO.setState("SUCCESS");
             appComponentDao.save(appComponentDO);
             //根据结构生成依赖信息并保存
@@ -766,7 +771,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         List<AppComponentDependencyTreeDO> appComponentDependencyTreeDOS = new ArrayList<>();
         for (String id : applicationDO.getChildApplication()) {
             ApplicationDO tempApplicationDO = applicationDao.findApplicationDOById(id);
-            AppComponentDependencyTreeDO temp = appDependencyTreeDao.findByNameAndVersion(tempApplicationDO.getName(), tempApplicationDO.getVersion()).getTree();
+            AppComponentDependencyTreeDO childAppDependencyTree = appDependencyTreeDao.findByNameAndVersion(tempApplicationDO.getName(), tempApplicationDO.getVersion()).getTree();
+            //数据库的事务特性 dirty checking
+            AppComponentDependencyTreeDO temp = new AppComponentDependencyTreeDO();
+            BeanUtils.copyProperties(childAppDependencyTree, temp);
             AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(tempApplicationDO.getName(), tempApplicationDO.getVersion());
             temp.setType(appComponentDO.getType());
             addDepth(temp);
@@ -783,6 +791,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                             // 调用爬虫获得pom文件
                             String[] temp = tempJavaComponentDO.getName().split(":");
                             tempJavaDependencyTreeDO = mavenService.spiderDependency(temp[0], temp[1], tempJavaComponentDO.getVersion());
+                            javaDependencyTreeDao.save(tempJavaDependencyTreeDO);
+                            List<JavaDependencyTableDO> javaDependencyTableDOList = mavenService.dependencyTableAnalysis(tempJavaDependencyTreeDO);
+                            javaDependencyTableDao.saveAll(javaDependencyTableDOList);
                         }
                         AppComponentDependencyTreeDO temp = mavenService.translateComponentDependency(tempJavaDependencyTreeDO.getTree());
                         addDepth(temp);
@@ -795,6 +806,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                         JsDependencyTreeDO tempJsDependencyTreeDO = jsDependencyTreeDao.findByNameAndVersion(tempJsComponentDO.getName(), tempJsComponentDO.getVersion());
                         if (tempJsDependencyTreeDO == null) {
                             tempJsDependencyTreeDO = npmService.spiderDependency(tempJsComponentDO.getName(), tempJsComponentDO.getVersion());
+                            jsDependencyTreeDao.save(tempJsDependencyTreeDO);
+                            List<JsDependencyTableDO> jsDependencyTableDOList = npmService.dependencyTableAnalysis(tempJsDependencyTreeDO);
+                            jsDependencyTableDao.saveAll(jsDependencyTableDOList);
                         }
                         AppComponentDependencyTreeDO temp = npmService.translateComponentDependencyTree(tempJsDependencyTreeDO.getTree());
                         addDepth(temp);
@@ -807,6 +821,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                         GoDependencyTreeDO tempGoDependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(tempGoComponentDO.getName(), tempGoComponentDO.getVersion());
                         if (tempGoDependencyTreeDO == null) {
                             tempGoDependencyTreeDO = goService.spiderDependency(tempGoComponentDO.getName(), tempGoComponentDO.getVersion());
+                            goDependencyTreeDao.save(tempGoDependencyTreeDO);
+                            List<GoDependencyTableDO> goDependencyTableDOList = goService.dependencyTableAnalysis(tempGoDependencyTreeDO);
+                            goDependencyTableDao.saveAll(goDependencyTableDOList);
                         }
                         AppComponentDependencyTreeDO temp = goService.translateComponentDependency(tempGoDependencyTreeDO.getTree());
                         addDepth(temp);
@@ -819,6 +836,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                         PythonDependencyTreeDO tempPythonDependencyTreeDO = pythonDependencyTreeDao.findByNameAndVersion(tempPythonComponentDO.getName(), tempPythonComponentDO.getVersion());
                         if (tempPythonDependencyTreeDO == null) {
                             tempPythonDependencyTreeDO = pythonService.spiderDependency(tempPythonComponentDO.getName(), tempPythonComponentDO.getVersion());
+                            pythonDependencyTreeDao.save(tempPythonDependencyTreeDO);
+                            List<PythonDependencyTableDO> pythonDependencyTableDOList = pythonService.dependencyTableAnalysis(tempPythonDependencyTreeDO);
+                            pythonDependencyTableDao.saveAll(pythonDependencyTableDOList);
                         }
                         AppComponentDependencyTreeDO temp = pythonService.translateComponentDependency(tempPythonDependencyTreeDO.getTree());
                         addDepth(temp);
