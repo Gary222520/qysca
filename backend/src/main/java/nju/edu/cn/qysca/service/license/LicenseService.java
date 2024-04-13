@@ -66,4 +66,15 @@ public interface LicenseService {
      * @return 许可证冲突信息
      */
     LicenseConflictInfoDTO getLicenseConflictInformation(String name, String version);
+
+    /**
+     * 获取组件的许可证列表
+     * @param name 名称
+     * @param version 版本
+     * @param language  语言
+     * @param page 页数
+     * @param size 大小
+     * @return List<LicenseBriefDTO> 许可证简明信息
+     */
+    Page<LicenseBriefDTO> getComponentLicense(String name, String version, String language, int page, int size);
 }

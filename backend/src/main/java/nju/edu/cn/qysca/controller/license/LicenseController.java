@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Api(tags= "许可证管理")
 @RestController
 @RequestMapping("qysca/license")
@@ -54,6 +56,12 @@ public class LicenseController {
     @GetMapping("/getLicenseConflict")
     public ResponseMsg<LicenseConflictInfoDTO> getLicenseConflict(@RequestParam String name, @RequestParam String version) {
         return new ResponseMsg<>(licenseService.getLicenseConflictInformation(name, version));
+    }
+
+    @ApiOperation("查看组件的许可证列表")
+    @GetMapping("/getComponentLicense")
+    public ResponseMsg<Page<LicenseBriefDTO>> getComponentLicense(@RequestParam String name, @RequestParam String version, @RequestParam String language, @RequestParam int page, @RequestParam int size) {
+        return new ResponseMsg<>(licenseService.getComponentLicense(name, version, language, page, size));
     }
 
 }
