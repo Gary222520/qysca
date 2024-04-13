@@ -654,7 +654,7 @@ public class ComponentServiceImpl implements ComponentService {
                 javaComponentDO.setUrl(changeComponentDetailDTO.getUrl());
                 javaComponentDO.setSourceUrl(changeComponentDetailDTO.getSourceUrl());
                 javaComponentDO.setDownloadUrl(changeComponentDetailDTO.getDownloadUrl());
-                javaComponentDO.setPUrl(changeComponentDetailDTO.getPUrl());
+                javaComponentDO.setPUrl(changeComponentDetailDTO.getPackageUrl());
                 javaComponentDao.save(javaComponentDO);
                 break;
             case "golang":
@@ -666,7 +666,7 @@ public class ComponentServiceImpl implements ComponentService {
                 goComponentDO.setUrl(changeComponentDetailDTO.getUrl());
                 goComponentDO.setSourceUrl(changeComponentDetailDTO.getSourceUrl());
                 goComponentDO.setDownloadUrl(changeComponentDetailDTO.getDownloadUrl());
-                goComponentDO.setPUrl(changeComponentDetailDTO.getPUrl());
+                goComponentDO.setPUrl(changeComponentDetailDTO.getPackageUrl());
                 goComponentDao.save(goComponentDO);
                 break;
             case "javaScript":
@@ -678,7 +678,7 @@ public class ComponentServiceImpl implements ComponentService {
                 jsComponentDO.setUrl(changeComponentDetailDTO.getUrl());
                 jsComponentDO.setSourceUrl(changeComponentDetailDTO.getSourceUrl());
                 jsComponentDO.setDownloadUrl(changeComponentDetailDTO.getDownloadUrl());
-                jsComponentDO.setPUrl(changeComponentDetailDTO.getPUrl());
+                jsComponentDO.setPUrl(changeComponentDetailDTO.getPackageUrl());
                 jsComponentDao.save(jsComponentDO);
                 break;
             case "python":
@@ -690,7 +690,7 @@ public class ComponentServiceImpl implements ComponentService {
                 pythonComponentDO.setUrl(changeComponentDetailDTO.getUrl());
                 pythonComponentDO.setSourceUrl(changeComponentDetailDTO.getSourceUrl());
                 pythonComponentDO.setDownloadUrl(changeComponentDetailDTO.getDownloadUrl());
-                pythonComponentDO.setPUrl(changeComponentDetailDTO.getPUrl());
+                pythonComponentDO.setPUrl(changeComponentDetailDTO.getPackageUrl());
                 pythonComponentDao.save(pythonComponentDO);
                 break;
             case "app":
@@ -698,7 +698,7 @@ public class ComponentServiceImpl implements ComponentService {
                 appComponentDO.setUrl(changeComponentDetailDTO.getUrl());
                 appComponentDO.setSourceUrl(changeComponentDetailDTO.getSourceUrl());
                 appComponentDO.setDownloadUrl(changeComponentDetailDTO.getDownloadUrl());
-                appComponentDO.setPUrl(changeComponentDetailDTO.getPUrl());
+                appComponentDO.setPUrl(changeComponentDetailDTO.getPackageUrl());
                 appComponentDao.save(appComponentDO);
                 break;
         }
