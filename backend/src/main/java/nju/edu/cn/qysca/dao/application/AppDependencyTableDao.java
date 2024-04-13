@@ -1,8 +1,8 @@
 package nju.edu.cn.qysca.dao.application;
 
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
-import nju.edu.cn.qysca.domain.application.dtos.AppComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.TableExcelBriefDTO;
+import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,8 +28,8 @@ public interface AppDependencyTableDao extends JpaRepository<AppDependencyTableD
      * @param pageable 分页
      * @return Page<AppComponentTableDTO> 应用依赖信息表
      */
-    @Query("select new nju.edu.cn.qysca.domain.application.dtos.AppComponentTableDTO(a.cName, a.cVersion, a.depth, a.type, a.language, a.direct) from AppDependencyTableDO a where a.name = :name and a.version = :version")
-    Page<AppComponentTableDTO> findByNameAndVersion(String name, String version, Pageable pageable);
+    @Query("select new nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO(a.cName, a.cVersion, a.depth, a.type, a.language, a.direct) from AppDependencyTableDO a where a.name = :name and a.version = :version")
+    Page<ComponentTableDTO> findByNameAndVersion(String name, String version, Pageable pageable);
 
     /**
      *  根据名称和版本查询应用依赖信息
@@ -48,4 +48,14 @@ public interface AppDependencyTableDao extends JpaRepository<AppDependencyTableD
      * @return List<AppDependencyTableDO> 应用依赖信息
      */
     List<AppDependencyTableDO> findAllByNameAndVersion(String name, String version);
+
+
+    /**
+     * 查询依赖的组件数量
+     * @param name 名称
+     * @param version 版本
+     * @return Integer 依赖的组件数量
+     */
+    @Query(value = "select count(*) from plt_app_dependency_table where name = :name and version = :version", nativeQuery = true)
+    Integer getDependencyCount(String name, String version);
 }

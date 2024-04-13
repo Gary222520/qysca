@@ -3,6 +3,8 @@ package nju.edu.cn.qysca.service.spider;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.domain.component.dos.JsComponentDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
@@ -17,9 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
+import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -150,6 +152,30 @@ public class JsSpiderServiceImpl implements JsSpiderService {
         }
     }
 
+    /**
+     * 获取一个包的所有版本
+     * @param name 包名
+     * @return 版本列表
+     */
+    @Override
+    public List<String> getVersions(String name) {
+        String url = NPM_REPO_BASE_URL + name;
+        String jsonString = getUrlContent(url);
+        if (jsonString == null || jsonString.isEmpty())
+            return null;
+        try {
+            List<String> versions = new ArrayList<>();
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(jsonString);
+            if (jsonNode.get("versions")!=null)
+                jsonNode.get("versions").fieldNames().forEachRemaining(versions::add);
+            return versions;
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 
     /**
      * 解析版本号
@@ -164,5 +190,30 @@ public class JsSpiderServiceImpl implements JsSpiderService {
             return new String[]{matcher.group(1), matcher.group(2)};
         }
         return null;
+    }
+
+    /**
+     * 爬取指定url的内容，以字符串返回
+     * @param urlString url地址
+     * @return String
+     */
+    private static String getUrlContent(String urlString) {
+        StringBuilder content = new StringBuilder();
+
+        try {
+            URL url = new URL(urlString);
+            URLConnection conn = url.openConnection();
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+            in.close();
+        } catch (Exception e) {
+            return null;
+        }
+
+        return content.toString();
     }
 }

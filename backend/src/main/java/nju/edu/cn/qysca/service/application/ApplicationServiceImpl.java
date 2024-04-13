@@ -17,6 +17,7 @@ import nju.edu.cn.qysca.domain.bu.dos.BuDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentCompareTreeDTO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentDetailDTO;
+import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
 import nju.edu.cn.qysca.domain.user.dos.UserDO;
 import nju.edu.cn.qysca.domain.user.dos.UserRoleDO;
@@ -601,6 +602,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             temp.remove(applicationDO.getId());
             parentApplicationDO.setChildApplication(temp.toArray(new String[temp.size()]));
         }
+        Set<String> languageSet = new HashSet<>();
         Set<String> licenseSet = new HashSet<>();
         Set<String> vulnerabilitySet = new HashSet<>();
         //拿到所有剩余组件的Licenses信息进行更新
@@ -608,8 +610,12 @@ public class ApplicationServiceImpl implements ApplicationService {
             ApplicationDO subApplication = applicationDao.findOneById(subApplicationId);
             licenseSet.addAll(Arrays.asList(subApplication.getLicenses()));
             vulnerabilitySet.addAll(Arrays.asList(subApplication.getVulnerabilities()));
+            languageSet.addAll(Arrays.asList(subApplication.getLanguage()));
         }
         for (Map.Entry<String, List<String>> entry : parentApplicationDO.getChildComponent().entrySet()) {
+            if(entry.getValue().size() > 0) {
+                languageSet.add(entry.getKey());
+            }
             switch (entry.getKey()) {
                 case "golang":
                     for (String subComponentId : entry.getValue()) {
@@ -643,6 +649,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         parentApplicationDO.setLicenses(licenseSet.toArray(new String[0]));
         parentApplicationDO.setVulnerabilities(licenseSet.toArray(new String[0]));
+        parentApplicationDO.setLanguage(languageSet.toArray(new String[0]));
         applicationDao.save(parentApplicationDO);
         return Boolean.TRUE;
     }
@@ -681,28 +688,26 @@ public class ApplicationServiceImpl implements ApplicationService {
             }
             applicationDO.setRelease(false);
             appComponentDao.deleteByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
-            appDependencyTreeDao.deleteByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
-            appDependencyTableDao.deleteAllByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
+            // 上传特征文件形成的不能删除
+            if(applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().size() > 0) {
+                appDependencyTreeDao.deleteByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
+                appDependencyTableDao.deleteAllByNameAndVersion(changeReleaseStateDTO.getName(), changeReleaseStateDTO.getVersion());
+            }
         } else {
+            AppDependencyTreeDO temp = appDependencyTreeDao.findByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
+            if(applicationDO.getChildApplication().length == 0 && applicationDO.getChildComponent().size() == 0 && temp == null){
+                throw new PlatformException(500, "该应用没有依赖，不能发布");
+            }
             //发布应用成组件
             applicationDO.setRelease(true);
             AppComponentDO appComponentDO = new AppComponentDO();
             BeanUtils.copyProperties(applicationDO, appComponentDO);
             appComponentDO.setType(changeReleaseStateDTO.getType());
-            Set<String> language = new HashSet<>();
-            for (String id : applicationDO.getChildApplication()) {
-                ApplicationDO child = applicationDao.findApplicationDOById(id);
-                language.addAll(Arrays.asList(child.getLanguage()));
-            }
-            for (Map.Entry<String, List<String>> entry : applicationDO.getChildComponent().entrySet()) {
-                if (entry.getValue().size() > 0) {
-                    language.add(entry.getKey());
-                }
-            }
             appComponentDO.setLicenses(applicationDO.getLicenses());
-            appComponentDO.setLanguage(language.toArray(new String[0]));
+            // 应用本身已经具备language 不用再重新构建language
+            appComponentDO.setLanguage(applicationDO.getLanguage());
+            appComponentDO.setState("SUCCESS");
             appComponentDao.save(appComponentDO);
-            AppDependencyTreeDO temp = appDependencyTreeDao.findByNameAndVersion(applicationDO.getName(), applicationDO.getVersion());
             //根据结构生成依赖信息并保存
             if (temp == null) {
                 temp = generateDependencyTree(applicationDO, changeReleaseStateDTO.getType());
@@ -761,8 +766,9 @@ public class ApplicationServiceImpl implements ApplicationService {
         List<AppComponentDependencyTreeDO> appComponentDependencyTreeDOS = new ArrayList<>();
         for (String id : applicationDO.getChildApplication()) {
             ApplicationDO tempApplicationDO = applicationDao.findApplicationDOById(id);
-
             AppComponentDependencyTreeDO temp = appDependencyTreeDao.findByNameAndVersion(tempApplicationDO.getName(), tempApplicationDO.getVersion()).getTree();
+            AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(tempApplicationDO.getName(), tempApplicationDO.getVersion());
+            temp.setType(appComponentDO.getType());
             addDepth(temp);
             appComponentDependencyTreeDOS.add(temp);
         }
@@ -886,7 +892,7 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @return Page<ComponentTableDTO> 依赖平铺信息分页
      */
     @Override
-    public Page<AppComponentTableDTO> findApplicationDependencyTable(ApplicationSearchPageDTO applicationSearchPageDTO) {
+    public Page<ComponentTableDTO> findApplicationDependencyTable(ApplicationSearchPageDTO applicationSearchPageDTO) {
         // 设置排序规则
         List<Sort.Order> orders = new ArrayList<>();
         orders.add(new Sort.Order(Sort.Direction.ASC, "depth").nullsLast());

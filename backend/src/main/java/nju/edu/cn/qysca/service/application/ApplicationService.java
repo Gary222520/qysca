@@ -3,6 +3,7 @@ package nju.edu.cn.qysca.service.application;
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.application.dtos.*;
+import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import org.springframework.data.domain.Page;
 
 import javax.servlet.http.HttpServletResponse;
@@ -128,7 +129,7 @@ public interface ApplicationService {
      * @param applicationSearchPageDTO 带分页应用版本搜索信息
      * @return Page<ComponentTableDTO> 依赖平铺信息分页
      */
-    Page<AppComponentTableDTO> findApplicationDependencyTable(ApplicationSearchPageDTO applicationSearchPageDTO);
+    Page<ComponentTableDTO> findApplicationDependencyTable(ApplicationSearchPageDTO applicationSearchPageDTO);
 
     /**
      * 导出应用依赖平铺信息（简明）Excel
