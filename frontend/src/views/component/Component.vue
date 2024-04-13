@@ -60,13 +60,13 @@
                   <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showInfo(record)" />
                 </a-tooltip>
               </div>
-              <div class="action_icon" v-if="record.state === 'SUCCESS'">
+              <div class="action_icon" v-if="record.creator">
                 <a-tooltip>
                   <template #title>更新</template>
                   <SyncOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="updateComponent(record)" />
                 </a-tooltip>
               </div>
-              <div class="action_icon" v-if="record.language instanceof Array">
+              <div class="action_icon" v-if="record.creator">
                 <a-tooltip>
                   <template #title>删除</template>
                   <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个组件吗？">

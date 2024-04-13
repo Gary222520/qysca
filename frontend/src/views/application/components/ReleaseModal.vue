@@ -12,16 +12,16 @@
             <a-select-option value="internal">内部</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="主页地址" name="url" :rules="[{ required: true, message: '请输入主页地址' }]">
+        <a-form-item label="主页地址" name="url">
           <a-input v-model:value="formState.url" style="width: 300px" />
         </a-form-item>
-        <a-form-item label="源码地址" name="sourceUrl" :rules="[{ required: true, message: '请输入源码地址' }]">
+        <a-form-item label="源码地址" name="sourceUrl">
           <a-input v-model:value="formState.sourceUrl" style="width: 300px" />
         </a-form-item>
-        <a-form-item label="下载地址" name="downloadUrl" :rules="[{ required: true, message: '请输入下载地址' }]">
+        <a-form-item label="下载地址" name="downloadUrl">
           <a-input v-model:value="formState.downloadUrl" style="width: 300px" />
         </a-form-item>
-        <a-form-item label="包获取地址" name="pUrl" :rules="[{ required: true, message: '请输入包获取地址' }]">
+        <a-form-item label="包获取地址" name="pUrl">
           <a-input v-model:value="formState.pUrl" style="width: 300px" />
         </a-form-item>
       </a-form>
