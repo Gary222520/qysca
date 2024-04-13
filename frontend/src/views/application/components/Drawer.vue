@@ -21,7 +21,7 @@
       </div>
       <a-descriptions>
         <a-descriptions-item label="应用类型">{{ data.detail?.type }}</a-descriptions-item>
-        <a-descriptions-item label="应用描述">{{ data.detail?.description }}</a-descriptions-item>
+        <a-descriptions-item label="应用描述">{{ data.detail?.description || '-' }}</a-descriptions-item>
       </a-descriptions>
 
       <div class="relative">
@@ -31,9 +31,9 @@
         <a-descriptions-item label="语言" span="3">
           <a-tag v-for="(item, index) in data.detail?.language" :key="index">{{ item }}</a-tag>
         </a-descriptions-item>
-        <a-descriptions-item label="构建工具">{{ data.detail?.builder }}</a-descriptions-item>
-        <a-descriptions-item label="扫描对象">{{ data.detail?.scanner }}</a-descriptions-item>
-        <a-descriptions-item label="扫描时间">{{ data.detail?.time }}</a-descriptions-item>
+        <a-descriptions-item label="构建工具">{{ data.detail?.builder || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="扫描对象">{{ data.detail?.scanner || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="扫描时间">{{ data.detail?.time || '-' }}</a-descriptions-item>
       </a-descriptions>
 
       <div class="relative" v-if="data.isProject">

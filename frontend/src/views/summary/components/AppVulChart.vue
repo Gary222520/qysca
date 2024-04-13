@@ -13,15 +13,16 @@ import * as echarts from 'echarts'
 
 const data = reactive({
   spinning: true,
-  chart: null,
   compareDTOList: []
 })
+
+let chart = null
 
 const draw = (compareDTOList) => {
   data.spinning = false
   data.compareDTOList = compareDTOList
-  if (data.chart !== null) hide()
-  data.chart = echarts.init(document.getElementById('app-vul-chart'))
+  if (chart !== null) hide()
+  chart = echarts.init(document.getElementById('app-vul-chart'))
   const option = {
     legend: {},
     tooltip: {},
@@ -32,9 +33,9 @@ const draw = (compareDTOList) => {
       bottom: '5%',
       containLabel: true
     },
-    color: ['#ff7070', '#ffdc60', '#7ed3f4', '#9fe080', '#5c7bd9'],
+    color: ['#a80022', '#ff7070', '#ffdc60', '#7ed3f4', '#9fe080', '#5c7bd9'],
     dataset: {
-      dimensions: ['name', 'high', 'medium', 'low', 'none', 'unknown'],
+      dimensions: ['name', '严重', '高危', '中危', '低危', '无风险', '未知'],
       source: getData()
     },
     xAxis: {
@@ -50,29 +51,30 @@ const draw = (compareDTOList) => {
       { type: 'bar', barWidth: '12' },
       { type: 'bar', barWidth: '12' },
       { type: 'bar', barWidth: '12' },
+      { type: 'bar', barWidth: '12' },
       { type: 'bar', barWidth: '12' }
     ]
   }
-  data.chart.setOption(option)
+  chart.setOption(option)
 }
 
 const getData = () => {
   return data.compareDTOList.map((item) => {
-    return {
-      name: item.name + '\n' + item.version,
-      high: item.high,
-      medium: item.medium,
-      low: item.low,
-      none: item.none,
-      unknown: item.unknown
-    }
+    const res = { name: item.name + '\n' + item.version }
+    res['严重'] = item.map.CRITICAL
+    res['高危'] = item.map.HIGH
+    res['中危'] = item.map.MEDIUM
+    res['低危'] = item.map.LOW
+    res['无风险'] = item.map.NONE
+    res['未知'] = item.map.UNKNOWN
+    return res
   })
 }
 
 const hide = () => {
   data.spinning = true
-  data.chart?.dispose()
-  data.chart = null
+  chart?.dispose()
+  chart = null
 }
 
 defineExpose({ draw, hide })

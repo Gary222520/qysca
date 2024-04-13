@@ -13,15 +13,16 @@ import * as echarts from 'echarts'
 
 const data = reactive({
   spinning: true,
-  chart: null,
   categoryCountMap: []
 })
+
+let chart = null
 
 const draw = (categoryCountMap) => {
   data.spinning = false
   data.categoryCountMap = categoryCountMap
-  if (data.chart !== null) hide()
-  data.chart = echarts.init(document.getElementById('vul-chart'))
+  if (chart !== null) hide()
+  chart = echarts.init(document.getElementById('vul-chart'))
   const option = {
     tooltip: {
       trigger: 'item'
@@ -50,7 +51,7 @@ const draw = (categoryCountMap) => {
       }
     ]
   }
-  data.chart.setOption(option)
+  chart.setOption(option)
 }
 
 const getData = () => {
@@ -66,8 +67,8 @@ const getData = () => {
 
 const hide = () => {
   data.spinning = true
-  data.chart?.dispose()
-  data.chart = null
+  chart?.dispose()
+  chart = null
 }
 
 defineExpose({ draw, hide })

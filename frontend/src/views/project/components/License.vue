@@ -56,8 +56,8 @@
           </template>
           <template v-if="column.key === 'riskLevel'">
             <a-tag v-if="record.riskLevel === 'high'" color="error">高危</a-tag>
-            <a-tag v-if="record.riskLevel === 'medium'" color="warning">中危</a-tag>
-            <a-tag v-if="record.riskLevel === 'low'" color="processing">低危</a-tag>
+            <a-tag v-else-if="record.riskLevel === 'medium'" color="warning">中危</a-tag>
+            <a-tag v-else-if="record.riskLevel === 'low'" color="processing">低危</a-tag>
             <div v-else>-</div>
           </template>
           <template v-if="column.key === 'isOsiApproved'">

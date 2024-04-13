@@ -26,12 +26,11 @@
             <a-tag>{{ data.detail?.language }}</a-tag>
           </div>
         </a-descriptions-item>
-        <a-descriptions-item label="组件描述" span="3">{{ data.detail?.description }}</a-descriptions-item>
-
-        <a-descriptions-item label="主页地址" span="3">{{ data.detail?.url }}</a-descriptions-item>
-        <a-descriptions-item label="源码地址" span="3">{{ data.detail?.sourceUrl }}</a-descriptions-item>
-        <a-descriptions-item label="下载地址" span="3">{{ data.detail?.downloadUrl }}</a-descriptions-item>
-        <a-descriptions-item label="包获取地址" span="3">{{ data.detail?.purl }}</a-descriptions-item>
+        <a-descriptions-item label="组件描述" span="3">{{ data.detail?.description || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="主页地址" span="3">{{ data.detail?.url || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="源码地址" span="3">{{ data.detail?.sourceUrl || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="下载地址" span="3">{{ data.detail?.downloadUrl || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="包获取地址" span="3">{{ data.detail?.purl || '-' }}</a-descriptions-item>
       </a-descriptions>
 
       <div class="relative">
@@ -45,7 +44,6 @@
           <div>
             <a-tag v-for="(item, index) in data.detail?.licenses" :key="index">{{ item }}</a-tag>
           </div>
-          <!-- {{ arrToString(data.detail?.licenses) }} -->
         </a-descriptions-item>
       </a-descriptions>
 

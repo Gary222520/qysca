@@ -130,8 +130,10 @@ const close = () => {
 }
 const clear = () => {
   data.currentStep = 0
-  formRef.value.resetFields()
-  uploadRef.value.clear()
+  if (data.currentStep === 2) {
+    formRef.value.resetFields()
+    uploadRef.value.clear()
+  }
 }
 const selectLanguage = (language) => {
   componentInfo.language = language

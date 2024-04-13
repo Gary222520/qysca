@@ -13,15 +13,16 @@ import * as echarts from 'echarts'
 
 const data = reactive({
   spinning: true,
-  chart: null,
   licenseTypeNumberMap: []
 })
+
+let chart = null
 
 const draw = (licenseTypeNumberMap) => {
   data.spinning = false
   data.licenseTypeNumberMap = licenseTypeNumberMap
-  if (data.chart !== null) hide()
-  data.chart = echarts.init(document.getElementById('license-chart'))
+  if (chart !== null) hide()
+  chart = echarts.init(document.getElementById('license-chart'))
   const chartData = getData()
   const option = {
     tooltip: {},
@@ -45,11 +46,18 @@ const draw = (licenseTypeNumberMap) => {
       {
         name: '许可证使用次数',
         type: 'bar',
-        data: chartData[1]
+        data: chartData[1],
+        itemStyle: {
+          color: function (params) {
+            const color = ['#5c7bd9', '#5c7bd9', '#5c7bd9', '#9fe080', '#7ed3f4', '#ffdc60', '#ff7070', '#a80022']
+            const index = params.dataIndex % 8
+            return color[index]
+          }
+        }
       }
     ]
   }
-  data.chart.setOption(option)
+  chart.setOption(option)
 }
 
 const getData = () => {
@@ -72,8 +80,8 @@ const getData = () => {
 
 const hide = () => {
   data.spinning = true
-  data.chart?.dispose()
-  data.chart = null
+  chart?.dispose()
+  chart = null
 }
 
 defineExpose({ draw, hide })

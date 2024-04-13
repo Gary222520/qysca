@@ -13,15 +13,16 @@ import * as echarts from 'echarts'
 
 const data = reactive({
   spinning: true,
-  chart: null,
   compareDTOList: []
 })
+
+let chart = null
 
 const draw = (compareDTOList) => {
   data.spinning = false
   data.compareDTOList = compareDTOList
-  if (data.chart !== null) hide()
-  data.chart = echarts.init(document.getElementById('app-license-chart'))
+  if (chart !== null) hide()
+  chart = echarts.init(document.getElementById('app-license-chart'))
   const option = {
     legend: {},
     tooltip: {},
@@ -34,7 +35,7 @@ const draw = (compareDTOList) => {
     },
     color: ['#ff7070', '#9fe080'],
     dataset: {
-      dimensions: ['name', 'risk', 'secure'],
+      dimensions: ['name', '有风险', '无风险'],
       source: getData()
     },
     xAxis: {
@@ -50,17 +51,16 @@ const draw = (compareDTOList) => {
       { type: 'bar', barWidth: '24' }
     ]
   }
-  data.chart.setOption(option)
+  chart.setOption(option)
 }
 
 const getData = () => {
   return data.compareDTOList
     .map((item) => {
-      return {
-        name: item.name + '\n' + item.version,
-        risk: item.risk,
-        secure: item.secure
-      }
+      const res = { name: item.name + '\n' + item.version }
+      res['有风险'] = item.risk
+      res['无风险'] = item.secure
+      return res
     })
     .sort((a, b) => {
       if (a.risk === 0 && a.secure === 0) return 1
@@ -73,8 +73,8 @@ const getData = () => {
 
 const hide = () => {
   data.spinning = true
-  data.chart?.dispose()
-  data.chart = null
+  chart?.dispose()
+  chart = null
 }
 
 defineExpose({ draw, hide })

@@ -19,7 +19,7 @@ router.beforeEach((to, from, next) => {
       return
     }
     if (permission.some((item) => item.role === 'Admin')) next('/home/userManage')
-    else next('/home/application')
+    else next('/home/summary')
   } else next()
 })
 
