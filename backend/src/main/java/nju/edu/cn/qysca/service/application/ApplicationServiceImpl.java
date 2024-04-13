@@ -602,6 +602,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             temp.remove(applicationDO.getId());
             parentApplicationDO.setChildApplication(temp.toArray(new String[temp.size()]));
         }
+        Set<String> languageSet = new HashSet<>();
         Set<String> licenseSet = new HashSet<>();
         Set<String> vulnerabilitySet = new HashSet<>();
         //拿到所有剩余组件的Licenses信息进行更新
@@ -609,8 +610,12 @@ public class ApplicationServiceImpl implements ApplicationService {
             ApplicationDO subApplication = applicationDao.findOneById(subApplicationId);
             licenseSet.addAll(Arrays.asList(subApplication.getLicenses()));
             vulnerabilitySet.addAll(Arrays.asList(subApplication.getVulnerabilities()));
+            languageSet.addAll(Arrays.asList(subApplication.getLanguage()));
         }
         for (Map.Entry<String, List<String>> entry : parentApplicationDO.getChildComponent().entrySet()) {
+            if(entry.getValue().size() > 0) {
+                languageSet.add(entry.getKey());
+            }
             switch (entry.getKey()) {
                 case "golang":
                     for (String subComponentId : entry.getValue()) {
@@ -644,6 +649,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         parentApplicationDO.setLicenses(licenseSet.toArray(new String[0]));
         parentApplicationDO.setVulnerabilities(licenseSet.toArray(new String[0]));
+        parentApplicationDO.setLanguage(languageSet.toArray(new String[0]));
         applicationDao.save(parentApplicationDO);
         return Boolean.TRUE;
     }
@@ -760,8 +766,9 @@ public class ApplicationServiceImpl implements ApplicationService {
         List<AppComponentDependencyTreeDO> appComponentDependencyTreeDOS = new ArrayList<>();
         for (String id : applicationDO.getChildApplication()) {
             ApplicationDO tempApplicationDO = applicationDao.findApplicationDOById(id);
-
             AppComponentDependencyTreeDO temp = appDependencyTreeDao.findByNameAndVersion(tempApplicationDO.getName(), tempApplicationDO.getVersion()).getTree();
+            AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(tempApplicationDO.getName(), tempApplicationDO.getVersion());
+            temp.setType(appComponentDO.getType());
             addDepth(temp);
             appComponentDependencyTreeDOS.add(temp);
         }
