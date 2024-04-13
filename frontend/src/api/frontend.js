@@ -78,7 +78,9 @@ export const AddLicense = (params) => request('post', API.ADD_LICENSE, { params 
 // 删除某个应用许可证
 export const DeleteLicense = (params) => request('post', API.DELETE_LICENSE, { params })
 // 查看应用的许可证冲突信息
-export const GetLicenseConflict = (params) => request('get', API.LICENSE_CONFLICT, { params })
+export const GetLicenseConflict = (params) => request('get', API.APP_LICENSE_CONFLICT, { params })
+// 查看组件的许可证冲突信息
+export const GetComLicenseConflict = (params) => request('get', API.COM_LICENSE_CONFLICT, { params })
 
 // 查看漏洞库界面
 export const GetAllVul = (params) => request('get', API.ALL_VUL, { params })
