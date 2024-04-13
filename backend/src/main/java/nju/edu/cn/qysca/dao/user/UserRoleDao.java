@@ -73,7 +73,6 @@ public interface UserRoleDao extends JpaRepository<UserRoleDO, String> {
      */
     List<UserRoleDO> findAllByAid(String aid);
 
-
     /**
      * 查看部门的Bu Rep
      */

@@ -26,14 +26,13 @@ public interface ComponentService {
     /**
      * 更新闭源组件信息
      * @param updateCloseComponentDTO 更新闭源组件接口信息
-     * @return 更新闭源组件是否成功
      */
     void updateCloseComponent(UpdateCloseComponentDTO updateCloseComponentDTO);
 
     /**
      * 删除闭源组件
      * @param deleteCloseComponentDTO 删除闭源组件信息接口
-     * @return
+     * @return List<ApplicationDO> 依赖此组件信息
      */
     List<ApplicationDO> deleteCloseComponent(DeleteCloseComponentDTO deleteCloseComponentDTO);
 
@@ -80,7 +79,12 @@ public interface ComponentService {
     /**
      * 将闭源组件状态设置为RUNNING
      * @param updateCloseComponentDTO 更新闭源组件信息接口
-     * @return Boolean 状态设置是否成功
      */
-    Boolean changeCloseComponentState(UpdateCloseComponentDTO updateCloseComponentDTO);
+    void changeCloseComponentState(UpdateCloseComponentDTO updateCloseComponentDTO);
+
+    /**
+     * 修改发布组件详细信息
+     * @param changeComponentDetailDTO 修改发布组件详细信息接口
+     */
+    void changeComponentDetail(ChangeComponentDetailDTO changeComponentDetailDTO);
 }
