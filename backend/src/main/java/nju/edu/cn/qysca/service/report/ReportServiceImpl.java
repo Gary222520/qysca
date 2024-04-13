@@ -159,7 +159,7 @@ public class ReportServiceImpl implements ReportService {
 
         LicenseConflictInfoDTO licenseConflictInfoDTO = licenseService.getLicenseConflictInformation(appName, appVersion);
 
-        List<VulnerabilityBriefDTO> vulnerabilityBriefDTOList = vulnerabilityService.getVulnerabilityList(appName, appVersion);
+        List<VulnerabilityBriefDTO> vulnerabilityBriefDTOList = vulnerabilityService.getApplicationVulnerabilityList(appName, appVersion);
 
         // 生成html文件
         String filePath = makeHtml(dir, "report-template", applicationDO, componentDOList, licenseDOList, licenseConflictInfoDTO, vulnerabilityBriefDTOList);
