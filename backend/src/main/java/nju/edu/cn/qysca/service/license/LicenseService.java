@@ -19,10 +19,22 @@ public interface LicenseService {
      * 分页查询应用许可证列表
      * @param name 名称
      * @param version 版本
+     * @param page 页数
+     * @param size 大小
      * @return Page<LicenseBriefDTO> 许可证简明信息
      */
-    Page<LicenseBriefDTO> getLicenseList(String name, String version, int page, int size);
+    Page<LicenseBriefDTO> getAppLicense(String name, String version, int page, int size);
 
+    /**
+     * 获取组件的许可证列表
+     * @param name 名称
+     * @param version 版本
+     * @param language  语言
+     * @param page 页数
+     * @param size 大小
+     * @return List<LicenseBriefDTO> 许可证简明信息
+     */
+    Page<LicenseBriefDTO> getComponentLicense(String name, String version, String language, int page, int size);
 
     /**
      * 添加应用许可证
@@ -65,16 +77,15 @@ public interface LicenseService {
      * @param version 版本
      * @return 许可证冲突信息
      */
-    LicenseConflictInfoDTO getLicenseConflictInformation(String name, String version);
+    LicenseConflictInfoDTO getAppLicenseConflictInformation(String name, String version);
 
     /**
-     * 获取组件的许可证列表
+     * 获取组件的许可证冲突信息
+     *
      * @param name 名称
      * @param version 版本
-     * @param language  语言
-     * @param page 页数
-     * @param size 大小
-     * @return List<LicenseBriefDTO> 许可证简明信息
+     * @param language 语言
+     * @return 许可证冲突信息
      */
-    Page<LicenseBriefDTO> getComponentLicense(String name, String version, String language, int page, int size);
+    LicenseConflictInfoDTO getComponentLicenseConflictInformation(String name, String version, String language);
 }

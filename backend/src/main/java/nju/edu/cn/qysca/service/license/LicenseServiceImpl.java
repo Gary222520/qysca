@@ -84,10 +84,12 @@ public class LicenseServiceImpl implements LicenseService{
      * 分页查询应用许可证列表
      * @param name 名称
      * @param version 版本
+     * @param page 页数
+     * @param size 大小
      * @return Page<LicenseBriefDTO> 许可证简明信息
      */
     @Override
-    public Page<LicenseBriefDTO> getLicenseList(String name, String version, int page, int size) {
+    public Page<LicenseBriefDTO> getAppLicense(String name, String version, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
         Page<LicenseDO> temp = licenseDao.getLicenseList(Arrays.asList(applicationDO.getLicenses()), pageable);
@@ -221,12 +223,60 @@ public class LicenseServiceImpl implements LicenseService{
      * @param version 版本
      * @return 许可证冲突信息
      */
-    public LicenseConflictInfoDTO getLicenseConflictInformation(String name, String version) {
+    @Override
+    public LicenseConflictInfoDTO getAppLicenseConflictInformation(String name, String version) {
 
         // 获取应用的许可证列表
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
         List<LicenseDO> licenses = licenseDao.findLicenseList(Arrays.asList(applicationDO.getLicenses()));
 
+        return getLicenseConflictInformation(licenses);
+    }
+
+    /**
+     * 获取组件的许可证冲突信息
+     *
+     * @param name 名称
+     * @param version 版本
+     * @param language 语言
+     * @return 许可证冲突信息
+     */
+    @Override
+    public LicenseConflictInfoDTO getComponentLicenseConflictInformation(String name, String version, String language) {
+        List<String> licenses = null;
+        switch (language) {
+            case "java":
+                JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(name, version);
+                licenses = Arrays.asList(javaComponentDO.getLicenses());
+                break;
+            case "javaScript":
+                JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(name,version);
+                licenses = Arrays.asList(jsComponentDO.getLicenses());
+                break;
+            case "golang":
+                GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(name, version);
+                licenses = Arrays.asList(goComponentDO.getLicenses());
+                break;
+            case "python":
+                PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(name, version);
+                licenses = Arrays.asList(pythonComponentDO.getLicenses());
+                break;
+            case "app":
+                AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(name, version);
+                licenses = Arrays.asList(appComponentDO.getLicenses());
+                break;
+        }
+        List<LicenseDO> licenseDOList = licenseDao.findLicenseList(licenses);
+
+        return getLicenseConflictInformation(licenseDOList);
+    }
+
+    /**
+     * 检测许可证冲突
+     * @param licenses 许可证列表
+     * @return 许可证冲突信息
+     */
+    private LicenseConflictInfoDTO getLicenseConflictInformation(List<LicenseDO> licenses){
         Set<String> obligationsSet = new HashSet<>();
         Set<String> rightsSet = new HashSet<>();
 
