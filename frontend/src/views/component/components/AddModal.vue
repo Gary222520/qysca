@@ -43,7 +43,11 @@
               <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
             </div>
             <div v-if="componentInfo.builder === 'txt'">
-              <Upload ref="uploadRef" :accept="'.txt'" :upload-text="'.txt文件'" @success="handleUpload"></Upload>
+              <Upload
+                ref="uploadRef"
+                :accept="'.txt'"
+                :upload-text="'requirements.txt'"
+                @success="handleUpload"></Upload>
             </div>
             <div v-if="componentInfo.builder === 'tar.gz'">
               <Upload ref="uploadRef" :accept="'.gz'" :upload-text="'tar.gz文件'" @success="handleUpload"></Upload>
@@ -130,8 +134,10 @@ const close = () => {
 }
 const clear = () => {
   data.currentStep = 0
-  formRef.value.resetFields()
-  uploadRef.value.clear()
+  if (data.currentStep === 2) {
+    formRef.value.resetFields()
+    uploadRef.value.clear()
+  }
 }
 const selectLanguage = (language) => {
   componentInfo.language = language

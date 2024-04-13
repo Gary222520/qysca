@@ -89,6 +89,15 @@ export const API = {
   // 在某个应用中删除漏洞信息
   DELETE_VUL: '/qysca/vulnerability/deleteAppVulnerability',
 
+  // 查询用户所在部门的应用总数
+  STATISTIC_APP: '/qysca/statistics/getApplicationCount',
+  // 查询用户所在部门的应用的组件总数
+  STATISTIC_COM: '/qysca/statistics/getComponentCount',
+  // 查询用户所在部门的应用的漏洞统计
+  STATISTIC_VUL: '/qysca/statistics/getVulnerabilityStatistics',
+  // 查询用户所在部门的应用的许可证统计
+  STATISTIC_LICENSE: '/qysca/statistics/getLicenseStatistics',
+
   // 文件上传
   FILE_UPLOAD: '/qysca/file/chunk',
   // 文件合并
@@ -100,6 +109,8 @@ export const API = {
   EXPORT_DETAIL: '/qysca/application/exportTableExcelDetail',
   // 导出SBOM
   EXPORT_SBOM: '/qysca/application/exportSBOM',
+  // 导出报告
+  EXPORT_REPORT: '/qysca/application/exportHtml',
 
   // 新增部门
   CREATE_BU: '/qysca/bu/addBu',

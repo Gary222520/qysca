@@ -131,6 +131,18 @@ const onFileAdded = (file, event) => {
     message.info('必须上传pom.xml')
     return
   }
+  if (props.uploadText === 'go.mod' && file.name !== 'go.mod') {
+    message.info('必须上传go.mod')
+    return
+  }
+  if (props.uploadText === 'package.json' && file.name !== 'package.json') {
+    message.info('必须上传package.json')
+    return
+  }
+  if (props.uploadText === 'requirements.txt' && file.name !== 'requirements.txt') {
+    message.info('必须上传requirements.txt')
+    return
+  }
   if (file.size > upload.maxSize) {
     message.info('文件大小不能超过100MB')
     return

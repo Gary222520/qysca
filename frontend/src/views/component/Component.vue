@@ -47,8 +47,8 @@
             <div v-if="record.type === 'internal'">内部使用</div>
           </template>
           <template v-if="column.key === 'language'">
-            <div v-if="!record.language instanceof Array">{{ record.language }}</div>
             <div v-if="record.language instanceof Array">{{ arrToString(record.language) }}</div>
+            <div v-else>{{ record.language }}</div>
           </template>
           <template v-if="column.key === 'action'">
             <div
@@ -60,13 +60,13 @@
                   <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showInfo(record)" />
                 </a-tooltip>
               </div>
-              <div class="action_icon" v-if="record.state === 'SUCCESS'">
+              <!-- <div class="action_icon" v-if="record.state === 'SUCCESS'">
                 <a-tooltip>
                   <template #title>更新</template>
                   <SyncOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="updateComponent(record)" />
                 </a-tooltip>
-              </div>
-              <div class="action_icon">
+              </div> -->
+              <div class="action_icon" v-if="record.language instanceof Array">
                 <a-tooltip>
                   <template #title>删除</template>
                   <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个组件吗？">
@@ -135,11 +135,8 @@ const updateModal = ref()
 const warnModal = ref()
 
 const data = reactive({
-  // accurate: false,
   search: {
     name: '',
-    // groupId: '',
-    // artifactId: '',
     version: '',
     language: 'java',
     type: 'opensource'
@@ -165,9 +162,6 @@ const pagination = reactive({
   hideOnSinglePage: true
 })
 const getComponents = (number = 1, size = 8) => {
-  // data.datasource = []
-  // if (data.accurate && data.search.groupId === '') return
-  // if (!data.accurate && data.search.language === '' && data.search.name === '') return
   const params = {
     ...data.search,
     number,
@@ -191,15 +185,7 @@ const getComponents = (number = 1, size = 8) => {
       console.error(err)
     })
 }
-// const changeMode = (value) => {
-//   data.accurate = value
-//   if (!value) {
-//     data.search.groupId = ''
-//     data.search.version = ''
-//     data.search.artifactId = ''
-//   }
-//   getComponents()
-// }
+
 const addComponent = () => {
   addModal.value.open()
 }
@@ -215,7 +201,12 @@ const retry = (record) => {
 }
 const deleteComponent = (record) => {
   record.popconfirm = false
-  DeleteComponent({ name: record.name, version: record.version, language: record.language })
+  const params = {
+    name: record.name,
+    version: record.version,
+    language: record.language instanceof Array ? 'app' : record.language
+  }
+  DeleteComponent(params)
     .then((res) => {
       // console.log('DeleteComponent', res)
       if (res.code !== 200) {

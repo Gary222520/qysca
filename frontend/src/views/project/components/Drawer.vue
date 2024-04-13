@@ -17,24 +17,39 @@
       </div>
       <a-descriptions>
         <a-descriptions-item label="名称">{{ data.detail?.name }}</a-descriptions-item>
-        <a-descriptions-item label="版本">{{ data.detail?.version }}</a-descriptions-item>
-        <a-descriptions-item label="语言">{{ data.detail?.language }}</a-descriptions-item>
-        <a-descriptions-item label="组件描述" span="3">{{ data.detail?.description }}</a-descriptions-item>
-
-        <a-descriptions-item label="主页地址" span="3">{{ data.detail?.url }}</a-descriptions-item>
-        <a-descriptions-item label="源码地址" span="3">{{ data.detail?.sourceUrl }}</a-descriptions-item>
-        <a-descriptions-item label="下载地址" span="3">{{ data.detail?.downloadUrl }}</a-descriptions-item>
-        <a-descriptions-item label="包获取地址" span="3">{{ data.detail?.purl }}</a-descriptions-item>
+        <a-descriptions-item label="版本" span="2">{{ data.detail?.version }}</a-descriptions-item>
+        <a-descriptions-item label="语言" span="3">
+          <div v-if="data.detail?.language instanceof Array">
+            <a-tag v-for="(item, index) in data.detail?.language" :key="index">{{ item }}</a-tag>
+          </div>
+          <div v-else>
+            <a-tag>{{ data.detail?.language }}</a-tag>
+          </div>
+        </a-descriptions-item>
+        <a-descriptions-item label="组件描述" span="3">
+          <div style="position: relative">
+            <span ref="descriptionRef" v-html="description.text"></span>
+            <div class="text-btn" v-if="description.showBtn" @click="changeDescription()">
+              {{ description.showTotal ? '收起' : '展开' }}
+            </div>
+          </div>
+        </a-descriptions-item>
+        <a-descriptions-item label="主页地址" span="3">{{ data.detail?.url || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="源码地址" span="3">{{ data.detail?.sourceUrl || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="下载地址" span="3">{{ data.detail?.downloadUrl || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="包获取地址" span="3">{{ data.detail?.purl || '-' }}</a-descriptions-item>
       </a-descriptions>
 
       <div class="relative">
         <div class="drawer_title">许可证信息</div>
       </div>
-      <!-- <a-table :data-source="data.detail?.licenses" :columns="data.licenseColumns" :pagination="false">
-      <template #emptyText>暂无数据</template>
-    </a-table> -->
+
       <a-descriptions>
-        <a-descriptions-item label="许可证">{{ arrToString(data.detail?.licenses) }}</a-descriptions-item>
+        <a-descriptions-item label="许可证" span="3">
+          <div>
+            <a-tag v-for="(item, index) in data.detail?.licenses" :key="index">{{ item }}</a-tag>
+          </div>
+        </a-descriptions-item>
       </a-descriptions>
 
       <div class="relative">
@@ -48,13 +63,15 @@
 </template>
 
 <script setup>
-import { reactive, defineExpose } from 'vue'
+import { reactive, ref, defineExpose, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { GetComponentInfo } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 import { arrToString } from '@/utils/util.js'
 
 const router = useRouter()
+const descriptionRef = ref()
+
 const data = reactive({
   spinning: false,
   open: false,
@@ -69,12 +86,22 @@ const data = reactive({
     { title: '开发者ID', dataIndex: 'id', key: 'id' },
     { title: '开发者姓名', dataIndex: 'name', key: 'name' },
     { title: '开发者邮箱', dataIndex: 'email', key: 'email' }
-  ]
+  ],
+  language: ''
 })
+const description = reactive({
+  text: '',
+  showBtn: true,
+  showTotal: false
+})
+
 const open = (component, dependency) => {
   data.open = true
   data.dependency = dependency
   data.component = component
+  data.language = data.component.language instanceof Array ? 'app' : data.component.language
+  description.showTotal = false
+  description.showBtn = true
   getComponentInfo()
 }
 const close = () => {
@@ -84,9 +111,8 @@ const getComponentInfo = () => {
   const params = {
     name: data.component.name,
     version: data.component.version,
-    language: data.component.language
+    language: data.language
   }
-  if (params.language instanceof Array) params.language = 'app'
   // console.log('params', params)
   data.spinning = true
   GetComponentInfo(params)
@@ -98,21 +124,76 @@ const getComponentInfo = () => {
         return
       }
       data.detail = res.data
+      data.detail.licenses = data.detail.licenses.filter((item) => item !== '')
+      handleDescription()
+      handleLanguage()
       data.spinning = false
-      if (data.detail?.language instanceof Array) data.detail.language = arrToString(data.detail.language)
     })
     .catch((err) => {
       data.spinning = false
       console.error(err)
     })
 }
+
+const handleDescription = () => {
+  description.text = data.detail.description
+  cutDescription(3)
+}
+const handleLanguage = () => {
+  if (data.language === 'app') data.detail.language = data.detail.language.split(',')
+}
+
+const changeDescription = () => {
+  description.showTotal = !description.showTotal
+  if (description.showTotal) descriptionRef.value.innerHTML = description.text
+  else cutDescription(3)
+}
+const cutDescription = (line = 3) => {
+  if (!descriptionRef.value) return
+
+  if (description.text) descriptionRef.value.innerHTML = description.text
+  else {
+    description.showBtn = false
+    descriptionRef.value.innerHTML = '-'
+    return
+  }
+
+  nextTick(() => {
+    // 文本行数
+    let rows = descriptionRef.value.getClientRects().length
+    // 文本内容
+    let content = description.text
+    // 文本小于指定行数则不用截取
+    if (rows <= line) {
+      descriptionRef.value.innerHTML = description.text
+      description.showBtn = false
+      return
+    }
+    // 截取文本
+    while (rows > line) {
+      // 截取字符数
+      // 截取至目标行数前，每一次截取更多字符以缩减时间
+      let step = rows > line + 1 ? 100 : 1
+      // 遇到标签
+      if (/<br\/>$/.test(content)) step = 5
+      content = content.slice(0, -step)
+      descriptionRef.value.innerHTML = content
+      rows = descriptionRef.value.getClientRects().length
+    }
+    // 末尾替换为省略号（中文-3，英文-8）
+    if (content.charCodeAt(content.length - 1) < 255) descriptionRef.value.innerHTML = content.slice(0, -8) + '...'
+    else descriptionRef.value.innerHTML = content.slice(0, -3) + '...'
+    description.showBtn = true
+  })
+}
+
 const showDependency = () => {
   router.push({
     path: '/home/dependency',
     query: {
       name: data.component.name,
       version: data.component.version,
-      language: data.component.language
+      language: JSON.stringify(data.component.language)
     }
   })
 }
@@ -141,6 +222,13 @@ defineExpose({ open })
   position: relative;
   display: flex;
   align-items: center;
+}
+.text-btn {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  cursor: pointer;
+  color: #6f005f;
 }
 </style>
 <style scoped src="@/atdv/pagination.css"></style>

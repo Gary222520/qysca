@@ -18,7 +18,7 @@
               <a-tooltip v-if="!props.parentApp.groupId">
                 <template #title>删除组件</template>
                 <DeleteOutlined
-                  @click.stop="deleteComponent(app, index)"
+                  @click.stop="deleteComponent(app, true)"
                   :style="{ fontSize: '20px', color: '#ff4d4f', marginRight: '10px' }" />
               </a-tooltip>
             </div>
@@ -49,7 +49,7 @@
               <a-tooltip v-if="!props.parentApp.groupId">
                 <template #title>删除组件</template>
                 <DeleteOutlined
-                  @click.stop="deleteComponent(com)"
+                  @click.stop="deleteComponent(com, false)"
                   :style="{ fontSize: '20px', color: '#ff4d4f', marginRight: '10px' }" />
               </a-tooltip>
             </div>
@@ -283,7 +283,9 @@ const showComDetail = (com) => {
   comDrawer.value.open(com, true)
 }
 
-const deleteComponent = (com) => {
+const deleteComponent = (com, isProject) => {
+  if (isProject) com.language = 'app'
+  else com.language = com.language[0]
   deleteComModal.value.open(com, props.parentApp)
 }
 

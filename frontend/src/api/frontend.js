@@ -91,6 +91,15 @@ export const AddVul = (params) => request('post', API.ADD_VUL, { params })
 // 在某个应用中删除漏洞信息
 export const DeleteVul = (params) => request('post', API.DELETE_VUL, { params })
 
+// 查询用户所在部门的应用总数
+export const AppStatistic = () => request('get', API.STATISTIC_APP, {})
+// 查询用户所在部门的应用的组件总数
+export const ComStatistic = () => request('get', API.STATISTIC_COM, {})
+// 查询用户所在部门的应用的漏洞统计
+export const VulStatistic = () => request('get', API.STATISTIC_VUL, {})
+// 查询用户所在部门的应用的许可证统计
+export const LicenseStatistic = () => request('get', API.STATISTIC_LICENSE, {})
+
 // 文件合并
 export const FileMerge = (data) => request('post', API.FILE_MERGE, { data })
 
@@ -100,6 +109,8 @@ export const ExportBrief = (data) => request('post', API.EXPORT_BRIEF, { data, r
 export const ExportDetail = (data) => request('post', API.EXPORT_DETAIL, { data, responseType: 'blob' })
 // 导出SBOM
 export const ExportSBOM = (data) => request('post', API.EXPORT_SBOM, { data, responseType: 'blob' })
+// 导出报告
+export const ExportReport = (data) => request('post', API.EXPORT_REPORT, { data, responseType: 'blob' })
 
 // 新增部门
 export const CreateBu = (params) => request('get', API.CREATE_BU, { params })
