@@ -164,6 +164,12 @@ public class StatisticsServiceImpl implements StatisticsService {
             LicenseCompareDTO licenseCompareDTO = new LicenseCompareDTO();
             licenseCompareDTO.setName(applicationDO.getName());
             licenseCompareDTO.setVersion(applicationDO.getVersion());
+            Map<String, Integer> currentMap = new HashMap<>(){{
+                put("high", 0);
+                put("medium", 0);
+                put("low", 0);
+                put("unknown", 0);
+            }};
             for(String license : applicationDO.getLicenses()) {
                 if(!license.equals("")) {
                     if (map.containsKey(license)) {
@@ -172,13 +178,14 @@ public class StatisticsServiceImpl implements StatisticsService {
                         map.put(license, 1);
                     }
                     LicenseDO licenseDO = licenseDao.findByName(license);
-                    if (licenseDO.getRiskLevel().equals("high") || licenseDO.getRiskLevel().equals("medium")) {
-                        licenseCompareDTO.setRisk(licenseCompareDTO.getRisk() + 1);
-                    } else if (licenseDO.getRiskLevel().equals("low")) {
-                        licenseCompareDTO.setSecure(licenseCompareDTO.getSecure() + 1);
+                    if (licenseDO.getRiskLevel().equals("-")) {
+                        currentMap.put("unknown", currentMap.get("unknown")+ 1);
+                    } else {
+                        currentMap.put(licenseDO.getRiskLevel(), currentMap.get(licenseDO.getRiskLevel()) + 1);
                     }
                 }
             }
+            licenseCompareDTO.setMap(currentMap);
             licenseCompareDTOS.add(licenseCompareDTO);
             set.addAll(Arrays.asList(applicationDO.getLicenses()));
         }
