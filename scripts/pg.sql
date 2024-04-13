@@ -426,5 +426,14 @@ CREATE TABLE IF NOT EXISTS plt_visited_python_packages(
     visited BOOLEAN NOT NULL,
     is_success BOOLEAN NOT NULL,
     UNIQUE(name,version)
-)
+);
+
+CREATE TABLE IF NOT EXISTS plt_visited_npm_packages(
+    id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(255) NOT NULL,
+    visited BOOLEAN NOT NULL,
+    is_success BOOLEAN NOT NULL,
+    UNIQUE(name,version)
+);
 

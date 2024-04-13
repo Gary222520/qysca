@@ -36,24 +36,32 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
      */
     @Override
     public PythonComponentDO crawlByNV(String name, String version){
-        String url;
-        if (version.equals("-")) {
-            // 当版本为"-"时，先查默认的版本
-            url = PYPI_REPO_BASE_URL + name + "/json";
-            String jsonString = getUrlContent(url);
-            if (jsonString == null || jsonString.isEmpty())
-                return null;
-            try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode jsonNode = objectMapper.readTree(jsonString);
-                version = jsonNode.get("info").get("version").asText();
-            } catch (Exception e){
-                e.printStackTrace();
-                return null;
-            }
-        }
-        url = PYPI_REPO_BASE_URL + name + "/" + version + "/json";
+        String url = PYPI_REPO_BASE_URL + name + "/" + version + "/json";
         return crawl(url, name, version);
+    }
+
+    /**
+     * 获取一个包的所有版本
+     * @param name 包名
+     * @return 版本列表
+     */
+    @Override
+    public List<String> getVersions(String name){
+        String url = PYPI_REPO_BASE_URL + name + "/json";
+        String jsonString = getUrlContent(url);
+        if (jsonString == null || jsonString.isEmpty())
+            return null;
+        try {
+            List<String> versions = new ArrayList<>();
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(jsonString);
+            if (jsonNode.get("releases")!=null)
+                jsonNode.get("releases").fieldNames().forEachRemaining(versions::add);
+            return versions;
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
@@ -130,7 +138,7 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
      * @param urlString url地址
      * @return String
      */
-    public static String getUrlContent(String urlString) {
+    private static String getUrlContent(String urlString) {
         StringBuilder content = new StringBuilder();
 
         try {
