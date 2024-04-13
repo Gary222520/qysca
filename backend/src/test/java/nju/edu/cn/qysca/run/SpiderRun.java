@@ -121,14 +121,13 @@ public class SpiderRun {
                                 continue;
                             }
                             pythonComponentDao.save(pythonComponentDO);
-
-                            Date date = new Date();
-                            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-                            String timeStamp = dateFormat.format(date);
-                            System.out.println(timeStamp + " 成功爬取：" + pythonComponentDO.getName() + ":" + pythonComponentDO.getVersion());
                         }
                     }
 
+                    pythonVisitedPackagesDO.setVisited(true);
+                    pythonVisitedPackagesDO.setIsSuccess(isSuccess);
+                    pythonVisitedPackagesDao.deleteById(pythonVisitedPackagesDO.getId());
+                    pythonVisitedPackagesDao.save(pythonVisitedPackagesDO);
                 }
 
 
