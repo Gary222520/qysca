@@ -86,7 +86,8 @@ const data = reactive({
     { title: '开发者ID', dataIndex: 'id', key: 'id' },
     { title: '开发者姓名', dataIndex: 'name', key: 'name' },
     { title: '开发者邮箱', dataIndex: 'email', key: 'email' }
-  ]
+  ],
+  language: ''
 })
 const description = reactive({
   text: '',
@@ -98,6 +99,7 @@ const open = (component, dependency) => {
   data.open = true
   data.dependency = dependency
   data.component = component
+  data.language = data.component.language instanceof Array ? 'app' : data.component.language
   description.showTotal = false
   description.showBtn = true
   getComponentInfo()
@@ -109,9 +111,8 @@ const getComponentInfo = () => {
   const params = {
     name: data.component.name,
     version: data.component.version,
-    language: data.component.language
+    language: data.language
   }
-  if (params.language instanceof Array) params.language = 'app'
   // console.log('params', params)
   data.spinning = true
   GetComponentInfo(params)
@@ -124,14 +125,22 @@ const getComponentInfo = () => {
       }
       data.detail = res.data
       data.detail.licenses = data.detail.licenses.filter((item) => item !== '')
-      description.text = data.detail.description
-      cutDescription(3)
+      handleDescription()
+      handleLanguage()
       data.spinning = false
     })
     .catch((err) => {
       data.spinning = false
       console.error(err)
     })
+}
+
+const handleDescription = () => {
+  description.text = data.detail.description
+  cutDescription(3)
+}
+const handleLanguage = () => {
+  if (data.language === 'app') data.detail.language = data.detail.language.split(',')
 }
 
 const changeDescription = () => {
@@ -143,7 +152,11 @@ const cutDescription = (line = 3) => {
   if (!descriptionRef.value) return
 
   if (description.text) descriptionRef.value.innerHTML = description.text
-  else return
+  else {
+    description.showBtn = false
+    descriptionRef.value.innerHTML = '-'
+    return
+  }
 
   nextTick(() => {
     // 文本行数

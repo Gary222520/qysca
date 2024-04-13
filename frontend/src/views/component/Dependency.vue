@@ -78,7 +78,6 @@ const route = useRoute()
 onMounted(async () => {
   data.component = route.query
   data.component.language = JSON.parse(data.component.language)
-  console.log(data.component)
   getCount(data.component.name, data.component.version, data.component.language)
   changeMode('tree')
 })

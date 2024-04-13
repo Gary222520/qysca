@@ -42,7 +42,7 @@
               <div class="number-title">许可证总数</div>
               <div class="number-count">{{ count.license }}</div>
             </div>
-            <VerifiedOutlined :style="{ fontSize: '30px', color: '#6f005f' }" />
+            <FileProtectOutlined :style="{ fontSize: '30px', color: '#6f005f' }" />
           </div>
         </a-card>
       </div>
@@ -59,7 +59,7 @@
 </template>
 
 <script setup>
-import { ScheduleOutlined, AppstoreOutlined, BugOutlined, VerifiedOutlined } from '@ant-design/icons-vue'
+import { ScheduleOutlined, AppstoreOutlined, BugOutlined, FileProtectOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { reactive, ref, onMounted, computed } from 'vue'
 import { useStore } from 'vuex'

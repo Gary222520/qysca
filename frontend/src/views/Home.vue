@@ -23,7 +23,7 @@
           <span>{{ getTitle('vulnerability') }}</span>
         </a-menu-item>
         <a-menu-item v-if="permit('license')" key="license">
-          <VerifiedOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <FileProtectOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
           <span>{{ getTitle('license') }}</span>
         </a-menu-item>
         <a-menu-item v-if="permit('buManage')" key="buManage">
@@ -79,7 +79,7 @@ import {
   UserOutlined,
   GroupOutlined,
   BugOutlined,
-  VerifiedOutlined
+  FileProtectOutlined
 } from '@ant-design/icons-vue'
 import { Logout } from '@/api/frontend'
 import { message } from 'ant-design-vue'
