@@ -1,6 +1,5 @@
 package nju.edu.cn.qysca;
 
-import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
 import nju.edu.cn.qysca.domain.license.dtos.LicenseConflictInfoDTO;
 import nju.edu.cn.qysca.service.license.LicenseService;
 import org.junit.jupiter.api.Test;
@@ -48,7 +47,7 @@ public class LicenseTest {
     public void test4(){
         String appName = "bu:java-app";
         String appVersion = "1.0.0";
-        LicenseConflictInfoDTO licenseConflictInfoDTO = licenseService.getLicenseConflictInformation(appName, appVersion);
+        LicenseConflictInfoDTO licenseConflictInfoDTO = licenseService.getAppLicenseConflictInformation(appName, appVersion);
         System.out.println("ok");
     }
 }

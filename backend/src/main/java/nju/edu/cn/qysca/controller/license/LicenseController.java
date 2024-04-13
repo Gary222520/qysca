@@ -12,8 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Api(tags= "许可证管理")
 @RestController
 @RequestMapping("qysca/license")
@@ -23,9 +21,15 @@ public class LicenseController {
     private LicenseService licenseService;
 
     @ApiOperation("获取某个应用的许可证列表")
-    @GetMapping("/getLicenseList")
-    public ResponseMsg<Page<LicenseBriefDTO>> getLicenseList(@RequestParam String name, @RequestParam String version, @RequestParam  int page, @RequestParam int size){
-        return new ResponseMsg<>(licenseService.getLicenseList(name, version, page, size));
+    @GetMapping("/getAppLicense")
+    public ResponseMsg<Page<LicenseBriefDTO>> getAppLicense(@RequestParam String name, @RequestParam String version, @RequestParam  int page, @RequestParam int size){
+        return new ResponseMsg<>(licenseService.getAppLicense(name, version, page, size));
+    }
+
+    @ApiOperation("查看组件的许可证列表")
+    @GetMapping("/getComponentLicense")
+    public ResponseMsg<Page<LicenseBriefDTO>> getComponentLicense(@RequestParam String name, @RequestParam String version, @RequestParam String language, @RequestParam int page, @RequestParam int size) {
+        return new ResponseMsg<>(licenseService.getComponentLicense(name, version, language, page, size));
     }
 
     @ApiOperation("在某个应用中增加许可证")
@@ -53,15 +57,15 @@ public class LicenseController {
     }
 
     @ApiOperation("查看应用的许可证冲突信息")
-    @GetMapping("/getLicenseConflict")
-    public ResponseMsg<LicenseConflictInfoDTO> getLicenseConflict(@RequestParam String name, @RequestParam String version) {
-        return new ResponseMsg<>(licenseService.getLicenseConflictInformation(name, version));
+    @GetMapping("/getAppLicenseConflict")
+    public ResponseMsg<LicenseConflictInfoDTO> getAppLicenseConflict(@RequestParam String name, @RequestParam String version) {
+        return new ResponseMsg<>(licenseService.getAppLicenseConflictInformation(name, version));
     }
 
-    @ApiOperation("查看组件的许可证列表")
-    @GetMapping("/getComponentLicense")
-    public ResponseMsg<Page<LicenseBriefDTO>> getComponentLicense(@RequestParam String name, @RequestParam String version, @RequestParam String language, @RequestParam int page, @RequestParam int size) {
-        return new ResponseMsg<>(licenseService.getComponentLicense(name, version, language, page, size));
+    @ApiOperation("查看组件的许可证冲突信息")
+    @GetMapping("/getComponentLicenseConflict")
+    public ResponseMsg<LicenseConflictInfoDTO> getComponentLicenseConflict(@RequestParam String name, @RequestParam String version, @RequestParam String language) {
+        return new ResponseMsg<>(licenseService.getComponentLicenseConflictInformation(name, version, language));
     }
 
 }

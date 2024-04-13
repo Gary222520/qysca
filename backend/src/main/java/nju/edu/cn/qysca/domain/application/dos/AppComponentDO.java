@@ -59,6 +59,22 @@ public class AppComponentDO extends ComponentDO {
     @ApiModelProperty(value = "组件描述", example = "Core starter, including auto-configuration support, logging and YAML")
     private String description;
 
+    @Column(name = "url")
+    @ApiModelProperty(value = "组件主页地址", example = "https://spring.io/applications/spring-boot")
+    private String url;
+
+    @Column(name = "download_url")
+    @ApiModelProperty(value = "下载地址", example = "https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-starter/2.5.15/spring-boot-starter-2.5.15.pom")
+    private String downloadUrl;
+
+    @Column(name = "source_url")
+    @ApiModelProperty(value = "源码地址", example = "https://github.com/spring-applications/spring-boot")
+    private String sourceUrl;
+
+    @Column(name = "p_url")
+    @ApiModelProperty(value = "包获取地址",example = "pkg:maven/io.grpc/grpc-protobuf@1.44.1?type=jar")
+    private String pUrl;
+
     @Column(name="developers")
     @ApiModelProperty(value = "开发者列表")
     @Type(type="jsonb")

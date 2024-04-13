@@ -170,7 +170,6 @@ public class ComponentServiceImpl implements ComponentService {
      * 存储闭源组件信息
      *
      * @param saveCloseComponentDTO 保存闭源组件接口信息
-     * @return 存储闭源组件信息
      */
     @Transactional
     @Override
@@ -300,11 +299,10 @@ public class ComponentServiceImpl implements ComponentService {
      * 将闭源组建状态设置为RUNNING
      *
      * @param updateCloseComponentDTO 更新闭源组件信息接口
-     * @return 设置闭源组件状态是否成功
      */
     @Override
     @Transactional
-    public Boolean changeCloseComponentState(UpdateCloseComponentDTO updateCloseComponentDTO) {
+    public void changeCloseComponentState(UpdateCloseComponentDTO updateCloseComponentDTO) {
         UserDO userDO = ContextUtil.getUserDO();
         if (updateCloseComponentDTO.getFilePath() != null) {
             ApplicationDO applicationDO = applicationDao.findByNameAndVersion(updateCloseComponentDTO.getName(), updateCloseComponentDTO.getVersion());
@@ -363,14 +361,12 @@ public class ComponentServiceImpl implements ComponentService {
                 pythonComponentDao.save(pythonComponentDO);
                 break;
         }
-        return true;
     }
 
     /**
      * 更新闭源组件信息
      *
      * @param updateCloseComponentDTO 更新闭源组件接口信息
-     * @return 更新闭源组件是否成功
      */
     @Override
     @Transactional
@@ -639,5 +635,72 @@ public class ComponentServiceImpl implements ComponentService {
                 break;
         }
         return componentDetailDTO;
+    }
+
+
+    /**
+     * 修改发布组件的详细信息
+     */
+    @Override
+    @Transactional
+    public void changeComponentDetail(ChangeComponentDetailDTO changeComponentDetailDTO) {
+        switch (changeComponentDetailDTO.getLanguage()) {
+            case "java":
+                JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(changeComponentDetailDTO.getName(), changeComponentDetailDTO.getVersion());
+                JavaDependencyTreeDO javaDependencyTreeDO = javaDependencyTreeDao.findByNameAndVersion(changeComponentDetailDTO.getName(), changeComponentDetailDTO.getVersion());
+                if (javaDependencyTreeDO == null) {
+                    throw new PlatformException(500, "开源组件不可修改");
+                }
+                javaComponentDO.setUrl(changeComponentDetailDTO.getUrl());
+                javaComponentDO.setSourceUrl(changeComponentDetailDTO.getSourceUrl());
+                javaComponentDO.setDownloadUrl(changeComponentDetailDTO.getDownloadUrl());
+                javaComponentDO.setPUrl(changeComponentDetailDTO.getPUrl());
+                javaComponentDao.save(javaComponentDO);
+                break;
+            case "golang":
+                GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(changeComponentDetailDTO.getName(), changeComponentDetailDTO.getVersion());
+                GoDependencyTreeDO goDependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(changeComponentDetailDTO.getName(), changeComponentDetailDTO.getVersion());
+                if (goDependencyTreeDO == null) {
+                    throw new PlatformException(500, "开源组件不可修改");
+                }
+                goComponentDO.setUrl(changeComponentDetailDTO.getUrl());
+                goComponentDO.setSourceUrl(changeComponentDetailDTO.getSourceUrl());
+                goComponentDO.setDownloadUrl(changeComponentDetailDTO.getDownloadUrl());
+                goComponentDO.setPUrl(changeComponentDetailDTO.getPUrl());
+                goComponentDao.save(goComponentDO);
+                break;
+            case "javaScript":
+                JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(changeComponentDetailDTO.getName(), changeComponentDetailDTO.getVersion());
+                JsDependencyTreeDO jsDependencyTreeDO = jsDependencyTreeDao.findByNameAndVersion(changeComponentDetailDTO.getName(), changeComponentDetailDTO.getVersion());
+                if (jsDependencyTreeDO == null) {
+                    throw new PlatformException(500, "开源组件不可修改");
+                }
+                jsComponentDO.setUrl(changeComponentDetailDTO.getUrl());
+                jsComponentDO.setSourceUrl(changeComponentDetailDTO.getSourceUrl());
+                jsComponentDO.setDownloadUrl(changeComponentDetailDTO.getDownloadUrl());
+                jsComponentDO.setPUrl(changeComponentDetailDTO.getPUrl());
+                jsComponentDao.save(jsComponentDO);
+                break;
+            case "python":
+                PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(changeComponentDetailDTO.getName(), changeComponentDetailDTO.getVersion());
+                PythonDependencyTreeDO pythonDependencyTreeDO = pythonDependencyTreeDao.findByNameAndVersion(changeComponentDetailDTO.getName(), changeComponentDetailDTO.getVersion());
+                if (pythonDependencyTreeDO == null) {
+                    throw new PlatformException(500, "开源组件不可修改");
+                }
+                pythonComponentDO.setUrl(changeComponentDetailDTO.getUrl());
+                pythonComponentDO.setSourceUrl(changeComponentDetailDTO.getSourceUrl());
+                pythonComponentDO.setDownloadUrl(changeComponentDetailDTO.getDownloadUrl());
+                pythonComponentDO.setPUrl(changeComponentDetailDTO.getPUrl());
+                pythonComponentDao.save(pythonComponentDO);
+                break;
+            case "app":
+                AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(changeComponentDetailDTO.getName(), changeComponentDetailDTO.getVersion());
+                appComponentDO.setUrl(changeComponentDetailDTO.getUrl());
+                appComponentDO.setSourceUrl(changeComponentDetailDTO.getSourceUrl());
+                appComponentDO.setDownloadUrl(changeComponentDetailDTO.getDownloadUrl());
+                appComponentDO.setPUrl(changeComponentDetailDTO.getPUrl());
+                appComponentDao.save(appComponentDO);
+                break;
+        }
     }
 }
