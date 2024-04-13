@@ -477,11 +477,11 @@ public class SBOMServiceImpl implements SBOMService {
                 sbomJsComponentDTO.setOrigin(component.getType());
                 sbomJsComponentDTO.setDirectDependency(direct);
                 sbomJsComponentDTO.setDescription(component.getDescription());
-                sbomJsComponentDTO.setPUrl(component.getPurl());
+                sbomJsComponentDTO.setPUrl(component.getPUrl());
                 sbomJsComponentDTO.setLicenses(Arrays.asList(component.getLicenses()));
-                sbomJsComponentDTO.setWebsite(component.getWebsite());
+                sbomJsComponentDTO.setWebsite(component.getUrl());
                 sbomJsComponentDTO.setDownloadUrl(component.getDownloadUrl());
-                sbomJsComponentDTO.setRepoUrl(component.getRepoUrl());
+                sbomJsComponentDTO.setRepoUrl(component.getSourceUrl());
                 sbomJsComponentDTO.setCopyrightStatements(component.getCopyrightStatements());
                 return sbomJsComponentDTO;
             }
@@ -536,10 +536,10 @@ public class SBOMServiceImpl implements SBOMService {
                 break;
             }
             case "javaScript": {
-                sbomDependencyDTO.setRef(jsComponentDao.findByNameAndVersion(component.getName(), component.getVersion()).getPurl());
+                sbomDependencyDTO.setRef(jsComponentDao.findByNameAndVersion(component.getName(), component.getVersion()).getPUrl());
                 sbomDependencyDTO.setDependsOn(new ArrayList<>());
                 for (ComponentSearchNameDTO dependency : dependencies){
-                    sbomDependencyDTO.getDependsOn().add(jsComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion()).getPurl());                }
+                    sbomDependencyDTO.getDependsOn().add(jsComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion()).getPUrl());                }
                 break;
             }
             case "python": {

@@ -9,7 +9,6 @@ import nju.edu.cn.qysca.domain.component.dos.JsComponentDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
 import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
-import nju.edu.cn.qysca.utils.FolderUtil;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -55,7 +54,7 @@ public class JsSpiderServiceImpl implements JsSpiderService {
         JsComponentDO jsComponentDO = new JsComponentDO();
         jsComponentDO.setName(name);
         jsComponentDO.setVersion(version);
-        jsComponentDO.setPurl("pkg:npm/" + name + "@" + version);
+        jsComponentDO.setPUrl("pkg:npm/" + name + "@" + version);
         jsComponentDO.setLanguage("javaScript");
         jsComponentDO.setType("opensource");
         jsComponentDO.setCreator("-");
@@ -84,11 +83,11 @@ public class JsSpiderServiceImpl implements JsSpiderService {
             String content = EntityUtils.toString(response.getEntity(), "UTF-8");
             JSONObject jsonObject = JSON.parseObject(content);
             jsComponentDO.setDescription(jsonObject.getString("description"));
-            jsComponentDO.setWebsite(jsonObject.getString("homepage"));
+            jsComponentDO.setUrl(jsonObject.getString("homepage"));
             if (jsonObject.get("repository") instanceof JSONObject) {
-                jsComponentDO.setRepoUrl(jsonObject.getJSONObject("repository").getString("url"));
+                jsComponentDO.setSourceUrl(jsonObject.getJSONObject("repository").getString("url"));
             } else {
-                jsComponentDO.setRepoUrl(jsonObject.getString("repository"));
+                jsComponentDO.setSourceUrl(jsonObject.getString("repository"));
             }
             if (jsonObject.get("license") != null) {
                 jsComponentDO.setLicenses(licenseService.searchLicense(jsonObject.getString("license")).toArray(new String[0]));
