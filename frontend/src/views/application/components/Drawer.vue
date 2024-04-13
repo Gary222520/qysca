@@ -13,24 +13,27 @@
         <a-button v-if="!data.isProject" class="btn" type="primary" @click="showDetail()">
           <FileTextOutlined />查看依赖信息
         </a-button>
-        <a-button type="primary" style="margin-left: 30px" @click="exportSBOM">导出SBOM</a-button>
+        <a-button type="primary" style="margin-left: 30px" @click="exportSBOM()">导出SBOM</a-button>
+        <a-button type="primary" style="margin-left: 10px" @click="exportReport()">导出报告</a-button>
       </div>
       <div class="relative">
         <div class="drawer_title">基本信息</div>
       </div>
       <a-descriptions>
         <a-descriptions-item label="应用类型">{{ data.detail?.type }}</a-descriptions-item>
-        <a-descriptions-item label="应用描述">{{ data.detail?.description }}</a-descriptions-item>
+        <a-descriptions-item label="应用描述">{{ data.detail?.description || '-' }}</a-descriptions-item>
       </a-descriptions>
 
       <div class="relative">
         <div class="drawer_title">扫描信息</div>
       </div>
       <a-descriptions>
-        <a-descriptions-item label="语言">{{ arrToString(data.detail?.language) }}</a-descriptions-item>
-        <a-descriptions-item label="构建工具">{{ data.detail?.builder }}</a-descriptions-item>
-        <a-descriptions-item label="扫描对象">{{ data.detail?.scanner }}</a-descriptions-item>
-        <a-descriptions-item label="扫描时间">{{ data.detail?.time }}</a-descriptions-item>
+        <a-descriptions-item label="语言" span="3">
+          <a-tag v-for="(item, index) in data.detail?.language" :key="index">{{ item }}</a-tag>
+        </a-descriptions-item>
+        <a-descriptions-item label="构建工具">{{ data.detail?.builder || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="扫描对象">{{ data.detail?.scanner || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="扫描时间">{{ data.detail?.time || '-' }}</a-descriptions-item>
       </a-descriptions>
 
       <div class="relative" v-if="data.isProject">
@@ -118,7 +121,7 @@ import {
 } from '@ant-design/icons-vue'
 import { reactive, ref, defineExpose, defineEmits, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { GetComponentInfo, GetVersionInfo, DeleteAppMember, ExportSBOM } from '@/api/frontend'
+import { GetComponentInfo, GetVersionInfo, DeleteAppMember, ExportSBOM, ExportReport } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 import AddDepModal from './AddDepModal.vue'
 import AddMember from './AddMember.vue'
@@ -236,7 +239,23 @@ const refresh = () => {
 const exportSBOM = () => {
   ExportSBOM({ name: data.detail.name, version: data.detail.version })
     .then((res) => {
-      downloadSBOM(res.data, `${data.detail.name}-${data.detail.version}-SBOM`)
+      // console.log('ExportSBOM', res)
+      const reader = new FileReader()
+      reader.readAsText(res.data, 'utf-8')
+      reader.onload = () => {
+        try {
+          const result = JSON.parse(reader.result)
+          if (result.code && result.code !== 200) {
+            message.error(result.message)
+          } else {
+            downloadSBOM(res.data, `${data.detail.name}-${data.detail.version}-SBOM`)
+            message.success('导出成功')
+          }
+        } catch (e) {
+          downloadSBOM(res.data, `${data.detail.name}-${data.detail.version}-SBOM`)
+          message.success('导出成功')
+        }
+      }
     })
     .catch((e) => {
       message.error(e)
@@ -247,7 +266,43 @@ const downloadSBOM = (data, fileName) => {
   const a = document.createElement('a')
   a.style.display = 'none'
   a.href = URL.createObjectURL(blob)
-  a.download = `${fileName}.json`
+  if (hasChildren.value) a.download = `${fileName}.zip`
+  else a.download = `${fileName}.json`
+  a.click()
+  a.remove()
+}
+
+const exportReport = () => {
+  ExportReport({ name: data.detail.name, version: data.detail.version })
+    .then((res) => {
+      // console.log('ExportReport', res)
+      const reader = new FileReader()
+      reader.readAsText(res.data, 'utf-8')
+      reader.onload = () => {
+        try {
+          const result = JSON.parse(reader.result)
+          if (result.code && result.code !== 200) {
+            message.error(result.message)
+          } else {
+            downloadReport(res.data, `${data.detail.name}-${data.detail.version}-Report`)
+            message.success('导出成功')
+          }
+        } catch (e) {
+          downloadReport(res.data, `${data.detail.name}-${data.detail.version}-Report`)
+          message.success('导出成功')
+        }
+      }
+    })
+    .catch((e) => {
+      message.error(e)
+    })
+}
+const downloadReport = (data, fileName) => {
+  const blob = new Blob([data])
+  const a = document.createElement('a')
+  a.style.display = 'none'
+  a.href = URL.createObjectURL(blob)
+  a.download = `${fileName}.html`
   a.click()
   a.remove()
 }

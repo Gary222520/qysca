@@ -21,7 +21,8 @@ instance.interceptors.response.use(
     if (
       response.config.url === API.EXPORT_BRIEF ||
       response.config.url === API.EXPORT_DETAIL ||
-      response.config.url === API.EXPORT_SBOM
+      response.config.url === API.EXPORT_SBOM ||
+      response.config.url === API.EXPORT_REPORT
     ) {
       return response
     }

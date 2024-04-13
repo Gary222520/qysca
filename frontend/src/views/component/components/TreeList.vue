@@ -51,6 +51,7 @@ const show = (component) => {
     version: component.version,
     language: component.language
   }
+  if (params.language instanceof Array) params.language = 'app'
   data.spinning = true
   GetComponentTree(params)
     .then((res) => {

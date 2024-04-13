@@ -59,7 +59,17 @@ const show = (component) => {
   data.component = component
   getComponentTiled(component)
 }
-const getComponentTiled = (component, number = 1, size = 8) => {
+const getCount = async (name, version, language) => {
+  let count = 0
+  const params = { name, version, language, number: 1, size: 6 }
+  if (params.language instanceof Array) params.language = 'app'
+  await GetComponentTiled(params).then((res) => {
+    if (res.code !== 200) return
+    count = res.data.totalElements
+  })
+  return count
+}
+const getComponentTiled = (component, number = 1, size = 6) => {
   const params = {
     name: component.name,
     version: component.version,
@@ -67,6 +77,7 @@ const getComponentTiled = (component, number = 1, size = 8) => {
     number,
     size
   }
+  if (params.language instanceof Array) params.language = 'app'
   data.spinning = true
   GetComponentTiled(params)
     .then((res) => {
@@ -91,7 +102,7 @@ const hide = () => {
 const showInfo = (record) => {
   drawer.value.open(record, false)
 }
-defineExpose({ show, hide })
+defineExpose({ show, hide, getCount })
 </script>
 
 <style scoped>
