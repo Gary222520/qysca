@@ -30,25 +30,8 @@
     </a-card>
     <a-card class="content_card">
       <div class="content">
-        <!-- <div class="content_header">
-          <a-radio-group v-model:value="data.mode">
-            <a-tooltip>
-              <template #title>树形展示</template>
-              <a-radio-button value="tree" @click="changeMode('tree')" style="width: 60px">
-                <ApartmentOutlined :style="{ fontSize: '16px' }" />
-              </a-radio-button>
-            </a-tooltip>
-            <a-tooltip>
-              <template #title>平铺展示</template>
-              <a-radio-button value="tiled" @click="changeMode('tiled')" style="width: 60px">
-                <UnorderedListOutlined :style="{ fontSize: '16px' }" />
-              </a-radio-button>
-            </a-tooltip>
-          </a-radio-group>
-        </div> -->
         <div>
           <CompareTree ref="compareTree"></CompareTree>
-          <!-- <TiledList ref="tiledList"></TiledList> -->
         </div>
       </div>
     </a-card>
@@ -65,8 +48,6 @@ import TiledList from './components/TiledList.vue'
 import { message } from 'ant-design-vue'
 
 onMounted(async () => {
-  // data.groupId = route.query.groupId
-  // data.artifactId = route.query.artifactId
   data.name = route.query.name
   data.currentVersion = route.query.currentVersion || ''
   data.compareVersion = route.query.compareVersion || ''

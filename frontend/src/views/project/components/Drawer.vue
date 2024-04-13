@@ -98,6 +98,8 @@ const open = (component, dependency) => {
   data.open = true
   data.dependency = dependency
   data.component = component
+  description.showTotal = false
+  description.showBtn = true
   getComponentInfo()
 }
 const close = () => {
@@ -178,7 +180,7 @@ const showDependency = () => {
     query: {
       name: data.component.name,
       version: data.component.version,
-      language: data.component.language
+      language: JSON.stringify(data.component.language)
     }
   })
 }
