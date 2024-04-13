@@ -25,7 +25,7 @@ public class ReportTest {
 
     @Test
     public void test1(){
-        String appName = "bu:java-app";
+        String appName = "backend:clickhouse";
         String appVersion = "1.0.0";
         File dir = new File(tempFolder, "test");
         if (!dir.exists()){
