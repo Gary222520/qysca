@@ -14,7 +14,9 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -72,6 +74,10 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
      * @return ComponentDO
      */
     private PythonComponentDO crawl(String url, String name, String version){
+        Date date = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        String timeStamp = dateFormat.format(date);
+        System.out.println(timeStamp + " crawling :" + url);
         String jsonString = getUrlContent(url);
         if (jsonString == null || jsonString.isEmpty())
             return null;
