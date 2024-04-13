@@ -22,7 +22,9 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -64,6 +66,12 @@ public class GoSpiderServiceImpl implements GoSpiderService{
         }
         try {
             String url = GO_REPO_BASE_URL + name.substring(11);
+
+            Date date = new Date();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+            String timeStamp = dateFormat.format(date);
+            System.out.println(timeStamp + " crawling :" + url);
+
             // 创建HttpClient对象
             CloseableHttpClient httpClient = HttpClients.createDefault();
             // 声明访问地址
