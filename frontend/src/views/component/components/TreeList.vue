@@ -28,13 +28,15 @@
 </template>
 
 <script setup>
-import { reactive, ref, defineExpose } from 'vue'
+import { reactive, ref, defineExpose, defineEmits } from 'vue'
 import { GetComponentTree } from '@/api/frontend'
 import { DownOutlined, ExperimentOutlined } from '@ant-design/icons-vue'
 import Drawer from '@/views/project/components/Drawer.vue'
 import { message } from 'ant-design-vue'
 
 const drawer = ref()
+const emit = defineEmits(['success'])
+
 const data = reactive({
   visible: true,
   treeData: [],
@@ -63,6 +65,7 @@ const show = (component) => {
       }
       const resData = res.data
       data.treeData = []
+      emit('success')
       if (resData) {
         data.treeData = createTree([resData.tree], '0')
       }

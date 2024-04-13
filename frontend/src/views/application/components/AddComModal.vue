@@ -7,11 +7,11 @@
       <a-form :model="formState" ref="formRef" name="application" :label-col="{ span: 8 }">
         <a-form-item label="语言" name="language" :rules="[{ required: true, message: '请选择语言' }]">
           <a-select v-model:value="formState.language" style="width: 300px">
+            <a-select-option value="app">mixed</a-select-option>
             <a-select-option value="java">java</a-select-option>
             <a-select-option value="python">python</a-select-option>
             <a-select-option value="golang">golang</a-select-option>
             <a-select-option value="javaScript">javaScript</a-select-option>
-            <a-select-option value="app">mixed</a-select-option>
           </a-select>
         </a-form-item>
         <a-form-item label="组件名称" name="name" :rules="[{ required: true, message: '请输入组件名称' }]">

@@ -127,6 +127,7 @@ const getCount = async (name, version) => {
 const setCount = ({ type, value }) => {
   count[type] = value
 }
+
 const getVersionInfo = async (name, version) => {
   data.selectedVersion = version
   getCount(name, version)
@@ -162,8 +163,6 @@ const changeVersion = (value) => {
   router.push({
     path: '/home/appDetail',
     query: {
-      // groupId: data.versionInfo.groupId,
-      // artifactId: data.versionInfo.artifactId,
       name: data.versionInfo.name,
       version: value
     }
@@ -174,8 +173,6 @@ const compare = () => {
   router.push({
     path: '/home/compare',
     query: {
-      // groupId: data.versionInfo.groupId,
-      // artifactId: data.versionInfo.artifactId,
       name: data.versionInfo.name,
       currentVersion: data.selectedVersion
     }
@@ -197,8 +194,6 @@ const filterOption = (input, option) => {
 }
 const exportExcel = () => {
   const params = {
-    // groupId: data.versionInfo.groupId,
-    // artifactId: data.versionInfo.artifactId,
     name: data.versionInfo.name,
     version: data.versionInfo.version
   }
