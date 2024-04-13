@@ -466,8 +466,12 @@ public class SBOMServiceImpl implements SBOMService {
                 JsComponentDO component = jsComponentDao.findByNameAndVersion(cName, cVersion);
 
                 SbomJsComponentDTO sbomJsComponentDTO = new SbomJsComponentDTO();
-                sbomJsComponentDTO.setNamespace(component.getName().split("/")[0]);
-                sbomJsComponentDTO.setArtifactId(component.getName().split("/")[component.getName().split("/").length - 1]);
+                if (component.getName().contains("/")) {
+                    sbomJsComponentDTO.setNamespace(component.getName().split("/")[0]);
+                    sbomJsComponentDTO.setArtifactId(component.getName().split("/")[1]);
+                } else {
+                    sbomJsComponentDTO.setArtifactId(component.getName());
+                }
                 sbomJsComponentDTO.setVersion(component.getVersion());
                 sbomJsComponentDTO.setPrimaryLanguage(component.getLanguage());
                 sbomJsComponentDTO.setOrigin(component.getType());
