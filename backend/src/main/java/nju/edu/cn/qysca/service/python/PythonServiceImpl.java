@@ -93,45 +93,51 @@ public class PythonServiceImpl implements PythonService {
             throw new PlatformException(500, "python解析暂不支持此文件类型");
         }
 
-        File project = new File(filePath);
-        // 调用以下命令，获取json形式的依赖树
-        // 1. 创建虚拟环境venv
-        // 2. 安装pipdeptree
-        // 3. 安装在requirements.txt中的包
-        // 4. 执行setup.py，里面要求了一些依赖
-        // 5. pipdeptree --json-tree获取json形式的依赖树
-        String[] command1 = {"python", "-m", "venv", "venv"};
-        executeCommand(command1, project, false);
+        try {
+            File project = new File(filePath);
+            // 调用以下命令，获取json形式的依赖树
+            // 1. 创建虚拟环境venv
+            // 2. 安装pipdeptree
+            // 3. 安装在requirements.txt中的包
+            // 4. 执行setup.py，里面要求了一些依赖
+            // 5. pipdeptree --json-tree获取json形式的依赖树
+            String[] command1 = {"python", "-m", "venv", "venv"};
+            System.out.println(executeCommand(command1, project, true));
 
-        String[] command2 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
-        executeCommand(command2, null, false);
+            String[] command2 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "pipdeptree"};
+            System.out.println(executeCommand(command2, null, true));
 
-        List<String> requirementTxtList = findRequirementFiles(project);
-        if (builder.equals("zip") || builder.equals("tar.gz") || builder.equals("txt")) {
-            for (String requirementsTxt : requirementTxtList) {
-                String[] command3 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "-r", requirementsTxt};
-                executeCommand(command3, null, true);
+            List<String> requirementTxtList = findRequirementFiles(project);
+            if (builder.equals("zip") || builder.equals("tar.gz") || builder.equals("txt")) {
+                for (String requirementsTxt : requirementTxtList) {
+                    String[] command3 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", "-r", requirementsTxt};
+                    System.out.println(executeCommand(command3, null, true));
+                }
             }
+
+            String[] command4 = {project.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "setup.py", "develop"};
+            if (builder.equals("zip") || builder.equals("tar.gz")) {
+                System.out.println(executeCommand(command4, project, true));
+            }
+
+            String[] command5 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
+            String jsonString = executeCommand(command5, null, true);
+
+            // 删除生成的文件
+            if (builder.equals("zip") || builder.equals("tar.gz")) {
+                FolderUtil.deleteFolder(filePath);
+            } else {
+                FolderUtil.deleteFolder(filePath + "\\venv");
+            }
+
+            // 将json形式的依赖树转化为PythonDependencyTreeDO
+            PythonDependencyTreeDO dependencyTreeDO = parseJsonDependencyTree(jsonString, name, version, type);
+            return dependencyTreeDO;
+        } catch (PlatformException e){
+            throw e;
+        } catch (Exception e){
+            throw new PlatformException(500, "识别依赖信息失败");
         }
-
-        String[] command4 = {project.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "setup.py", "develop"};
-        if (builder.equals("zip") || builder.equals("tar.gz")) {
-            executeCommand(command4, project, true);
-        }
-
-        String[] command5 = {project.getPath() + "\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
-        String jsonString = executeCommand(command5, null, true);
-
-        // 删除生成的文件
-        if (builder.equals("zip") || builder.equals("tar.gz")) {
-            FolderUtil.deleteFolder(filePath);
-        } else {
-            FolderUtil.deleteFolder(filePath + "\\venv");
-        }
-
-        // 将json形式的依赖树转化为PythonDependencyTreeDO
-        PythonDependencyTreeDO dependencyTreeDO = parseJsonDependencyTree(jsonString, name, version, type);
-        return dependencyTreeDO;
     }
 
     /**
@@ -206,14 +212,16 @@ public class PythonServiceImpl implements PythonService {
                 command4 = new String[]{tempDir.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pip", "install", name + "==" + version};
             String[] command5 = {tempDir.getAbsolutePath() + "\\venv\\Scripts\\python.exe", "-m", "pipdeptree", "--json-tree"};
 
-            executeCommand(command1, tempDir, false);
-            executeCommand(command3, null, true);
-            executeCommand(command4, null, true);
+            System.out.println(executeCommand(command1, tempDir, false));
+            System.out.println(executeCommand(command3, null, true));
+            System.out.println(executeCommand(command4, null, true));
             String jsonString = executeCommand(command5, null, true);
             //删除临时文件夹
             FolderUtil.deleteFolder(tempDir.getPath());
             PythonDependencyTreeDO dependencyTreeDO = parseJsonDependencyTree(jsonString, name, version, "opensource");
             return dependencyTreeDO;
+        } catch (PlatformException e){
+            throw e;
         } catch (Exception e){
             e.printStackTrace();
             throw new PlatformException(500, "识别依赖信息失败");
@@ -231,7 +239,7 @@ public class PythonServiceImpl implements PythonService {
      */
     @Override
     public AppComponentDependencyTreeDO translateComponentDependency(PythonComponentDependencyTreeDO pythonComponentDependencyTreeDO) {
-        if (pythonComponentDependencyTreeDO == null) {
+        if (null == pythonComponentDependencyTreeDO) {
             return null;
         }
         AppComponentDependencyTreeDO appComponentDependencyTreeDO = new AppComponentDependencyTreeDO();
