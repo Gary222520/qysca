@@ -635,6 +635,7 @@ public class ComponentServiceImpl implements ComponentService {
             case "app":
                 AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
                 BeanUtils.copyProperties(appComponentDO, componentDetailDTO);
+                componentDetailDTO.setLanguage(String.join(",", appComponentDO.getLanguage()));
                 break;
         }
         return componentDetailDTO;
