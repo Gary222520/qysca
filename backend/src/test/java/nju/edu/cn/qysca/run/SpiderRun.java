@@ -21,6 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -146,6 +147,7 @@ public class SpiderRun {
     @Test
     public void executeJsSpiderTask(){
         List<NpmVisitedPackagesDO> npmVisitedPackagesDOList = npmVisitedPackagesDao.findAll();
+        Collections.shuffle(npmVisitedPackagesDOList);
         for (NpmVisitedPackagesDO npmVisitedPackagesDO : npmVisitedPackagesDOList) {
             synchronized (this) {
                 // 如果该包被成功访问过，则跳过

@@ -152,7 +152,9 @@ public class ReportServiceImpl implements ReportService {
 
         List<LicenseDO> licenseDOList = new ArrayList<>();
         for (String licenseName : applicationDO.getLicenses()) {
-            licenseDOList.add(licenseDao.findByName(licenseName));
+            LicenseDO licenseDO = licenseDao.findByNameIgnoreCase(licenseName);
+            if (licenseDO != null)
+                licenseDOList.add(licenseDO);
         }
 
         LicenseConflictInfoDTO licenseConflictInfoDTO = licenseService.getLicenseConflictInformation(appName, appVersion);
@@ -182,8 +184,6 @@ public class ReportServiceImpl implements ReportService {
         context.setVariable("licenses", licenseDOList);
         context.setVariable("licensesConflict", licenseConflictInfoDTO);
         context.setVariable("vulnerabilities", vulnerabilityBriefDTOList);
-
-
 
         File file = new File(dir, applicationDO.getName().replaceAll(":","-") + "-report.html");
         try (FileWriter writer = new FileWriter(file)) {
