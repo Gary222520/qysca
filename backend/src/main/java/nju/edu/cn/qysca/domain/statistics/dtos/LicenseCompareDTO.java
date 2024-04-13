@@ -6,6 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
+import java.util.Map;
+
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,31 +22,27 @@ public class LicenseCompareDTO implements Comparable<LicenseCompareDTO>{
     @ApiModelProperty(value = "应用版本", example = "1.0.0")
     private String version;
 
-    @ApiModelProperty(value = "安全许可证个数",example = "10")
-    private int secure;
+    @ApiModelProperty(value = "许可证数量", example = "{\"high\": 10, \"medium:\" 10, \"low\": 20, \"unknown\": 50}")
+    private Map<String, Integer> map = new HashMap<>();
 
-    @ApiModelProperty(value = "风险许可证个数", example = "10")
-    private int risk;
+    public int getTotalLicenses() {
+        return map.values().stream().mapToInt(Integer::intValue).sum();
+    }
 
     @Override
     public int compareTo(LicenseCompareDTO licenseCompareDTO) {
-        double thisRatio;
-        if(this.risk == 0 &&this.secure == 0) {
-            thisRatio = Double.NEGATIVE_INFINITY;
-        }else{
-            thisRatio = this.risk / (double) (this.secure + this.risk);
-        }
-        double otherRatio;
-        if(licenseCompareDTO.getRisk() == 0 && licenseCompareDTO.getSecure() == 0) {
-            otherRatio = Double.NEGATIVE_INFINITY;
-        }else{
-            otherRatio = licenseCompareDTO.getRisk() / (double) (licenseCompareDTO.getSecure() + licenseCompareDTO.getRisk());
-        }
-        int ratioCompare = Double.compare(otherRatio, thisRatio);
-        if(ratioCompare != 0){
-            return ratioCompare;
-        } else{
-            return Integer.compare(licenseCompareDTO.risk, this.risk);
-        }
+        int totalComparison = Integer.compare(licenseCompareDTO.getTotalLicenses(), this.getTotalLicenses());
+        if(totalComparison != 0) return totalComparison;
+
+        int highComparison = Integer.compare(licenseCompareDTO.getMap().get("high"), this.getMap().get("high"));
+        if(highComparison != 0) return highComparison;
+
+        int mediumComparison = Integer.compare(licenseCompareDTO.getMap().get("medium"), this.getMap().get("medium"));
+        if(mediumComparison != 0) return mediumComparison;
+
+        int lowComparison = Integer.compare(licenseCompareDTO.getMap().get("low"), this.getMap().get("low"));
+        if(lowComparison != 0) return lowComparison;
+
+        return Integer.compare(licenseCompareDTO.getMap().get("unknown"), this.getMap().get("unknown"));
     }
 }
