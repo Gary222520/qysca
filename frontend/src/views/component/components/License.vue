@@ -176,7 +176,7 @@ import {
   ExclamationCircleOutlined
 } from '@ant-design/icons-vue'
 import { reactive, ref, defineExpose, defineEmits, defineProps, onMounted } from 'vue'
-import { GetComLicenseList, AddLicense, DeleteLicense, GetLicenseConflict } from '@/api/frontend'
+import { GetComLicenseList, AddLicense, DeleteLicense, GetComLicenseConflict } from '@/api/frontend'
 import Drawer from '@/components/LicenseDrawer.vue'
 import { message } from 'ant-design-vue'
 
@@ -270,9 +270,9 @@ const getLicenseList = (name = app.name, version = app.version, language = app.l
 }
 const getLicenseConflict = () => {
   data.spinning = true
-  GetLicenseConflict({ name: app.name, version: app.version })
+  GetComLicenseConflict({ name: app.name, version: app.version, language: app.language })
     .then((res) => {
-      // console.log('GetLicenseConflict', res)
+      // console.log('GetComLicenseConflict', res)
       data.spinning = false
       if (res.code !== 200) {
         message.error(res.message)
