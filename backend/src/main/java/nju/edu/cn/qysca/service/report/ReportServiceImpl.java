@@ -157,7 +157,7 @@ public class ReportServiceImpl implements ReportService {
                 licenseDOList.add(licenseDO);
         }
 
-        LicenseConflictInfoDTO licenseConflictInfoDTO = licenseService.getLicenseConflictInformation(appName, appVersion);
+        LicenseConflictInfoDTO licenseConflictInfoDTO = licenseService.getAppLicenseConflictInformation(appName, appVersion);
 
         List<VulnerabilityBriefDTO> vulnerabilityBriefDTOList = vulnerabilityService.getApplicationVulnerabilityList(appName, appVersion);
 

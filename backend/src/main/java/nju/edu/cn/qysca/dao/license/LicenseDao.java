@@ -33,7 +33,7 @@ public interface LicenseDao extends JpaRepository<LicenseDO, String> {
 
 
     /**
-     * 查询应用的license
+     * 查询license
      * @param licenses 应用的license信息
      * @return List<LicenseDO> 许可证信息
      */
@@ -41,7 +41,7 @@ public interface LicenseDao extends JpaRepository<LicenseDO, String> {
             nativeQuery = true)
     List<LicenseDO> findLicenseList(List<String> licenses);
     /**
-     * 查询应用的license
+     * 分页查询license
      * @param licenses 应用的license信息
      * @param pageable 分页信息
      * @return Page<LicenseDO> 许可证信息
