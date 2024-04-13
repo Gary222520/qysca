@@ -3,9 +3,17 @@ package nju.edu.cn.qysca.service.license;
 import nju.edu.cn.qysca.dao.application.AppComponentDao;
 import nju.edu.cn.qysca.dao.application.AppDependencyTableDao;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
+import nju.edu.cn.qysca.dao.component.GoComponentDao;
+import nju.edu.cn.qysca.dao.component.JavaComponentDao;
+import nju.edu.cn.qysca.dao.component.JsComponentDao;
+import nju.edu.cn.qysca.dao.component.PythonComponentDao;
 import nju.edu.cn.qysca.dao.license.LicenseDao;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
+import nju.edu.cn.qysca.domain.component.dos.GoComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.JsComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
 import nju.edu.cn.qysca.domain.license.dos.LicenseTermDO;
 import nju.edu.cn.qysca.domain.license.dtos.LicenseBriefDTO;
@@ -37,7 +45,16 @@ public class LicenseServiceImpl implements LicenseService{
     private AppComponentDao appComponentDao;
 
     @Autowired
-    private AppDependencyTableDao appDependencyTableDao;
+    private JavaComponentDao javaComponentDao;
+
+    @Autowired
+    private JsComponentDao jsComponentDao;
+
+    @Autowired
+    private GoComponentDao goComponentDao;
+
+    @Autowired
+    private PythonComponentDao pythonComponentDao;
 
     /**
      * 查询许可证
@@ -74,6 +91,46 @@ public class LicenseServiceImpl implements LicenseService{
         Pageable pageable = PageRequest.of(page - 1, size);
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
         Page<LicenseDO> temp = licenseDao.getLicenseList(Arrays.asList(applicationDO.getLicenses()), pageable);
+        Page<LicenseBriefDTO> result = temp.map(licenseDO -> new LicenseBriefDTO(licenseDO.getName(), licenseDO.getFullName(), licenseDO.getIsOsiApproved(), licenseDO.getIsFsfApproved(), licenseDO.getIsSpdxApproved(), licenseDO.getRiskLevel(), licenseDO.getGplCompatibility()));
+        return result;
+    }
+
+    /**
+     * 查询组件许可证列表
+     * @param name 名称
+     * @param version 版本
+     * @param language 语言
+     * @param page 页码
+     * @param size 每页数量
+     * @return  List<LicenseBriefDTO> 许可证简明信息
+     */
+    @Override
+    public Page<LicenseBriefDTO> getComponentLicense(String name, String version, String language, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        List<String> licenses = null;
+        switch (language) {
+            case "java":
+                JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(name, version);
+                licenses = Arrays.asList(javaComponentDO.getLicenses());
+                break;
+            case "javaScript":
+                JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(name,version);
+                licenses = Arrays.asList(jsComponentDO.getLicenses());
+                break;
+            case "golang":
+                GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(name, version);
+                licenses = Arrays.asList(goComponentDO.getLicenses());
+                break;
+            case "python":
+                PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(name, version);
+                licenses = Arrays.asList(pythonComponentDO.getLicenses());
+                break;
+            case "app":
+                AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(name, version);
+                licenses = Arrays.asList(appComponentDO.getLicenses());
+                break;
+        }
+        Page<LicenseDO> temp = licenseDao.getLicenseList(licenses, pageable);
         Page<LicenseBriefDTO> result = temp.map(licenseDO -> new LicenseBriefDTO(licenseDO.getName(), licenseDO.getFullName(), licenseDO.getIsOsiApproved(), licenseDO.getIsFsfApproved(), licenseDO.getIsSpdxApproved(), licenseDO.getRiskLevel(), licenseDO.getGplCompatibility()));
         return result;
     }
