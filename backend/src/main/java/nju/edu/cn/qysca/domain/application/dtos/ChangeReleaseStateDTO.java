@@ -31,5 +31,5 @@ public class ChangeReleaseStateDTO {
     private String downloadUrl;
 
     @ApiModelProperty(value = "包获取地址",example = "pkg:maven/io.grpc/grpc-protobuf@1.44.1?type=jar")
-    private String pUrl;
+    private String packageUrl;
 }
