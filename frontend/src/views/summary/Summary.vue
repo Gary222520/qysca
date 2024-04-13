@@ -1,6 +1,12 @@
 <template>
   <div class="main">
-    <div class="title">统计概览</div>
+    <div class="title">
+      统计概览
+      <a-tooltip>
+        <template #title>{{ `当前部门：${buName}` }}</template>
+        <a-tag style="font-weight: normal; margin-left: 10px">{{ buName }}</a-tag>
+      </a-tooltip>
+    </div>
     <div class="content">
       <div style="display: flex; width: 100%; height: 15%; margin-bottom: 10px">
         <a-card class="number-card" hoverable>
@@ -55,7 +61,8 @@
 <script setup>
 import { ScheduleOutlined, AppstoreOutlined, BugOutlined, VerifiedOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
+import { useStore } from 'vuex'
 import { AppStatistic, ComStatistic, VulStatistic, LicenseStatistic } from '@/api/frontend'
 import VulChart from './components/VulChart.vue'
 import LicenseChart from './components/LicenseChart.vue'
@@ -70,6 +77,7 @@ const vulChart = ref()
 const licenseChart = ref()
 const appVulChart = ref()
 const appLicenseChart = ref()
+const store = useStore()
 
 const data = reactive({})
 
@@ -78,6 +86,9 @@ const count = reactive({
   com: 0,
   vul: 0,
   license: 0
+})
+const buName = computed(() => {
+  return store.getters.permission[0]?.buName
 })
 
 const getStatistics = () => {
@@ -145,6 +156,8 @@ const getStatistics = () => {
   font-weight: bold;
   font-size: 20px;
   margin-bottom: 15px;
+  display: flex;
+  align-items: center;
 }
 .content {
   position: absolute;

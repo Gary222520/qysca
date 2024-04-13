@@ -154,12 +154,12 @@ const data = reactive({
 const open = (license) => {
   data.open = true
   data.license = license
+  data.showTotal = false
+  data.showBtn = true
   getLicenseInfo()
 }
 const close = () => {
   data.open = false
-  data.showTotal = false
-  data.showBtn = true
 }
 const getLicenseInfo = () => {
   data.spinning = true
