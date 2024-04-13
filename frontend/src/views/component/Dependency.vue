@@ -42,7 +42,7 @@
               </a-radio-group>
             </div>
             <div style="margin-top: 20px">
-              <TreeList ref="treeList"></TreeList>
+              <TreeList ref="treeList" @success="getComponentCount()"></TreeList>
               <TiledList ref="tiledList"></TiledList>
             </div>
           </div>
@@ -69,8 +69,8 @@ import { LeftOutlined, ApartmentOutlined, UnorderedListOutlined, ExportOutlined 
 import { GetVersionList, GetVersionInfo } from '@/api/frontend'
 import TreeList from './components/TreeList.vue'
 import TiledList from './components/TiledList.vue'
-import Vulnerablity from '@/views/project/components/Vulnerability.vue'
-import License from '@/views/project/components/License.vue'
+import Vulnerablity from './components/Vulnerability.vue'
+import License from './components/License.vue'
 import { message } from 'ant-design-vue'
 
 const router = useRouter()
@@ -78,7 +78,7 @@ const route = useRoute()
 onMounted(async () => {
   data.component = route.query
   data.component.language = JSON.parse(data.component.language)
-  getCount(data.component.name, data.component.version, data.component.language)
+  getCount()
   changeMode('tree')
 })
 
@@ -104,12 +104,15 @@ const count = reactive({
 const back = () => {
   router.back()
 }
-const getCount = async (name, version, language) => {
-  await tiledList.value.getCount(name, version, language).then((res) => {
+const getCount = async (name = data.component.name, version = data.component.version) => {
+  const language = data.component.language instanceof Array ? 'app' : data.component.language
+  vulnerablity.value.show(name, version, language, false)
+  license.value.show(name, version, language, false)
+}
+const getComponentCount = async () => {
+  await tiledList.value.getCount(data.component.name, data.component.version, data.component.language).then((res) => {
     count.component = res
   })
-  vulnerablity.value.show(name, version, false)
-  license.value.show(name, version, false)
 }
 const setCount = ({ type, value }) => {
   count[type] = value

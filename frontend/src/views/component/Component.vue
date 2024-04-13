@@ -60,12 +60,12 @@
                   <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showInfo(record)" />
                 </a-tooltip>
               </div>
-              <!-- <div class="action_icon" v-if="record.state === 'SUCCESS'">
+              <div class="action_icon" v-if="record.state === 'SUCCESS'">
                 <a-tooltip>
                   <template #title>更新</template>
                   <SyncOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="updateComponent(record)" />
                 </a-tooltip>
-              </div> -->
+              </div>
               <div class="action_icon" v-if="record.language instanceof Array">
                 <a-tooltip>
                   <template #title>删除</template>
@@ -147,7 +147,7 @@ const data = reactive({
     { title: '版本', dataIndex: 'version', key: 'version' },
     { title: '语言', dataIndex: 'language', key: 'language' },
     { title: '类型', dataIndex: 'type', key: 'type' },
-    { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
+    { title: '操作', dataIndex: 'action', key: 'action', width: 120 }
   ]
 })
 const pagination = reactive({

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div style="margin-bottom: 10px">许可证使用次数 TOP 10</div>
+    <div style="margin-bottom: 10px">许可证使用次数 TOP 8</div>
     <a-spin :spinning="data.spinning" tip="图表加载中，请稍等...">
       <div id="license-chart"></div>
     </a-spin>
@@ -49,7 +49,7 @@ const draw = (licenseTypeNumberMap) => {
         data: chartData[1],
         itemStyle: {
           color: function (params) {
-            const color = ['#5c7bd9', '#5c7bd9', '#5c7bd9', '#9fe080', '#7ed3f4', '#ffdc60', '#ff7070', '#a80022']
+            const color = ['#a969c6', '#5c7bd9', '#3dab78', '#9fe080', '#7ed3f4', '#ffdc60', '#ff7070', '#a80022']
             const index = params.dataIndex % 8
             return color[index]
           }

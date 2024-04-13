@@ -66,7 +66,9 @@ export const API = {
   // 许可证库界面查看许可证列表
   ALL_LICENSE: '/qysca/license/getLicensePage',
   // 获取某个应用的许可证列表
-  LICENSE_LIST: '/qysca/license/getLicenseList',
+  APP_LICENSE_LIST: '/qysca/license/getLicenseList',
+  // 获取某个组件的许可证列表
+  COM_LICENSE_LIST: '/qysca/license/getComponentLicense',
   // 查看许可证详细内容
   LICENSE_INFO: '/qysca/license/getLicenseInfo',
   // 在某个应用中增加许可证
@@ -79,7 +81,9 @@ export const API = {
   // 查看漏洞库界面
   ALL_VUL: '/qysca/vulnerability/getVulnerabilityPage',
   // 获取某个应用的漏洞列表
-  VUL_LIST: '/qysca/vulnerability/getVulnerabilityList',
+  APP_VUL_LIST: '/qysca/vulnerability/getApplicationVulnerabilityList',
+  // 获取某个组件的漏洞列表
+  COM_VUL_LIST: '/qysca/vulnerability/getComponentVulnerabilityList',
   // 查看某个漏洞的详细信息
   VUL_INFO: '/qysca/vulnerability/getVulnerabilityById',
   // 查看某个漏洞类型的详细信息

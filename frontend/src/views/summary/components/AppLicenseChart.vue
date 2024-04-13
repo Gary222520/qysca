@@ -33,9 +33,9 @@ const draw = (compareDTOList) => {
       bottom: '5%',
       containLabel: true
     },
-    color: ['#ff7070', '#9fe080'],
+    color: ['#ff7070', '#ffdc60', '#7ed3f4', '#5c7bd9'],
     dataset: {
-      dimensions: ['name', '有风险', '无风险'],
+      dimensions: ['name', '高危', '中危', '低危', '未知'],
       source: getData()
     },
     xAxis: {
@@ -47,28 +47,31 @@ const draw = (compareDTOList) => {
     },
     yAxis: {},
     series: [
-      { type: 'bar', barWidth: '24' },
-      { type: 'bar', barWidth: '24' }
+      { type: 'bar', barWidth: '15' },
+      { type: 'bar', barWidth: '15' },
+      { type: 'bar', barWidth: '15' },
+      { type: 'bar', barWidth: '15' }
     ]
   }
   chart.setOption(option)
 }
 
 const getData = () => {
-  return data.compareDTOList
-    .map((item) => {
-      const res = { name: item.name + '\n' + item.version }
-      res['有风险'] = item.risk
-      res['无风险'] = item.secure
-      return res
-    })
-    .sort((a, b) => {
-      if (a.risk === 0 && a.secure === 0) return 1
-      if (a.risk > 0 && a.secure === 0) return -1
-      if (b.risk === 0 && b.secure === 0) return -1
-      if (b.risk > 0 && b.secure === 0) return 1
-      return b.risk / b.secure - a.risk / a.secure
-    })
+  return data.compareDTOList.map((item) => {
+    const res = { name: item.name + '\n' + item.version }
+    res['高危'] = item.map.high
+    res['中危'] = item.map.medium
+    res['低危'] = item.map.low
+    res['未知'] = item.map.unknown
+    return res
+  })
+  // .sort((a, b) => {
+  //   if (a.risk === 0 && a.secure === 0) return 1
+  //   if (a.risk > 0 && a.secure === 0) return -1
+  //   if (b.risk === 0 && b.secure === 0) return -1
+  //   if (b.risk > 0 && b.secure === 0) return 1
+  //   return b.risk / b.secure - a.risk / a.secure
+  // })
 }
 
 const hide = () => {
