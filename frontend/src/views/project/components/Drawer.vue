@@ -9,15 +9,15 @@
         <a-tag v-if="data.component?.type === 'business'">商用</a-tag>
         <a-tag v-if="data.component?.type === 'internal'">内部</a-tag>
         <a-button v-if="data.dependency" type="primary" style="margin-left: 30px" @click="showDependency">
-          查看依赖信息
+          查看详情
         </a-button>
       </div>
       <div class="relative">
         <div class="drawer_title">基本信息</div>
       </div>
       <a-descriptions>
-        <a-descriptions-item label="名称">{{ data.detail?.name }}</a-descriptions-item>
-        <a-descriptions-item label="版本" span="2">{{ data.detail?.version }}</a-descriptions-item>
+        <a-descriptions-item label="名称" span="2">{{ data.detail?.name }}</a-descriptions-item>
+        <a-descriptions-item label="版本">{{ data.detail?.version }}</a-descriptions-item>
         <a-descriptions-item label="语言" span="3">
           <div v-if="data.detail?.language instanceof Array">
             <a-tag v-for="(item, index) in data.detail?.language" :key="index">{{ item }}</a-tag>
