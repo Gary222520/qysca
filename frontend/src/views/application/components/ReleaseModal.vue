@@ -1,10 +1,17 @@
 <template>
   <a-modal v-model:open="data.open" @close="close()" :footer="null">
     <template #title>
-      <div style="font-size: 20px">更新组件信息</div>
+      <div style="font-size: 20px">应用发布</div>
     </template>
     <div style="display: flex; margin-top: 20px">
-      <a-form :model="formState" ref="formRef" name="component" :label-col="{ span: 8 }">
+      <a-form :model="formState" ref="formRef" name="application" :label-col="{ span: 8 }">
+        <a-form-item label="发布类型" name="type" :rules="[{ required: true, message: '请选择发布类型' }]">
+          <a-select v-model:value="formState.type" style="width: 300px">
+            <a-select-option value="opensource">开源</a-select-option>
+            <a-select-option value="business">商用</a-select-option>
+            <a-select-option value="internal">内部</a-select-option>
+          </a-select>
+        </a-form-item>
         <a-form-item label="主页地址" name="url">
           <a-input v-model:value="formState.url" style="width: 300px" />
         </a-form-item>
@@ -21,14 +28,14 @@
     </div>
     <div class="button">
       <a-button class="cancel-btn" @click="close">取消</a-button>
-      <a-button class="btn" @click="update()">修改</a-button>
+      <a-button class="btn" @click="release()">发布</a-button>
     </div>
   </a-modal>
 </template>
 
 <script setup>
 import { reactive, ref, defineExpose, defineEmits } from 'vue'
-import { UpdateComponent } from '@/api/frontend'
+import { ChangeRelease } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 import { useStore } from 'vuex'
 
@@ -37,24 +44,19 @@ const store = useStore()
 
 const data = reactive({
   open: false,
-  com: {},
-  language: ''
+  app: {}
 })
 const formRef = ref()
 const formState = reactive({
+  type: 'internal',
   url: '',
   sourceUrl: '',
   downloadUrl: '',
   pUrl: ''
 })
-const open = (com) => {
+const open = (app) => {
   data.open = true
-  data.com = com
-  data.language = data.com.language instanceof Array ? 'app' : data.com.language
-  formState.url = com.url
-  formState.sourceUrl = com.sourceUrl
-  formState.downloadUrl = com.downloadUrl
-  formState.pUrl = com.purl
+  data.app = app
 }
 const close = () => {
   data.open = false
@@ -63,24 +65,23 @@ const close = () => {
 const clear = () => {
   formRef.value.resetFields()
 }
-
-const update = () => {
+const release = () => {
   formRef.value
     .validate()
     .then(() => {
       const params = {
-        name: data.com.name,
-        version: data.com.version,
+        name: data.app.name,
+        version: data.app.version,
         ...formState
       }
-      UpdateComponent(params)
+      ChangeRelease(params)
         .then((res) => {
-          // console.log('UpdateComponent', res)
+          // console.log('ChangeRelease', res)
           if (res.code !== 200) {
             message.error(res.message)
             return
           }
-          message.success('修改成功')
+          message.success('发布成功')
           close()
           emit('success')
         })

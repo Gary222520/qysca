@@ -69,7 +69,7 @@
                   </a-tooltip>
                   <a-tooltip v-if="!app.release && !app.releaseStatus">
                     <template #title>点击发布</template>
-                    <a-popconfirm v-model:open="app.popconfirm" title="选择发布类型">
+                    <!-- <a-popconfirm v-model:open="app.popconfirm" title="选择发布类型">
                       <template #cancelButton></template>
                       <template #okButton>
                         <a-button class="btn" size="small" @click="release(app, index, 'opensource')">开源</a-button>
@@ -77,7 +77,10 @@
                         <a-button class="btn" size="small" @click="release(app, index, 'internal')">内部</a-button>
                       </template>
                       <CloudUploadOutlined :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
-                    </a-popconfirm>
+                    </a-popconfirm> -->
+                    <CloudUploadOutlined
+                      @click.stop="release(app, index)"
+                      :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
                   </a-tooltip>
                   <div v-if="app.releaseStatus" style="display: flex; align-items: center">
                     <LoadingOutlined :style="{ fontSize: '20px', color: '#6f005f' }" />
@@ -137,6 +140,7 @@
     <AddComModal ref="addComModal" @success="refresh(data.currentKey)"></AddComModal>
     <UpgradeAppModal ref="upgradeAppModal" @success="refresh(data.currentKey, true)"></UpgradeAppModal>
     <DeleteAppModal ref="deleteAppModal" @success="refresh(data.currentKey, true)"></DeleteAppModal>
+    <ReleaseModal ref="releaseModal" @success="refresh(data.currentKey)"></ReleaseModal>
     <Drawer ref="drawer" @refresh="refreshDrawer()"></Drawer>
     <WarnModal ref="warnModal" @ok="refresh(data.currentKey)"></WarnModal>
   </div>
@@ -177,6 +181,7 @@ import AddDepModal from './components/AddDepModal.vue'
 import AddComModal from './components/AddComModal.vue'
 import UpgradeAppModal from './components/UpgradeAppModal.vue'
 import DeleteAppModal from './components/DeleteAppModal.vue'
+import ReleaseModal from './components/ReleaseModal.vue'
 import Drawer from './components/Drawer.vue'
 import AppCollapse from '@/views/application/components/AppCollapse.vue'
 import WarnModal from '@/components/WarnModal.vue'
@@ -192,6 +197,7 @@ const addDepModal = ref()
 const addComModal = ref()
 const upgradeAppModal = ref()
 const deleteAppModal = ref()
+const releaseModal = ref()
 const drawer = ref()
 const appCollapse = ref()
 const warnModal = ref()
@@ -413,35 +419,36 @@ const lock = async (app, index) => {
     })
 }
 
-const release = async (app, index, type) => {
+const release = async (app, index) => {
   data.currentKey = index
   app.releaseStatus = app.release ? '取消发布中...' : '发布中...'
-  ChangeRelease({ name: app.name, version: app.version, type })
-    .then((res) => {
-      if (res.code !== 200) {
-        app.releaseStatus = null
-        refresh(index)
-        message.error(res.message)
-        return
-      }
-      // console.log('ChangeRelease', res)
-      if (app.release) {
+  if (app.release) {
+    ChangeRelease({ name: app.name, version: app.version })
+      .then((res) => {
+        if (res.code !== 200) {
+          app.releaseStatus = null
+          refresh(index)
+          message.error(res.message)
+          return
+        }
+        // console.log('ChangeRelease', res)
         if (!res.data || res.data.length === 0) {
           message.success('取消发布成功')
         } else {
           warnModal.value.open(res.data, '有以下应用依赖该版本：')
         }
-      } else {
-        message.success('发布成功')
-      }
-      app.releaseStatus = null
-      refresh(index)
-    })
-    .catch((err) => {
-      app.releaseStatus = null
-      refresh(index)
-      console.error(err)
-    })
+        app.releaseStatus = null
+        refresh(index)
+      })
+      .catch((err) => {
+        app.releaseStatus = null
+        refresh(index)
+        console.error(err)
+      })
+  } else {
+    app.releaseStatus = null
+    releaseModal.value.open(app)
+  }
 }
 </script>
 
