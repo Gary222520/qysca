@@ -62,6 +62,8 @@ export const GetComponentTiled = (data) => request('post', API.COMPONENT_TILED, 
 export const AddComponent = (data) => request('post', API.ADD_COMPONENT, { data })
 // 修改闭源组件
 export const UpdateComponent = (data) => request('post', API.UPDATE_COMPONENT, { data })
+// 修改发布组件的信息
+export const UpdateRelease = (data) => request('post', API.UPDATE_RELEASE, { data })
 // 删除闭源组件
 export const DeleteComponent = (data) => request('post', API.DELETE_COMPONENT, { data })
 

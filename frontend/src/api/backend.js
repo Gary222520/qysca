@@ -60,6 +60,8 @@ export const API = {
   ADD_COMPONENT: '/qysca/component/saveCloseComponent',
   // 修改闭源组件
   UPDATE_COMPONENT: '/qysca/component/updateCloseComponent',
+  // 修改发布组件的信息
+  UPDATE_RELEASE: '/qysca/component/changeComponentDetail',
   // 删除闭源组件
   DELETE_COMPONENT: '/qysca/component/deleteCloseComponent',
 

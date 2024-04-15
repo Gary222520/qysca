@@ -30,6 +30,7 @@
       <a-descriptions>
         <a-descriptions-item label="语言" span="3">
           <a-tag v-for="(item, index) in data.detail?.language" :key="index">{{ item }}</a-tag>
+          <div v-if="!data.detail?.language">-</div>
         </a-descriptions-item>
         <a-descriptions-item label="构建工具">{{ data.detail?.builder || '-' }}</a-descriptions-item>
         <a-descriptions-item label="扫描对象">{{ data.detail?.scanner || '-' }}</a-descriptions-item>

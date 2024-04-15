@@ -9,7 +9,7 @@
           <a-select v-model:value="formState.type" style="width: 300px">
             <a-select-option value="opensource">开源</a-select-option>
             <a-select-option value="business">商用</a-select-option>
-            <a-select-option value="internal">内部</a-select-option>
+            <a-select-option value="internal">内部使用</a-select-option>
           </a-select>
         </a-form-item>
         <a-form-item label="主页地址" name="url">
@@ -21,8 +21,8 @@
         <a-form-item label="下载地址" name="downloadUrl">
           <a-input v-model:value="formState.downloadUrl" style="width: 300px" />
         </a-form-item>
-        <a-form-item label="包获取地址" name="pUrl">
-          <a-input v-model:value="formState.pUrl" style="width: 300px" />
+        <a-form-item label="包获取地址" name="packageUrl">
+          <a-input v-model:value="formState.packageUrl" style="width: 300px" />
         </a-form-item>
       </a-form>
     </div>
@@ -52,7 +52,7 @@ const formState = reactive({
   url: '',
   sourceUrl: '',
   downloadUrl: '',
-  pUrl: ''
+  packageUrl: ''
 })
 const open = (app) => {
   data.open = true
