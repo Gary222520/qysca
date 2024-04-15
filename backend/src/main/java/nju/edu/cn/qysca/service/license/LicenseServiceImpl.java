@@ -379,24 +379,6 @@ public class LicenseServiceImpl implements LicenseService{
             fullNameDistance.put(license.getFullName(), editDistanceWithWeight.apply(queryName.toLowerCase(), license.getFullName().toLowerCase()));
         }
 
-//        List<Map.Entry<String, Integer>> entryList = new ArrayList<>(nameDistance.entrySet());
-//        // 使用 Collections.sort() 方法对 List 进行排序
-//        Collections.sort(entryList, Comparator.comparing(Map.Entry::getValue));
-//        // 打印排序后的键值对
-//        for (Map.Entry<String, Integer> entry : entryList) {
-//            System.out.println(entry.getKey() + ": " + entry.getValue());
-//        }
-//
-//        System.out.println();
-//        System.out.println();
-//        List<Map.Entry<String, Integer>> entryList2 = new ArrayList<>(fullNameDistance.entrySet());
-//        // 使用 Collections.sort() 方法对 List 进行排序
-//        Collections.sort(entryList2, Comparator.comparing(Map.Entry::getValue));
-//        // 打印排序后的键值对
-//        for (Map.Entry<String, Integer> entry2 : entryList2) {
-//            System.out.println(entry2.getKey() + ": " + entry2.getValue());
-//        }
-
          // 先严格，再逐渐增加阈值使得条件宽松，直到找到合适结果
         int threshold = 0; // 初始阈值为 0
         while (threshold <= maxThreshold) {

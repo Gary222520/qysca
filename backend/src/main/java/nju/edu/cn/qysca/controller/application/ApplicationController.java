@@ -192,6 +192,7 @@ public class ApplicationController {
 
     @ApiOperation("导出应用html报告")
     @PostMapping("/exportHtml")
+    @PreAuthorize("@my.checkAuth('/qysca/application/exportHtml')")
     public void exportHtml(@RequestBody ApplicationSearchDTO dto, HttpServletResponse response){
         reportService.exportHtml(dto, response);
     }
