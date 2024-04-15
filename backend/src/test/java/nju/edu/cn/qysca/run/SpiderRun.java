@@ -1,5 +1,6 @@
 package nju.edu.cn.qysca.run;
 
+import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.dao.application.AppDependencyTableDao;
 import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.dao.spider.NpmVisitedPackagesDao;
@@ -29,6 +30,7 @@ import java.util.List;
  * 批量爬取入口
  */
 @SpringBootTest
+@Slf4j
 public class SpiderRun {
     @Autowired
     private AppDependencyTableDao appDependencyTableDao;
@@ -120,7 +122,14 @@ public class SpiderRun {
                                 isSuccess = false;
                                 continue;
                             }
-                            pythonComponentDao.save(pythonComponentDO);
+                            try {
+                                pythonComponentDao.save(pythonComponentDO);
+                            } catch (Exception e){
+                                log.error("保存组件时出错：" + pythonComponentDO.getName() + " " + pythonComponentDO.getVersion());
+                                log.error(e.getMessage());
+                                e.printStackTrace();
+                            }
+
                         }
                     }
 
@@ -168,7 +177,14 @@ public class SpiderRun {
                                 isSuccess = false;
                                 continue;
                             }
-                            jsComponentDao.save(jsComponentDO);
+                            try {
+                                jsComponentDao.save(jsComponentDO);
+                            } catch (Exception e){
+                                log.error("保存组件时出错：" + jsComponentDO.getName() + " " + jsComponentDO.getVersion());
+                                log.error(e.getMessage());
+                                e.printStackTrace();
+                            }
+
 
                         }
                     }

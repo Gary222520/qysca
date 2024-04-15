@@ -1,5 +1,6 @@
 package nju.edu.cn.qysca.service.spider;
 
+import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.dao.component.JavaComponentDao;
 import nju.edu.cn.qysca.dao.component.JavaDependencyTableDao;
 import nju.edu.cn.qysca.dao.component.JavaDependencyTreeDao;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class JavaSpiderServiceImpl implements JavaSpiderService {
 
 
@@ -135,7 +137,16 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
                     mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true, false));
                     return;
                 }
-                javaComponentDao.save(javaComponentDO);
+                try {
+                    javaComponentDao.save(javaComponentDO);
+                } catch (Exception e){
+                    log.error("保存组件时出错：" + javaComponentDO.getName() + " " + javaComponentDO.getVersion());
+                    log.error(e.getMessage());
+                    e.printStackTrace();
+                    mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true, false));
+                    return;
+                }
+
                 // 记录该url已被访问过
                 mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, true, true, false));
             }

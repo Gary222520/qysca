@@ -41,4 +41,9 @@ public class NpmTest {
     public void test4(){
         npmService.spiderDependency("pinkie", "2.0.4");
     }
+
+    @Test
+    public void test5() {
+        JsComponentDO jsComponentDO = jsSpiderService.crawlByNV("typescriptdeclarationfilepublication", "1.0.0");
+    }
 }
