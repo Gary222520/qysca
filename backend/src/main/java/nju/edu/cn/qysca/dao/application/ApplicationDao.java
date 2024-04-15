@@ -51,7 +51,7 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      * @return Page<ApplicationDO> 应用分页信息
      */
     @Query(value = "select distinct on (a.name) a.* from plt_application a where a.id = any (select aid from plt_bu_app where bid = :bid) order by name desc",
-            countQuery = "select count(*) from (select distinct a.name from plt_application a where a.id in (select aid from plt_bu_app where bid in :bids) order by name desc) as unique_combinations",
+            countQuery = "select count(*) from (select distinct a.name from plt_application a where a.id = any(select aid from plt_bu_app where bid = :bid) order by name desc) as unique_combinations",
             nativeQuery = true)
     Page<ApplicationDO> findApplicationPage(String bid, Pageable pageable);
 
