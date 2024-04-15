@@ -265,7 +265,13 @@ public class MavenServiceImpl implements MavenService {
             if (javaComponentDO == null) {
                 javaComponentDO = javaSpiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 if (javaComponentDO != null) {
-                    javaComponentDao.save(javaComponentDO);
+                    try {
+                        javaComponentDao.save(javaComponentDO);
+                    } catch (Exception e){
+                        // save组件时出现错误，跳过该组件，仍继续执行
+                        e.printStackTrace();
+                    }
+
                     javaComponentDependencyTreeDO.setLicenses(String.join(",", javaComponentDO.getLicenses()));
                     javaComponentDependencyTreeDO.setVulnerabilities(String.join(",", javaComponentDO.getVulnerabilities()));
                     javaComponentDependencyTreeDO.setType("opensource");

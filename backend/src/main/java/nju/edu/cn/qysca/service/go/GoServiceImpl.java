@@ -306,7 +306,12 @@ public class GoServiceImpl implements GoService {
                     if (null == goComponentDO) {
                         goComponentDO = goSpiderService.crawlByNV(child.getName(), child.getVersion());
                         if (goComponentDO != null){
-                            goComponentDao.save(goComponentDO);
+                            try {
+                                goComponentDao.save(goComponentDO);
+                            } catch (Exception e){
+                                // save组件时出现错误，跳过该组件，仍继续执行
+                                e.printStackTrace();
+                            }
                         } else {
                             // 如果爬虫没有爬到则打印报错信息，仍继续执行
                             System.err.println("存在未识别的组件：" + child.getName() + ":" + child.getVersion());
