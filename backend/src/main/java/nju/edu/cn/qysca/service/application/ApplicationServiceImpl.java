@@ -777,6 +777,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             BeanUtils.copyProperties(childAppDependencyTree, temp);
             AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(tempApplicationDO.getName(), tempApplicationDO.getVersion());
             temp.setType(appComponentDO.getType());
+            temp.setLanguage(String.join(",", appComponentDO.getLanguage()));
             addDepth(temp);
             appComponentDependencyTreeDOS.add(temp);
         }
