@@ -84,6 +84,7 @@ public class ComponentController {
 
     @ApiOperation("改变发布组件的详细信息")
     @PostMapping("/changeComponentDetail")
+    @PreAuthorize("@my.checkAuth('/qysca/component/changeComponentDetail')")
     public ResponseMsg<Void> changeComponentDetail(@RequestBody ChangeComponentDetailDTO dto) {
         componentService.changeComponentDetail(dto);
         return new ResponseMsg<>();
