@@ -697,7 +697,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             // 应用本身已经具备language 不用再重新构建language
             appComponentDO.setLanguage(applicationDO.getLanguage());
             appComponentDO.setUrl(changeReleaseStateDTO.getUrl());
-            appComponentDO.setPUrl(changeReleaseStateDTO.getPUrl());
+            appComponentDO.setPUrl(changeReleaseStateDTO.getPackageUrl());
             appComponentDO.setSourceUrl(changeReleaseStateDTO.getSourceUrl());
             appComponentDO.setDownloadUrl(changeReleaseStateDTO.getDownloadUrl());
             // 构造创建者信息
@@ -777,6 +777,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             BeanUtils.copyProperties(childAppDependencyTree, temp);
             AppComponentDO appComponentDO = appComponentDao.findByNameAndVersion(tempApplicationDO.getName(), tempApplicationDO.getVersion());
             temp.setType(appComponentDO.getType());
+            temp.setLanguage(String.join(",", appComponentDO.getLanguage()));
             addDepth(temp);
             appComponentDependencyTreeDOS.add(temp);
         }
