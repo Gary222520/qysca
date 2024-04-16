@@ -7,6 +7,7 @@
             <div style="display: flex; align-items: center">
               <div style="margin-right: 20px; font-size: 18px; font-weight: bold">{{ app.name }}</div>
               <a-tag>{{ app.version }}</a-tag>
+              <a-tag v-for="(lang, i) in app.language" :key="i">{{ lang }}</a-tag>
             </div>
             <div style="display: flex; align-items: center">
               <a-tooltip>
@@ -284,9 +285,9 @@ const showComDetail = (com) => {
 }
 
 const deleteComponent = (com, isProject) => {
-  if (isProject) com.language = 'app'
-  else com.language = com.language[0]
-  deleteComModal.value.open(com, props.parentApp)
+  const comInfo = { ...com }
+  if (isProject) comInfo.language = 'app'
+  deleteComModal.value.open(comInfo, props.parentApp)
 }
 
 const close = () => {

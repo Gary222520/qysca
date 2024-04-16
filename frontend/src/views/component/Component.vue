@@ -167,7 +167,7 @@ const data = reactive({
     { title: '版本', dataIndex: 'version', key: 'version' },
     { title: '语言', dataIndex: 'language', key: 'language' },
     { title: '类型', dataIndex: 'type', key: 'type' },
-    { title: '操作', dataIndex: 'action', key: 'action', width: 120 }
+    { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
   ]
 })
 const pagination = reactive({

@@ -65,7 +65,7 @@ const formRef = ref()
 const formState = reactive({
   name: '',
   version: '',
-  language: 'java'
+  language: 'app'
 })
 const parentInfo = reactive({
   parentName: '',
