@@ -1131,7 +1131,10 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     /**
-     *
+     * 获取所有依赖的漏洞名称
+     * @param name    应用名称
+     * @param version 应用版本
+     * @return String[] 所有依赖的漏洞名称
      */
     private String[] getUniqueVulnerabilityNames(String name, String version) {
         List<AppDependencyTableDO> dependencies = appDependencyTableDao.findAllByNameAndVersion(name, version);

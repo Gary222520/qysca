@@ -101,7 +101,7 @@ public interface ApplicationDao extends JpaRepository<ApplicationDO, String> {
      * @param id 组件Id
      * @return List<ApplicationDO> 父应用列表
      */
-    @Query(value = "select * from plt_application where child_component -> ?1 @> ?2", nativeQuery = true)
+    @Query(value = "select * from plt_application where JSONB_EXISTS(child_component, :language) and :id = any(ARRAY(SELECT JSONB_ARRAY_ELEMENTS_TEXT(child_component->:language)))", nativeQuery = true)
     List<ApplicationDO> findParentApplication(String language, String id);
 
     /**
