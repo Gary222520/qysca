@@ -41,7 +41,7 @@ const draw = (licenseTypeNumberMap) => {
       type: 'category',
       data: chartData[0]
     },
-    color: ['#6f005f'],
+    color: ['#00557c'],
     series: [
       {
         name: '许可证使用次数',
@@ -49,7 +49,7 @@ const draw = (licenseTypeNumberMap) => {
         data: chartData[1],
         itemStyle: {
           color: function (params) {
-            const color = ['#a969c6', '#5c7bd9', '#3dab78', '#9fe080', '#7ed3f4', '#ffdc60', '#ff7070', '#a80022']
+            const color = ['#aa32be', '#0087be', '#00af8e', '#00d7a0', '#00bedc', '#ffd732', '#fe8389', '#ef0137']
             const index = params.dataIndex % 8
             return color[index]
           }

@@ -48,7 +48,7 @@ defineExpose({ open })
 
 <style scoped>
 .btn:hover {
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 </style>

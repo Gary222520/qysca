@@ -43,7 +43,7 @@
         <div class="user">
           <a-dropdown style="height: 50px">
             <span>
-              <a-avatar style="color: #ffffff; background-color: #6f005f">
+              <a-avatar style="color: #ffffff; background-color: #00557c">
                 <template #icon><UserOutlined /></template>
               </a-avatar>
               <span style="margin-left: 10px; font-size: 16px">{{ data.username }}</span>
@@ -181,7 +181,7 @@ const logout = () => {
   font-weight: bold;
   font-size: 30px;
   margin-left: 10px;
-  color: #6f005f;
+  color: #00557c;
   font-family: 'Arial Rounded MT';
 }
 .menu_icon {
@@ -198,7 +198,7 @@ const logout = () => {
   font-size: 15px;
 }
 :deep(.ant-menu-item-selected) {
-  background-color: #6f005f;
+  background-color: #00557c;
   color: #fff;
   font-weight: 700;
 }

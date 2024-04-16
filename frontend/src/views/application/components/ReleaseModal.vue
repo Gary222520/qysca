@@ -9,7 +9,7 @@
           <a-select v-model:value="formState.type" style="width: 300px">
             <a-select-option value="opensource">开源</a-select-option>
             <a-select-option value="business">商用</a-select-option>
-            <a-select-option value="internal">内部</a-select-option>
+            <a-select-option value="internal">内部使用</a-select-option>
           </a-select>
         </a-form-item>
         <a-form-item label="主页地址" name="url">
@@ -21,8 +21,8 @@
         <a-form-item label="下载地址" name="downloadUrl">
           <a-input v-model:value="formState.downloadUrl" style="width: 300px" />
         </a-form-item>
-        <a-form-item label="包获取地址" name="pUrl">
-          <a-input v-model:value="formState.pUrl" style="width: 300px" />
+        <a-form-item label="包获取地址" name="packageUrl">
+          <a-input v-model:value="formState.packageUrl" style="width: 300px" />
         </a-form-item>
       </a-form>
     </div>
@@ -52,7 +52,7 @@ const formState = reactive({
   url: '',
   sourceUrl: '',
   downloadUrl: '',
-  pUrl: ''
+  packageUrl: ''
 })
 const open = (app) => {
   data.open = true
@@ -102,8 +102,8 @@ defineExpose({ open })
 .btn {
   min-width: 80px;
   margin-left: 10px;
-  border: #6f005f;
-  background-color: #6f005f;
+  border: #00557c;
+  background-color: #00557c;
   color: #fff;
 }
 .btn:hover {
@@ -116,8 +116,8 @@ defineExpose({ open })
 }
 .cancel-btn:hover {
   opacity: 0.8;
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 </style>
 <style scoped src="@/atdv/input.css"></style>

@@ -256,7 +256,7 @@ defineExpose({ clear })
   color: #52c41a;
 }
 .upload-failed {
-  color: #ff4d4f;
+  color: #ef0137;
 }
 .progress {
   margin-top: 10px;

@@ -1,9 +1,9 @@
 :deep(.ant-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn) {
-  color: #6f005f;
+  color: #00557c;
 }
 :deep(.ant-tabs .ant-tabs-ink-bar) {
-  background: #6f005f;
+  background: #00557c;
 }
 :deep(.ant-tabs .ant-tabs-tab:hover) {
-  color: #6f005f;
+  color: #00557c;
 }

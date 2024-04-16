@@ -19,26 +19,26 @@
               <div class="column_name" @click="showInfo(record)">{{ record.name }}</div>
             </template>
             <template v-if="column.key === 'riskLevel'">
-              <a-tag v-if="record.riskLevel === 'high'" color="error">高危</a-tag>
-              <a-tag v-if="record.riskLevel === 'medium'" color="warning">中危</a-tag>
-              <a-tag v-if="record.riskLevel === 'low'" color="processing">低危</a-tag>
+              <a-tag v-if="record.riskLevel === 'high'" class="error-tag">高危</a-tag>
+              <a-tag v-else-if="record.riskLevel === 'medium'" class="warning-tag">中危</a-tag>
+              <a-tag v-else-if="record.riskLevel === 'low'" class="processing-tag">低危</a-tag>
               <div v-else>-</div>
             </template>
             <template v-if="column.key === 'isOsiApproved'">
               <CheckOutlined v-if="record.isOsiApproved" :style="{ color: '#52c41a' }" />
-              <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
+              <CloseOutlined v-else :style="{ color: '#ef0137' }" />
             </template>
             <template v-if="column.key === 'isFsfApproved'">
               <CheckOutlined v-if="record.isFsfApproved" :style="{ color: '#52c41a' }" />
-              <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
+              <CloseOutlined v-else :style="{ color: '#ef0137' }" />
             </template>
             <template v-if="column.key === 'isSpdxApproved'">
               <CheckOutlined v-if="record.isSpdxApproved" :style="{ color: '#52c41a' }" />
-              <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
+              <CloseOutlined v-else :style="{ color: '#ef0137' }" />
             </template>
             <template v-if="column.key === 'gplCompatibility'">
               <CheckOutlined v-if="record.gplCompatibility" :style="{ color: '#52c41a' }" />
-              <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
+              <CloseOutlined v-else :style="{ color: '#ef0137' }" />
             </template>
             <template v-if="column.key === 'type'">
               <div v-if="record.type === 'opensource'">开源</div>
@@ -49,7 +49,7 @@
               <a-tooltip>
                 <template #title>详情</template>
                 <FileTextOutlined
-                  :style="{ fontSize: '18px', color: '#6f005f', marginRight: '10px' }"
+                  :style="{ fontSize: '18px', color: '#00557c', marginRight: '10px' }"
                   @click="showInfo(record)" />
               </a-tooltip>
             </template>
@@ -164,14 +164,14 @@ const showInfo = (record) => {
   cursor: pointer;
 }
 .column_name:hover {
-  color: #6f005f;
+  color: #00557c;
 }
 .action_icon {
   margin-right: 10px;
 }
 .cancel_btn:hover {
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 </style>
 <style scoped src="@/atdv/primary-btn.css"></style>
@@ -183,3 +183,4 @@ const showInfo = (record) => {
 <style scoped src="@/atdv/radio-btn.css"></style>
 <style scoped src="@/atdv/select.css"></style>
 <style scoped src="@/atdv/spin.css"></style>
+<style scoped src="@/atdv/tag.css"></style>

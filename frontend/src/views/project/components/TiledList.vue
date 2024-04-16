@@ -96,7 +96,7 @@ defineExpose({ show, hide, getCount })
   cursor: pointer;
 }
 .column_name:hover {
-  color: #6f005f;
+  color: #00557c;
 }
 </style>
 <style scoped src="@/atdv/pagination.css"></style>
