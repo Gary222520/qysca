@@ -13,13 +13,13 @@
                 <template #title>查看详情</template>
                 <FileSearchOutlined
                   @click.stop="showAppDetail(app, false, index)"
-                  :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                  :style="{ fontSize: '20px', color: '#00557c', marginRight: '10px' }" />
               </a-tooltip>
               <a-tooltip v-if="!props.parentApp.groupId">
                 <template #title>删除组件</template>
                 <DeleteOutlined
                   @click.stop="deleteComponent(app, true)"
-                  :style="{ fontSize: '20px', color: '#ff4d4f', marginRight: '10px' }" />
+                  :style="{ fontSize: '20px', color: '#ef0137', marginRight: '10px' }" />
               </a-tooltip>
             </div>
           </div>
@@ -44,13 +44,13 @@
                 <template #title>查看详情</template>
                 <FileSearchOutlined
                   @click.stop="showComDetail(com)"
-                  :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                  :style="{ fontSize: '20px', color: '#00557c', marginRight: '10px' }" />
               </a-tooltip>
               <a-tooltip v-if="!props.parentApp.groupId">
                 <template #title>删除组件</template>
                 <DeleteOutlined
                   @click.stop="deleteComponent(com, false)"
-                  :style="{ fontSize: '20px', color: '#ff4d4f', marginRight: '10px' }" />
+                  :style="{ fontSize: '20px', color: '#ef0137', marginRight: '10px' }" />
               </a-tooltip>
             </div>
           </div>

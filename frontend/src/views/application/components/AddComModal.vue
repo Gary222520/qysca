@@ -97,36 +97,31 @@ const getNameList = async () => {
   formState.version = ''
   selection.options = []
   if (formState.name === '') return
-  await GetComponentNameList({ name: formState.name, language: formState.language })
-    .then((res) => {
-      if (res.code !== 200) {
-        message.error(res.message)
-        return
-      }
-      // console.log('GetComponentNameList', res)
-      selection.componentList = res.data.reduce((pre, curr) => {
-        let exsist = false
-        pre.forEach((item) => {
-          if (curr.name === item.name) {
-            item.versions.push({ label: curr.version, value: curr.version })
-            exsist = true
-          }
-        })
-        if (!exsist) {
-          pre.push({
-            name: curr.name,
-            versions: [{ label: curr.version, value: curr.version }]
-          })
+  await GetComponentNameList({ name: formState.name, language: formState.language }).then((res) => {
+    // if (res.code !== 200) {
+    //   message.error(res.message)
+    //   return
+    // }
+    selection.componentList = res.data.reduce((pre, curr) => {
+      let exsist = false
+      pre.forEach((item) => {
+        if (curr.name === item.name) {
+          item.versions.push({ label: curr.version, value: curr.version })
+          exsist = true
         }
-        return pre
-      }, [])
-      componentInfo.name = formState.name
-      componentInfo.language = formState.language
-      if (selection.componentList.length === 1) selection.options = selection.componentList[0].versions
-    })
-    .catch((err) => {
-      console.error(err)
-    })
+      })
+      if (!exsist) {
+        pre.push({
+          name: curr.name,
+          versions: [{ label: curr.version, value: curr.version }]
+        })
+      }
+      return pre
+    }, [])
+    componentInfo.name = formState.name
+    componentInfo.language = formState.language
+    if (selection.componentList.length === 1) selection.options = selection.componentList[0].versions
+  })
 }
 const chooseName = async (item) => {
   // console.log('chooseName', item)
@@ -175,8 +170,8 @@ defineExpose({ open })
 .btn {
   min-width: 80px;
   margin-left: 10px;
-  border: #6f005f;
-  background-color: #6f005f;
+  border: #00557c;
+  background-color: #00557c;
   color: #fff;
 }
 .btn:hover {
@@ -189,8 +184,8 @@ defineExpose({ open })
 }
 .cancel-btn:hover {
   opacity: 0.8;
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 </style>
 <style scoped src="@/atdv/input.css"></style>

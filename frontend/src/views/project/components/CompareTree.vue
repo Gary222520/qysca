@@ -5,8 +5,8 @@
       <div style="margin-left: 5px; margin-right: 20px; color: #1677ff">新增</div>
       <div style="background-color: #389e0d; width: 15px; height: 15px"></div>
       <div style="margin-left: 5px; margin-right: 20px; color: #389e0d">更新</div>
-      <div style="background-color: #ff4d4f; width: 15px; height: 15px"></div>
-      <div style="margin-left: 5px; margin-right: 20px; color: #ff4d4f">删除</div>
+      <div style="background-color: #ef0137; width: 15px; height: 15px"></div>
+      <div style="margin-left: 5px; margin-right: 20px; color: #ef0137">删除</div>
       <div style="background-color: #000000; width: 15px; height: 15px"></div>
       <div style="margin-left: 5px; margin-right: 20px; color: #000000">不变</div>
     </div>
@@ -26,7 +26,7 @@
       <template #title="{ title, version, type, mark }">
         <span v-if="mark === 'CHANGE'" style="font-weight: bold; margin-right: 10px; color: #389e0d">{{ title }}</span>
         <span v-if="mark === 'ADD'" style="font-weight: bold; margin-right: 10px; color: #1677ff">{{ title }}</span>
-        <span v-if="mark === 'DELETE'" style="font-weight: bold; margin-right: 10px; color: #ff4d4f">{{ title }}</span>
+        <span v-if="mark === 'DELETE'" style="font-weight: bold; margin-right: 10px; color: #ef0137">{{ title }}</span>
         <span v-if="mark === 'SAME'" style="font-weight: bold; margin-right: 10px">{{ title }}</span>
         <a-tag>{{ version }}</a-tag>
         <a-tag v-if="type === 'opensource'">开源</a-tag>

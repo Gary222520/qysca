@@ -12,7 +12,7 @@
               <a-tooltip>
                 <template #title>更新</template>
                 <SyncOutlined
-                  :style="{ fontSize: '18px', color: '#6f005f', marginRight: '10px' }"
+                  :style="{ fontSize: '18px', color: '#00557c', marginRight: '10px' }"
                   @click="updateUser(record)" />
               </a-tooltip>
               <a-tooltip>
@@ -24,7 +24,7 @@
                   <template #okButton>
                     <a-button danger type="primary" size="small" @click="deleteUser(record)">删除</a-button>
                   </template>
-                  <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f', marginRight: '10px' }" />
+                  <DeleteOutlined :style="{ fontSize: '18px', color: '#ef0137', marginRight: '10px' }" />
                 </a-popconfirm>
               </a-tooltip>
             </template>
@@ -143,8 +143,8 @@ const deleteUser = (record) => {
   margin-top: 20px;
 }
 .cancel_btn:hover {
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 </style>
 <style scoped src="@/atdv/primary-btn.css"></style>

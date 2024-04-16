@@ -175,8 +175,8 @@ defineExpose({ open })
 .btn {
   width: 80px;
   margin-left: 10px;
-  border: #6f005f;
-  background-color: #6f005f;
+  border: #00557c;
+  background-color: #00557c;
   color: #fff;
 }
 .btn:hover {
@@ -189,8 +189,8 @@ defineExpose({ open })
 }
 .cancel-btn:hover {
   opacity: 0.8;
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 </style>
 <style scoped src="@/atdv/steps.css"></style>

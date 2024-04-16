@@ -206,6 +206,7 @@ defineExpose({ open })
   align-items: center;
   font-size: 16px;
   font-weight: bold;
+  color: #00557c;
   margin: 15px 0;
   padding-left: 10px;
 }
@@ -216,7 +217,7 @@ defineExpose({ open })
   width: 3px;
   height: 18px;
   left: 0;
-  background-color: #6f005f;
+  background-color: #00557c;
 }
 .relative {
   position: relative;
@@ -228,7 +229,7 @@ defineExpose({ open })
   right: 0;
   bottom: 0;
   cursor: pointer;
-  color: #6f005f;
+  color: #00557c;
 }
 </style>
 <style scoped src="@/atdv/pagination.css"></style>

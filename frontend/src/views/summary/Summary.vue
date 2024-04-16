@@ -15,7 +15,7 @@
               <div class="number-title">应用总数</div>
               <div class="number-count">{{ count.app }}</div>
             </div>
-            <ScheduleOutlined :style="{ fontSize: '30px', color: '#6f005f' }" />
+            <ScheduleOutlined :style="{ fontSize: '30px', color: '#00557c' }" />
           </div>
         </a-card>
         <a-card class="number-card" hoverable>
@@ -24,7 +24,7 @@
               <div class="number-title">组件总数</div>
               <div class="number-count">{{ count.com }}</div>
             </div>
-            <AppstoreOutlined :style="{ fontSize: '30px', color: '#6f005f' }" />
+            <AppstoreOutlined :style="{ fontSize: '30px', color: '#00557c' }" />
           </div>
         </a-card>
         <a-card class="number-card" hoverable>
@@ -33,7 +33,7 @@
               <div class="number-title">漏洞总数</div>
               <div class="number-count">{{ count.vul }}</div>
             </div>
-            <BugOutlined :style="{ fontSize: '30px', color: '#6f005f' }" />
+            <BugOutlined :style="{ fontSize: '30px', color: '#00557c' }" />
           </div>
         </a-card>
         <a-card class="number-card" hoverable>
@@ -42,7 +42,7 @@
               <div class="number-title">许可证总数</div>
               <div class="number-count">{{ count.license }}</div>
             </div>
-            <FileProtectOutlined :style="{ fontSize: '30px', color: '#6f005f' }" />
+            <FileProtectOutlined :style="{ fontSize: '30px', color: '#00557c' }" />
           </div>
         </a-card>
       </div>

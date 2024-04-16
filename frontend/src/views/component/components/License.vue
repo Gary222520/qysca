@@ -30,7 +30,7 @@
                 <a-button class="btn" @click="addLicense()">添加</a-button>
               </template>
               <a-tooltip title="添加许可证">
-                <PlusOutlined :style="{ fontSize: '16px', color: '#6f005f', marginLeft: '5px' }" />
+                <PlusOutlined :style="{ fontSize: '16px', color: '#00557c', marginLeft: '5px' }" />
               </a-tooltip>
             </a-popconfirm>
           </template>
@@ -40,32 +40,32 @@
             <div class="column_name" @click="showInfo(record)">{{ record.name }}</div>
           </template>
           <template v-if="column.key === 'riskLevel'">
-            <a-tag v-if="record.riskLevel === 'high'" color="error">高危</a-tag>
-            <a-tag v-else-if="record.riskLevel === 'medium'" color="warning">中危</a-tag>
-            <a-tag v-else-if="record.riskLevel === 'low'" color="processing">低危</a-tag>
+            <a-tag v-if="record.riskLevel === 'high'" class="error-tag">高危</a-tag>
+            <a-tag v-else-if="record.riskLevel === 'medium'" class="warning-tag">中危</a-tag>
+            <a-tag v-else-if="record.riskLevel === 'low'" class="processing-tag">低危</a-tag>
             <div v-else>-</div>
           </template>
           <template v-if="column.key === 'isOsiApproved'">
-            <CheckOutlined v-if="record.isOsiApproved" :style="{ color: '#52c41a' }" />
-            <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
+            <CheckOutlined v-if="record.isOsiApproved" :style="{ color: '#00d7a0' }" />
+            <CloseOutlined v-else :style="{ color: '#ef0137' }" />
           </template>
           <template v-if="column.key === 'isFsfApproved'">
-            <CheckOutlined v-if="record.isFsfApproved" :style="{ color: '#52c41a' }" />
-            <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
+            <CheckOutlined v-if="record.isFsfApproved" :style="{ color: '#00d7a0' }" />
+            <CloseOutlined v-else :style="{ color: '#ef0137' }" />
           </template>
           <template v-if="column.key === 'isSpdxApproved'">
-            <CheckOutlined v-if="record.isSpdxApproved" :style="{ color: '#52c41a' }" />
-            <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
+            <CheckOutlined v-if="record.isSpdxApproved" :style="{ color: '#00d7a0' }" />
+            <CloseOutlined v-else :style="{ color: '#ef0137' }" />
           </template>
           <template v-if="column.key === 'gplCompatibility'">
-            <CheckOutlined v-if="record.gplCompatibility" :style="{ color: '#52c41a' }" />
-            <CloseOutlined v-else :style="{ color: '#ff4d4f' }" />
+            <CheckOutlined v-if="record.gplCompatibility" :style="{ color: '#00d7a0' }" />
+            <CloseOutlined v-else :style="{ color: '#ef0137' }" />
           </template>
           <template v-if="column.key === 'action'">
             <a-tooltip>
               <template #title>详情</template>
               <FileTextOutlined
-                :style="{ fontSize: '18px', color: '#6f005f', marginRight: '10px' }"
+                :style="{ fontSize: '18px', color: '#00557c', marginRight: '10px' }"
                 @click="showInfo(record)" />
             </a-tooltip>
             <a-tooltip v-if="data.editable">
@@ -77,7 +77,7 @@
                 <template #okButton>
                   <a-button danger type="primary" size="small" @click="deleteLicense(record)">删除</a-button>
                 </template>
-                <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+                <DeleteOutlined :style="{ fontSize: '18px', color: '#ef0137' }" />
               </a-popconfirm>
             </a-tooltip>
           </template>
@@ -97,8 +97,8 @@
               <a-tooltip v-if="hasConflict(record)" placement="left">
                 <template #title>存在冲突</template>
                 <div style="display: flex; align-items: center">
-                  <ExclamationCircleOutlined :style="{ color: '#ff4d4f' }" />
-                  <div style="color: #ff4d4f; margin-left: 5px">{{ record.title }}</div>
+                  <ExclamationCircleOutlined :style="{ color: '#ef0137' }" />
+                  <div style="color: #ef0137; margin-left: 5px">{{ record.title }}</div>
                 </div>
               </a-tooltip>
               <div v-else>{{ record.title }}</div>
@@ -107,7 +107,7 @@
               <a-tag
                 v-for="(item, index) in record.pos_licenses"
                 :key="index"
-                :color="hasConflict(record) ? 'error' : ''"
+                :class="hasConflict(record) ? 'error-tag' : ''"
                 @click="showInfo(item)"
                 style="cursor: pointer">
                 {{ item.name }}
@@ -117,7 +117,7 @@
               <a-tag
                 v-for="(item, index) in record.neg_licenses"
                 :key="index"
-                :color="hasConflict(record) ? 'error' : ''"
+                :class="hasConflict(record) ? 'error-tag' : ''"
                 @click="showInfo(item)"
                 style="cursor: pointer">
                 {{ item.name }}
@@ -135,13 +135,20 @@
           style="margin-bottom: 10px">
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'title'">
-              <div>{{ record.title }}</div>
+              <a-tooltip v-if="hasConflict(record)" placement="left">
+                <template #title>存在冲突</template>
+                <div style="display: flex; align-items: center">
+                  <ExclamationCircleOutlined :style="{ color: '#ef0137' }" />
+                  <div style="color: #ef0137; margin-left: 5px">{{ record.title }}</div>
+                </div>
+              </a-tooltip>
+              <div v-else>{{ record.title }}</div>
             </template>
             <template v-if="column.key === 'pos_licenses'">
               <a-tag
                 v-for="(item, index) in record.pos_licenses"
                 :key="index"
-                :color="hasConflict(record) ? 'error' : ''"
+                :class="hasConflict(record) ? 'error-tag' : ''"
                 @click="showInfo(item)"
                 style="cursor: pointer">
                 {{ item.name }}
@@ -151,7 +158,7 @@
               <a-tag
                 v-for="(item, index) in record.neg_licenses"
                 :key="index"
-                :color="hasConflict(record) ? 'error' : ''"
+                :class="hasConflict(record) ? 'error-tag' : ''"
                 @click="showInfo(item)"
                 style="cursor: pointer">
                 {{ item.name }}
@@ -347,7 +354,7 @@ defineExpose({ show })
   cursor: pointer;
 }
 .column_name:hover {
-  color: #6f005f;
+  color: #00557c;
 }
 .risk-tag {
   display: inline-block;
@@ -357,7 +364,7 @@ defineExpose({ show })
   /* border-radius: 3px; */
 }
 .high-risk {
-  color: #ff4d4f;
+  color: #ef0137;
   /* background-color: #ffccc7; */
 }
 .medium-risk {
@@ -372,26 +379,26 @@ defineExpose({ show })
   width: 200px;
 }
 .input:hover {
-  border-color: #6f005f;
+  border-color: #00557c;
 }
 .input:focus {
-  border-color: #6f005f;
-  box-shadow: 0 0 0 2px rgba(111, 0, 95, 0.1);
+  border-color: #00557c;
+  box-shadow: 0 0 0 2px rgba(0, 85, 124, 0.1);
 }
 .btn {
-  border-color: #6f005f;
-  background-color: #6f005f;
+  border-color: #00557c;
+  background-color: #00557c;
   color: #ffffff;
 }
 .btn:hover {
-  border-color: #6f005f;
-  background-color: #6f005f;
+  border-color: #00557c;
+  background-color: #00557c;
   color: #ffffff;
   opacity: 0.8;
 }
 .cancel_btn:hover {
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 :deep(.ant-popconfirm .ant-popconfirm-description) {
   margin-inline-start: 0;
@@ -404,3 +411,4 @@ defineExpose({ show })
 <style scoped src="@/atdv/pagination.css"></style>
 <style scoped src="@/atdv/spin.css"></style>
 <style scoped src="@/atdv/radio-btn.css"></style>
+<style scoped src="@/atdv/tag.css"></style>

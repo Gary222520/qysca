@@ -5,9 +5,9 @@
       .ant-input-search-button:not(.ant-btn-primary)
   ) {
   width: 50px;
-  background-color: #6f005f;
+  background-color: #00557c;
   color: #fff;
-  border-color: #6f005f;
+  border-color: #00557c;
 }
 :deep(
     .ant-input-search
