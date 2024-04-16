@@ -4,7 +4,7 @@
       <div style="font-size: 20px">删除项目版本</div>
     </template>
     <div class="content">
-      <WarningOutlined :style="{ fontSize: '30px', color: '#ff4d4f' }" />
+      <WarningOutlined :style="{ fontSize: '30px', color: '#ef0137' }" />
       <div style="margin-left: 15px">删除后不可恢复！确定删除？</div>
     </div>
     <template #footer>
@@ -74,25 +74,25 @@ defineExpose({ open })
 
 <style scoped>
 .cancel_btn:hover {
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 .delete_btn {
   margin-left: 10px;
-  background-color: #ff4d4f;
-  border-color: #ff4d4f;
+  background-color: #ef0137;
+  border-color: #ef0137;
   color: #fff;
 }
 .delete_btn:hover {
   opacity: 0.8;
   color: #fff;
-  border-color: #ff4d4f;
+  border-color: #ef0137;
 }
 .content {
   margin: 20px 0;
   display: flex;
   align-items: center;
   font-size: 16px;
-  color: #ff4d4f;
+  color: #ef0137;
 }
 </style>

@@ -72,7 +72,7 @@ const login = () => {
   text-align: center;
   font-size: 36px;
   font-weight: bold;
-  color: #6f005f;
+  color: #00557c;
   margin-bottom: 30px;
 }
 .btn {

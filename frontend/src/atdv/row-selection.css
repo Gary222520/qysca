@@ -1,12 +1,12 @@
 :deep(.ant-checkbox:not(.ant-checkbox-disabled):hover .ant-checkbox-inner) {
-  border-color: #6f005f;
+  border-color: #00557c;
 }
 :deep(.ant-checkbox-checked .ant-checkbox-inner) {
-  background-color: #6f005f;
-  border-color: #6f005f;
+  background-color: #00557c;
+  border-color: #00557c;
 }
 :deep(.ant-checkbox-checked:not(.ant-checkbox-disabled):hover .ant-checkbox-inner) {
-  background-color: #6f005f;
+  background-color: #00557c;
   opacity: 0.8;
 }
 :deep(
@@ -14,15 +14,15 @@
       .ant-checkbox-checked:not(.ant-checkbox-disabled)
       .ant-checkbox-inner
   ) {
-  background-color: #6f005f;
-  border-color: #6f005f;
+  background-color: #00557c;
+  border-color: #00557c;
   opacity: 0.8;
 }
 :deep(
     .ant-checkbox-wrapper:not(.ant-checkbox-wrapper-disabled):hover
       .ant-checkbox-checked:not(.ant-checkbox-disabled):after
   ) {
-  border-color: #6f005f;
+  border-color: #00557c;
   opacity: 0.8;
 }
 

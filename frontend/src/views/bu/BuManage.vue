@@ -12,7 +12,7 @@
               <a-tooltip>
                 <template #title>成员详情</template>
                 <FileTextOutlined
-                  :style="{ fontSize: '18px', color: '#6f005f', marginRight: '10px' }"
+                  :style="{ fontSize: '18px', color: '#00557c', marginRight: '10px' }"
                   @click="showInfo(record)" />
               </a-tooltip>
               <a-tooltip>
@@ -24,7 +24,7 @@
                   <template #okButton>
                     <a-button danger type="primary" size="small" @click="deleteBu(record)">删除</a-button>
                   </template>
-                  <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f', marginRight: '10px' }" />
+                  <DeleteOutlined :style="{ fontSize: '18px', color: '#ef0137', marginRight: '10px' }" />
                 </a-popconfirm>
               </a-tooltip>
             </template>
@@ -129,8 +129,8 @@ const deleteBu = (record) => {
   margin-top: 20px;
 }
 .cancel_btn:hover {
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 </style>
 <style scoped src="@/atdv/primary-btn.css"></style>

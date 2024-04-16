@@ -8,7 +8,7 @@
         <span style="font-size: 18px; font-weight: bold; margin-right: 20px">{{ data.detail?.name }}</span>
         <a-tooltip v-if="data.isProject">
           <template #title>刷新</template>
-          <RedoOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click.stop="refresh()" />
+          <RedoOutlined :style="{ fontSize: '18px', color: '#00557c' }" @click.stop="refresh()" />
         </a-tooltip>
         <a-button v-if="!data.isProject" class="btn" type="primary" @click="showDetail()">
           <FileTextOutlined />查看依赖信息
@@ -41,7 +41,12 @@
         <div class="drawer_title">成员信息</div>
       </div>
       <div style="margin-bottom: 10px" v-if="data.isProject">
-        <a-button type="primary" @click="addAppMember()"><PlusOutlined />添加成员</a-button>
+        <a-button
+          v-show="permit([ROLE.ADMIN, ROLE.BU_REP, ROLE.BU_PO, ROLE.APP_LEADER])"
+          type="primary"
+          @click="addAppMember()">
+          <PlusOutlined />添加成员
+        </a-button>
       </div>
       <div style="margin-bottom: 20px" v-if="data.isProject">
         <a-table :data-source="table.datasource" :columns="table.columns" bordered :pagination="false">
@@ -56,7 +61,9 @@
                   <template #okButton>
                     <a-button danger type="primary" size="small" @click="deleteMember(record)">删除</a-button>
                   </template>
-                  <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+                  <DeleteOutlined
+                    v-show="permit([ROLE.ADMIN, ROLE.BU_REP])"
+                    :style="{ fontSize: '18px', color: '#ef0137' }" />
                 </a-popconfirm>
               </a-tooltip>
             </template>
@@ -78,17 +85,21 @@
       </div>
       <div style="margin-top: 10px" v-if="data.isProject && !hasChildren">
         <div style="display: flex" v-if="data.detail.state === 'CREATED'">
-          <a-button class="btn" type="primary" @click="addDependency()"> <FileAddOutlined />上传扫描文件</a-button>
+          <a-button v-show="permit([ROLE.BU_REP, ROLE.BU_PO])" class="btn" type="primary" @click="addDependency()">
+            <FileAddOutlined />上传扫描文件
+          </a-button>
         </div>
         <div style="display: flex" v-if="data.detail.state === 'SUCCESS'">
           <a-tooltip placement="bottom">
             <template #title>组件、漏洞、许可证...</template>
             <a-button class="btn" type="primary" @click="showDetail()"><FileTextOutlined />查看扫描结果</a-button>
           </a-tooltip>
-          <a-button class="btn" type="primary" @click="updateDependency()"><SyncOutlined />重新扫描</a-button>
+          <a-button v-show="permit([ROLE.BU_REP, ROLE.BU_PO])" class="btn" type="primary" @click="updateDependency()">
+            <SyncOutlined />重新扫描
+          </a-button>
         </div>
         <div style="display: flex; align-items: center; height: 32px" v-if="data.detail.state === 'RUNNING'">
-          <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
+          <LoadingOutlined :style="{ fontSize: '18px', color: '#00557c' }" />
           <div style="margin-left: 10px">扫描分析中...</div>
         </div>
         <div style="display: flex; align-items: center; height: 32px" v-if="data.detail.state === 'FAILED'">
@@ -97,8 +108,8 @@
               <a-button class="cancel_btn" size="small" @click="retry()">重试</a-button>
             </template>
             <template #okButton></template>
-            <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
-            <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
+            <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ef0137' }" />
+            <span style="margin-left: 10px; color: #ef0137; cursor: pointer">扫描失败</span>
           </a-popconfirm>
         </div>
       </div>
@@ -126,7 +137,7 @@ import { GetComponentInfo, GetVersionInfo, DeleteAppMember, ExportSBOM, ExportRe
 import { message } from 'ant-design-vue'
 import AddDepModal from './AddDepModal.vue'
 import AddMember from './AddMember.vue'
-import { arrToString } from '@/utils/util.js'
+import { arrToString, ROLE, permit } from '@/utils/util.js'
 
 const router = useRouter()
 const addDepModal = ref()
@@ -329,6 +340,7 @@ defineExpose({ open })
   align-items: center;
   font-size: 16px;
   font-weight: bold;
+  color: #00557c;
   margin: 15px 0;
   padding-left: 10px;
 }
@@ -339,7 +351,7 @@ defineExpose({ open })
   width: 3px;
   height: 18px;
   left: 0;
-  background-color: #6f005f;
+  background-color: #00557c;
 }
 .relative {
   position: relative;
@@ -355,8 +367,8 @@ defineExpose({ open })
   margin-left: 10px;
 }
 .cancel_btn:hover {
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 :deep(.ant-descriptions .ant-descriptions-item-label) {
   font-weight: bold;

@@ -9,11 +9,15 @@
             <a-radio-button value="business" style="width: 70px">商用</a-radio-button>
             <a-radio-button value="internal" style="width: 100px">内部使用</a-radio-button>
           </a-radio-group>
-          <a-button type="primary" @click="addComponent()" style="margin-left: 20px">
+          <a-button
+            v-show="permit([ROLE.BU_REP, ROLE.BU_PO])"
+            type="primary"
+            @click="addComponent()"
+            style="margin-left: 20px">
             <PlusOutlined />添加组件
           </a-button>
         </div>
-        <div>
+        <div style="display: flex; align-items: center">
           <span v-if="!data.accurate">
             语言：<a-select
               v-model:value="data.search.language"
@@ -27,13 +31,27 @@
               <a-select-option value="app">mixed</a-select-option>
             </a-select>
           </span>
-          <a-input-search
-            v-if="!data.accurate"
-            v-model:value="data.search.name"
-            placeholder="请输入组件名称"
-            style="width: 250px"
-            @change="(e) => getComponents()"
-            @search="(value, e) => getComponents()"></a-input-search>
+          <a-dropdown placement="bottomRight">
+            <a-input-search
+              v-if="!data.accurate"
+              v-model:value="data.search.name"
+              placeholder="请输入组件名称"
+              style="width: 400px"
+              @change="
+                (e) => {
+                  getNameList()
+                  getComponents()
+                }
+              "
+              @search="(value, e) => getComponents()"></a-input-search>
+            <template #overlay>
+              <a-menu v-if="selection.nameList.length" style="max-height: 300px; width: 400px; overflow-y: scroll">
+                <a-menu-item v-for="(item, index) in selection.nameList" :key="index" @click="() => chooseName(item)">
+                  {{ item }}
+                </a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
         </div>
       </div>
       <a-table :data-source="data.datasource" :columns="data.columns" bordered :pagination="pagination">
@@ -57,16 +75,16 @@
               <div class="action_icon">
                 <a-tooltip>
                   <template #title>详情</template>
-                  <FileTextOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="showInfo(record)" />
+                  <FileTextOutlined :style="{ fontSize: '18px', color: '#00557c' }" @click="showInfo(record)" />
                 </a-tooltip>
               </div>
-              <div class="action_icon" v-if="record.creator">
+              <div class="action_icon" v-if="record.creator && record.creator !== '-'">
                 <a-tooltip>
                   <template #title>更新</template>
-                  <SyncOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click="updateComponent(record)" />
+                  <SyncOutlined :style="{ fontSize: '18px', color: '#0087be' }" @click="updateComponent(record)" />
                 </a-tooltip>
               </div>
-              <div class="action_icon" v-if="record.creator">
+              <div class="action_icon" v-if="record.creator && record.creator !== '-'">
                 <a-tooltip>
                   <template #title>删除</template>
                   <a-popconfirm v-model:open="record.popconfirm" title="确定删除这个组件吗？">
@@ -76,13 +94,15 @@
                     <template #okButton>
                       <a-button danger type="primary" size="small" @click="deleteComponent(record)">删除</a-button>
                     </template>
-                    <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+                    <DeleteOutlined
+                      v-show="permit([ROLE.BU_REP, ROLE.BU_PO])"
+                      :style="{ fontSize: '18px', color: '#ef0137' }" />
                   </a-popconfirm>
                 </a-tooltip>
               </div>
             </div>
             <div v-if="record.state === 'RUNNING'" style="display: flex; align-items: center">
-              <LoadingOutlined :style="{ fontSize: '18px', color: '#6f005f' }" />
+              <LoadingOutlined :style="{ fontSize: '18px', color: '#00557c' }" />
               <div style="margin-left: 10px">扫描分析中...</div>
             </div>
             <div v-if="record.state === 'FAILED'" style="display: flex; align-items: center">
@@ -91,8 +111,8 @@
                   <a-button class="cancel_btn" size="small" @click="retry(record)">重试</a-button>
                 </template>
                 <template #okButton></template>
-                <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
-                <span style="margin-left: 10px; color: #ff4d4f; cursor: pointer">扫描失败</span>
+                <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#ef0137' }" />
+                <span style="margin-left: 10px; color: #ef0137; cursor: pointer">扫描失败</span>
               </a-popconfirm>
             </div>
           </template>
@@ -118,13 +138,13 @@ import {
   LoadingOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons-vue'
-import { GetComponents, DeleteComponent } from '@/api/frontend'
+import { GetComponents, DeleteComponent, GetComponentNameList } from '@/api/frontend'
 import Drawer from '@/views/project/components/Drawer.vue'
 import AddModal from './components/AddModal.vue'
 import UpdateModal from './components/UpdateModal.vue'
 import WarnModal from '@/components/WarnModal.vue'
 import { message } from 'ant-design-vue'
-import { arrToString } from '@/utils/util.js'
+import { arrToString, ROLE, permit } from '@/utils/util.js'
 
 onMounted(() => {
   getComponents()
@@ -161,6 +181,33 @@ const pagination = reactive({
   },
   hideOnSinglePage: true
 })
+const selection = reactive({
+  nameList: []
+})
+const getNameList = async () => {
+  selection.nameList = []
+  if (data.search.name === '') return
+  await GetComponentNameList({ name: data.search.name, language: data.search.language }).then((res) => {
+    // if (res.code !== 200) {
+    //   message.error(res.message)
+    //   return
+    // }
+    selection.nameList = res.data.reduce((pre, curr) => {
+      let exsist = false
+      pre.forEach((item) => {
+        if (curr.name === item) exsist = true
+      })
+      if (!exsist) pre.push(curr.name)
+      return pre
+    }, [])
+  })
+}
+const chooseName = async (item) => {
+  data.search.name = item
+  await getNameList()
+  getComponents()
+}
+
 const getComponents = (number = 1, size = 8) => {
   const params = {
     ...data.search,
@@ -251,14 +298,14 @@ const deleteComponent = (record) => {
   cursor: pointer;
 }
 .column_name:hover {
-  color: #6f005f;
+  color: #00557c;
 }
 .action_icon {
   margin-right: 10px;
 }
 .cancel_btn:hover {
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 </style>
 <style scoped src="@/atdv/primary-btn.css"></style>
