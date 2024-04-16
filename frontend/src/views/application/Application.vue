@@ -54,7 +54,7 @@
                 <div v-if="app.selection" style="margin: 0 20px; display: flex; align-items: center">
                   <a-tooltip v-if="app.lock">
                     <template #title>点击解锁</template>
-                    <a-tag color="warning" @click="lock(app, index)" style="margin-right: 10px; cursor: pointer">
+                    <a-tag class="warning-tag" @click="lock(app, index)" style="margin-right: 10px; cursor: pointer">
                       <template #icon><LockOutlined /></template>已锁定
                     </a-tag>
                   </a-tooltip>
@@ -66,7 +66,7 @@
                   </a-tooltip>
                   <a-tooltip v-if="app.release && !app.releaseStatus">
                     <template #title>取消发布</template>
-                    <a-tag color="success" @click="release(app, index)" style="margin-right: 10px; cursor: pointer">
+                    <a-tag class="success-tag" @click="release(app, index)" style="margin-right: 10px; cursor: pointer">
                       <template #icon><EyeOutlined /></template>已发布
                     </a-tag>
                   </a-tooltip>
@@ -87,13 +87,13 @@
                   <template #title>查看详情</template>
                   <FileSearchOutlined
                     @click.stop="showAppDetail(app, true, index)"
-                    :style="{ fontSize: '20px', color: '#009999', marginRight: '10px' }" />
+                    :style="{ fontSize: '20px', color: '#00557c', marginRight: '10px' }" />
                 </a-tooltip>
                 <a-tooltip>
                   <template #title>添加组件</template>
                   <PlusOutlined
                     @click.stop="addComponent(app, index)"
-                    :style="{ fontSize: '20px', color: '#0087be', marginRight: '10px' }" />
+                    :style="{ fontSize: '20px', color: '#00557c', marginRight: '10px' }" />
                 </a-tooltip>
                 <a-tooltip>
                   <template #title>应用升级</template>
@@ -524,3 +524,4 @@ const release = async (app, index) => {
 <style scoped src="@/atdv/primary-btn.css"></style>
 <style scoped src="@/atdv/delete-btn.css"></style>
 <style scoped src="@/atdv/row-selection.css"></style>
+<style scoped src="@/atdv/tag.css"></style>

@@ -27,8 +27,8 @@
 }
 
 :deep(.ant-table-wrapper .ant-table-tbody > tr.ant-table-row-selected > td) {
-  background: rgba(111, 0, 95, 0.1);
+  background: rgba(0, 85, 124, 0.1);
 }
 :deep(.ant-table-wrapper .ant-table-tbody > tr.ant-table-row-selected:hover > td) {
-  background: rgba(111, 0, 95, 0.2);
+  background: rgba(0, 85, 124, 0.2);
 }

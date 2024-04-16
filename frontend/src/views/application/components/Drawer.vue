@@ -75,12 +75,10 @@
       <div class="relative" v-if="data.isProject && !hasChildren">
         <div class="drawer_title">
           应用状态
-          <a-tag v-if="data.detail.state === 'CREATED'" color="processing" :bordered="false" class="label">
-            暂未扫描
-          </a-tag>
-          <a-tag v-if="data.detail.state === 'RUNNING'" color="warning" :bordered="false" class="label">扫描中</a-tag>
-          <a-tag v-if="data.detail.state === 'SUCCESS'" color="success" :bordered="false" class="label">扫描成功</a-tag>
-          <a-tag v-if="data.detail.state === 'FAILED'" color="error" :bordered="false" class="label">扫描失败</a-tag>
+          <a-tag v-if="data.detail.state === 'CREATED'" :bordered="false" class="label processing-tag">暂未扫描</a-tag>
+          <a-tag v-if="data.detail.state === 'RUNNING'" :bordered="false" class="label warning-tag">扫描中</a-tag>
+          <a-tag v-if="data.detail.state === 'SUCCESS'" :bordered="false" class="label success-tag">扫描成功</a-tag>
+          <a-tag v-if="data.detail.state === 'FAILED'" :bordered="false" class="label error-tag">扫描失败</a-tag>
         </div>
       </div>
       <div style="margin-top: 10px" v-if="data.isProject && !hasChildren">
@@ -359,7 +357,7 @@ defineExpose({ open })
   align-items: center;
 }
 .label {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: normal;
   margin-left: 10px;
 }
@@ -378,3 +376,4 @@ defineExpose({ open })
 <style scoped src="@/atdv/primary-btn.css"></style>
 <style scoped src="@/atdv/description.css"></style>
 <style scoped src="@/atdv/spin.css"></style>
+<style scoped src="@/atdv/tag.css"></style>

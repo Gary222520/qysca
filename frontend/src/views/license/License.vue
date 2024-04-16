@@ -19,9 +19,9 @@
               <div class="column_name" @click="showInfo(record)">{{ record.name }}</div>
             </template>
             <template v-if="column.key === 'riskLevel'">
-              <a-tag v-if="record.riskLevel === 'high'" color="error">高危</a-tag>
-              <a-tag v-else-if="record.riskLevel === 'medium'" color="warning">中危</a-tag>
-              <a-tag v-else-if="record.riskLevel === 'low'" color="processing">低危</a-tag>
+              <a-tag v-if="record.riskLevel === 'high'" class="error-tag">高危</a-tag>
+              <a-tag v-else-if="record.riskLevel === 'medium'" class="warning-tag">中危</a-tag>
+              <a-tag v-else-if="record.riskLevel === 'low'" class="processing-tag">低危</a-tag>
               <div v-else>-</div>
             </template>
             <template v-if="column.key === 'isOsiApproved'">
@@ -183,3 +183,4 @@ const showInfo = (record) => {
 <style scoped src="@/atdv/radio-btn.css"></style>
 <style scoped src="@/atdv/select.css"></style>
 <style scoped src="@/atdv/spin.css"></style>
+<style scoped src="@/atdv/tag.css"></style>

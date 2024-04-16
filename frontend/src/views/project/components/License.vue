@@ -42,25 +42,25 @@
             <div class="column_name" @click="showInfo(record)">{{ record.name }}</div>
           </template>
           <template v-if="column.key === 'riskLevel'">
-            <a-tag v-if="record.riskLevel === 'high'" color="error">高危</a-tag>
-            <a-tag v-else-if="record.riskLevel === 'medium'" color="warning">中危</a-tag>
-            <a-tag v-else-if="record.riskLevel === 'low'" color="processing">低危</a-tag>
+            <a-tag v-if="record.riskLevel === 'high'" class="error-tag">高危</a-tag>
+            <a-tag v-else-if="record.riskLevel === 'medium'" class="warning-tag">中危</a-tag>
+            <a-tag v-else-if="record.riskLevel === 'low'" class="processing-tag">低危</a-tag>
             <div v-else>-</div>
           </template>
           <template v-if="column.key === 'isOsiApproved'">
-            <CheckOutlined v-if="record.isOsiApproved" :style="{ color: '#52c41a' }" />
+            <CheckOutlined v-if="record.isOsiApproved" :style="{ color: '#00d7a0' }" />
             <CloseOutlined v-else :style="{ color: '#ef0137' }" />
           </template>
           <template v-if="column.key === 'isFsfApproved'">
-            <CheckOutlined v-if="record.isFsfApproved" :style="{ color: '#52c41a' }" />
+            <CheckOutlined v-if="record.isFsfApproved" :style="{ color: '#00d7a0' }" />
             <CloseOutlined v-else :style="{ color: '#ef0137' }" />
           </template>
           <template v-if="column.key === 'isSpdxApproved'">
-            <CheckOutlined v-if="record.isSpdxApproved" :style="{ color: '#52c41a' }" />
+            <CheckOutlined v-if="record.isSpdxApproved" :style="{ color: '#00d7a0' }" />
             <CloseOutlined v-else :style="{ color: '#ef0137' }" />
           </template>
           <template v-if="column.key === 'gplCompatibility'">
-            <CheckOutlined v-if="record.gplCompatibility" :style="{ color: '#52c41a' }" />
+            <CheckOutlined v-if="record.gplCompatibility" :style="{ color: '#00d7a0' }" />
             <CloseOutlined v-else :style="{ color: '#ef0137' }" />
           </template>
           <template v-if="column.key === 'action'">
@@ -111,7 +111,7 @@
               <a-tag
                 v-for="(item, index) in record.pos_licenses"
                 :key="index"
-                :color="hasConflict(record) ? 'error' : ''"
+                :class="hasConflict(record) ? 'error-tag' : ''"
                 @click="showInfo(item)"
                 style="cursor: pointer">
                 {{ item.name }}
@@ -121,7 +121,7 @@
               <a-tag
                 v-for="(item, index) in record.neg_licenses"
                 :key="index"
-                :color="hasConflict(record) ? 'error' : ''"
+                :class="hasConflict(record) ? 'error-tag' : ''"
                 @click="showInfo(item)"
                 style="cursor: pointer">
                 {{ item.name }}
@@ -139,13 +139,20 @@
           style="margin-bottom: 10px">
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'title'">
-              <div>{{ record.title }}</div>
+              <a-tooltip v-if="hasConflict(record)" placement="left">
+                <template #title>存在冲突</template>
+                <div style="display: flex; align-items: center">
+                  <ExclamationCircleOutlined :style="{ color: '#ef0137' }" />
+                  <div style="color: #ef0137; margin-left: 5px">{{ record.title }}</div>
+                </div>
+              </a-tooltip>
+              <div v-else>{{ record.title }}</div>
             </template>
             <template v-if="column.key === 'pos_licenses'">
               <a-tag
                 v-for="(item, index) in record.pos_licenses"
                 :key="index"
-                :color="hasConflict(record) ? 'error' : ''"
+                :class="hasConflict(record) ? 'error-tag' : ''"
                 @click="showInfo(item)"
                 style="cursor: pointer">
                 {{ item.name }}
@@ -155,7 +162,7 @@
               <a-tag
                 v-for="(item, index) in record.neg_licenses"
                 :key="index"
-                :color="hasConflict(record) ? 'error' : ''"
+                :class="hasConflict(record) ? 'error-tag' : ''"
                 @click="showInfo(item)"
                 style="cursor: pointer">
                 {{ item.name }}
@@ -380,7 +387,7 @@ defineExpose({ show })
 }
 .input:focus {
   border-color: #00557c;
-  box-shadow: 0 0 0 2px rgba(111, 0, 95, 0.1);
+  box-shadow: 0 0 0 2px rgba(0, 85, 124, 0.1);
 }
 .btn {
   border-color: #00557c;
@@ -408,3 +415,4 @@ defineExpose({ show })
 <style scoped src="@/atdv/pagination.css"></style>
 <style scoped src="@/atdv/spin.css"></style>
 <style scoped src="@/atdv/radio-btn.css"></style>
+<style scoped src="@/atdv/tag.css"></style>

@@ -1,7 +1,7 @@
 :deep(.ant-btn-primary) {
   color: #fff;
   background-color: #00557c;
-  box-shadow: 0 2px 0 rgba(111, 0, 95, 0.1);
+  box-shadow: 0 2px 0 rgba(0, 85, 124, 0.1);
 }
 :deep(.ant-btn-primary:not(:disabled):hover) {
   color: #fff;

@@ -4,5 +4,5 @@
 }
 :deep(.ant-select-focused .ant-select-selector) {
   border-color: #00557c !important;
-  box-shadow: 0 0 0 2px rgba(111, 0, 95, 0.1) !important;
+  box-shadow: 0 0 0 2px rgba(0, 85, 124, 0.1) !important;
 }

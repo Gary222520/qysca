@@ -3,5 +3,5 @@
 }
 :deep(.ant-input:focus) {
   border-color: #00557c;
-  box-shadow: 0 0 0 2px rgba(111, 0, 95, 0.1);
+  box-shadow: 0 0 0 2px rgba(0, 85, 124, 0.1);
 }
