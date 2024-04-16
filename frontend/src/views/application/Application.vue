@@ -3,12 +3,15 @@
     <div class="title">应用管理</div>
     <a-card class="content_card">
       <div class="operations">
-        <a-button type="primary" @click="addApplication"><PlusOutlined />新建应用</a-button>
+        <a-button v-show="permit([ROLE.BU_REP, ROLE.BU_PO])" type="primary" @click="addApplication">
+          <PlusOutlined />新建应用
+        </a-button>
+        <div></div>
         <a-dropdown>
           <a-input-search
             v-model:value="data.search.name"
             placeholder="请输入应用名称"
-            style="width: 250px; margin-right: 10px"
+            style="width: 250px"
             @change="() => getNameList()"
             @search="() => findProject()"></a-input-search>
           <template #overlay>
@@ -32,13 +35,13 @@
                 <div style="margin-right: 20px; font-size: 18px; font-weight: bold">{{ app.name }}</div>
                 <a-tooltip v-if="app.selection">
                   <template #title>刷新</template>
-                  <RedoOutlined :style="{ fontSize: '18px', color: '#6f005f' }" @click.stop="refresh(index)" />
+                  <RedoOutlined :style="{ fontSize: '18px', color: '#00557c' }" @click.stop="refresh(index)" />
                 </a-tooltip>
                 <div v-if="app.selection" style="font-size: 18px; margin-left: 20px">
                   <a-input-group compact>
                     <a-input
                       value="版本选择"
-                      style="width: 90px; cursor: default; background-color: #6f005f; color: white; text-align: center"
+                      style="width: 90px; cursor: default; background-color: #00557c; color: white; text-align: center"
                       readonly></a-input>
                     <a-select
                       v-model:value="app.selection.current"
@@ -51,7 +54,7 @@
                 <div v-if="app.selection" style="margin: 0 20px; display: flex; align-items: center">
                   <a-tooltip v-if="app.lock">
                     <template #title>点击解锁</template>
-                    <a-tag color="warning" @click="lock(app, index)" style="margin-right: 10px; cursor: pointer">
+                    <a-tag class="warning-tag" @click="lock(app, index)" style="margin-right: 10px; cursor: pointer">
                       <template #icon><LockOutlined /></template>已锁定
                     </a-tag>
                   </a-tooltip>
@@ -59,31 +62,22 @@
                     <template #title>点击锁定</template>
                     <UnlockOutlined
                       @click.stop="lock(app, index)"
-                      :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                      :style="{ fontSize: '20px', color: '#00557c', marginRight: '10px' }" />
                   </a-tooltip>
                   <a-tooltip v-if="app.release && !app.releaseStatus">
                     <template #title>取消发布</template>
-                    <a-tag color="success" @click="release(app, index)" style="margin-right: 10px; cursor: pointer">
+                    <a-tag class="success-tag" @click="release(app, index)" style="margin-right: 10px; cursor: pointer">
                       <template #icon><EyeOutlined /></template>已发布
                     </a-tag>
                   </a-tooltip>
                   <a-tooltip v-if="!app.release && !app.releaseStatus">
                     <template #title>点击发布</template>
-                    <!-- <a-popconfirm v-model:open="app.popconfirm" title="选择发布类型">
-                      <template #cancelButton></template>
-                      <template #okButton>
-                        <a-button class="btn" size="small" @click="release(app, index, 'opensource')">开源</a-button>
-                        <a-button class="btn" size="small" @click="release(app, index, 'business')">商用</a-button>
-                        <a-button class="btn" size="small" @click="release(app, index, 'internal')">内部</a-button>
-                      </template>
-                      <CloudUploadOutlined :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
-                    </a-popconfirm> -->
                     <CloudUploadOutlined
                       @click.stop="release(app, index)"
-                      :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                      :style="{ fontSize: '20px', color: '#00557c', marginRight: '10px' }" />
                   </a-tooltip>
                   <div v-if="app.releaseStatus" style="display: flex; align-items: center">
-                    <LoadingOutlined :style="{ fontSize: '20px', color: '#6f005f' }" />
+                    <LoadingOutlined :style="{ fontSize: '20px', color: '#00557c' }" />
                     <div style="margin-left: 10px">{{ app.releaseStatus }}</div>
                   </div>
                 </div>
@@ -93,25 +87,27 @@
                   <template #title>查看详情</template>
                   <FileSearchOutlined
                     @click.stop="showAppDetail(app, true, index)"
-                    :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                    :style="{ fontSize: '20px', color: '#00557c', marginRight: '10px' }" />
                 </a-tooltip>
                 <a-tooltip>
                   <template #title>添加组件</template>
                   <PlusOutlined
                     @click.stop="addComponent(app, index)"
-                    :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                    :style="{ fontSize: '20px', color: '#00557c', marginRight: '10px' }" />
                 </a-tooltip>
                 <a-tooltip>
                   <template #title>应用升级</template>
                   <RocketOutlined
+                    v-show="permit([ROLE.BU_REP, ROLE.BU_PO])"
                     @click.stop="upgradeProject(app, index)"
-                    :style="{ fontSize: '20px', color: '#6f005f', marginRight: '10px' }" />
+                    :style="{ fontSize: '20px', color: '#00557c', marginRight: '10px' }" />
                 </a-tooltip>
                 <a-tooltip>
                   <template #title>删除该版本</template>
                   <DeleteOutlined
+                    v-show="permit([ROLE.BU_REP])"
                     @click.stop="deleteVersion(app, index)"
-                    :style="{ fontSize: '20px', color: '#ff4d4f', marginRight: '10px' }" />
+                    :style="{ fontSize: '20px', color: '#ef0137', marginRight: '10px' }" />
                 </a-tooltip>
               </div>
             </div>
@@ -187,6 +183,7 @@ import AppCollapse from '@/views/application/components/AppCollapse.vue'
 import WarnModal from '@/components/WarnModal.vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
+import { ROLE, permit } from '@/utils/util.js'
 
 onMounted(async () => {
   await getProjectList()
@@ -404,6 +401,10 @@ const showAppDetail = (app, isProject, index) => {
 }
 
 const lock = async (app, index) => {
+  if (!permit([ROLE.BU_REP])) {
+    message.error('权限不足')
+    return
+  }
   data.currentKey = index
   ChangeLock({ name: app.name, version: app.version })
     .then((res) => {
@@ -421,6 +422,10 @@ const lock = async (app, index) => {
 
 const release = async (app, index) => {
   data.currentKey = index
+  if (!permit([ROLE.BU_PO, ROLE.APP_LEADER, ROLE.APP_MEMBER])) {
+    message.error('权限不足')
+    return
+  }
   app.releaseStatus = app.release ? '取消发布中...' : '发布中...'
   if (app.release) {
     ChangeRelease({ name: app.name, version: app.version })
@@ -486,8 +491,8 @@ const release = async (app, index) => {
   margin-right: 10px;
 }
 .btn:hover {
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 .pagination {
   display: flex;
@@ -519,3 +524,4 @@ const release = async (app, index) => {
 <style scoped src="@/atdv/primary-btn.css"></style>
 <style scoped src="@/atdv/delete-btn.css"></style>
 <style scoped src="@/atdv/row-selection.css"></style>
+<style scoped src="@/atdv/tag.css"></style>

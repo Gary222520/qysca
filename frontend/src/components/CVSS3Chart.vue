@@ -48,10 +48,10 @@ const draw = (cvss3) => {
       // shape: 'circle',
       splitNumber: 4,
       indicator: [
-        { name: '攻击向量', max: 4, color: '#6f005f' },
-        { name: '攻击复杂度', max: 4, color: '#6f005f' },
-        { name: '所需权限', max: 4, color: '#6f005f' },
-        { name: '用户交互', max: 4, color: '#6f005f' }
+        { name: '攻击向量', max: 4, color: '#00557c' },
+        { name: '攻击复杂度', max: 4, color: '#00557c' },
+        { name: '所需权限', max: 4, color: '#00557c' },
+        { name: '用户交互', max: 4, color: '#00557c' }
       ]
     },
     series: [
@@ -59,7 +59,7 @@ const draw = (cvss3) => {
         name: 'cvss3可利用性度量',
         type: 'radar',
         areaStyle: {
-          color: '#6f005f'
+          color: '#00557c'
         },
         data: getChart1Data(cvss3)
       }
@@ -76,9 +76,9 @@ const draw = (cvss3) => {
       // shape: 'circle',
       splitNumber: 4,
       indicator: [
-        { name: '保密性影响', max: 4, color: '#6f005f' },
-        { name: '完整性影响', max: 4, color: '#6f005f' },
-        { name: '可用性影响', max: 4, color: '#6f005f' }
+        { name: '保密性影响', max: 4, color: '#00557c' },
+        { name: '完整性影响', max: 4, color: '#00557c' },
+        { name: '可用性影响', max: 4, color: '#00557c' }
       ]
     },
     series: [
@@ -86,7 +86,7 @@ const draw = (cvss3) => {
         name: 'cvss3影响性度量',
         type: 'radar',
         areaStyle: {
-          color: '#6f005f'
+          color: '#00557c'
         },
         data: getChart2Data(cvss3)
       }
@@ -115,7 +115,7 @@ const getChart1Data = (cvss3) => {
         stringToNumber('userInteraction', cvss3.userInteraction)
       ],
       itemStyle: {
-        color: '#6f005f'
+        color: '#00557c'
       },
       tooltip: {
         trigger: 'item',
@@ -142,7 +142,7 @@ const getChart2Data = (cvss3) => {
         stringToNumber('availabilityImpact', cvss3.availabilityImpact)
       ],
       itemStyle: {
-        color: '#6f005f'
+        color: '#00557c'
       },
       tooltip: {
         trigger: 'item',

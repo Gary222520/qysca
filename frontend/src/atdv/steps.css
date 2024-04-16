@@ -6,16 +6,16 @@
   pointer-events: none;
 }
 :deep(.ant-steps .ant-steps-item-process .ant-steps-item-icon) {
-  background-color: #6f005f;
+  background-color: #00557c;
   border: transparent;
 }
 :deep(.ant-steps .ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-tail::after) {
-  background-color: #6f005f;
+  background-color: #00557c;
 }
 :deep(.ant-steps .ant-steps-item-finish .ant-steps-item-icon) {
-  background-color: rgba(111, 0, 95, 0.1);
-  border-color: rgba(111, 0, 95, 0.1);
+  background-color: rgba(0, 85, 124, 0.1);
+  border-color: rgba(0, 85, 124, 0.1);
 }
 :deep(.ant-steps .ant-steps-item-finish .ant-steps-item-icon > .ant-steps-icon) {
-  color: #6f005f;
+  color: #00557c;
 }

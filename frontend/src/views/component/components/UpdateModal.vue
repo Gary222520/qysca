@@ -14,8 +14,8 @@
         <a-form-item label="下载地址" name="downloadUrl">
           <a-input v-model:value="formState.downloadUrl" style="width: 300px" />
         </a-form-item>
-        <a-form-item label="包获取地址" name="pUrl">
-          <a-input v-model:value="formState.pUrl" style="width: 300px" />
+        <a-form-item label="包获取地址" name="packageUrl">
+          <a-input v-model:value="formState.packageUrl" style="width: 300px" />
         </a-form-item>
       </a-form>
     </div>
@@ -28,7 +28,7 @@
 
 <script setup>
 import { reactive, ref, defineExpose, defineEmits } from 'vue'
-import { UpdateComponent } from '@/api/frontend'
+import { UpdateRelease } from '@/api/frontend'
 import { message } from 'ant-design-vue'
 import { useStore } from 'vuex'
 
@@ -45,7 +45,7 @@ const formState = reactive({
   url: '',
   sourceUrl: '',
   downloadUrl: '',
-  pUrl: ''
+  packageUrl: ''
 })
 const open = (com) => {
   data.open = true
@@ -54,7 +54,7 @@ const open = (com) => {
   formState.url = com.url
   formState.sourceUrl = com.sourceUrl
   formState.downloadUrl = com.downloadUrl
-  formState.pUrl = com.purl
+  formState.packageUrl = com.purl
 }
 const close = () => {
   data.open = false
@@ -71,11 +71,12 @@ const update = () => {
       const params = {
         name: data.com.name,
         version: data.com.version,
+        language: data.language,
         ...formState
       }
-      UpdateComponent(params)
+      UpdateRelease(params)
         .then((res) => {
-          // console.log('UpdateComponent', res)
+          // console.log('UpdateRelease', res)
           if (res.code !== 200) {
             message.error(res.message)
             return
@@ -101,8 +102,8 @@ defineExpose({ open })
 .btn {
   min-width: 80px;
   margin-left: 10px;
-  border: #6f005f;
-  background-color: #6f005f;
+  border: #00557c;
+  background-color: #00557c;
   color: #fff;
 }
 .btn:hover {
@@ -115,8 +116,8 @@ defineExpose({ open })
 }
 .cancel-btn:hover {
   opacity: 0.8;
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 </style>
 <style scoped src="@/atdv/input.css"></style>

@@ -1,12 +1,12 @@
 /* 表格分页样式 */
 :deep(.ant-pagination .ant-pagination-item-active) {
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 :deep(.ant-pagination .ant-pagination-item-active a) {
-  color: #6f005f;
+  color: #00557c;
 }
 :deep(.ant-pagination .ant-pagination-jump-prev .ant-pagination-item-container .ant-pagination-item-link-icon),
 :deep(.ant-pagination .ant-pagination-jump-next .ant-pagination-item-container .ant-pagination-item-link-icon) {
-  color: #6f005f;
+  color: #00557c;
 }

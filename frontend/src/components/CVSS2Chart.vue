@@ -49,9 +49,9 @@ const draw = (cvss2) => {
       // shape: 'circle',
       splitNumber: 4,
       indicator: [
-        { name: '访问向量', max: 4, color: '#6f005f' },
-        { name: '访问复杂度', max: 4, color: '#6f005f' },
-        { name: '认证', max: 4, color: '#6f005f' }
+        { name: '访问向量', max: 4, color: '#00557c' },
+        { name: '访问复杂度', max: 4, color: '#00557c' },
+        { name: '认证', max: 4, color: '#00557c' }
       ]
     },
     series: [
@@ -59,7 +59,7 @@ const draw = (cvss2) => {
         name: 'cvss2可利用性度量',
         type: 'radar',
         areaStyle: {
-          color: '#6f005f'
+          color: '#00557c'
         },
         data: getChart1Data(cvss2)
       }
@@ -76,9 +76,9 @@ const draw = (cvss2) => {
       // shape: 'circle',
       splitNumber: 4,
       indicator: [
-        { name: '保密性影响', max: 4, color: '#6f005f' },
-        { name: '完整性影响', max: 4, color: '#6f005f' },
-        { name: '可用性影响', max: 4, color: '#6f005f' }
+        { name: '保密性影响', max: 4, color: '#00557c' },
+        { name: '完整性影响', max: 4, color: '#00557c' },
+        { name: '可用性影响', max: 4, color: '#00557c' }
       ]
     },
     series: [
@@ -86,7 +86,7 @@ const draw = (cvss2) => {
         name: 'cvss2影响性度量',
         type: 'radar',
         areaStyle: {
-          color: '#6f005f'
+          color: '#00557c'
         },
         data: getChart2Data(cvss2)
       }
@@ -114,7 +114,7 @@ const getChart1Data = (cvss2) => {
         stringToNumber('authentication', cvss2.authentication)
       ],
       itemStyle: {
-        color: '#6f005f'
+        color: '#00557c'
       },
       tooltip: {
         trigger: 'item',
@@ -140,7 +140,7 @@ const getChart2Data = (cvss2) => {
         stringToNumber('availabilityImpact', cvss2.availabilityImpact)
       ],
       itemStyle: {
-        color: '#6f005f'
+        color: '#00557c'
       },
       tooltip: {
         trigger: 'item',

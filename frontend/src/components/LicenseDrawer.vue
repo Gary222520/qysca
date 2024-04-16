@@ -3,26 +3,26 @@
     <template #title><div style="font-size: 20px">许可证详情</div></template>
     <a-spin :spinning="data.spinning" tip="许可证信息加载中，请稍等...">
       <div style="display: flex; align-items: center; margin-bottom: 20px">
-        <a-tag v-if="data.detail?.riskLevel === 'high'" color="error">高危</a-tag>
-        <a-tag v-if="data.detail?.riskLevel === 'medium'" color="warning">中危</a-tag>
-        <a-tag v-if="data.detail?.riskLevel === 'low'" color="processing">低危</a-tag>
+        <a-tag v-if="data.detail?.riskLevel === 'high'" class="error-tag">高危</a-tag>
+        <a-tag v-if="data.detail?.riskLevel === 'medium'" class="warning-tag">中危</a-tag>
+        <a-tag v-if="data.detail?.riskLevel === 'low'" class="processing-tag">低危</a-tag>
         <span style="font-size: 18px; font-weight: bold; margin-right: 10px">{{ data.detail?.name }}</span>
-        <a-tag v-if="data.detail?.isOsiApproved" class="flex" color="success">
+        <a-tag v-if="data.detail?.isOsiApproved" class="flex success-tag">
           <template #icon><img class="tag-img" src="@/assets/osi.png" /></template>
           <div style="color: #48cd7f">OSI认证</div>
         </a-tag>
-        <a-tag v-if="data.detail?.isFsfApproved" class="flex" color="success">
+        <a-tag v-if="data.detail?.isFsfApproved" class="flex success-tag">
           <template #icon><img class="tag-img" src="@/assets/fsf.png" /></template>
           <div style="color: #48cd7f">FSF许可</div>
         </a-tag>
-        <a-tag v-if="data.detail?.isSpdxApproved" class="flex" color="success">
+        <a-tag v-if="data.detail?.isSpdxApproved" class="flex success-tag">
           <template #icon><img class="tag-img" src="@/assets/spdx.png" /></template>
           <div style="color: #48cd7f">SPDX认证</div>
         </a-tag>
-        <a-tag v-if="data.detail?.gplCompatibility" color="success">
+        <a-tag v-if="data.detail?.gplCompatibility" class="success-tag">
           <div style="color: #48cd7f">GPL兼容</div>
         </a-tag>
-        <a-tag v-else color="error">
+        <a-tag v-else class="error-tag">
           <div style="color: #f64e60">GPL不兼容</div>
         </a-tag>
       </div>
@@ -246,6 +246,7 @@ defineExpose({ open })
   align-items: center;
   font-size: 16px;
   font-weight: bold;
+  color: #00557c;
   margin: 15px 0;
   padding-left: 10px;
 }
@@ -256,7 +257,7 @@ defineExpose({ open })
   width: 3px;
   height: 18px;
   left: 0;
-  background-color: #6f005f;
+  background-color: #00557c;
 }
 .relative {
   position: relative;
@@ -268,11 +269,11 @@ defineExpose({ open })
   right: 0;
   bottom: 0;
   cursor: pointer;
-  color: #6f005f;
+  color: #00557c;
 }
 .btn:hover {
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 .list {
   margin-bottom: 20px;
@@ -283,12 +284,12 @@ defineExpose({ open })
 .allowed :deep(.ant-list-split .ant-list-header) {
   font-weight: bold;
   color: #fff;
-  background-color: #48cd7f;
+  background-color: #00d7a0;
 }
 .prohibited :deep(.ant-list-split .ant-list-header) {
   font-weight: bold;
   color: #fff;
-  background-color: #f64e60;
+  background-color: #ef0137;
 }
 .flex {
   display: flex;
@@ -307,3 +308,4 @@ defineExpose({ open })
 <style scoped src="@/atdv/primary-btn.css"></style>
 <style scoped src="@/atdv/spin.css"></style>
 <style scoped src="@/atdv/description.css"></style>
+<style scoped src="@/atdv/tag.css"></style>

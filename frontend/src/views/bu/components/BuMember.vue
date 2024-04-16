@@ -18,25 +18,25 @@
             <a-tooltip v-if="!hasBuRep() && record.role !== 'Bu PO'">
               <template #title>授予Bu Rep</template>
               <UsergroupAddOutlined
-                :style="{ fontSize: '18px', color: '#6f005f', marginRight: '10px' }"
+                :style="{ fontSize: '18px', color: '#00557c', marginRight: '10px' }"
                 @click="addBuRep(record)" />
             </a-tooltip>
             <a-tooltip v-if="record.role === 'Bu Rep'">
               <template #title>撤销Bu Rep</template>
               <UsergroupDeleteOutlined
-                :style="{ fontSize: '18px', color: '#6f005f', marginRight: '10px' }"
+                :style="{ fontSize: '18px', color: '#00557c', marginRight: '10px' }"
                 @click="deleteBuRep(record)" />
             </a-tooltip>
             <a-tooltip v-if="record.role !== 'Bu Rep' && record.role !== 'Bu PO'">
               <template #title>授予Bu PO</template>
               <UserAddOutlined
-                :style="{ fontSize: '18px', color: '#6f005f', marginRight: '10px' }"
+                :style="{ fontSize: '18px', color: '#00557c', marginRight: '10px' }"
                 @click="addBuPO(record)" />
             </a-tooltip>
             <a-tooltip v-if="record.role === 'Bu PO'">
               <template #title>撤销Bu PO</template>
               <UserDeleteOutlined
-                :style="{ fontSize: '18px', color: '#6f005f', marginRight: '10px' }"
+                :style="{ fontSize: '18px', color: '#00557c', marginRight: '10px' }"
                 @click="deleteBuPO(record)" />
             </a-tooltip>
             <a-tooltip>
@@ -48,7 +48,7 @@
                 <template #okButton>
                   <a-button danger type="primary" size="small" @click="deleteMember(record)">删除</a-button>
                 </template>
-                <DeleteOutlined :style="{ fontSize: '18px', color: '#ff4d4f' }" />
+                <DeleteOutlined :style="{ fontSize: '18px', color: '#ef0137' }" />
               </a-popconfirm>
             </a-tooltip>
           </template>
@@ -201,8 +201,8 @@ defineExpose({ open })
   margin-top: 10px;
 }
 .cancel_btn:hover {
-  border-color: #6f005f;
-  color: #6f005f;
+  border-color: #00557c;
+  color: #00557c;
 }
 </style>
 <style scoped src="@/atdv/primary-btn.css"></style>

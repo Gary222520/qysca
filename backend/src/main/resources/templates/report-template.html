@@ -98,22 +98,28 @@
         <table class="component-table">
           <thead>
             <tr>
+              <th style="width: 25px"></th>
               <th>名称</th>
               <th>版本</th>
               <th>语言</th>
               <th>类型</th>
-              <th style="width: 80px">操作</th>
+              <!-- <th style="width: 80px">操作</th> -->
             </tr>
           </thead>
           <tbody th:each="component : ${components}">
             <!-- 使用 Thymeleaf 迭代 Component 列表，并为每个 Component 展示一行信息 -->
             <tr>
               <!-- 添加点击事件，调用 JavaScript 函数切换详细信息的显示状态 -->
+              <td
+                class="collaspe"
+                th:attr="data-component-id=${component.id}"
+                th:id="${component.id}+'-a'"
+                onclick="showComponentInfo(this.getAttribute('data-component-id'))"></td>
               <td th:text="${component.name}">Component Name</td>
               <td th:text="${component.version}">Component Version</td>
               <td th:text="${component.language}">Component Language</td>
               <td th:text="${component.type}">Component Type</td>
-              <td>
+              <!-- <td>
                 <a
                   href="javaScript:;"
                   th:attr="data-component-id=${component.id}"
@@ -121,7 +127,7 @@
                   onclick="showComponentInfo(this.getAttribute('data-component-id'))">
                   查看详情
                 </a>
-              </td>
+              </td> -->
             </tr>
             <tr th:id="${component.id}" style="display: none">
               <td colspan="5">
@@ -329,10 +335,12 @@
       const a = document.getElementById(id + '-a')
       if (detail.style.display === 'none') {
         detail.style.display = 'table-row'
-        a.innerHTML = '收起'
+        // a.innerHTML = '收起'
+        a.className = 'collasped'
       } else {
         detail.style.display = 'none'
-        a.innerHTML = '查看详情'
+        // a.innerHTML = '查看详情'
+        a.className = 'collaspe'
       }
     }
   </script>
@@ -424,7 +432,7 @@
       align-items: center;
       width: 20%;
       height: 100%;
-      background: rgb(247, 245, 249);
+      background: rgb(250, 250, 250);
       padding: 12px;
       border-right: 1px solid #ebeef5;
     }
@@ -440,7 +448,7 @@
       height: 30px;
       display: flex;
       align-items: center;
-      background-color: rgb(238, 234, 244);
+      background-color: rgb(229, 229, 233);
       padding: 15px;
       padding-left: 30px;
     }
@@ -517,6 +525,49 @@
     }
     .component-table th {
       background-color: rgb(250, 250, 250);
+    }
+
+    .collaspe,
+    .collasped {
+      position: relative;
+      cursor: pointer;
+    }
+    .collaspe::before,
+    .collaspe::after {
+      position: absolute;
+      left: calc(50% - 5px);
+      top: calc(50% - 10px);
+      content: '';
+      border-top: 10px transparent dashed;
+      border-left: 10px #fff solid;
+      border-bottom: 10px transparent dashed;
+      border-right: 10px transparent dashed;
+    }
+    .collaspe:before {
+      border-left: 10px #9999a9 solid;
+    }
+    .collaspe:after {
+      left: calc(50% - 6px); /* 覆盖并错开1px */
+      border-left: 10px #fff solid;
+    }
+
+    .collasped::before,
+    .collasped::after {
+      position: absolute;
+      left: calc(50% - 10px);
+      top: calc(50% - 5px);
+      content: '';
+      border-top: 10px #fff solid;
+      border-left: 10px transparent dashed;
+      border-bottom: 10px transparent dashed;
+      border-right: 10px transparent dashed;
+    }
+    .collasped:before {
+      border-top: 10px #9999a9 solid;
+    }
+    .collasped:after {
+      top: calc(50% - 6px); /* 覆盖并错开1px */
+      border-top: 10px #fff solid;
     }
 
     .logo {

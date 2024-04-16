@@ -33,7 +33,7 @@ const draw = (compareDTOList) => {
       bottom: '5%',
       containLabel: true
     },
-    color: ['#ff7070', '#ffdc60', '#7ed3f4', '#5c7bd9'],
+    color: ['#fe8389', '#ffd732', '#00bedc', '#0087be'],
     dataset: {
       dimensions: ['name', '高危', '中危', '低危', '未知'],
       source: getData()
