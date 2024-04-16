@@ -201,7 +201,7 @@ public class ComponentServiceImpl implements ComponentService {
             jsComponentDO.setCreator(userDO.getUid());
             jsComponentDO.setState("RUNNING");
             jsComponentDao.save(jsComponentDO);
-        } else if (saveCloseComponentDTO.getLanguage().equals("go")) {
+        } else if (saveCloseComponentDTO.getLanguage().equals("golang")) {
             GoComponentDO goComponentDO = goService.componentAnalysis(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getType());
             GoComponentDO temp = goComponentDao.findByNameAndVersion(goComponentDO.getName(), goComponentDO.getVersion());
             if (temp != null) {
@@ -217,6 +217,7 @@ public class ComponentServiceImpl implements ComponentService {
                 throw new PlatformException(500, "该组件已存在");
             }
             pythonComponentDO.setCreator(userDO.getUid());
+            pythonComponentDO.setState("RUNNING");
             pythonComponentDao.save(pythonComponentDO);
         }
     }
