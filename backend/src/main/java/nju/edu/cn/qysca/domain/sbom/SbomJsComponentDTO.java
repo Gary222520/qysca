@@ -45,9 +45,6 @@ public class SbomJsComponentDTO extends SbomComponentDTO{
     @ApiModelProperty(value = "是否直接依赖", example = "true")
     private boolean directDependency;
 
-//    @ApiModelProperty(value = "哈希值列表")
-//    private List<HashDO> hashes = new ArrayList<>();
-
     @ApiModelProperty(value = "网站网址")
     private String website;
 
@@ -57,7 +54,7 @@ public class SbomJsComponentDTO extends SbomComponentDTO{
     @ApiModelProperty(value = "下载url")
     private String downloadUrl;
 
-    @ApiModelProperty(value = "版权声明", example = "[\"The Font Awesome Team, https://github.com/orgs/FortAwesome/people\"]")
+    @ApiModelProperty(value = "版权声明")
     private String[] copyrightStatements;
 
 }

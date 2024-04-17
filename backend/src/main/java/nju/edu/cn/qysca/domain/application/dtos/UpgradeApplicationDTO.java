@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @ApiModel("升级应用接口信息DTO")
 public class UpgradeApplicationDTO {
 
-
     @ApiModelProperty(value = "父应用名称", example = "parentApp")
     private String parentName;
 
