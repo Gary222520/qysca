@@ -11,6 +11,7 @@
         </div>
         <div v-if="data.currentStep === 1">
           <JavaBuilder
+            ref="javaBuilder"
             v-if="componentInfo.language === 'java'"
             @select="(builder) => selectBuilder(builder)"></JavaBuilder>
           <PythonBuilder
@@ -72,9 +73,25 @@
           <a-form :model="formState" ref="formRef" name="component" :label-col="{ span: 5 }" style="margin-top: 30px">
             <a-form-item label="组件名称" name="name" :rules="[{ required: true, message: '请输入组件名称' }]">
               <a-input v-model:value="formState.name" style="width: 300px" />
+              <a-tooltip v-if="componentInfo.language === 'java'">
+                <template #title>必须是特征文件的groupId:artifactId</template>
+                <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#00557c', marginLeft: '10px' }" />
+              </a-tooltip>
+              <a-tooltip v-if="componentInfo.language === 'javaScript'">
+                <template #title>必须是package.json的name</template>
+                <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#00557c', marginLeft: '10px' }" />
+              </a-tooltip>
             </a-form-item>
             <a-form-item label="版本编号" name="version" :rules="[{ required: true, message: '请输入版本编号' }]">
               <a-input v-model:value="formState.version" style="width: 300px" />
+              <a-tooltip v-if="componentInfo.language === 'java'">
+                <template #title>必须是特征文件的version</template>
+                <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#00557c', marginLeft: '10px' }" />
+              </a-tooltip>
+              <a-tooltip v-if="componentInfo.language === 'javaScript'">
+                <template #title>必须是package.json的version</template>
+                <ExclamationCircleOutlined :style="{ fontSize: '18px', color: '#00557c', marginLeft: '10px' }" />
+              </a-tooltip>
             </a-form-item>
             <a-form-item label="组件类型" name="type" :rules="[{ required: true, message: '请选择组件类型' }]">
               <a-select v-model:value="formState.type" style="width: 300px">
@@ -97,6 +114,7 @@
 
 <script setup>
 import { reactive, ref, defineExpose, defineEmits } from 'vue'
+import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
 import { AddComponent } from '@/api/frontend'
 import Upload from '@/components/Upload.vue'
 import Language from '@/components/Language.vue'
@@ -107,7 +125,10 @@ import JSBuilder from '@/components/builder/JSBuilder.vue'
 import { message } from 'ant-design-vue'
 
 const emit = defineEmits(['success'])
+
 const uploadRef = ref()
+const javaBuilder = ref()
+
 const data = reactive({
   open: false,
   currentStep: 0,
@@ -145,13 +166,16 @@ const selectLanguage = (language) => {
 }
 const selectBuilder = (builder) => {
   componentInfo.builder = builder
-  next()
+  if (builder !== 'tool') next()
 }
 const handleUpload = (uploadInfo) => {
   componentInfo.filePath = uploadInfo.filePath
 }
 const back = () => {
-  data.currentStep -= 1
+  if (componentInfo.language === 'java' && componentInfo.builder === 'tool') {
+    javaBuilder.value.back()
+    componentInfo.builder = ''
+  } else data.currentStep -= 1
 }
 const next = () => {
   data.currentStep += 1

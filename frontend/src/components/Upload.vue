@@ -16,6 +16,7 @@
           <div style="text-align: center">
             <CloudUploadOutlined :style="{ fontSize: '30px' }" />
             <div class="upload_text">{{ props.uploadText }}</div>
+            <div class="upload_text" v-if="props.tip">{{ props.tip }}</div>
           </div>
         </uploader-btn>
       </uploader-drop>
@@ -51,6 +52,10 @@ const props = defineProps({
   uploadText: {
     type: String,
     required: true
+  },
+  tip: {
+    type: String,
+    default: ''
   }
 })
 const options = {

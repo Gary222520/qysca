@@ -8,8 +8,8 @@
         </div>
         <div class="card_text">
           <ul style="margin-bottom: 0">
-            <li class="list_item">Java语言开发的软件</li>
-            <li class="list_item">maven或gradle管理的项目</li>
+            <li class="list_item">Java语言开发的应用</li>
+            <li class="list_item">maven或gradle管理的应用</li>
           </ul>
         </div>
       </a-card>
@@ -20,8 +20,8 @@
         </div>
         <div class="card_text">
           <ul>
-            <li class="list_item">Python语言开发的软件</li>
-            <li class="list_item">pip工具管理的项目</li>
+            <li class="list_item">Python语言开发的应用</li>
+            <li class="list_item">pip工具管理的应用</li>
           </ul>
         </div>
       </a-card>
@@ -34,8 +34,8 @@
         </div>
         <div class="card_text">
           <ul style="margin-bottom: 0">
-            <li class="list_item">Go语言开发的软件</li>
-            <li class="list_item">Go.mod工具管理的项目</li>
+            <li class="list_item">Go语言开发的应用</li>
+            <li class="list_item">go.mod工具管理的应用</li>
           </ul>
         </div>
       </a-card>
@@ -46,8 +46,8 @@
         </div>
         <div class="card_text">
           <ul style="margin-bottom: 0">
-            <li class="list_item">JavaScript语言开发的软件</li>
-            <li class="list_item">npm工具管理的NodeJS项目</li>
+            <li class="list_item">JavaScript语言开发的应用</li>
+            <li class="list_item">npm工具管理的NodeJS应用</li>
           </ul>
         </div>
       </a-card>

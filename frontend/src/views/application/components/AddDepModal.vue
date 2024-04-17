@@ -9,7 +9,10 @@
         <Language @select="(lang) => selectLanguage(lang)"></Language>
       </div>
       <div v-if="data.currentStep === 1">
-        <JavaBuilder v-if="projectInfo.language === 'java'" @select="(builder) => selectBuilder(builder)"></JavaBuilder>
+        <JavaBuilder
+          ref="javaBuilder"
+          v-if="projectInfo.language === 'java'"
+          @select="(builder) => selectBuilder(builder)"></JavaBuilder>
         <PythonBuilder
           v-if="projectInfo.language === 'python'"
           @select="(builder) => selectBuilder(builder)"></PythonBuilder>
@@ -21,16 +24,36 @@
       <div v-if="data.currentStep === 2">
         <div class="upload" v-if="projectInfo.language === 'java'">
           <div v-if="projectInfo.builder === 'maven'">
-            <Upload ref="uploadRef" :accept="'.xml'" :upload-text="'pom.xml'" @success="handleUpload"></Upload>
+            <Upload
+              ref="uploadRef"
+              :accept="'.xml'"
+              :upload-text="'pom.xml'"
+              :tip="'groupId:artifactId和version必须与应用的名称和版本一致'"
+              @success="handleUpload"></Upload>
           </div>
           <div v-if="projectInfo.builder === 'gradle'">
-            <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
+            <Upload
+              ref="uploadRef"
+              :accept="'.zip'"
+              :upload-text="'.zip文件'"
+              :tip="'groupId:artifactId和version必须与应用的名称和版本一致'"
+              @success="handleUpload"></Upload>
           </div>
           <div v-if="projectInfo.builder === 'zip'">
-            <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
+            <Upload
+              ref="uploadRef"
+              :accept="'.zip'"
+              :upload-text="'.zip文件'"
+              :tip="'groupId:artifactId和version必须与应用的名称和版本一致'"
+              @success="handleUpload"></Upload>
           </div>
           <div v-if="projectInfo.builder === 'jar'">
-            <Upload ref="uploadRef" :accept="'.jar'" :upload-text="'jar包'" @success="handleUpload"></Upload>
+            <Upload
+              ref="uploadRef"
+              :accept="'.jar'"
+              :upload-text="'jar包'"
+              :tip="'groupId:artifactId和version必须与应用的名称和版本一致'"
+              @success="handleUpload"></Upload>
           </div>
         </div>
         <div class="upload" v-if="projectInfo.language === 'python'">
@@ -54,10 +77,20 @@
         </div>
         <div class="upload" v-if="projectInfo.language === 'javaScript'">
           <div v-if="projectInfo.builder === 'package.json'">
-            <Upload ref="uploadRef" :accept="'.json'" :upload-text="'package.json'" @success="handleUpload"></Upload>
+            <Upload
+              ref="uploadRef"
+              :accept="'.json'"
+              :upload-text="'package.json'"
+              :tip="'package.json中的name和version必须与应用的名称和版本一致'"
+              @success="handleUpload"></Upload>
           </div>
           <div v-if="projectInfo.builder === 'zip'">
-            <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>
+            <Upload
+              ref="uploadRef"
+              :accept="'.zip'"
+              :upload-text="'.zip文件'"
+              :tip="'zip需要包含package.json，name和version必须与应用的名称和版本一致'"
+              @success="handleUpload"></Upload>
           </div>
         </div>
       </div>
@@ -82,7 +115,10 @@ import JSBuilder from '@/components/builder/JSBuilder.vue'
 import { message } from 'ant-design-vue'
 
 const emit = defineEmits(['success'])
+
 const uploadRef = ref()
+const javaBuilder = ref()
+
 const data = reactive({
   open: false,
   add: true,
@@ -116,14 +152,17 @@ const selectLanguage = (language) => {
 }
 const selectBuilder = (builder) => {
   projectInfo.builder = builder
-  next()
+  if (builder !== 'tool') next()
 }
 const handleUpload = (uploadInfo) => {
   projectInfo.filePath = uploadInfo.filePath
   projectInfo.scanner = uploadInfo.scanner
 }
 const back = () => {
-  data.currentStep -= 1
+  if (projectInfo.language === 'java' && projectInfo.builder === 'tool') {
+    javaBuilder.value.back()
+    projectInfo.builder = ''
+  } else data.currentStep -= 1
 }
 const next = () => {
   data.currentStep += 1

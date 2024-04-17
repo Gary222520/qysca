@@ -4,11 +4,11 @@
       <a-card class="card" hoverable @click="selectBuilder('go.mod')">
         <div class="card_title">
           <img class="img" src="@/assets/gomod.png" />
-          <div class="name">Go.mod</div>
+          <div class="name">go.mod</div>
         </div>
         <div class="card_text">
           <ul style="margin-bottom: 0">
-            <li class="list_item">Go Mod构建并管理的项目</li>
+            <li class="list_item">Go Mod构建并管理的应用</li>
             <li class="list_item">go.mod记录依赖信息</li>
           </ul>
         </div>
@@ -16,11 +16,11 @@
       <a-card class="card" hoverable @click="selectBuilder('zip')">
         <div class="card_title">
           <img class="img" src="@/assets/zip.png" />
-          <div class="name">Zip</div>
+          <div class="name">zip</div>
         </div>
         <div class="card_text">
           <ul style="margin-bottom: 0">
-            <li class="list_item">项目根目录的Zip压缩文件</li>
+            <li class="list_item">应用根目录的zip压缩文件</li>
             <li class="list_item">扫描zip中的依赖文件</li>
           </ul>
         </div>
