@@ -92,6 +92,11 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         return document.outerHtml();
     }
 
+
+    /**
+     * 递归地爬取目录url下所有组件
+     * @param directoryUrl 要爬取的目录
+     */
     @Override
     public void crawlDirectory(String directoryUrl) {
         // 如果该url已被访问过，跳过
