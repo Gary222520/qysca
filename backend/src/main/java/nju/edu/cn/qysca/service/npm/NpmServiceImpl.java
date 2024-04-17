@@ -382,7 +382,13 @@ public class NpmServiceImpl implements NpmService {
                     child.setType("opensource");
                     child.setLicenses(String.join(",", jsComponentDO.getLicenses()));
                     child.setVulnerabilities(String.join(",", jsComponentDO.getVulnerabilities()));
-                    jsComponentDao.save(jsComponentDO);
+                    try {
+                        jsComponentDao.save(jsComponentDO);
+                    } catch (Exception e){
+                        // save组件时出现错误，跳过该组件，仍继续执行
+                        e.printStackTrace();
+                    }
+
                 } else {
                     // 如果爬虫没有爬到则打印报错信息，仍继续执行
                     child.setType("opensource");

@@ -297,10 +297,11 @@ public class PythonServiceImpl implements PythonService {
             String result = null;
             if (needResult) {
                 StringBuilder outputStringBuilder = new StringBuilder();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    outputStringBuilder.append(line);
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))){
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        outputStringBuilder.append(line);
+                    }
                 }
                 result = outputStringBuilder.toString();
             }
@@ -376,7 +377,13 @@ public class PythonServiceImpl implements PythonService {
             // 如果知识库中没有则爬取
             componentDO = pythonSpiderService.crawlByNV(componentDependencyTreeDO.getName(), componentDependencyTreeDO.getVersion());
             if (componentDO != null) {
-                pythonComponentDao.save(componentDO);
+                try {
+                    pythonComponentDao.save(componentDO);
+                } catch (Exception e){
+                    // save组件时出现错误，跳过该组件，仍继续执行
+                    e.printStackTrace();
+                }
+
                 componentDependencyTreeDO.setLicenses(String.join(",", componentDO.getLicenses()));
                 componentDependencyTreeDO.setVulnerabilities(String.join(",", componentDO.getVulnerabilities()));
                 componentDependencyTreeDO.setType("opensource");
