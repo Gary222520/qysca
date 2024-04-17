@@ -2,6 +2,8 @@ package nju.edu.cn.qysca.service.spider;
 
 import nju.edu.cn.qysca.domain.component.dos.GoComponentDO;
 
+import java.util.List;
+
 public interface GoSpiderService {
     /**
      * 爬虫获取并填充Go组件信息
@@ -19,4 +21,11 @@ public interface GoSpiderService {
      * @param filePath 存储目录地址
      */
     void spiderContent(String downloadUrl, String filePath);
+
+    /**
+     * 获取一个包的所有版本
+     * @param name 包名
+     * @return 版本列表
+     */
+    List<String> getVersions(String name);
 }
