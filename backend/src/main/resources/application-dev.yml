@@ -37,6 +37,10 @@ spring:
   thymeleaf:
     cache: false
     prefix: "classpath:/templates/"
+logging:
+  file:
+    path: src/main/resources/log
+
 
 uploadFolder: src/main/resources/static/upload/
 tempPomFolder: src/main/resources/static/temp/pom/

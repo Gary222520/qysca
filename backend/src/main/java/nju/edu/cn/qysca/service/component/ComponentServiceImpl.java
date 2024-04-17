@@ -8,6 +8,7 @@ import nju.edu.cn.qysca.dao.application.AppDependencyTreeDao;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDO;
+import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.*;
@@ -30,8 +31,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ComponentServiceImpl implements ComponentService {
@@ -200,7 +201,7 @@ public class ComponentServiceImpl implements ComponentService {
             jsComponentDO.setCreator(userDO.getUid());
             jsComponentDO.setState("RUNNING");
             jsComponentDao.save(jsComponentDO);
-        } else if (saveCloseComponentDTO.getLanguage().equals("go")) {
+        } else if (saveCloseComponentDTO.getLanguage().equals("golang")) {
             GoComponentDO goComponentDO = goService.componentAnalysis(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getType());
             GoComponentDO temp = goComponentDao.findByNameAndVersion(goComponentDO.getName(), goComponentDO.getVersion());
             if (temp != null) {
@@ -216,6 +217,7 @@ public class ComponentServiceImpl implements ComponentService {
                 throw new PlatformException(500, "该组件已存在");
             }
             pythonComponentDO.setCreator(userDO.getUid());
+            pythonComponentDO.setState("RUNNING");
             pythonComponentDao.save(pythonComponentDO);
         }
     }
@@ -239,6 +241,8 @@ public class ComponentServiceImpl implements ComponentService {
                     //存储闭源组件平铺依赖信息
                     List<JavaDependencyTableDO> javaDependencyTableDOList = mavenService.dependencyTableAnalysis(closeJavaDependencyTreeDO);
                     javaDependencyTableDao.saveAll(javaDependencyTableDOList);
+                    javaComponentDO.setLicenses(getUniqueLicenseNames(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getLanguage()));
+                    javaComponentDO.setVulnerabilities(getUniqueVulnerabilityNames(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getLanguage()));
                     javaComponentDO.setState("SUCCESS");
                     javaComponentDao.save(javaComponentDO);
 
@@ -254,6 +258,8 @@ public class ComponentServiceImpl implements ComponentService {
                     jsDependencyTreeDao.save(closeJsDependencyTreeDO);
                     List<JsDependencyTableDO> jsDependencyTableDOList = npmService.dependencyTableAnalysis(closeJsDependencyTreeDO);
                     jsDependencyTableDao.saveAll(jsDependencyTableDOList);
+                    jsComponentDO.setLicenses(getUniqueLicenseNames(saveCloseComponentDTO.getName(), jsComponentDO.getVersion(), saveCloseComponentDTO.getLanguage()));
+                    jsComponentDO.setVulnerabilities(getUniqueVulnerabilityNames(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getLanguage()));
                     jsComponentDO.setState("SUCCESS");
                     jsComponentDao.save(jsComponentDO);
                 } catch (Exception e) {
@@ -268,6 +274,8 @@ public class ComponentServiceImpl implements ComponentService {
                     goDependencyTreeDao.save(closeGoDependencyTreeDO);
                     List<GoDependencyTableDO> goDependencyTableDOList = goService.dependencyTableAnalysis(closeGoDependencyTreeDO);
                     goDependencyTableDao.saveAll(goDependencyTableDOList);
+                    goComponentDO.setLicenses(getUniqueLicenseNames(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getLanguage()));
+                    goComponentDO.setVulnerabilities(getUniqueVulnerabilityNames(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getLanguage()));
                     goComponentDO.setState("SUCCESS");
                     goComponentDao.save(goComponentDO);
                 } catch (Exception e) {
@@ -282,6 +290,8 @@ public class ComponentServiceImpl implements ComponentService {
                     pythonDependencyTreeDao.save(pythonDependencyTreeDO);
                     List<PythonDependencyTableDO> pythonDependencyTableDOS = pythonService.dependencyTableAnalysis(pythonDependencyTreeDO);
                     pythonDependencyTableDao.saveAll(pythonDependencyTableDOS);
+                    pythonComponentDO.setLicenses(getUniqueLicenseNames(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getLanguage()));
+                    pythonComponentDO.setVulnerabilities(getUniqueVulnerabilityNames(saveCloseComponentDTO.getName(), saveCloseComponentDTO.getVersion(), saveCloseComponentDTO.getLanguage()));
                     pythonComponentDO.setState("SUCCESS");
                     pythonComponentDao.save(pythonComponentDO);
                 } catch (Exception e) {
@@ -428,7 +438,7 @@ public class ComponentServiceImpl implements ComponentService {
                 break;
         }
         File file = new File(updateCloseComponentDTO.getFilePath());
-        FolderUtil.deleteFolder(file.getParent());
+        FolderUtil.deleteFolder(file.getParentFile().getPath());
     }
 
 
@@ -702,5 +712,67 @@ public class ComponentServiceImpl implements ComponentService {
                 appComponentDao.save(appComponentDO);
                 break;
         }
+    }
+
+    /**
+     * 获取所有依赖的license
+     *
+     * @param name    组件名称
+     * @param version 组件版本
+     * @param language 组件语言
+     * @return String[] 所有依赖的license信息
+     */
+    private String[] getUniqueLicenseNames(String name, String version, String language) {
+        Set<String> uniqueLicenses = new HashSet<>();
+        switch (language) {
+            case "java":
+                List<JavaDependencyTableDO> javaDependencyTableDOS = javaDependencyTableDao.findAllByNameAndVersion(name, version);
+                uniqueLicenses = javaDependencyTableDOS.stream().map(JavaDependencyTableDO::getLicenses).filter(licenses -> !licenses.equals("-")).flatMap(licenses -> Arrays.stream(licenses.split(","))).map(String::trim).collect(Collectors.toSet());
+                break;
+            case "javaScript":
+                List<JsDependencyTableDO> jsDependencyTableDOS = jsDependencyTableDao.findAllByNameAndVersion(name, version);
+                uniqueLicenses = jsDependencyTableDOS.stream().map(JsDependencyTableDO::getLicenses).filter(licenses -> !licenses.equals("-")).flatMap(licenses -> Arrays.stream(licenses.split(","))).map(String::trim).collect(Collectors.toSet());
+                break;
+            case "python":
+                List<PythonDependencyTableDO> pythonDependencyTableDOS = pythonDependencyTableDao.findAllByNameAndVersion(name, version);
+                uniqueLicenses = pythonDependencyTableDOS.stream().map(PythonDependencyTableDO::getLicenses).filter(licenses -> !licenses.equals("-")).flatMap(licenses -> Arrays.stream(licenses.split(","))).map(String::trim).collect(Collectors.toSet());
+                break;
+            case "golang":
+                List<GoDependencyTableDO> goDependencyTableDOS = goDependencyTableDao.findAllByNameAndVersion(name, version);
+                uniqueLicenses = goDependencyTableDOS.stream().map(GoDependencyTableDO::getLicenses).filter(licenses -> !licenses.equals("-")).flatMap(licenses -> Arrays.stream(licenses.split(","))).map(String::trim).collect(Collectors.toSet());
+                break;
+        }
+        return uniqueLicenses.toArray(new String[0]);
+    }
+
+
+    /**
+     * 获取所有依赖的漏洞名称
+     * @param name 组件名称
+     * @param version 组件版本
+     * @param language 组件语言
+     * @return String[] 所有依赖的漏洞信息
+     */
+    private String[] getUniqueVulnerabilityNames(String name, String version, String language){
+        Set<String> uniqueVulnerabilities = new HashSet<>();
+        switch (language){
+            case "java":
+                List<JavaDependencyTableDO> javaDependencyTableDOS = javaDependencyTableDao.findAllByNameAndVersion(name, version);
+                uniqueVulnerabilities = javaDependencyTableDOS.stream().map(JavaDependencyTableDO::getVulnerabilities).filter(vulnerabilities -> !vulnerabilities.equals("-")).flatMap(vulnerabilities -> Arrays.stream(vulnerabilities.split(","))).map(String::trim).collect(Collectors.toSet());
+                break;
+            case "javaScript":
+                List<JsDependencyTableDO> jsDependencyTableDOS = jsDependencyTableDao.findAllByNameAndVersion(name, version);
+                uniqueVulnerabilities = jsDependencyTableDOS.stream().map(JsDependencyTableDO::getVulnerabilities).filter(vulnerabilities -> !vulnerabilities.equals("-")).flatMap(vulnerabilities -> Arrays.stream(vulnerabilities.split(","))).map(String::trim).collect(Collectors.toSet());
+                break;
+            case "python":
+                List<PythonDependencyTableDO> pythonDependencyTableDOS = pythonDependencyTableDao.findAllByNameAndVersion(name, version);
+                uniqueVulnerabilities = pythonDependencyTableDOS.stream().map(PythonDependencyTableDO::getVulnerabilities).filter(vulnerabilities -> !vulnerabilities.equals("-")).flatMap(vulnerabilities -> Arrays.stream(vulnerabilities.split(","))).map(String::trim).collect(Collectors.toSet());
+                break;
+            case "golang":
+                List<GoDependencyTableDO> goDependencyTableDOS = goDependencyTableDao.findAllByNameAndVersion(name, version);
+                uniqueVulnerabilities = goDependencyTableDOS.stream().map(GoDependencyTableDO::getVulnerabilities).filter(vulnerabilities -> !vulnerabilities.equals("-")).flatMap(vulnerabilities -> Arrays.stream(vulnerabilities.split(","))).map(String::trim).collect(Collectors.toSet());
+                break;
+        }
+        return uniqueVulnerabilities.toArray(new String[0]);
     }
 }

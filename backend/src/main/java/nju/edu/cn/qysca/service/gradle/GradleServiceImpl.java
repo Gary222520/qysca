@@ -50,13 +50,14 @@ public class GradleServiceImpl implements GradleService {
             // 启动命令
             Process process = processBuilder.start();
             // 直接将命令执行结果保存在lines中，没有生成中间文件
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                lines.add(line);
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    lines.add(line);
+                }
+                // 等待命令执行完毕
+                process.waitFor();
             }
-            // 等待命令执行完毕
-            process.waitFor();
         } catch (IOException | InterruptedException e) {
             throw new PlatformException(500, "gradle项目解析失败");
         }
@@ -203,10 +204,17 @@ public class GradleServiceImpl implements GradleService {
                         componentDependencyTreeDO.setType("opensource");
                         componentDependencyTreeDO.setLicenses(String.join(",", javaComponentDO.getLicenses()));
                         componentDependencyTreeDO.setVulnerabilities(String.join(",", javaComponentDO.getVulnerabilities()));
+                        try {
+                            javaComponentDao.save(javaComponentDO);
+                        } catch (Exception e) {
+                            // save组件时出现错误，跳过该组件，仍继续执行
+                            e.printStackTrace();
+                        }
                     } else {
                         componentDependencyTreeDO.setType("opensource");
-                        //如果爬虫没有爬到则扫描错误 通过抛出异常处理
-                        throw new PlatformException(500, "存在未识别的组件");
+                        // 如果爬虫没有爬到则打印报错信息，仍继续执行
+                        System.err.println("存在未识别的组件：" + groupId+":"+artifactId+":"+version);
+                        //throw new PlatformException(500, "存在未识别的组件");
                     }
                 } else {
                     componentDependencyTreeDO.setType(javaComponentDO.getType());

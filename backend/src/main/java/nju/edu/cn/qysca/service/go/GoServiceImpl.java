@@ -306,7 +306,12 @@ public class GoServiceImpl implements GoService {
                     if (null == goComponentDO) {
                         goComponentDO = goSpiderService.crawlByNV(child.getName(), child.getVersion());
                         if (goComponentDO != null){
-                            goComponentDao.save(goComponentDO);
+                            try {
+                                goComponentDao.save(goComponentDO);
+                            } catch (Exception e){
+                                // save组件时出现错误，跳过该组件，仍继续执行
+                                e.printStackTrace();
+                            }
                         } else {
                             // 如果爬虫没有爬到则打印报错信息，仍继续执行
                             System.err.println("存在未识别的组件：" + child.getName() + ":" + child.getVersion());
@@ -343,13 +348,14 @@ public class GoServiceImpl implements GoService {
             // 启动命令
             Process process = processBuilder.start();
             // 直接将命令执行结果保存在lines中，没有生成中间文件
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                lines.add(line);
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    lines.add(line);
+                }
+                // 等待命令执行完毕
+                int exitCode = process.waitFor();
             }
-            // 等待命令执行完毕
-            int exitCode = process.waitFor();
         } catch (IOException | InterruptedException e) {
             throw new PlatformException(500, "解析执行失败");
         }
