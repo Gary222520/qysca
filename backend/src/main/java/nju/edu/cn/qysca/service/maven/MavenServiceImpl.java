@@ -149,13 +149,11 @@ public class MavenServiceImpl implements MavenService {
             tempDir.mkdirs();
         }
 
-        try {
-            String tempPomPath = tempDir + FILE_SEPARATOR + "pom.xml";
+        String tempPomPath = tempDir + FILE_SEPARATOR + "pom.xml";
+        try (FileWriter fileWriter = new FileWriter(tempPomPath)){
             String xml = javaSpiderService.getPomStrByGav(groupId, artifactId, version);
-            FileWriter fileWriter = new FileWriter(tempPomPath);
             fileWriter.write(xml);
             fileWriter.flush();
-            fileWriter.close();
             JavaDependencyTreeDO javaDependencyTreeDO = dependencyTreeAnalysis(tempPomPath, "maven", "opensource");
             return javaDependencyTreeDO;
         } catch (Exception e) {
@@ -231,12 +229,13 @@ public class MavenServiceImpl implements MavenService {
             request.setGoals(Collections.singletonList("dependency:tree -DoutputFile=result -DoutputType=text"));
             invoker.execute(request);
             // 获得result结果的路径
-            FileInputStream fis = new FileInputStream(new File(resultPath));
-            Reader reader = new BufferedReader(new InputStreamReader(fis));
-            InputType type = InputType.TEXT;
-            Parser parser = type.newParser();
-            Node node = parser.parse(reader);
-            return node;
+            try( FileInputStream fis = new FileInputStream(new File(resultPath));
+                 Reader reader = new BufferedReader(new InputStreamReader(fis))) {
+                InputType type = InputType.TEXT;
+                Parser parser = type.newParser();
+                Node node = parser.parse(reader);
+                return node;
+            }
         } catch (Exception e) {
             throw new PlatformException(500, "pom文件解析失败");
         }
@@ -265,7 +264,13 @@ public class MavenServiceImpl implements MavenService {
             if (javaComponentDO == null) {
                 javaComponentDO = javaSpiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 if (javaComponentDO != null) {
-                    javaComponentDao.save(javaComponentDO);
+                    try {
+                        javaComponentDao.save(javaComponentDO);
+                    } catch (Exception e){
+                        // save组件时出现错误，跳过该组件，仍继续执行
+                        e.printStackTrace();
+                    }
+
                     javaComponentDependencyTreeDO.setLicenses(String.join(",", javaComponentDO.getLicenses()));
                     javaComponentDependencyTreeDO.setVulnerabilities(String.join(",", javaComponentDO.getVulnerabilities()));
                     javaComponentDependencyTreeDO.setType("opensource");
@@ -341,10 +346,9 @@ public class MavenServiceImpl implements MavenService {
      * @param pomPath POM文件路径
      */
     private Model pomToModel(String pomPath) {
-        try {
+        try (FileReader fileReader = new FileReader(pomPath)){
             MavenXpp3Reader reader = new MavenXpp3Reader();
-            Model model = reader.read(new FileReader(pomPath));
-            return model;
+            return reader.read(fileReader);
         } catch (Exception e) {
             throw new PlatformException(500, "解析pom文件失败");
         }

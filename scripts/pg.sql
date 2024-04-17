@@ -133,8 +133,8 @@ CREATE TABLE plt_go_dependency_table(
 	direct BOOLEAN NOT NULL,
 	type VARCHAR(255) NOT NULL,
 	language VARCHAR(255) NOT NULL,
-    licenses VARCHAR(255) NOT NULL,
-    vulnerabilities VARCHAR(255) NOT NULL
+    licenses TEXT NOT NULL,
+    vulnerabilities TEXT NOT NULL
 );
 
 DROP TABLE IF EXISTS plt_python_component;
@@ -179,8 +179,8 @@ CREATE TABLE plt_python_dependency_table(
     direct BOOLEAN NOT NULL,
     type VARCHAR(255) NOT NULL,
     language VARCHAR(255) NOT NULL,
-	licenses VARCHAR(255) NOT NULL,
-    vulnerabilities VARCHAR(255) NOT NULL
+	licenses TEXT NOT NULL,
+    vulnerabilities TEXT NOT NULL
 );
 
 DROP TABLE IF EXISTS plt_bu;
@@ -304,7 +304,7 @@ CREATE TABLE plt_java_dependency_table(
 	direct BOOLEAN NOT NULL,
 	type VARCHAR(255) NOT NULL,
 	language VARCHAR(255) NOT NULL,
-	licenses VARCHAR(255) NOT NULL,
+	licenses TEXT NOT NULL,
     vulnerabilities TEXT NOT NULL
 );
 
@@ -367,8 +367,8 @@ CREATE TABLE plt_js_dependency_table (
     direct BOOLEAN NOT NULL,
     type VARCHAR(255) NOT NULL,
     language VARCHAR(255) NOT NULL,
-	licenses VARCHAR(255) NOT NULL,
-    vulnerabilities VARCHAR(255) NOT NULL
+	licenses TEXT NOT NULL,
+    vulnerabilities TEXT NOT NULL
 );
 
 DROP TABLE IF EXISTS plt_app_component;
@@ -410,7 +410,7 @@ CREATE TABLE plt_app_dependency_table(
     direct BOOLEAN NOT NULL,
     type VARCHAR(255) NOT NULL,
     language VARCHAR(255) NOT NULL,
-	licenses VARCHAR(255) NOT NULL,
+	licenses TEXT NOT NULL,
     vulnerabilities TEXT NOT NULL
 );
 
