@@ -27,12 +27,7 @@
         <div v-if="data.currentStep === 2">
           <div class="upload" v-if="componentInfo.language === 'java'">
             <div v-if="componentInfo.builder === 'maven'">
-              <Upload
-                ref="uploadRef"
-                :accept="'.xml'"
-                :upload-text="'pom.xml'"
-                :tip="'groupId:artifactId和version必须与组件的名称和版本一致'"
-                @success="handleUpload"></Upload>
+              <Upload ref="uploadRef" :accept="'.xml'" :upload-text="'pom.xml'" @success="handleUpload"></Upload>
             </div>
             <div v-if="componentInfo.builder === 'gradle'">
               <Upload ref="uploadRef" :accept="'.zip'" :upload-text="'.zip文件'" @success="handleUpload"></Upload>

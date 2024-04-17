@@ -20,7 +20,7 @@
         </div>
         <div class="card_text">
           <ul style="margin-bottom: 0">
-            <li class="list_item">项目根目录的zip压缩文件</li>
+            <li class="list_item">应用根目录的zip压缩文件</li>
             <li class="list_item">扫描zip中的依赖文件</li>
           </ul>
         </div>
