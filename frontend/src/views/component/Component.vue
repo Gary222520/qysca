@@ -81,7 +81,7 @@
               <div class="action_icon" v-if="record.creator && record.creator !== '-'">
                 <a-tooltip>
                   <template #title>更新</template>
-                  <SyncOutlined :style="{ fontSize: '18px', color: '#0087be' }" @click="updateComponent(record)" />
+                  <SyncOutlined :style="{ fontSize: '18px', color: '#00557c' }" @click="updateComponent(record)" />
                 </a-tooltip>
               </div>
               <div class="action_icon" v-if="record.creator && record.creator !== '-'">
