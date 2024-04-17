@@ -50,13 +50,14 @@ public class GradleServiceImpl implements GradleService {
             // 启动命令
             Process process = processBuilder.start();
             // 直接将命令执行结果保存在lines中，没有生成中间文件
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                lines.add(line);
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    lines.add(line);
+                }
+                // 等待命令执行完毕
+                process.waitFor();
             }
-            // 等待命令执行完毕
-            process.waitFor();
         } catch (IOException | InterruptedException e) {
             throw new PlatformException(500, "gradle项目解析失败");
         }

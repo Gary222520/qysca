@@ -297,10 +297,11 @@ public class PythonServiceImpl implements PythonService {
             String result = null;
             if (needResult) {
                 StringBuilder outputStringBuilder = new StringBuilder();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    outputStringBuilder.append(line);
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))){
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        outputStringBuilder.append(line);
+                    }
                 }
                 result = outputStringBuilder.toString();
             }
