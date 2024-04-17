@@ -6,8 +6,6 @@ import nju.edu.cn.qysca.dao.component.PythonDependencyTableDao;
 import nju.edu.cn.qysca.dao.component.PythonDependencyTreeDao;
 import nju.edu.cn.qysca.dao.spider.PythonVisitedPackagesDao;
 import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
-import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTreeDO;
-import nju.edu.cn.qysca.domain.component.dos.PythonDependencyTableDO;
 import nju.edu.cn.qysca.domain.spider.dos.PythonVisitedPackagesDO;
 import nju.edu.cn.qysca.service.python.PythonService;
 import nju.edu.cn.qysca.service.spider.PythonSpiderService;
@@ -33,7 +31,7 @@ public class PythonSpiderRun {
     @Autowired
     private PythonService pythonService;
 
-    public void executePythonSpiderTask() {
+    public void executeSpiderTask() {
         List<PythonVisitedPackagesDO> packagesDOList = pythonVisitedPackagesDao.findAll();
         for (PythonVisitedPackagesDO pythonVisitedPackagesDO : packagesDOList) {
             synchronized (this) {
