@@ -2,6 +2,8 @@ package nju.edu.cn.qysca.service.spider;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import nju.edu.cn.qysca.domain.component.dos.GoComponentDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
@@ -15,10 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -144,5 +143,55 @@ public class GoSpiderServiceImpl implements GoSpiderService{
         } catch (Exception e){
             throw new PlatformException(500, "识别依赖信息失败");
         }
+    }
+
+    /**
+     * 获取一个包的所有版本
+     * @param name 包名
+     * @return 版本列表
+     */
+    @Override
+    public List<String> getVersions(String name) {
+        String url = GO_REPO_BASE_URL + name.substring(11) + "/tags";
+        String jsonString = getUrlContent(url);
+        if (jsonString == null || jsonString.isEmpty())
+            return null;
+        try {
+            List<String> versions = new ArrayList<>();
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(jsonString);
+            for (JsonNode child: jsonNode){
+                versions.add(child.get("name").asText());
+            }
+            return versions;
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * 爬取指定url的内容，以字符串返回
+     * @param urlString url地址
+     * @return String
+     */
+    private static String getUrlContent(String urlString) {
+        StringBuilder content = new StringBuilder();
+
+        try {
+            URL url = new URL(urlString);
+            URLConnection conn = url.openConnection();
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+            in.close();
+        } catch (Exception e) {
+            return null;
+        }
+
+        return content.toString();
     }
 }

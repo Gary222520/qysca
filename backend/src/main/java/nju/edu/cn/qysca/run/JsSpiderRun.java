@@ -21,7 +21,7 @@ public class JsSpiderRun {
     @Autowired
     private NpmVisitedPackagesDao npmVisitedPackagesDao;
 
-    public void executeJsSpiderTask(){
+    public void executeSpiderTask(){
         List<NpmVisitedPackagesDO> npmVisitedPackagesDOList = npmVisitedPackagesDao.findAll();
         Collections.shuffle(npmVisitedPackagesDOList);
         for (NpmVisitedPackagesDO npmVisitedPackagesDO : npmVisitedPackagesDOList) {
