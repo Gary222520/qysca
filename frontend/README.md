@@ -1,4 +1,4 @@
-# frontend
+# SCA frontend
 
 ## Project setup
 ```

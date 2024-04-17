@@ -47,7 +47,7 @@ public class AppComponentDO extends ComponentDO {
     private String version;
 
     @Column(name="language", nullable = false)
-    @ApiModelProperty(value = "语言", example = "[\"java\",]")
+    @ApiModelProperty(value = "语言")
     @Type(type = "string-array")
     private String[] language;
 
@@ -81,12 +81,12 @@ public class AppComponentDO extends ComponentDO {
     private List<DeveloperDO> developers = new ArrayList<>();
 
     @Column(name = "licenses")
-    @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")
+    @ApiModelProperty(value = "许可证")
     @Type(type = "string-array")
     private String[] licenses = {};
 
     @Column(name  = "vulnerabilities")
-    @ApiModelProperty(value = "漏洞", example = "[\"CVE-2020-1197\",]")
+    @ApiModelProperty(value = "漏洞")
     @Type(type= "string-array")
     private String[] vulnerabilities = {};
 

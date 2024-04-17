@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "删除应用的信息接口")
 public class DeleteApplicationDTO {
 
-
     @ApiModelProperty(value = "父应用名称", example = "app")
     private String parentName;
 

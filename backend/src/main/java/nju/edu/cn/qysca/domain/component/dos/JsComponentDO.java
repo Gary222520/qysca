@@ -54,7 +54,7 @@ public class JsComponentDO extends ComponentDO{
     private String sourceUrl;
 
     @Column(name = "copyright_statements")
-    @ApiModelProperty(value = "版权声明", example = "[\"The Font Awesome Team, https://github.com/orgs/FortAwesome/people\"]")
+    @ApiModelProperty(value = "版权声明")
     @Type(type = "string-array")
     private String[] copyrightStatements;
 
@@ -63,12 +63,12 @@ public class JsComponentDO extends ComponentDO{
     private String pUrl;
 
     @Column(name = "licenses")
-    @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")
+    @ApiModelProperty(value = "许可证")
     @Type(type = "string-array")
     private String[] licenses = {};
 
     @Column(name  = "vulnerabilities")
-    @ApiModelProperty(value = "漏洞", example = "[\"CVE-2020-1197\",]")
+    @ApiModelProperty(value = "漏洞")
     @Type(type= "string-array")
     private String[] vulnerabilities = {};
 

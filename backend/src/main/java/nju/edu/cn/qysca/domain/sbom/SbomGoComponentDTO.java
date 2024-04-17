@@ -43,9 +43,6 @@ public class SbomGoComponentDTO extends SbomComponentDTO{
     @ApiModelProperty(value = "是否直接依赖", example = "true")
     private boolean directDependency;
 
-//    @ApiModelProperty(value = "哈希值列表")
-//    private List<HashDO> hashes = new ArrayList<>();
-
     @ApiModelProperty(value = "网站网址")
     private String website;
 
