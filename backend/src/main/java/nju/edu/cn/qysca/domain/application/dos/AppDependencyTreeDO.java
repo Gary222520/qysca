@@ -36,7 +36,7 @@ public class AppDependencyTreeDO extends DependencyTreeDO {
     private String version;
 
     @Column(name = "tree")
-    @ApiModelProperty(value = "依赖树", example = "{\"name\":\"spring-boot-starter\",\"version\":\"2.5.15\",\"children\":[{\"name\":\"spring-boot\",\"version\":\"2.5.15\",\"children\":[{\"name\":\"spring-core\",\"version\":\"5.3.20\",\"children\":[]}")
+    @ApiModelProperty(value = "依赖树")
     @Type(type="jsonb")
     private AppComponentDependencyTreeDO tree;
 }

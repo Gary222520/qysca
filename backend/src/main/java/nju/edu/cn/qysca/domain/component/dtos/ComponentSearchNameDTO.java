@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "组件名称模糊查询接口")
 public class ComponentSearchNameDTO {
 
-
     @ApiModelProperty(value = "组件名称", example = "qysca-core")
     private String name;
 

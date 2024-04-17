@@ -22,7 +22,7 @@ public class LicenseCompareDTO implements Comparable<LicenseCompareDTO>{
     @ApiModelProperty(value = "应用版本", example = "1.0.0")
     private String version;
 
-    @ApiModelProperty(value = "许可证数量", example = "{\"high\": 10, \"medium:\" 10, \"low\": 20, \"unknown\": 50}")
+    @ApiModelProperty(value = "许可证数量")
     private Map<String, Integer> map = new HashMap<>();
 
     public int getTotalLicenses() {
