@@ -81,7 +81,7 @@
               <div class="action_icon" v-if="record.creator && record.creator !== '-'">
                 <a-tooltip>
                   <template #title>更新</template>
-                  <SyncOutlined :style="{ fontSize: '18px', color: '#0087be' }" @click="updateComponent(record)" />
+                  <SyncOutlined :style="{ fontSize: '18px', color: '#00557c' }" @click="updateComponent(record)" />
                 </a-tooltip>
               </div>
               <div class="action_icon" v-if="record.creator && record.creator !== '-'">
@@ -167,7 +167,7 @@ const data = reactive({
     { title: '版本', dataIndex: 'version', key: 'version' },
     { title: '语言', dataIndex: 'language', key: 'language' },
     { title: '类型', dataIndex: 'type', key: 'type' },
-    { title: '操作', dataIndex: 'action', key: 'action', width: 120 }
+    { title: '操作', dataIndex: 'action', key: 'action', width: 150 }
   ]
 })
 const pagination = reactive({

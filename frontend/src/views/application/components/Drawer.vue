@@ -162,10 +162,10 @@ const data = reactive({
 })
 const hasChildren = computed(() => {
   if (data.detail.childApplication.length > 0) return true
-  if (data.detail.childComponent?.java) return true
-  if (data.detail.childComponent?.python) return true
-  if (data.detail.childComponent?.go) return true
-  if (data.detail.childComponent?.javaScript) return true
+  if (data.detail.childComponent?.java?.length > 0) return true
+  if (data.detail.childComponent?.python?.length > 0) return true
+  if (data.detail.childComponent?.go?.length > 0) return true
+  if (data.detail.childComponent?.javaScript?.length > 0) return true
   return false
 })
 const table = reactive({
