@@ -62,7 +62,13 @@ public class StatisticsServiceImpl implements StatisticsService {
         UserDO userDO = ContextUtil.getUserDO();
         String bid = userRoleDao.findUserBu(userDO.getUid());
         Integer result = 0;
-        List<ApplicationDO> applicationDOS = applicationDao.getApplicationList(bid);
+        List<ApplicationDO> applicationDOS = null;
+        //applicationDOS可能为空
+        try {
+            applicationDOS = applicationDao.getApplicationList(bid);
+        }catch (Exception e) {
+            applicationDOS = new ArrayList<>();
+        }
         for (ApplicationDO applicationDO : applicationDOS) {
             if (applicationDO.getChildApplication().length > 0 || applicationDO.getChildComponent().size() > 0) {
                 result += applicationDO.getChildApplication().length;
@@ -96,7 +102,12 @@ public class StatisticsServiceImpl implements StatisticsService {
         }};
         List<VulnerabilityCompareDTO> vulnerabilityCompareDTOS = new ArrayList<>();
         // 组件的漏洞信息在增删的时候已经处理
-        List<ApplicationDO> applicationDOS = applicationDao.getApplicationList(bid);
+        List<ApplicationDO> applicationDOS = null;
+        try {
+            applicationDOS = applicationDao.getApplicationList(bid);
+        }catch (Exception e) {
+            applicationDOS = new ArrayList<>();
+        }
         for (ApplicationDO applicationDO : applicationDOS) {
             VulnerabilityCompareDTO vulnerabilityCompareDTO = new VulnerabilityCompareDTO();
             vulnerabilityCompareDTO.setName(applicationDO.getName());
@@ -167,7 +178,12 @@ public class StatisticsServiceImpl implements StatisticsService {
         Set<String> set = new HashSet<>();
         Map<String, Integer> map = new HashMap<>();
         List<LicenseCompareDTO> licenseCompareDTOS = new ArrayList<>();
-        List<ApplicationDO> applicationDOS = applicationDao.getApplicationList(bid);
+        List<ApplicationDO> applicationDOS = null;
+        try {
+            applicationDOS = applicationDao.getApplicationList(bid);
+        } catch (Exception e){
+            applicationDOS = new ArrayList<>();
+        }
         for (ApplicationDO applicationDO : applicationDOS) {
             LicenseCompareDTO licenseCompareDTO = new LicenseCompareDTO();
             licenseCompareDTO.setName(applicationDO.getName());
