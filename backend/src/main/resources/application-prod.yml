@@ -5,7 +5,7 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
-    url: jdbc:postgresql://172.29.7.168:35432/qysca
+    url: jdbc:postgresql://124.71.180.24:5432/qysca
     username: qysca
     password: qysca
     show-sql: false
@@ -19,8 +19,8 @@ spring:
         temp:
           use-jdbc-metadata-defaults: false
   redis:
-    host: 172.29.7.168
-    port: 37379
+    host: 124.71.180.24
+    port: 6379
     database: 0
     password:
     timeout: 10s
@@ -39,16 +39,16 @@ spring:
     prefix: "classpath:/templates/"
 logging:
   file:
-    path: src/main/resources/log
+    path: /root/tyhj/qysca/logs
 
-uploadFolder: src/main/resources/static/upload/
-tempPomFolder: src/main/resources/static/temp/pom/
-tempNpmFolder: src/main/resources/static/temp/npm/
-tempGoFolder: src/main/resources/static/temp/go/
-tempPythonFolder: src/main/resources/static/temp/python/
+uploadFolder: /root/tyhj/qysca/upload/
+tempPomFolder: /root/tyhj/qysca/temp/pom/
+tempNpmFolder: /root/tyhj/qysca/temp/npm/
+tempGoFolder: /root/tyhj/qysca/temp/go/
+tempPythonFolder: /root/tyhj/qysca/temp/python/
 targetUrlsPath: src/main/resources/static/target_urls.txt
-tempSBOMPath: src/main/resources/static/temp/sbom/
-tempReportFolder: src/main/resources/static/temp/report/
+tempSBOMPath: /root/tyhj/qysca/temp/sbom/
+tempReportFolder: /root/tyhj/qysca/temp/report/
 MAVEN_REPO_BASE_URL: https://repo1.maven.org/maven2/
 PYPI_REPO_BASE_URL: https://pypi.org/pypi/
 NPM_REPO_BASE_URL: https://registry.npmjs.org/
