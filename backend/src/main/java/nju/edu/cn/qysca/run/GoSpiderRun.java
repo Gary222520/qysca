@@ -80,6 +80,9 @@ public class GoSpiderRun {
 
             }
         }
+
+        // 当1000个爬完后，进行下一步
+        executeSpiderTaskWithDependency();
     }
 
     /**
@@ -91,25 +94,27 @@ public class GoSpiderRun {
             finished = true;
             List<GoComponentDO> goComponentDOList = goComponentDao.findAll();
             for (GoComponentDO goComponentDO : goComponentDOList) {
-                String name = goComponentDO.getName();
-                String version = goComponentDO.getVersion();
-                GoDependencyTreeDO goDependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(name, version);
-                if (null == goDependencyTreeDO) {
-                    // 只要有组件没有生成依赖树，则不停止该过程
-                    finished = false;
-                    // 生成组件依赖树和依赖表
-                    try {
-                        goDependencyTreeDO = goService.spiderDependency(name, version);
-                    } catch (Exception e){
-                        goDependencyTreeDO = null;
-                        log.error("组件生成依赖树失败: " + name + ":" + version);
-                    }
+                synchronized (this) {
+                    String name = goComponentDO.getName();
+                    String version = goComponentDO.getVersion();
+                    GoDependencyTreeDO goDependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(name, version);
+                    if (null == goDependencyTreeDO) {
+                        // 只要有组件没有生成依赖树，则不停止该过程
+                        finished = false;
+                        // 生成组件依赖树和依赖表
+                        try {
+                            goDependencyTreeDO = goService.spiderDependency(name, version);
+                        } catch (Exception e) {
+                            goDependencyTreeDO = null;
+                            log.error("组件生成依赖树失败: " + name + ":" + version);
+                        }
 
-                    if (null != goDependencyTreeDO) {
-                        log.info("组件生成依赖树和依赖表: " + name + ":" + version);
-                        List<GoDependencyTableDO> goDependencyTableDOList = goService.dependencyTableAnalysis(goDependencyTreeDO);
-                        goDependencyTreeDao.save(goDependencyTreeDO);
-                        goDependencyTableDao.saveAll(goDependencyTableDOList);
+                        if (null != goDependencyTreeDO) {
+                            log.info("组件生成依赖树和依赖表: " + name + ":" + version);
+                            List<GoDependencyTableDO> goDependencyTableDOList = goService.dependencyTableAnalysis(goDependencyTreeDO);
+                            goDependencyTreeDao.save(goDependencyTreeDO);
+                            goDependencyTableDao.saveAll(goDependencyTableDOList);
+                        }
                     }
                 }
             }
