@@ -28,9 +28,9 @@ public class GradleServiceImpl implements GradleService {
 
     @Autowired
     private JavaSpiderService javaSpiderService;
-
     @Autowired
     private JavaComponentDao javaComponentDao;
+    private final String FILE_SEPARATOR = "/";
 
     /**
      * 调用./gradlew dependencies命令，并返回命令结果
@@ -38,25 +38,36 @@ public class GradleServiceImpl implements GradleService {
      * @param filePath 文件路径，用以设置工作目录
      * @return List<String> 命令结果
      */
-    private static List<String> runGradleCommand(String filePath) {
+    private List<String> runGradleCommand(String filePath) {
         List<String> lines = new ArrayList<>();
         try {
             File file = new File(filePath);
-            // 创建命令 ./gradlew dependencies
+            // 执行命令 chmod +x ..../gradlew 给该文件添加可执行权限
+            List<String> command1 = List.of("chmod", "+x", file.getAbsolutePath()+FILE_SEPARATOR +"gradlew");
+            ProcessBuilder processBuilder1 = new ProcessBuilder(command1);
+            processBuilder1.directory(file);
+            Process process1 = processBuilder1.start();
+            process1.waitFor();
+
+            // 创建命令 ..../gradlew dependencies
             // windows系统执行gradlew.bat，linux还是gradlew
-            List<String> command = List.of(file.getAbsolutePath() + "\\gradlew.bat", "dependencies");
-            ProcessBuilder processBuilder = new ProcessBuilder(command);
-            processBuilder.directory(file);
-            // 启动命令
-            Process process = processBuilder.start();
+            List<String> command2 = List.of(file.getAbsolutePath()+FILE_SEPARATOR +"gradlew", "dependencies");
+            ProcessBuilder processBuilder2 = new ProcessBuilder(command2);
+            processBuilder2.directory(file);
+            Process process2 = processBuilder2.start();
             // 直接将命令执行结果保存在lines中，没有生成中间文件
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process2.getInputStream()));
+                BufferedReader errReader = new BufferedReader(new InputStreamReader(process2.getErrorStream()))) {
                 String line;
+                while ((line = errReader.readLine()) != null){
+                    // 打印错误信息
+                    System.err.println(line);
+                }
                 while ((line = reader.readLine()) != null) {
                     lines.add(line);
                 }
                 // 等待命令执行完毕
-                process.waitFor();
+                process2.waitFor();
             }
         } catch (IOException | InterruptedException e) {
             throw new PlatformException(500, "gradle项目解析失败");
