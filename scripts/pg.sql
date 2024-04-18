@@ -387,6 +387,7 @@ CREATE TABLE plt_app_component(
     licenses TEXT[],
     vulnerabilities TEXT[],
     creator VARCHAR(32),
+    state VARCHAR(32) NOT NULL,
     UNIQUE(name, version)
 );
 
