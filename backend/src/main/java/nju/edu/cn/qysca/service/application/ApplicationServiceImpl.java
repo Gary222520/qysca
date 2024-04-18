@@ -357,6 +357,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             File file = new File(saveApplicationDependencyDTO.getFilePath());
             redisTemplate.delete(file.getParentFile().getName());
             FolderUtil.deleteFolder(new File(saveApplicationDependencyDTO.getFilePath()).getParentFile().getPath());
+            throw new PlatformException(500, "识别组件依赖关系失败");
         }
     }
 
@@ -381,8 +382,6 @@ public class ApplicationServiceImpl implements ApplicationService {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String timeStamp = dateFormat.format(now);
         newApplicationDO.setTime(timeStamp);
-        //升级后的项目为CREATED状态
-        newApplicationDO.setState("CREATED");
         newApplicationDO.setLock(false);
         newApplicationDO.setRelease(false);
         applicationDao.save(newApplicationDO);
@@ -402,14 +401,28 @@ public class ApplicationServiceImpl implements ApplicationService {
             newUserRoleDOS.add(newUserRoleDO);
         }
         userRoleDao.saveAll(newUserRoleDOS);
-        //新增新应用关系 删除旧应用关系
-        if (!StringUtils.isEmpty(upgradeApplicationDTO.getParentName()) && !StringUtils.isEmpty(upgradeApplicationDTO.getParentVersion())) {
-            ApplicationDO parentApplicationDO = applicationDao.findByNameAndVersion(upgradeApplicationDTO.getParentName(), upgradeApplicationDTO.getParentVersion());
-            ArrayList<String> temp = new ArrayList<>(Arrays.asList(parentApplicationDO.getChildApplication()));
-            temp.remove(oldApplicationDO.getId());
-            temp.add(newApplicationDO.getId());
-            parentApplicationDO.setChildApplication(temp.toArray(new String[temp.size()]));
-            applicationDao.save(parentApplicationDO);
+        //copy 依赖表
+        AppDependencyTreeDO oldAppDependencyTreeDO = appDependencyTreeDao.findByNameAndVersion(oldApplicationDO.getName(), oldApplicationDO.getVersion());
+        if(oldAppDependencyTreeDO != null) {
+            AppDependencyTreeDO newAppDependencyTreeDO = new AppDependencyTreeDO();
+            newAppDependencyTreeDO.setName(newApplicationDO.getName());
+            newAppDependencyTreeDO.setVersion(newApplicationDO.getVersion());
+            AppComponentDependencyTreeDO oldAppComponentDependencyTreeDO = oldAppDependencyTreeDO.getTree();
+            AppComponentDependencyTreeDO newAppComponentDependencyTreeDO = new AppComponentDependencyTreeDO();
+            BeanUtils.copyProperties(oldAppComponentDependencyTreeDO, newAppComponentDependencyTreeDO);
+            newAppComponentDependencyTreeDO.setVersion(newApplicationDO.getVersion());
+            newAppDependencyTreeDO.setTree(newAppComponentDependencyTreeDO);
+            appDependencyTreeDao.save(newAppDependencyTreeDO);
+            List<AppDependencyTableDO> oldAppDependencyTableDOS = appDependencyTableDao.findAllByNameAndVersion(oldApplicationDO.getName(), oldApplicationDO.getVersion());
+            List<AppDependencyTableDO> newAppDependencyTableDOS = new ArrayList<>();
+            for (AppDependencyTableDO oldAppDependencyTableDO : oldAppDependencyTableDOS) {
+                AppDependencyTableDO newAppDependencyTableDO = new AppDependencyTableDO();
+                BeanUtils.copyProperties(oldAppDependencyTableDO, newAppDependencyTableDO);
+                newAppDependencyTableDO.setId(null);
+                newAppDependencyTableDO.setVersion(newApplicationDO.getVersion());
+                newAppDependencyTableDOS.add(newAppDependencyTableDO);
+            }
+            appDependencyTableDao.saveAll(newAppDependencyTableDOS);
         }
         return true;
     }
