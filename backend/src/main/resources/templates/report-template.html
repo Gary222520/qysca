@@ -103,7 +103,6 @@
               <th>版本</th>
               <th>语言</th>
               <th>类型</th>
-              <!-- <th style="width: 80px">操作</th> -->
             </tr>
           </thead>
           <tbody th:each="component : ${components}">
@@ -119,15 +118,6 @@
               <td th:text="${component.version}">Component Version</td>
               <td th:text="${component.language}">Component Language</td>
               <td th:text="${component.type}">Component Type</td>
-              <!-- <td>
-                <a
-                  href="javaScript:;"
-                  th:attr="data-component-id=${component.id}"
-                  th:id="${component.id}+'-a'"
-                  onclick="showComponentInfo(this.getAttribute('data-component-id'))">
-                  查看详情
-                </a>
-              </td> -->
             </tr>
             <tr th:id="${component.id}" style="display: none">
               <td colspan="5">
@@ -208,6 +198,7 @@
         <table class="component-table">
           <thead>
             <tr>
+              <th style="width: 25px"></th>
               <th>许可证</th>
               <th>名称</th>
               <th>风险等级</th>
@@ -217,8 +208,13 @@
               <th>GPL兼容性</th>
             </tr>
           </thead>
-          <tbody>
-            <tr th:each="license : ${licenses}">
+          <tbody th:each="license : ${licenses}">
+            <tr>
+              <td
+                class="collaspe"
+                th:attr="data-license-id=${license.id}"
+                th:id="${license.id}+'-a'"
+                onclick="showLicenseInfo(this.getAttribute('data-license-id'))"></td>
               <td th:text="${license.name}">MPL-2.0</td>
               <td th:text="${license.fullName}">Mozilla Public License 2.0</td>
               <td th:text="${license.riskLevel}">中危</td>
@@ -237,6 +233,38 @@
               <td>
                 <span th:if="${license.gplCompatibility}">√</span>
                 <span th:if="not ${license.gplCompatibility}">×</span>
+              </td>
+            </tr>
+            <tr th:id="${license.id}" style="display: none">
+              <td colspan="8">
+                <p>
+                  <strong>必须义务：</strong>
+                  <span th:each="item, index : ${license.obligationsRequired}">
+                    <br />
+                    <span th:text="${index.index+1}+'、'+${item.title}+'：'+${item.content}">MPL-2.0</span>
+                  </span>
+                </p>
+                <p>
+                  <strong>无需义务：</strong>
+                  <span th:each="item, index : ${license.obligationsNotRequired}">
+                    <br />
+                    <span th:text="${index.index+1}+'、'+${item.title}+'：'+${item.content}">MPL-2.0</span>
+                  </span>
+                </p>
+                <p>
+                  <strong>允许权利：</strong>
+                  <span th:each="item, index : ${license.rightsAllowed}">
+                    <br />
+                    <span th:text="${index.index+1}+'、'+${item.title}+'：'+${item.content}">MPL-2.0</span>
+                  </span>
+                </p>
+                <p>
+                  <strong>禁止权利：</strong>
+                  <span th:each="item, index : ${license.rightsProhibited}">
+                    <br />
+                    <span th:text="${index.index+1}+'、'+${item.title}+'：'+${item.content}">MPL-2.0</span>
+                  </span>
+                </p>
               </td>
             </tr>
           </tbody>
@@ -331,6 +359,19 @@
     }
     // JavaScript 函数，用于切换详细信息的显示状态
     function showComponentInfo(id) {
+      const detail = document.getElementById(id)
+      const a = document.getElementById(id + '-a')
+      if (detail.style.display === 'none') {
+        detail.style.display = 'table-row'
+        // a.innerHTML = '收起'
+        a.className = 'collasped'
+      } else {
+        detail.style.display = 'none'
+        // a.innerHTML = '查看详情'
+        a.className = 'collaspe'
+      }
+    }
+    function showLicenseInfo(id) {
       const detail = document.getElementById(id)
       const a = document.getElementById(id + '-a')
       if (detail.style.display === 'none') {
