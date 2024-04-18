@@ -15,8 +15,6 @@ import java.util.List;
 @NoArgsConstructor
 @ApiModel(description = "组件依赖树DO")
 public class JavaComponentDependencyTreeDO {
-
-
     @ApiModelProperty(value = "名称", example = "commons-lang")
     private String name;
 
