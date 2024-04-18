@@ -47,7 +47,7 @@
         <div class="card_text">
           <ul style="margin-bottom: 0">
             <li class="list_item">JavaScript语言开发的应用</li>
-            <li class="list_item">npm工具管理的NodeJS应用</li>
+            <li class="list_item">npm工具管理的Node.js应用</li>
           </ul>
         </div>
       </a-card>
