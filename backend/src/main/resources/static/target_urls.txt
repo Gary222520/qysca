@@ -35,3 +35,4 @@ https://repo1.maven.org/maven2/javax/
 https://repo1.maven.org/maven2/org/apache/
 https://repo1.maven.org/maven2/org/
 https://repo1.maven.org/maven2/com/
+https://repo1.maven.org/maven2/
