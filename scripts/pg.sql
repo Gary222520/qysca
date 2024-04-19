@@ -204,7 +204,7 @@ CREATE TABLE plt_application(
 	name VARCHAR(255) NOT NULL,
 	version VARCHAR(255) NOT NULL,
 	description TEXT,
-	language VARCHAR(255),
+	language VARCHAR[],
 	type VARCHAR(255) NOT NULL,
 	builder VARCHAR(255),
 	scanner VARCHAR(255),
