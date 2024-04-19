@@ -56,6 +56,7 @@ public class GoSpiderRun {
                             if (goComponentDao.findByNameAndVersion(name, version) != null) {
                                 continue;
                             }
+                            log.info("开始爬取: " + "go组件 " + name + ":" + version);
                             GoComponentDO goComponentDO = goSpiderService.crawlByNV(name, version);
                             if (goComponentDO == null) {
                                 isSuccess = false;
@@ -64,8 +65,7 @@ public class GoSpiderRun {
                             try {
                                 goComponentDao.save(goComponentDO);
                             } catch (Exception e){
-                                log.error("保存组件时出错：" + goComponentDO.getName() + " " + goComponentDO.getVersion());
-                                log.error(e.getMessage());
+                                log.error("go组件存入数据库失败：" + goComponentDO.toString());
                                 e.printStackTrace();
                             }
                         }

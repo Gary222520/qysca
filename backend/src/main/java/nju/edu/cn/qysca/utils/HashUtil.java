@@ -1,6 +1,7 @@
 package nju.edu.cn.qysca.utils;
 
 
+import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.domain.component.dos.HashDO;
 
 import java.io.*;
@@ -11,6 +12,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class HashUtil {
 
     /**
@@ -37,7 +39,7 @@ public class HashUtil {
         }
 
         if (file == null) {
-            System.err.println("无效的jar包url: " + jarUrl);
+            log.error("无效的jar包url: " + jarUrl);
         }
 
         // 调用哈希算法
@@ -71,7 +73,7 @@ public class HashUtil {
             }
             return bytesToHex(digest.digest());
         } catch (NoSuchAlgorithmException e) {
-            System.err.println("不存在该哈希算法: " + alg);
+            log.error("不存在该哈希算法: " + alg);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
