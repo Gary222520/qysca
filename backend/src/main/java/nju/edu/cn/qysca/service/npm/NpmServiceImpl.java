@@ -1,6 +1,7 @@
 package nju.edu.cn.qysca.service.npm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.dao.component.JsComponentDao;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
@@ -27,6 +28,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 @Service
+@Slf4j
 public class NpmServiceImpl implements NpmService {
 
     private final String FILE_SEPARATOR = "/";
@@ -386,13 +388,14 @@ public class NpmServiceImpl implements NpmService {
                         jsComponentDao.save(jsComponentDO);
                     } catch (Exception e){
                         // save组件时出现错误，跳过该组件，仍继续执行
+                        log.error("组件存入数据库失败：" + jsComponentDO.toString());
                         e.printStackTrace();
                     }
 
                 } else {
                     // 如果爬虫没有爬到则打印报错信息，仍继续执行
                     child.setType("opensource");
-                    System.err.println("存在未识别的组件：" + entry.getKey() + ":" + entry.getValue().getVersion());
+                    log.error("存在未识别的组件：" + entry.getKey() + ":" + entry.getValue().getVersion());
                 }
             } else {
                 child.setLicenses(String.join(",", jsComponentDO.getLicenses()));

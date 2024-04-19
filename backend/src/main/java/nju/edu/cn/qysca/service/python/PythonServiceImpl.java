@@ -3,6 +3,7 @@ package nju.edu.cn.qysca.service.python;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.dao.component.PythonComponentDao;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
@@ -29,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
+@Slf4j
 public class PythonServiceImpl implements PythonService {
 
     @Value("${tempPythonFolder}")
@@ -103,22 +105,22 @@ public class PythonServiceImpl implements PythonService {
             // 4. 执行setup.py，里面要求了一些依赖
             // 5. pipdeptree --json-tree获取json形式的依赖树
             String[] command1 = {"python3", "-m", "venv", "venv"};
-            System.out.println(executeCommand(command1, project, true));
+            log.info(executeCommand(command1, project, true));
 
             String[] command2 = {project.getPath()+FILE_SEPARATOR+"venv"+FILE_SEPARATOR+"bin"+FILE_SEPARATOR+"python", "-m", "pip", "install", "pipdeptree"};
-            System.out.println(executeCommand(command2, null, true));
+            log.info(executeCommand(command2, null, true));
 
             List<String> requirementTxtList = findRequirementFiles(project);
             if (builder.equals("zip") || builder.equals("tar.gz") || builder.equals("txt")) {
                 for (String requirementsTxt : requirementTxtList) {
                     String[] command3 = {project.getPath()+FILE_SEPARATOR+"venv"+FILE_SEPARATOR+"bin"+FILE_SEPARATOR+"python", "-m", "pip", "install", "-r", requirementsTxt};
-                    System.out.println(executeCommand(command3, null, true));
+                    log.info(executeCommand(command3, null, true));
                 }
             }
 
             String[] command4 = {project.getPath()+FILE_SEPARATOR+"venv"+FILE_SEPARATOR+"bin"+FILE_SEPARATOR+"python", "setup.py", "develop"};
             if (builder.equals("zip") || builder.equals("tar.gz")) {
-                System.out.println(executeCommand(command4, project, true));
+                log.info(executeCommand(command4, project, true));
             }
 
             String[] command5 = {project.getPath()+FILE_SEPARATOR+"venv"+FILE_SEPARATOR+"bin"+FILE_SEPARATOR+"python", "-m", "pipdeptree", "--json-tree"};
@@ -213,9 +215,9 @@ public class PythonServiceImpl implements PythonService {
                 command4 = new String[]{tempDir.getAbsolutePath()+FILE_SEPARATOR+"venv"+FILE_SEPARATOR+"bin"+FILE_SEPARATOR+"python", "-m", "pip", "install", name + "==" + version};
             String[] command5 = {tempDir.getAbsolutePath()+FILE_SEPARATOR+"venv"+FILE_SEPARATOR+"bin"+FILE_SEPARATOR+"python", "-m", "pipdeptree", "--json-tree"};
 
-            System.out.println(executeCommand(command1, tempDir, false));
-            System.out.println(executeCommand(command3, null, true));
-            System.out.println(executeCommand(command4, null, true));
+            log.info(executeCommand(command1, tempDir, false));
+            log.info(executeCommand(command3, null, true));
+            log.info(executeCommand(command4, null, true));
             String jsonString = executeCommand(command5, null, true);
             //删除临时文件夹
             FolderUtil.deleteFolder(tempDir.getPath());
@@ -373,32 +375,31 @@ public class PythonServiceImpl implements PythonService {
         componentDependencyTreeDO.setName(tree.get("key").asText());
         componentDependencyTreeDO.setVersion(tree.get("installed_version").asText());
         // 从知识库中查找
-        PythonComponentDO componentDO = pythonComponentDao.findByNameAndVersion(componentDependencyTreeDO.getName(), componentDependencyTreeDO.getVersion());
-        if (componentDO == null) {
+        PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(componentDependencyTreeDO.getName(), componentDependencyTreeDO.getVersion());
+        if (pythonComponentDO == null) {
             // 如果知识库中没有则爬取
-            componentDO = pythonSpiderService.crawlByNV(componentDependencyTreeDO.getName(), componentDependencyTreeDO.getVersion());
-            if (componentDO != null) {
+            pythonComponentDO = pythonSpiderService.crawlByNV(componentDependencyTreeDO.getName(), componentDependencyTreeDO.getVersion());
+            if (pythonComponentDO != null) {
                 try {
-                    pythonComponentDao.save(componentDO);
+                    pythonComponentDao.save(pythonComponentDO);
                 } catch (Exception e){
                     // save组件时出现错误，跳过该组件，仍继续执行
+                    log.error("组件存入数据库失败：" + pythonComponentDO.toString());
                     e.printStackTrace();
                 }
 
-                componentDependencyTreeDO.setLicenses(String.join(",", componentDO.getLicenses()));
-                componentDependencyTreeDO.setVulnerabilities(String.join(",", componentDO.getVulnerabilities()));
+                componentDependencyTreeDO.setLicenses(String.join(",", pythonComponentDO.getLicenses()));
+                componentDependencyTreeDO.setVulnerabilities(String.join(",", pythonComponentDO.getVulnerabilities()));
                 componentDependencyTreeDO.setType("opensource");
             } else {
                 componentDependencyTreeDO.setType("opensource");
                 // 如果爬虫没有爬到则打印报错信息，仍继续执行
-                System.err.println("存在未识别组件：" + componentDependencyTreeDO.getName() + ":" + componentDependencyTreeDO.getVersion());
-//                //如果爬虫没有爬到则扫描错误 通过抛出异常处理
-//                throw new PlatformException(500, "存在未识别的组件");
+                log.error("存在未识别组件：" + componentDependencyTreeDO.getName() + ":" + componentDependencyTreeDO.getVersion());
             }
         } else {
-            componentDependencyTreeDO.setLicenses(String.join(",", componentDO.getLicenses()));
-            componentDependencyTreeDO.setVulnerabilities(String.join(",", componentDO.getVulnerabilities()));
-            componentDependencyTreeDO.setType(componentDO.getType());
+            componentDependencyTreeDO.setLicenses(String.join(",", pythonComponentDO.getLicenses()));
+            componentDependencyTreeDO.setVulnerabilities(String.join(",", pythonComponentDO.getVulnerabilities()));
+            componentDependencyTreeDO.setType(pythonComponentDO.getType());
         }
         componentDependencyTreeDO.setDepth(depth);
 

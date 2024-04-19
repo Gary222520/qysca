@@ -38,8 +38,8 @@ spring:
     cache: false
     prefix: "classpath:/templates/"
 logging:
-  file:
-    path: /root/tyhj/qysca/logs
+  # 指定日志配置文件
+  config: classpath:logback-spring.xml
 
 uploadFolder: /root/tyhj/qysca/upload/
 tempPomFolder: /root/tyhj/qysca/temp/pom/
