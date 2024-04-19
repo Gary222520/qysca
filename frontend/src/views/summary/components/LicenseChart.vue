@@ -18,9 +18,10 @@ const data = reactive({
 
 let chart = null
 
-const draw = (licenseTypeNumberMap) => {
+const draw = (licenseTypeNumberMap, hasData) => {
   data.spinning = false
   data.licenseTypeNumberMap = licenseTypeNumberMap
+  if (!hasData) return
   if (chart !== null) hide()
   chart = echarts.init(document.getElementById('license-chart'))
   const chartData = getData()
