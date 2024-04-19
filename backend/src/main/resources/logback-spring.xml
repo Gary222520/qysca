@@ -1,6 +1,6 @@
 <configuration>
     <!-- 日志地址 -->
-    <property name="LOG_HOME" value="/root/tyhj/qysca/logs/backend" />
+    <property name="LOG_HOME" value="/root/tyhj/qysca/logs/spider/js" />
 
     <!-- 日志格式 -->
     <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36}:%line - %msg%n" />
