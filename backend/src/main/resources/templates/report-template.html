@@ -105,6 +105,11 @@
               <th>类型</th>
             </tr>
           </thead>
+          <tbody th:if="${components == null or #lists.isEmpty(components)}">
+            <tr>
+              <td colspan="5" style="text-align: center">暂无内容</td>
+            </tr>
+          </tbody>
           <tbody th:each="component : ${components}">
             <!-- 使用 Thymeleaf 迭代 Component 列表，并为每个 Component 展示一行信息 -->
             <tr>
@@ -163,9 +168,14 @@
               <th>最后修改时间</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody th:if="${vulnerabilities == null or #lists.isEmpty(vulnerabilities)}">
+            <tr>
+              <td colspan="9" style="text-align: center">暂无内容</td>
+            </tr>
+          </tbody>
+          <tbody th:each="vul : ${vulnerabilities}">
             <!-- 使用 Thymeleaf 迭代 Component 列表，并为每个 Component 展示一行信息 -->
-            <tr th:each="vul : ${vulnerabilities}">
+            <tr>
               <!-- 添加点击事件，调用 JavaScript 函数切换详细信息的显示状态 -->
               <td th:text="${vul.cveId}">CVE-2023-29401</td>
               <td th:text="${vul.severity}">中危</td>
@@ -208,6 +218,11 @@
               <th>GPL兼容性</th>
             </tr>
           </thead>
+          <tbody th:if="${licenses == null or #lists.isEmpty(licenses)}">
+            <tr>
+              <td colspan="8" style="text-align: center">暂无内容</td>
+            </tr>
+          </tbody>
           <tbody th:each="license : ${licenses}">
             <tr>
               <td
@@ -282,9 +297,15 @@
               <th>无需</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody
+            th:if="${licensesConflict.obligations_terms == null or #lists.isEmpty(licensesConflict.obligations_terms)}">
+            <tr>
+              <td colspan="3" style="text-align: center">暂无内容</td>
+            </tr>
+          </tbody>
+          <tbody th:each="conflict : ${licensesConflict.obligations_terms}">
             <!-- 使用 Thymeleaf 迭代 Component 列表，并为每个 Component 展示一行信息 -->
-            <tr th:each="conflict : ${licensesConflict.obligations_terms}">
+            <tr>
               <!-- 添加点击事件，调用 JavaScript 函数切换详细信息的显示状态 -->
               <td th:text="${conflict.title}">保留许可信息</td>
               <td>
@@ -310,9 +331,14 @@
               <th>禁止</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody th:if="${licensesConflict.rights_terms == null or #lists.isEmpty(licensesConflict.rights_terms)}">
+            <tr>
+              <td colspan="3" style="text-align: center">暂无内容</td>
+            </tr>
+          </tbody>
+          <tbody th:each="conflict : ${licensesConflict.rights_terms}">
             <!-- 使用 Thymeleaf 迭代 Component 列表，并为每个 Component 展示一行信息 -->
-            <tr th:each="conflict : ${licensesConflict.rights_terms}">
+            <tr>
               <!-- 添加点击事件，调用 JavaScript 函数切换详细信息的显示状态 -->
               <td th:text="${conflict.title}">保留许可信息</td>
               <td>
