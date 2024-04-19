@@ -232,13 +232,14 @@ public class NpmServiceImpl implements NpmService {
         List<String> lines = new ArrayList<>();
         try {
             File file = new File(filePath);
-            List<String> command = List.of("cmd.exe", "/c", "npm install", "--package-lock-only", "--legacy-peer-deps");
+            List<String> command = List.of("npm install", "--package-lock-only", "--legacy-peer-deps");
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.directory(file);
             Process process = processBuilder.start();
             int exitCode = process.waitFor();
         } catch (Exception e) {
             e.printStackTrace();
+            throw new PlatformException(500, "生成package-lock.json文件失败");
         }
     }
 

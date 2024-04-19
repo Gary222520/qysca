@@ -239,6 +239,7 @@ public class MavenServiceImpl implements MavenService {
                 return node;
             }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new PlatformException(500, "pom文件解析失败");
         }
     }

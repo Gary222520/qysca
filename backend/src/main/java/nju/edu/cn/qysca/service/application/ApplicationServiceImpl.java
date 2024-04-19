@@ -33,6 +33,7 @@ import nju.edu.cn.qysca.utils.FolderUtil;
 import nju.edu.cn.qysca.utils.excel.ExcelUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -53,6 +54,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
+
+    @Autowired
+    private ApplicationContext applicationContext;
     @Autowired
     private ApplicationDao applicationDao;
     @Autowired
@@ -355,12 +359,12 @@ public class ApplicationServiceImpl implements ApplicationService {
             FolderUtil.deleteFolder(new File(saveApplicationDependencyDTO.getFilePath()).getParentFile().getPath());
         } catch (Exception e) {
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            changeApplicationState(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "FAILED");
+            ApplicationService proxy = applicationContext.getBean(ApplicationService.class);
+            proxy.changeApplicationState(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "FAILED");
             File file = new File(saveApplicationDependencyDTO.getFilePath());
             redisTemplate.delete(file.getParentFile().getName());
             FolderUtil.deleteFolder(new File(saveApplicationDependencyDTO.getFilePath()).getParentFile().getPath());
-            e.printStackTrace();
-            throw new PlatformException(500, "识别组件依赖关系失败");
+            throw new PlatformException(500, "保存组件依赖失败");
         }
     }
 
