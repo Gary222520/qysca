@@ -359,7 +359,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             FolderUtil.deleteFolder(new File(saveApplicationDependencyDTO.getFilePath()).getParentFile().getPath());
         } catch (Exception e) {
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            changeApplicationState(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "FAILED");
+            ApplicationService proxy = applicationContext.getBean(ApplicationService.class);
+            proxy.changeApplicationState(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "FAILED");
             File file = new File(saveApplicationDependencyDTO.getFilePath());
             redisTemplate.delete(file.getParentFile().getName());
             FolderUtil.deleteFolder(new File(saveApplicationDependencyDTO.getFilePath()).getParentFile().getPath());
