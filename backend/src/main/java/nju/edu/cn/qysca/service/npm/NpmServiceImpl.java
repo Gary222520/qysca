@@ -170,7 +170,6 @@ public class NpmServiceImpl implements NpmService {
             String tmpNpmPath = tempDir.getPath() + FILE_SEPARATOR + "package.json";
             return dependencyTreeAnalysis(tmpNpmPath, "package.json", "opensource");
         } catch (Exception e) {
-            e.printStackTrace();
             throw new PlatformException(500, "识别依赖信息失败");
         } finally {
             FolderUtil.deleteFolder(tempDir.getPath());
@@ -238,7 +237,7 @@ public class NpmServiceImpl implements NpmService {
             Process process = processBuilder.start();
             int exitCode = process.waitFor();
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new PlatformException(500, "生成Package-lock.json文件失败");
         }
     }
 
