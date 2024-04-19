@@ -57,11 +57,11 @@ public class AppDependencyTableDO extends DependencyTableDO {
     @ApiModelProperty(value = "语言", example = "java")
     private String language;
 
-    @Column(name="licenses", nullable = false)
+    @Column(name="licenses")
     @ApiModelProperty(value = "许可证", example = "Apache License 2.0")
     private String licenses;
 
-    @Column(name="vulnerabilities", nullable = false)
+    @Column(name="vulnerabilities")
     @ApiModelProperty(value = "漏洞", example = "CVE-2020-1197")
     private String vulnerabilities;
 }
