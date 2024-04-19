@@ -3,6 +3,7 @@ package nju.edu.cn.qysca.service.maven;
 import fr.dutra.tools.maven.deptree.core.InputType;
 import fr.dutra.tools.maven.deptree.core.Node;
 import fr.dutra.tools.maven.deptree.core.Parser;
+import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.dao.component.JavaComponentDao;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
@@ -31,6 +32,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 @Service
+@Slf4j
 public class MavenServiceImpl implements MavenService {
 
     private final String FILE_SEPARATOR = "/";
@@ -268,6 +270,7 @@ public class MavenServiceImpl implements MavenService {
                         javaComponentDao.save(javaComponentDO);
                     } catch (Exception e){
                         // save组件时出现错误，跳过该组件，仍继续执行
+                        log.error("组件存入数据库失败：" + javaComponentDO.toString());
                         e.printStackTrace();
                     }
 
@@ -277,9 +280,7 @@ public class MavenServiceImpl implements MavenService {
                 } else {
                     javaComponentDependencyTreeDO.setType("opensource");
                     // 如果爬虫没有爬到则打印报错信息，仍继续执行
-                    System.err.println("存在未识别的组件：" + javaComponentDependencyTreeDO.getName() + ":" + javaComponentDependencyTreeDO.getVersion());
-//                    //如果爬虫没有爬到则扫描错误 通过抛出异常处理
-//                    throw new PlatformException(500, "存在未识别的组件");
+                    log.error("存在未识别的组件：" + javaComponentDependencyTreeDO.getName() + ":" + javaComponentDependencyTreeDO.getVersion());
                 }
             } else {
                 javaComponentDependencyTreeDO.setLicenses(String.join(",", javaComponentDO.getLicenses()));

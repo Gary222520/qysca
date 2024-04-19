@@ -8,35 +8,6 @@ import java.util.Comparator;
 import java.util.stream.Stream;
 
 public class FolderUtil {
-//    /**
-//     * 强制删除文件夹
-//     * @param filePath 文件夹
-//     * @throws IOException
-//     */
-//    public static void forceDeleteFolder(String filePath) {
-//        File folder = new File(filePath);
-//        Path folderPath = folder.toPath();
-//        try {
-//            if (folder.isDirectory()) {
-//                try (Stream<Path> paths = Files.walk(folderPath)) {
-//                    paths.sorted(Comparator.reverseOrder())
-//                            .forEach(path -> {
-//                                try {
-//                                    Files.deleteIfExists(path);
-//                                } catch (IOException e) {
-//                                    System.err.println("here");
-//                                    e.printStackTrace();
-//                                }
-//                            });
-//                }
-//            } else {
-//                Files.deleteIfExists(folderPath);
-//            }
-//        } catch (IOException e){
-//            System.err.println("there");
-//            e.printStackTrace();
-//        }
-//    }
 
 
     /**

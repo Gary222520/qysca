@@ -86,7 +86,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         if (pomUrl == null) {
             return null;
         }
-        Document document = UrlConnector.getDocumentByUrl(pomUrl);
+        Document document = getDocumentByUrl(pomUrl);
         if (document == null)
             return null;
         return document.outerHtml();
@@ -136,6 +136,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
                     return;
                 }
                 // 数据库没有，爬取
+                log.info("开始爬取：" + directoryUrl);
                 JavaComponentDO javaComponentDO = crawl(directoryUrl);
                 if (javaComponentDO == null) {
                     // 爬取失败
@@ -146,7 +147,6 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
                     javaComponentDao.save(javaComponentDO);
                 } catch (Exception e){
                     log.error("保存组件时出错：" + javaComponentDO.getName() + " " + javaComponentDO.getVersion());
-                    log.error(e.getMessage());
                     e.printStackTrace();
                     mavenVisitedUrlsDao.save(new MavenVisitedUrlsDO(null, directoryUrl, false, true, false));
                     return;
@@ -194,8 +194,6 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         // 如果该目录为最后一层，进行爬取
         if (isLastLevel) {
             synchronized (this) {
-                System.out.println();
-                System.out.println("开始爬取：" + directoryUrl);
                 //爬取组件
                 JavaComponentDO javaComponentDO = crawl(directoryUrl);
                 if (javaComponentDO == null) {
@@ -233,10 +231,6 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
      * @return JavaComponentDO
      */
     private JavaComponentDO crawl(String url) {
-        Date date = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-        String timeStamp = dateFormat.format(date);
-        System.out.println(timeStamp + " crawling :" + url);
         // 爬取pom文件中的组件信息
         String pomUrl = findPomUrlInDirectory(url);
         if (pomUrl == null) {
@@ -279,7 +273,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
             // 连接到url并获取其内容
             return Jsoup.connect(url).get();
         } catch (Exception e) {
-            System.err.println("can't visit or it is invalid: " + url);
+            log.error("无法访问或url失效: " + url);
             return null;
         }
     }
@@ -313,7 +307,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
                 return fileAbsUrl;
             }
         }
-        System.err.println("No .pom file found in \"" + directoryUrl + "\"");
+        log.error("该目录下没有pom文件：" + directoryUrl);
         return null;
     }
 
