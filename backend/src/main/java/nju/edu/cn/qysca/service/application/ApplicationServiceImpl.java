@@ -364,7 +364,6 @@ public class ApplicationServiceImpl implements ApplicationService {
             File file = new File(saveApplicationDependencyDTO.getFilePath());
             redisTemplate.delete(file.getParentFile().getName());
             FolderUtil.deleteFolder(new File(saveApplicationDependencyDTO.getFilePath()).getParentFile().getPath());
-            e.printStackTrace();
             throw new PlatformException(500, "识别组件依赖关系失败");
         }
     }
