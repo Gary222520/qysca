@@ -53,6 +53,7 @@ public class PythonSpiderRun {
                             if (pythonComponentDao.findByNameAndVersion(name, version) != null) {
                                 continue;
                             }
+                            log.info("开始爬取: " + "python组件 " + name + ":" + version);
                             PythonComponentDO pythonComponentDO = pythonSpiderService.crawlByNV(name, version);
                             if (pythonComponentDO == null) {
                                 isSuccess = false;
@@ -61,7 +62,7 @@ public class PythonSpiderRun {
                             try {
                                 pythonComponentDao.save(pythonComponentDO);
                             } catch (Exception e) {
-                                log.error("组件存入数据库失败：" + pythonComponentDO.toString());
+                                log.error("python组件存入数据库失败：" + pythonComponentDO.toString());
                                 e.printStackTrace();
                             }
 
