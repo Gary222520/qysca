@@ -1,5 +1,6 @@
 package nju.edu.cn.qysca.service.gradle;
 
+import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.dao.component.JavaComponentDao;
 import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.JavaComponentDependencyTreeDO;
@@ -24,6 +25,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class GradleServiceImpl implements GradleService {
 
     @Autowired
@@ -50,8 +52,13 @@ public class GradleServiceImpl implements GradleService {
             // 启动命令
             Process process = processBuilder.start();
             // 直接将命令执行结果保存在lines中，没有生成中间文件
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
                 String line;
+                while ((line = errorReader.readLine()) != null) {
+                    log.error(line);
+                }
+
                 while ((line = reader.readLine()) != null) {
                     lines.add(line);
                 }
@@ -208,13 +215,13 @@ public class GradleServiceImpl implements GradleService {
                             javaComponentDao.save(javaComponentDO);
                         } catch (Exception e) {
                             // save组件时出现错误，跳过该组件，仍继续执行
+                            log.error("组件存入数据库失败：" + javaComponentDO.toString());
                             e.printStackTrace();
                         }
                     } else {
                         componentDependencyTreeDO.setType("opensource");
                         // 如果爬虫没有爬到则打印报错信息，仍继续执行
-                        System.err.println("存在未识别的组件：" + groupId+":"+artifactId+":"+version);
-                        //throw new PlatformException(500, "存在未识别的组件");
+                        log.error("存在未识别的组件：" + groupId+":"+artifactId+":"+version);
                     }
                 } else {
                     componentDependencyTreeDO.setType(javaComponentDO.getType());
