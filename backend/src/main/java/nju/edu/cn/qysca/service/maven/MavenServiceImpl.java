@@ -265,6 +265,7 @@ public class MavenServiceImpl implements MavenService {
 
             // 如果知识库中没有则爬取
             if (javaComponentDO == null) {
+                System.out.println("开始爬取" + node.getGroupId() + ":" + node.getArtifactId() + ":" + node.getVersion());
                 javaComponentDO = javaSpiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 if (javaComponentDO != null) {
                     try {

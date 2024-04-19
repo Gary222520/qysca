@@ -380,6 +380,7 @@ public class NpmServiceImpl implements NpmService {
             JsComponentDO jsComponentDO = null;
             jsComponentDO = jsComponentDao.findByNameAndVersion(entry.getKey(), entry.getValue().getVersion());
             if (jsComponentDO == null) {
+                System.out.println("开始爬取" + entry.getKey() + ":" + entry.getValue().getVersion());
                 jsComponentDO = jsSpiderService.crawlByNV(entry.getKey(), entry.getValue().getVersion());
                 if (jsComponentDO != null) {
                     child.setType("opensource");
