@@ -38,8 +38,8 @@ spring:
     cache: false
     prefix: "classpath:/templates/"
 logging:
-  file:
-    path: src/main/resources/log
+  # 指定日志配置文件
+  config: classpath:logback-spring.xml
 
 
 uploadFolder: src/main/resources/static/upload/

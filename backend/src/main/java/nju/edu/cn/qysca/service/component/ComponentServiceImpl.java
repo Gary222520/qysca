@@ -8,7 +8,6 @@ import nju.edu.cn.qysca.dao.application.AppDependencyTreeDao;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
 import nju.edu.cn.qysca.dao.component.*;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDO;
-import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.component.dtos.*;

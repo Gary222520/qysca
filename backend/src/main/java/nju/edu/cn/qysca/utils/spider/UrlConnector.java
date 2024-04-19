@@ -1,5 +1,6 @@
 package nju.edu.cn.qysca.utils.spider;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -7,6 +8,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+@Slf4j
 public class UrlConnector {
     /**
      * 休眠时间，单位毫秒
@@ -26,7 +28,7 @@ public class UrlConnector {
             // 连接到url并获取其内容
             return Jsoup.connect(url).get();
         } catch (Exception e) {
-            System.err.println("can't visit or it is invalid: " + url);
+            log.error("can't visit or it is invalid: " + url);
             return null;
         }
     }

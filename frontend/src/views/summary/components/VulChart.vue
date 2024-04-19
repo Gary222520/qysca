@@ -18,9 +18,10 @@ const data = reactive({
 
 let chart = null
 
-const draw = (categoryCountMap) => {
+const draw = (categoryCountMap, hasData) => {
   data.spinning = false
   data.categoryCountMap = categoryCountMap
+  if (!hasData) return
   if (chart !== null) hide()
   chart = echarts.init(document.getElementById('vul-chart'))
   const option = {

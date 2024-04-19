@@ -68,11 +68,6 @@ public class JsSpiderServiceImpl implements JsSpiderService {
             }
             String url = NPM_REPO_BASE_URL + name + FILE_SEPARATOR + version;
 
-            Date date = new Date();
-            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-            String timeStamp = dateFormat.format(date);
-            System.out.println(timeStamp + " crawling :" + url);
-
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpGet httpGet = new HttpGet(url);
             httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");

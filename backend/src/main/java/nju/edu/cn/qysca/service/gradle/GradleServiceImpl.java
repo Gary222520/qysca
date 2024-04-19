@@ -1,5 +1,6 @@
 package nju.edu.cn.qysca.service.gradle;
 
+import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.dao.component.JavaComponentDao;
 import nju.edu.cn.qysca.domain.component.dos.JavaComponentDO;
 import nju.edu.cn.qysca.domain.component.dos.JavaComponentDependencyTreeDO;
@@ -11,10 +12,7 @@ import nju.edu.cn.qysca.utils.ZipUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -24,6 +22,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class GradleServiceImpl implements GradleService {
 
     @Autowired
@@ -31,49 +30,6 @@ public class GradleServiceImpl implements GradleService {
     @Autowired
     private JavaComponentDao javaComponentDao;
     private final String FILE_SEPARATOR = "/";
-
-    /**
-     * 调用./gradlew dependencies命令，并返回命令结果
-     *
-     * @param filePath 文件路径，用以设置工作目录
-     * @return List<String> 命令结果
-     */
-    private List<String> runGradleCommand(String filePath) {
-        List<String> lines = new ArrayList<>();
-        try {
-            File file = new File(filePath);
-            // 执行命令 chmod +x ..../gradlew 给该文件添加可执行权限
-            List<String> command1 = List.of("chmod", "+x", file.getAbsolutePath()+FILE_SEPARATOR +"gradlew");
-            ProcessBuilder processBuilder1 = new ProcessBuilder(command1);
-            processBuilder1.directory(file);
-            Process process1 = processBuilder1.start();
-            process1.waitFor();
-
-            // 创建命令 ..../gradlew dependencies
-            // windows系统执行gradlew.bat，linux还是gradlew
-            List<String> command2 = List.of(file.getAbsolutePath()+FILE_SEPARATOR +"gradlew", "dependencies");
-            ProcessBuilder processBuilder2 = new ProcessBuilder(command2);
-            processBuilder2.directory(file);
-            Process process2 = processBuilder2.start();
-            // 直接将命令执行结果保存在lines中，没有生成中间文件
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process2.getInputStream()));
-                BufferedReader errReader = new BufferedReader(new InputStreamReader(process2.getErrorStream()))) {
-                String line;
-                while ((line = errReader.readLine()) != null){
-                    // 打印错误信息
-                    System.err.println(line);
-                }
-                while ((line = reader.readLine()) != null) {
-                    lines.add(line);
-                }
-                // 等待命令执行完毕
-                process2.waitFor();
-            }
-        } catch (IOException | InterruptedException e) {
-            throw new PlatformException(500, "gradle项目解析失败");
-        }
-        return lines;
-    }
 
     /**
      * 构造gradle java组件
@@ -122,6 +78,9 @@ public class GradleServiceImpl implements GradleService {
         } else {
             throw new PlatformException(500, "gradle解析暂不支持此文件类型");
         }
+
+        //修改上传gradle项目中的gradle wrapper源
+        changeGradleSource(filePath);
 
         // 调用./gradlew dependencies命令，并获取结果
         List<String> lines = runGradleCommand(filePath);
@@ -177,6 +136,77 @@ public class GradleServiceImpl implements GradleService {
     }
 
     /**
+     * 修改上传gradle项目中的gradle wrapper源
+     * @param filePath 文件路径
+     */
+    private void changeGradleSource(String filePath){
+        // 修改gradle项目中的gradle/wrapper/gradle-wrapper.properties文件中的distributionUrl
+        // 例如：从distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip
+        // 修改为distributionUrl=https\://mirrors.cloud.tencent.com/gradle/gradle-7.5.1-bin.zip
+        File gradlewPropertiesFile = new File(filePath, "gradle" + FILE_SEPARATOR + "wrapper" + FILE_SEPARATOR + "gradle-wrapper.properties");
+        if (!gradlewPropertiesFile.exists())
+            return;
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(gradlewPropertiesFile));
+            FileWriter fileWriter = new FileWriter(gradlewPropertiesFile)){
+            //读取文件
+            StringBuilder lines = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null){
+                lines.append(line).append("\n");
+            }
+
+            // 将默认gradle源修改为腾讯镜像源
+            String defaultDistributionUrl = "services.gradle.org/distributions/";
+            String mirrorDistributionUrl = "mirrors.cloud.tencent.com/gradle/";
+            fileWriter.write(lines.toString().replace(defaultDistributionUrl, mirrorDistributionUrl));
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * 调用./gradlew dependencies命令，并返回命令结果
+     *
+     * @param filePath 文件路径，用以设置工作目录
+     * @return List<String> 命令结果
+     */
+    private List<String> runGradleCommand(String filePath) {
+        List<String> lines = new ArrayList<>();
+        try {
+            File file = new File(filePath);
+            // 执行命令 chmod +x ..../gradlew 给该文件添加可执行权限
+            List<String> command1 = List.of("chmod", "+x", file.getAbsolutePath()+FILE_SEPARATOR +"gradlew");
+            ProcessBuilder processBuilder1 = new ProcessBuilder(command1);
+            processBuilder1.directory(file);
+            Process process1 = processBuilder1.start();
+            process1.waitFor();
+
+            // 创建命令 ..../gradlew dependencies
+            // windows系统执行gradlew.bat，linux还是gradlew
+            List<String> command2 = List.of(file.getAbsolutePath()+FILE_SEPARATOR +"gradlew", "dependencies");
+            ProcessBuilder processBuilder2 = new ProcessBuilder(command2);
+            processBuilder2.directory(file);
+            Process process2 = processBuilder2.start();
+            // 直接将命令执行结果保存在lines中，没有生成中间文件
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process2.getInputStream()));
+                 BufferedReader errReader = new BufferedReader(new InputStreamReader(process2.getErrorStream()))) {
+                String line;
+                while ((line = errReader.readLine()) != null){
+                    log.error(line);
+                }
+                while ((line = reader.readLine()) != null) {
+                    lines.add(line);
+                }
+                // 等待命令执行完毕
+                process2.waitFor();
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new PlatformException(500, "gradle项目解析失败");
+        }
+        return lines;
+    }
+    /**
      * 对一段依赖树进行递归解析
      *
      * @param lines 文本行
@@ -219,13 +249,13 @@ public class GradleServiceImpl implements GradleService {
                             javaComponentDao.save(javaComponentDO);
                         } catch (Exception e) {
                             // save组件时出现错误，跳过该组件，仍继续执行
+                            log.error("组件存入数据库失败：" + javaComponentDO.toString());
                             e.printStackTrace();
                         }
                     } else {
                         componentDependencyTreeDO.setType("opensource");
                         // 如果爬虫没有爬到则打印报错信息，仍继续执行
-                        System.err.println("存在未识别的组件：" + groupId+":"+artifactId+":"+version);
-                        //throw new PlatformException(500, "存在未识别的组件");
+                        log.error("存在未识别的组件：" + groupId+":"+artifactId+":"+version);
                     }
                 } else {
                     componentDependencyTreeDO.setType(javaComponentDO.getType());

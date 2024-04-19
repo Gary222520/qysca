@@ -18,9 +18,10 @@ const data = reactive({
 
 let chart = null
 
-const draw = (compareDTOList) => {
+const draw = (compareDTOList, hasData) => {
   data.spinning = false
   data.compareDTOList = compareDTOList
+  if (!hasData) return
   if (chart !== null) hide()
   chart = echarts.init(document.getElementById('app-vul-chart'))
   const option = {
