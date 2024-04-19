@@ -1,5 +1,6 @@
 package nju.edu.cn.qysca.service.go;
 
+import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.dao.component.GoComponentDao;
 import nju.edu.cn.qysca.domain.application.dos.AppComponentDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
@@ -23,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
+@Slf4j
 public class GoServiceImpl implements GoService {
 
     private final String FILE_SEPARATOR = "/";
@@ -310,11 +312,12 @@ public class GoServiceImpl implements GoService {
                                 goComponentDao.save(goComponentDO);
                             } catch (Exception e){
                                 // save组件时出现错误，跳过该组件，仍继续执行
+                                log.error("组件存入数据库失败：" + goComponentDO.toString());
                                 e.printStackTrace();
                             }
                         } else {
                             // 如果爬虫没有爬到则打印报错信息，仍继续执行
-                            System.err.println("存在未识别的组件：" + child.getName() + ":" + child.getVersion());
+                            log.error("存在未识别的组件：" + child.getName() + ":" + child.getVersion());
                         }
                     }
                     child.setLicenses(String.join(",", goComponentDO.getLicenses()));
@@ -348,8 +351,12 @@ public class GoServiceImpl implements GoService {
             // 启动命令
             Process process = processBuilder.start();
             // 直接将命令执行结果保存在lines中，没有生成中间文件
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                BufferedReader errReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
                 String line;
+                while ((line = errReader.readLine()) != null){
+                    log.error(line);
+                }
                 while ((line = reader.readLine()) != null) {
                     lines.add(line);
                 }

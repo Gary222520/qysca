@@ -103,9 +103,13 @@
               <th>版本</th>
               <th>语言</th>
               <th>类型</th>
-              <!-- <th style="width: 80px">操作</th> -->
             </tr>
           </thead>
+          <tbody th:if="${components == null or #lists.isEmpty(components)}">
+            <tr>
+              <td colspan="5" style="text-align: center">暂无内容</td>
+            </tr>
+          </tbody>
           <tbody th:each="component : ${components}">
             <!-- 使用 Thymeleaf 迭代 Component 列表，并为每个 Component 展示一行信息 -->
             <tr>
@@ -119,15 +123,6 @@
               <td th:text="${component.version}">Component Version</td>
               <td th:text="${component.language}">Component Language</td>
               <td th:text="${component.type}">Component Type</td>
-              <!-- <td>
-                <a
-                  href="javaScript:;"
-                  th:attr="data-component-id=${component.id}"
-                  th:id="${component.id}+'-a'"
-                  onclick="showComponentInfo(this.getAttribute('data-component-id'))">
-                  查看详情
-                </a>
-              </td> -->
             </tr>
             <tr th:id="${component.id}" style="display: none">
               <td colspan="5">
@@ -173,9 +168,14 @@
               <th>最后修改时间</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody th:if="${vulnerabilities == null or #lists.isEmpty(vulnerabilities)}">
+            <tr>
+              <td colspan="9" style="text-align: center">暂无内容</td>
+            </tr>
+          </tbody>
+          <tbody th:each="vul : ${vulnerabilities}">
             <!-- 使用 Thymeleaf 迭代 Component 列表，并为每个 Component 展示一行信息 -->
-            <tr th:each="vul : ${vulnerabilities}">
+            <tr>
               <!-- 添加点击事件，调用 JavaScript 函数切换详细信息的显示状态 -->
               <td th:text="${vul.cveId}">CVE-2023-29401</td>
               <td th:text="${vul.severity}">中危</td>
@@ -208,6 +208,7 @@
         <table class="component-table">
           <thead>
             <tr>
+              <th style="width: 25px"></th>
               <th>许可证</th>
               <th>名称</th>
               <th>风险等级</th>
@@ -217,8 +218,18 @@
               <th>GPL兼容性</th>
             </tr>
           </thead>
-          <tbody>
-            <tr th:each="license : ${licenses}">
+          <tbody th:if="${licenses == null or #lists.isEmpty(licenses)}">
+            <tr>
+              <td colspan="8" style="text-align: center">暂无内容</td>
+            </tr>
+          </tbody>
+          <tbody th:each="license : ${licenses}">
+            <tr>
+              <td
+                class="collaspe"
+                th:attr="data-license-id=${license.id}"
+                th:id="${license.id}+'-a'"
+                onclick="showLicenseInfo(this.getAttribute('data-license-id'))"></td>
               <td th:text="${license.name}">MPL-2.0</td>
               <td th:text="${license.fullName}">Mozilla Public License 2.0</td>
               <td th:text="${license.riskLevel}">中危</td>
@@ -239,6 +250,38 @@
                 <span th:if="not ${license.gplCompatibility}">×</span>
               </td>
             </tr>
+            <tr th:id="${license.id}" style="display: none">
+              <td colspan="8">
+                <p>
+                  <strong>必须义务：</strong>
+                  <span th:each="item, index : ${license.obligationsRequired}">
+                    <br />
+                    <span th:text="${index.index+1}+'、'+${item.title}+'：'+${item.content}">MPL-2.0</span>
+                  </span>
+                </p>
+                <p>
+                  <strong>无需义务：</strong>
+                  <span th:each="item, index : ${license.obligationsNotRequired}">
+                    <br />
+                    <span th:text="${index.index+1}+'、'+${item.title}+'：'+${item.content}">MPL-2.0</span>
+                  </span>
+                </p>
+                <p>
+                  <strong>允许权利：</strong>
+                  <span th:each="item, index : ${license.rightsAllowed}">
+                    <br />
+                    <span th:text="${index.index+1}+'、'+${item.title}+'：'+${item.content}">MPL-2.0</span>
+                  </span>
+                </p>
+                <p>
+                  <strong>禁止权利：</strong>
+                  <span th:each="item, index : ${license.rightsProhibited}">
+                    <br />
+                    <span th:text="${index.index+1}+'、'+${item.title}+'：'+${item.content}">MPL-2.0</span>
+                  </span>
+                </p>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -254,9 +297,15 @@
               <th>无需</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody
+            th:if="${licensesConflict.obligations_terms == null or #lists.isEmpty(licensesConflict.obligations_terms)}">
+            <tr>
+              <td colspan="3" style="text-align: center">暂无内容</td>
+            </tr>
+          </tbody>
+          <tbody th:each="conflict : ${licensesConflict.obligations_terms}">
             <!-- 使用 Thymeleaf 迭代 Component 列表，并为每个 Component 展示一行信息 -->
-            <tr th:each="conflict : ${licensesConflict.obligations_terms}">
+            <tr>
               <!-- 添加点击事件，调用 JavaScript 函数切换详细信息的显示状态 -->
               <td th:text="${conflict.title}">保留许可信息</td>
               <td>
@@ -282,9 +331,14 @@
               <th>禁止</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody th:if="${licensesConflict.rights_terms == null or #lists.isEmpty(licensesConflict.rights_terms)}">
+            <tr>
+              <td colspan="3" style="text-align: center">暂无内容</td>
+            </tr>
+          </tbody>
+          <tbody th:each="conflict : ${licensesConflict.rights_terms}">
             <!-- 使用 Thymeleaf 迭代 Component 列表，并为每个 Component 展示一行信息 -->
-            <tr th:each="conflict : ${licensesConflict.rights_terms}">
+            <tr>
               <!-- 添加点击事件，调用 JavaScript 函数切换详细信息的显示状态 -->
               <td th:text="${conflict.title}">保留许可信息</td>
               <td>
@@ -331,6 +385,19 @@
     }
     // JavaScript 函数，用于切换详细信息的显示状态
     function showComponentInfo(id) {
+      const detail = document.getElementById(id)
+      const a = document.getElementById(id + '-a')
+      if (detail.style.display === 'none') {
+        detail.style.display = 'table-row'
+        // a.innerHTML = '收起'
+        a.className = 'collasped'
+      } else {
+        detail.style.display = 'none'
+        // a.innerHTML = '查看详情'
+        a.className = 'collaspe'
+      }
+    }
+    function showLicenseInfo(id) {
       const detail = document.getElementById(id)
       const a = document.getElementById(id + '-a')
       if (detail.style.display === 'none') {

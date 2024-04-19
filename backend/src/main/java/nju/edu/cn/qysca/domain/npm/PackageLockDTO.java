@@ -22,6 +22,6 @@ public class PackageLockDTO {
     @ApiModelProperty(value = "版本", example = "1.0.0")
     private String version;
 
-    @ApiModelProperty(value = "依赖信息", example = "{}")
+    @ApiModelProperty(value = "依赖信息")
     private Map<String, PackageLockDependencyDTO> dependencies = new HashMap<>();
 }

@@ -26,10 +26,10 @@ public class PackageLockDependencyDTO {
     @ApiModelProperty(value = "资源完整性字符串", example = "sha512-bIusJLS8c4DkIcdiK+s13HiQ/zjQQVgpNohtd8d94Y2DnJqgM1yjh/jpDb8DoL6hd7r8Awagw8e3qK/oLaWr3g==")
     private String integrity;
 
-    @ApiModelProperty(value = "依赖的其他包及版本要求",example = "{ \"zrender\": \">=0.0.1 <4.0.0\" }")
+    @ApiModelProperty(value = "依赖的其他包及版本要求")
     private Map<String,String> requires = new HashMap<>();
 
-    @ApiModelProperty(value = "当前包实际安装的依赖项目及其确切版本",example = "{ \"zrender\": \"4.3.2\" }")
+    @ApiModelProperty(value = "当前包实际安装的依赖项目及其确切版本")
     private Map<String, PackageLockDependencyDTO> dependencies = new HashMap<>();
 
 }

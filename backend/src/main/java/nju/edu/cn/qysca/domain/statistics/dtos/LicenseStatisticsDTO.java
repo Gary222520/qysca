@@ -18,7 +18,7 @@ public class LicenseStatisticsDTO {
     @ApiModelProperty(value = "许可证总数", example = "100")
     private Integer totalNumber;
 
-    @ApiModelProperty(value = "许可证类型数量统计", example = "{\"MIT\": 10, \"BSD\": 20}")
+    @ApiModelProperty(value = "许可证类型数量统计")
     private Map<String, Integer> licenseTypeNumberMap;
 
     @ApiModelProperty(value = "许可证风险排序")

@@ -1,6 +1,7 @@
 package nju.edu.cn.qysca.service.report;
 
 
+import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.dao.application.AppDependencyTableDao;
 import nju.edu.cn.qysca.dao.application.AppDependencyTreeDao;
 import nju.edu.cn.qysca.dao.application.ApplicationDao;
@@ -34,6 +35,7 @@ import java.util.Date;
 import java.util.List;
 
 @Service
+@Slf4j
 public class ReportServiceImpl implements ReportService {
 
     @Autowired
@@ -188,7 +190,7 @@ public class ReportServiceImpl implements ReportService {
         File file = new File(dir, applicationDO.getName().replaceAll(":","-") + "-report.html");
         try (FileWriter writer = new FileWriter(file)) {
             templateEngine.process(template, context, writer);
-            System.out.println("HTML report exported successfully!");
+            log.info("导出html文件成功：" + file.getName());
         } catch (IOException e) {
             e.printStackTrace();
             throw new PlatformException(500, "导出html文件失败");

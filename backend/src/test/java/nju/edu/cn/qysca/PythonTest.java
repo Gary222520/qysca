@@ -52,7 +52,6 @@ public class PythonTest {
         String type = "internal";
         PythonDependencyTreeDO pythonDependencyTreeDO = pythonService.dependencyTreeAnalysis(filePath, builder, name, version, type);
         List<PythonDependencyTableDO> pythonDependencyTableDOList = pythonService.dependencyTableAnalysis(pythonDependencyTreeDO);
-        System.out.println();
     }
 
     @Test
