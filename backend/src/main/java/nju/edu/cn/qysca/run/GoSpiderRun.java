@@ -56,6 +56,7 @@ public class GoSpiderRun {
                             if (goComponentDao.findByNameAndVersion(name, version) != null) {
                                 continue;
                             }
+                            log.info("开始爬取: " + "go组件 " + name + ":" + version);
                             GoComponentDO goComponentDO = goSpiderService.crawlByNV(name, version);
                             if (goComponentDO == null) {
                                 isSuccess = false;
@@ -64,8 +65,7 @@ public class GoSpiderRun {
                             try {
                                 goComponentDao.save(goComponentDO);
                             } catch (Exception e){
-                                log.error("保存组件时出错：" + goComponentDO.getName() + " " + goComponentDO.getVersion());
-                                log.error(e.getMessage());
+                                log.error("go组件存入数据库失败：" + goComponentDO.toString());
                                 e.printStackTrace();
                             }
                         }
@@ -80,68 +80,45 @@ public class GoSpiderRun {
 
             }
         }
+
+        // 当1000个爬完后，进行下一步
+        executeSpiderTaskWithDependency();
     }
 
+    /**
+     * 为数据库中的所有go组件生成依赖树和依赖表，并对这个过程中新爬取的go组件同样生成依赖树和依赖表，直到表中所有go组件都有了依赖树
+     */
     public void executeSpiderTaskWithDependency(){
-//        List<GoVisitedPackagesDO> packagesDOList = goVisitedPackagesDao.findAll();
-//        for (GoVisitedPackagesDO goVisitedPackagesDO : packagesDOList) {
-//            synchronized (this) {
-//                // 如果该包被成功访问过，则跳过
-//                if (goVisitedPackagesDO.getVisited() && goVisitedPackagesDO.getIsSuccess())
-//                    continue;
-//
-//                // 爬取组件信息
-//                if (goVisitedPackagesDO.getVersion().equals("-")) {
-//                    boolean isSuccess = true;
-//                    String name = goVisitedPackagesDO.getName();
-//                    // 获取所有版本
-//                    List<String> versions = goSpiderService.getVersions(name);
-//                    if (null == versions) {
-//                        isSuccess = false;
-//                    } else {
-//                        for (String version : versions) {
-//                            // 爬取每个版本
-//                            if (goDependencyTreeDao.findByNameAndVersion(name, version) != null) {
-//                                continue;
-//                            }
-//                            GoComponentDO goComponentDO = goSpiderService.crawlByNV(name, version);
-//                            if (goComponentDO == null) {
-//                                isSuccess = false;
-//                                continue;
-//                            }
-//
-//                            try {
-//                                if (goComponentDao.findByNameAndVersion(name, version) == null)
-//                                    goComponentDao.save(goComponentDO);
-//                            } catch (Exception e){
-//                                isSuccess = false;
-//                                log.error("保存组件时出错：" + goComponentDO.getName() + " " + goComponentDO.getVersion());
-//                                log.error(e.getMessage());
-//                                e.printStackTrace();
-//                                continue;
-//                            }
-//
-//                            GoDependencyTreeDO goDependencyTreeDO = goService.spiderDependency(name, version);
-//                            if (goDependencyTreeDO == null){
-//                                isSuccess = false;
-//                                continue;
-//                            }
-//                            List<GoDependencyTableDO> goDependencyTableDOList = goService.dependencyTableAnalysis(goDependencyTreeDO);
-//
-//                            goDependencyTreeDao.save(goDependencyTreeDO);
-//                            goDependencyTableDao.saveAll(goDependencyTableDOList);
-//
-//                        }
-//                    }
-//
-//                    goVisitedPackagesDO.setVisited(true);
-//                    goVisitedPackagesDO.setIsSuccess(isSuccess);
-//                    goVisitedPackagesDao.deleteById(goVisitedPackagesDO.getId());
-//                    goVisitedPackagesDao.save(goVisitedPackagesDO);
-//                }
-//
-//
-//            }
-//        }
+        boolean finished = false;
+        while (!finished) {
+            finished = true;
+            List<GoComponentDO> goComponentDOList = goComponentDao.findAll();
+            for (GoComponentDO goComponentDO : goComponentDOList) {
+                synchronized (this) {
+                    String name = goComponentDO.getName();
+                    String version = goComponentDO.getVersion();
+                    GoDependencyTreeDO goDependencyTreeDO = goDependencyTreeDao.findByNameAndVersion(name, version);
+                    if (null == goDependencyTreeDO) {
+                        // 只要有组件没有生成依赖树，则不停止该过程
+                        finished = false;
+                        // 生成组件依赖树和依赖表
+                        try {
+                            goDependencyTreeDO = goService.spiderDependency(name, version);
+                        } catch (Exception e) {
+                            goDependencyTreeDO = null;
+                            log.error("组件生成依赖树失败: " + name + ":" + version);
+                        }
+
+                        if (null != goDependencyTreeDO) {
+                            log.info("组件生成依赖树和依赖表: " + name + ":" + version);
+                            List<GoDependencyTableDO> goDependencyTableDOList = goService.dependencyTableAnalysis(goDependencyTreeDO);
+                            goDependencyTreeDao.save(goDependencyTreeDO);
+                            goDependencyTableDao.saveAll(goDependencyTableDOList);
+                        }
+                    }
+                }
+            }
+        }
+        log.info("所有go组件都以及生成了依赖树，爬取过程结束。");
     }
 }

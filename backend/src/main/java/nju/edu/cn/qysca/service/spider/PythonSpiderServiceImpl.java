@@ -74,10 +74,6 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
      * @return ComponentDO
      */
     private PythonComponentDO crawl(String url, String name, String version){
-        Date date = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-        String timeStamp = dateFormat.format(date);
-        System.out.println(timeStamp + " crawling :" + url);
         String jsonString = getUrlContent(url);
         if (jsonString == null || jsonString.isEmpty())
             return null;
@@ -107,9 +103,6 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
             componentDO.setSourceUrl(jsonNode.get("info").get("release_url").asText());
             componentDO.setPUrl(getPyPiPUrl(name, version));
 
-/*            List<ComponentLicenseDO> componentLicenseDOList = new ArrayList<>();
-            componentLicenseDOList.add(new ComponentLicenseDO(jsonNode.get("info").get("license").asText(), null));
-            componentDO.setLicenses(componentLicenseDOList);*/
             String license = jsonNode.get("info").get("license").asText();
             if (license.length()>=100){
                 // 有时候pypi里license会写原内容，此时就先设为无许可证

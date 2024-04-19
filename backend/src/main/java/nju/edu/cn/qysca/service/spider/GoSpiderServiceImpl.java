@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.domain.component.dos.GoComponentDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
@@ -27,6 +28,7 @@ import java.util.Date;
 import java.util.List;
 
 @Service
+@Slf4j
 public class GoSpiderServiceImpl implements GoSpiderService{
     @Autowired
     private LicenseService licenseService;
@@ -66,11 +68,6 @@ public class GoSpiderServiceImpl implements GoSpiderService{
         try {
             String url = GO_REPO_BASE_URL + name.substring(11);
 
-            Date date = new Date();
-            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-            String timeStamp = dateFormat.format(date);
-            System.out.println(timeStamp + " crawling :" + url);
-
             // 创建HttpClient对象
             CloseableHttpClient httpClient = HttpClients.createDefault();
             // 声明访问地址
@@ -105,7 +102,7 @@ public class GoSpiderServiceImpl implements GoSpiderService{
             goComponentDO.setLicenses(licenses.toArray(new String[0]));
             goComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(name, version, "golang").toArray(new String[0]));
         } catch (Exception e) {
-            System.err.println("通过github api获取组件信息失败: " + name + "@" + version);
+            log.error("通过github api获取组件信息失败: " + name + "@" + version);
             goComponentDO.setDescription("-");
         }
         return goComponentDO;

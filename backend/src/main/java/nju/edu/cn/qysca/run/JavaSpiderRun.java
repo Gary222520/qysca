@@ -40,9 +40,9 @@ public class JavaSpiderRun {
         for (String targetUrl : targetUrls) {
             if (targetUrl.isEmpty() || targetUrl.startsWith("//"))
                 continue;
-            System.out.println("开始按目录爬取：" + targetUrl);
+            log.info("开始按目录爬取：" + targetUrl);
             javaSpiderService.crawlDirectory(targetUrl);
-            System.out.println("该目录爬取完毕: " + targetUrl);
+            log.info("该目录爬取完毕: " + targetUrl);
         }
     }
 
