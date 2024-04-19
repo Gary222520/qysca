@@ -8,7 +8,6 @@ spring:
     url: jdbc:postgresql://124.71.180.24:5432/qysca
     username: qysca
     password: qysca
-    show-sql: false
   jpa:
     database: postgresql
     hibernate:
@@ -18,6 +17,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         temp:
           use-jdbc-metadata-defaults: false
+    show-sql: false
   redis:
     host: 124.71.180.24
     port: 6379
@@ -38,8 +38,8 @@ spring:
     cache: false
     prefix: "classpath:/templates/"
 logging:
-  file:
-    path: /root/tyhj/qysca/logs
+  # 指定日志配置文件
+  config: classpath:logback-spring.xml
 
 uploadFolder: /root/tyhj/qysca/upload/
 tempPomFolder: /root/tyhj/qysca/temp/pom/

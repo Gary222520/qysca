@@ -44,6 +44,7 @@ public class JsSpiderRun {
                             if (jsComponentDao.findByNameAndVersion(name, version) != null) {
                                 continue;
                             }
+                            log.info("开始爬取: " + "js组件 " + name + ":" + version);
                             JsComponentDO jsComponentDO = jsSpiderService.crawlByNV(name, version);
                             if (jsComponentDO == null) {
                                 isSuccess = false;
@@ -52,8 +53,7 @@ public class JsSpiderRun {
                             try {
                                 jsComponentDao.save(jsComponentDO);
                             } catch (Exception e){
-                                log.error("保存组件时出错：" + jsComponentDO.getName() + " " + jsComponentDO.getVersion());
-                                log.error(e.getMessage());
+                                log.error("js组件存入数据库失败：" + jsComponentDO.toString());
                                 e.printStackTrace();
                             }
                         }
