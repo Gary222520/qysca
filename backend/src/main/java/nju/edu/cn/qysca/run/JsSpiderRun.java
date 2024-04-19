@@ -52,8 +52,7 @@ public class JsSpiderRun {
                             try {
                                 jsComponentDao.save(jsComponentDO);
                             } catch (Exception e){
-                                log.error("保存组件时出错：" + jsComponentDO.getName() + " " + jsComponentDO.getVersion());
-                                log.error(e.getMessage());
+                                log.error("组件存入数据库失败：" + jsComponentDO.toString());
                                 e.printStackTrace();
                             }
                         }

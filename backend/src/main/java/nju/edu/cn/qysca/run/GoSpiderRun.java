@@ -64,8 +64,7 @@ public class GoSpiderRun {
                             try {
                                 goComponentDao.save(goComponentDO);
                             } catch (Exception e){
-                                log.error("保存组件时出错：" + goComponentDO.getName() + " " + goComponentDO.getVersion());
-                                log.error(e.getMessage());
+                                log.error("组件存入数据库失败：" + goComponentDO.toString());
                                 e.printStackTrace();
                             }
                         }

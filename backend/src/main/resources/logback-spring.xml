@@ -1,13 +1,14 @@
 <configuration>
     <!-- 日志地址 -->
-    <property name="LOG_HOME" value="src/resources/log/backend" />
+    <property name="LOG_HOME" value="src/main/resources/logs/backend" />
 
     <!-- 日志格式 -->
     <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36}:%line - %msg%n" />
 
     <!-- 输出到文件 -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/app.log</file>
+
+        <file>${LOG_HOME}/app.log</file>
         <append>true</append>
 
         <!-- 日志格式 -->
@@ -16,10 +17,10 @@
             <charset>UTF-8</charset>
         </encoder>
 
-        <!-- 设置按尺寸和时间（同时满足）分割 -->
+        <!-- 设置按尺寸和时间（同时满足）分割滚动 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- 日志名格式 -->
-            <fileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/app-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
             <!--单个日志文件最大值-->
             <maxFileSize>10MB</maxFileSize>
             <!--日志保留天数-->
@@ -38,7 +39,7 @@
     </appender>
 
     <!-- 设置根日志记录器 -->
-    <root level="ALL">
+    <root level="INFO">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="FILE" />
     </root>

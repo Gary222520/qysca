@@ -61,8 +61,7 @@ public class PythonSpiderRun {
                             try {
                                 pythonComponentDao.save(pythonComponentDO);
                             } catch (Exception e) {
-                                log.error("保存组件时出错：" + pythonComponentDO.getName() + " " + pythonComponentDO.getVersion());
-                                log.error(e.getMessage());
+                                log.error("组件存入数据库失败：" + pythonComponentDO.toString());
                                 e.printStackTrace();
                             }
 
