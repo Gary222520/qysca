@@ -32,9 +32,9 @@ public class PackageJsonDTO {
     @ApiModelProperty(value = "许可证", example = "MIT")
     private String license;
 
-    @ApiModelProperty(value = "依赖", example = "{\"dependency1\": \"^1.0.0\", \"dependency2\": \"^2.0.0\"}")
+    @ApiModelProperty(value = "依赖")
     private Map<String, String> dependencies = new HashMap<>();
 
-    @ApiModelProperty(value = "开发时依赖", example = "{\"devDependency1\": \"^1.0.0\", \"devDependency2\": \"^2.0.0\"}")
+    @ApiModelProperty(value = "开发时依赖")
     private Map<String, String> devDependencies = new HashMap<>();
 }

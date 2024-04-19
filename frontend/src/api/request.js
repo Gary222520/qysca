@@ -52,6 +52,6 @@ export const request = (method, url, config) => {
     url,
     ...config,
     baseURL,
-    timeout: 600000
+    timeout: 10 * 60 * 1000
   })
 }

@@ -49,10 +49,9 @@ public class ApplicationDO {
     private String description;
 
     @Column(name="language", nullable = false)
-    @ApiModelProperty(value = "语言", example = "[\"java\",]")
+    @ApiModelProperty(value = "语言")
     @Type(type = "string-array")
     private String[] language;
-
 
     @Column(name = "type", nullable = false)
     @ApiModelProperty(value = "类型", example = "UI")
@@ -67,12 +66,12 @@ public class ApplicationDO {
     private String scanner;
 
     @Column(name = "licenses")
-    @ApiModelProperty(value = "许可证", example = "[\"MIT\",]")
+    @ApiModelProperty(value = "许可证")
     @Type(type = "string-array")
     private String[] licenses = {};
 
     @Column(name = "vulnerabilities")
-    @ApiModelProperty(value = "漏洞", example = "[\"CVE-2020-1234\",]")
+    @ApiModelProperty(value = "漏洞")
     @Type(type = "string-array")
     private String[] vulnerabilities = {};
 
@@ -97,12 +96,12 @@ public class ApplicationDO {
     private String creator;
 
     @Column(name = "childApplication")
-    @ApiModelProperty(value = "子应用", example = "['123e456-e74-b37-4d7a-9421d59bf3b',]")
+    @ApiModelProperty(value = "子应用")
     @Type(type = "string-array")
     private String[] childApplication = {};
 
     @Column(name = "childComponent")
-    @ApiModelProperty(value = "子组件", example = "{'java':['123e456-e74-b37-4d7a-9421d59bf3b',]}")
+    @ApiModelProperty(value = "子组件")
     @Type(type = "jsonb")
     private Map<String, List<String>> childComponent = new HashMap<>();
 }

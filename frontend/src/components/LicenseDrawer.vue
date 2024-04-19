@@ -39,12 +39,9 @@
             <div class="text-btn" v-if="data.showBtn" @click="changeText()">{{ data.showTotal ? '收起' : '展开' }}</div>
           </div>
         </a-descriptions-item>
-        <a-descriptions-item label="许可证内容" span="3">
-          <a-button type="primary" @click="openModal()">
-            <SearchOutlined :style="{ fontSize: '16px' }" />点击查看
-          </a-button>
-        </a-descriptions-item>
       </a-descriptions>
+      <a-button type="primary" @click="openModal()">许可证内容 </a-button>
+
       <a-modal v-model:open="data.showLicense" width="1000px" @cancel="closeModal()">
         <template #title>
           <div style="font-size: 20px">许可证内容</div>
@@ -148,7 +145,7 @@ const data = reactive({
   showTotal: false,
   showBtn: true,
   locale: {
-    emptyText: '暂无内容'
+    emptyText: '无'
   }
 })
 const open = (license) => {

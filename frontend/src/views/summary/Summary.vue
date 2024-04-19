@@ -124,8 +124,10 @@ const getStatistics = () => {
       }
       // console.log('VulStatistic', res)
       count.vul = res.data.totalNumber
-      vulChart.value.draw(res.data.categoryCountMap)
-      appVulChart.value.draw(res.data.compareDTOList)
+      if (count.vul) {
+        vulChart.value.draw(res.data.categoryCountMap)
+        appVulChart.value.draw(res.data.compareDTOList)
+      }
     })
     .catch((err) => {
       console.error(err)
@@ -138,8 +140,10 @@ const getStatistics = () => {
       }
       // console.log('LicenseStatistic', res)
       count.license = res.data.totalNumber
-      licenseChart.value.draw(res.data.licenseTypeNumberMap)
-      appLicenseChart.value.draw(res.data.compareDTOList)
+      if (count.license) {
+        licenseChart.value.draw(res.data.licenseTypeNumberMap)
+        appLicenseChart.value.draw(res.data.compareDTOList)
+      }
     })
     .catch((err) => {
       console.error(err)
