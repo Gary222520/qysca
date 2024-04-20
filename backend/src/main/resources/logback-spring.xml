@@ -1,4 +1,5 @@
-<configuration>
+<!-- 日志系统每隔 60 秒扫描一次配置文件，检查是否有更改，当配置文件发生更改时，日志系统会自动重新加载新的配置 -->
+<configuration scan="true" scanPeriod="60 seconds">
     <!-- 日志地址 -->
     <property name="LOG_HOME" value="src/main/resources/logs/backend" />
 
@@ -8,6 +9,7 @@
     <!-- 输出到文件 -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
 
+        <!-- 正在记录的日志文件的路径及文件名 -->
         <file>${LOG_HOME}/app.log</file>
         <append>true</append>
 
@@ -19,8 +21,8 @@
 
         <!-- 设置按尺寸和时间（同时满足）分割滚动 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <!-- 日志名格式 -->
-            <fileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/app-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <!-- 日志名格式，让日志文件每天滚动打包，按照月份文件夹保存-->
+            <fileNamePattern>${LOG_HOME}/%d{yyyy-MM,aux}/app-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
             <!--单个日志文件最大值-->
             <maxFileSize>10MB</maxFileSize>
             <!--日志保留天数-->
@@ -39,6 +41,7 @@
     </appender>
 
     <!-- 设置根日志记录器 -->
+    <!-- 日志级别从低到高分为TRACE < DEBUG < INFO < WARN < ERROR < FATAL，设置为INFO，则低于INFO的信息都不会输出 -->
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="FILE" />
