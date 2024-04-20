@@ -231,7 +231,6 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
      * @return JavaComponentDO
      */
     private JavaComponentDO crawl(String url) {
-
         // 爬取pom文件中的组件信息
         String pomUrl = findPomUrlInDirectory(url);
         if (pomUrl == null) {
@@ -352,11 +351,6 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
      * @return JavaComponentDO
      */
     private JavaComponentDO convertToComponentDO(String pomString, String pomUrl) {
-
-        //
-        long st = System.currentTimeMillis();
-        //
-
         // 从pom url中提取groupId, artifactId, and version
         String[] parts = pomUrl.split("/");
         String version = parts[parts.length - 2];
@@ -389,9 +383,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         for (String licenseName : license) {
             licenses.addAll(licenseService.searchLicense(licenseName));
         }
-
         javaComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(groupId + ":" + artifactId, version, "java").toArray(new String[0]));
-
         javaComponentDO.setLicenses(licenses.toArray(new String[0]));
         javaComponentDO.setCreator(null);
         javaComponentDO.setState("SUCCESS");
