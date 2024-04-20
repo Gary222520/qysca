@@ -233,7 +233,6 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
     private JavaComponentDO crawl(String url) {
 
         //
-        log.info("开始爬取: " + url);
         long stt = System.currentTimeMillis();
         long st = System.currentTimeMillis();
         //

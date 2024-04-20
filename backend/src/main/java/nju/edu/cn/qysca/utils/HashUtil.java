@@ -29,12 +29,6 @@ public class HashUtil {
      * @return List<HashDO>
      */
     public static List<HashDO> getHashes(String jarUrl) {
-
-        //
-        long st = System.currentTimeMillis();
-        //
-
-
         File file = null;
         try (CloseableHttpClient httpClient = HttpClients.createDefault();
              CloseableHttpResponse response = httpClient.execute(new HttpGet(jarUrl))) {
@@ -63,12 +57,6 @@ public class HashUtil {
             return new ArrayList<>();
         }
 
-        //
-        long et = System.currentTimeMillis();
-        log.info("爬取jar包耗时(ms)：" + (et- st));
-        st = System.currentTimeMillis();
-        //
-
         // 调用哈希算法
         List<HashDO> hashes = new ArrayList<>();
         hashes.add(new HashDO("MD5", hash(file, "MD5")));
@@ -79,11 +67,6 @@ public class HashUtil {
         hashes.add(new HashDO("SHA3-384", hash(file, "SHA3-384")));
         hashes.add(new HashDO("SHA3-256", hash(file, "SHA-256")));
         hashes.add(new HashDO("SHA3-512", hash(file, "SHA-512")));
-
-        //
-        et = System.currentTimeMillis();
-        log.info("计算八个哈希值耗时(ms)：" + (et-st));
-        //
 
         return hashes;
     }
