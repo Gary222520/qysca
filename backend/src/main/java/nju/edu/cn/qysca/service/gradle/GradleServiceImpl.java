@@ -12,10 +12,7 @@ import nju.edu.cn.qysca.utils.ZipUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -72,6 +69,35 @@ public class GradleServiceImpl implements GradleService {
     }
 
     /**
+     * 修改上传gradle项目中的gradle wrapper源
+     * @param filePath 文件路径
+     */
+    private void changeGradleSource(String filePath){
+        // 修改gradle项目中的gradle/wrapper/gradle-wrapper.properties文件中的distributionUrl
+        // 例如：从distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip
+        // 修改为distributionUrl=https\://mirrors.cloud.tencent.com/gradle/gradle-7.5.1-bin.zip
+        File gradlewPropertiesFile = new File(new File(new File(filePath, "gradle"), "wrapper"), "gradle-wrapper.properties");
+        if (!gradlewPropertiesFile.exists())
+            return;
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(gradlewPropertiesFile));
+             FileWriter fileWriter = new FileWriter(gradlewPropertiesFile)){
+            //读取文件
+            StringBuilder lines = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null){
+                lines.append(line).append("\n");
+            }
+
+            // 将默认gradle源修改为腾讯镜像源
+            String defaultDistributionUrl = "services.gradle.org/distributions/";
+            String mirrorDistributionUrl = "mirrors.cloud.tencent.com/gradle/";
+            fileWriter.write(lines.toString().replace(defaultDistributionUrl, mirrorDistributionUrl));
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * 构造gradle java组件
      *
      * @param name    组件名
@@ -118,6 +144,9 @@ public class GradleServiceImpl implements GradleService {
         } else {
             throw new PlatformException(500, "gradle解析暂不支持此文件类型");
         }
+
+
+        changeGradleSource(filePath);
 
         // 调用./gradlew dependencies命令，并获取结果
         List<String> lines = runGradleCommand(filePath);
