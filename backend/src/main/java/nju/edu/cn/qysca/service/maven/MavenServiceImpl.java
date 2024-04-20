@@ -281,6 +281,8 @@ public class MavenServiceImpl implements MavenService {
                     javaComponentDependencyTreeDO.setType("opensource");
                 } else {
                     javaComponentDependencyTreeDO.setType("opensource");
+                    javaComponentDependencyTreeDO.setLicenses("-");
+                    javaComponentDependencyTreeDO.setVulnerabilities("-");
                     // 如果爬虫没有爬到则打印报错信息，仍继续执行
                     log.error("存在未识别的组件：" + javaComponentDependencyTreeDO.getName() + ":" + javaComponentDependencyTreeDO.getVersion());
                 }

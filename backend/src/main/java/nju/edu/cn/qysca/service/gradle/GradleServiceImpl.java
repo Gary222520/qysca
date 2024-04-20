@@ -254,6 +254,8 @@ public class GradleServiceImpl implements GradleService {
                         }
                     } else {
                         componentDependencyTreeDO.setType("opensource");
+                        componentDependencyTreeDO.setVulnerabilities("-");
+                        componentDependencyTreeDO.setLicenses("-");
                         // 如果爬虫没有爬到则打印报错信息，仍继续执行
                         log.error("存在未识别的组件：" + groupId+":"+artifactId+":"+version);
                     }
