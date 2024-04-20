@@ -30,8 +30,15 @@ public class HashUtil {
      */
     public static List<HashDO> getHashes(String jarUrl) {
         File file = null;
-        try (CloseableHttpClient httpClient = HttpClients.createDefault();
-             CloseableHttpResponse response = httpClient.execute(new HttpGet(jarUrl))) {
+        try {
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            HttpGet httpGet = new HttpGet(jarUrl);
+            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
+            CloseableHttpResponse response = httpClient.execute(httpGet);
+            if (response.getStatusLine().getStatusCode() != 200){
+                log.error("爬取jar包失败：" + jarUrl);
+                return new ArrayList<>();
+            }
             // 获取响应实体
             HttpEntity entity = response.getEntity();
             file = File.createTempFile("tempJar", ".jar");
@@ -46,14 +53,11 @@ public class HashUtil {
             }
             // 确保释放实体资源
             EntityUtils.consume(entity);
+            httpClient.close();
+            response.close();
         } catch (Exception e) {
             e.printStackTrace();
             log.error("爬取jar包失败：" + jarUrl);
-            return new ArrayList<>();
-        }
-
-        if (file == null) {
-            log.error("无效的jar包url: " + jarUrl);
             return new ArrayList<>();
         }
 
