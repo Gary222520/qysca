@@ -315,6 +315,9 @@ public class GoServiceImpl implements GoService {
                                 log.error("组件存入数据库失败：" + goComponentDO.toString());
                                 e.printStackTrace();
                             }
+                            child.setLicenses(String.join(",", goComponentDO.getLicenses()));
+                            child.setVulnerabilities(String.join(",", goComponentDO.getVulnerabilities()));
+                            child.setType("opensource");
                         } else {
                             // 如果爬虫没有爬到则打印报错信息，仍继续执行
                             log.error("存在未识别的组件：" + child.getName() + ":" + child.getVersion());
@@ -322,10 +325,11 @@ public class GoServiceImpl implements GoService {
                             child.setLicenses("-");
                             child.setVulnerabilities("-");
                         }
+                    }else {
+                        child.setLicenses(String.join(",", goComponentDO.getLicenses()));
+                        child.setVulnerabilities(String.join(",", goComponentDO.getVulnerabilities()));
+                        child.setType(goComponentDO.getType());
                     }
-                    child.setLicenses(String.join(",", goComponentDO.getLicenses()));
-                    child.setVulnerabilities(String.join(",", goComponentDO.getVulnerabilities()));
-                    child.setType(goComponentDO.getType());
                     node.getDependencies().add(child);
                     queue.add(child);
                 }
