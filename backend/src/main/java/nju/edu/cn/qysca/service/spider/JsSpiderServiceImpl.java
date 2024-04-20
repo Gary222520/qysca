@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.domain.component.dos.JsComponentDO;
 import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
@@ -30,7 +29,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-@Slf4j
 public class JsSpiderServiceImpl implements JsSpiderService {
 
     private final String FILE_SEPARATOR = "/";
@@ -53,10 +51,6 @@ public class JsSpiderServiceImpl implements JsSpiderService {
      */
     @Override
     public JsComponentDO crawlByNV(String name, String version) {
-        //
-        long sst = System.currentTimeMillis();
-        //
-
         JsComponentDO jsComponentDO = new JsComponentDO();
         jsComponentDO.setName(name);
         jsComponentDO.setVersion(version);
@@ -74,10 +68,6 @@ public class JsSpiderServiceImpl implements JsSpiderService {
             }
             String url = NPM_REPO_BASE_URL + name + FILE_SEPARATOR + version;
 
-            //
-            long st = System.currentTimeMillis();
-            //
-
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpGet httpGet = new HttpGet(url);
             httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
@@ -86,13 +76,6 @@ public class JsSpiderServiceImpl implements JsSpiderService {
                 return null;
             }
             String content = EntityUtils.toString(response.getEntity(), "UTF-8");
-
-            //
-            long et = System.currentTimeMillis();
-            log.info("抓取url耗时：" + (et-st));
-            //
-
-
             JSONObject jsonObject = JSON.parseObject(content);
             jsComponentDO.setDescription(jsonObject.getString("description"));
             jsComponentDO.setUrl(jsonObject.getString("homepage"));
@@ -106,18 +89,7 @@ public class JsSpiderServiceImpl implements JsSpiderService {
             } else {
                 jsComponentDO.setLicenses(new String[0]);
             }
-
-            //
-            st = System.currentTimeMillis();
-            //
-
             jsComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(name, version, "javaScript").toArray(new String[0]));
-
-            //
-            et = System.currentTimeMillis();
-            log.info("解析漏洞耗时："+ (et-st));
-            //
-
             jsComponentDO.setDownloadUrl(jsonObject.getJSONObject("dist") == null ? "" : jsonObject.getJSONObject("dist").getString("tarball"));
             List<String> copyrightStatements = new ArrayList<>();
             if (jsonObject.get("author") instanceof JSONObject) {
@@ -147,12 +119,6 @@ public class JsSpiderServiceImpl implements JsSpiderService {
         } catch (Exception e) {
             return null;
         }
-
-        //
-        long eet =System.currentTimeMillis();
-        log.info("爬取组件总耗时：" + (eet-sst));
-        //
-
         return jsComponentDO;
     }
 

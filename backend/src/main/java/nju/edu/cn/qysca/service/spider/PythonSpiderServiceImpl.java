@@ -3,7 +3,6 @@ package nju.edu.cn.qysca.service.spider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
 import nju.edu.cn.qysca.domain.component.dos.PythonComponentDO;
 import nju.edu.cn.qysca.service.license.LicenseService;
 import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
@@ -21,7 +20,6 @@ import java.util.Date;
 import java.util.List;
 
 @Service
-@Slf4j
 public class PythonSpiderServiceImpl implements PythonSpiderService{
     @Value("${PYPI_REPO_BASE_URL}")
     private String PYPI_REPO_BASE_URL;
@@ -76,27 +74,10 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
      * @return ComponentDO
      */
     private PythonComponentDO crawl(String url, String name, String version){
-        //
-        long sst = System.currentTimeMillis();
-        long st = System.currentTimeMillis();
-        //
-
         String jsonString = getUrlContent(url);
         if (jsonString == null || jsonString.isEmpty())
             return null;
-
-        //
-        long et = System.currentTimeMillis();
-        log.info("抓取url耗时：" + (et-st));
-        //
-
         PythonComponentDO componentDO = convertToComponentDO(jsonString, name, version);
-
-        //
-        long eet =System.currentTimeMillis();
-        log.info("爬取组件总耗时：" + (eet-sst));
-        //
-
         return componentDO;
     }
 
@@ -108,11 +89,6 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
     private PythonComponentDO convertToComponentDO(String jsonString, String name, String version){
         PythonComponentDO componentDO = new PythonComponentDO();
         try {
-
-            //
-            long st = System.currentTimeMillis();
-            //
-
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(jsonString);
             componentDO.setName(name);
@@ -133,19 +109,7 @@ public class PythonSpiderServiceImpl implements PythonSpiderService{
                 license = "";
             }
             componentDO.setLicenses(licenseService.searchLicense(license).toArray(new String[0]));
-
-            //
-            long et = System.currentTimeMillis();
-            log.info("解析组件转化为componentDO耗时：" + (et-st));
-            st = System.currentTimeMillis();
-            //
-
             componentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(name, version, "python").toArray(new String[0]));
-
-            //
-            et = System.currentTimeMillis();
-            log.info("解析漏洞耗时："+ (et-st));
-            //
 
             componentDO.setCreator(null);
             componentDO.setState("SUCCESS");
