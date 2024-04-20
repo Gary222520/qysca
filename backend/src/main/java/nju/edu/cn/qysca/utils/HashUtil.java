@@ -29,70 +29,80 @@ public class HashUtil {
      * @return List<HashDO>
      */
     public static List<HashDO> getHashes(String jarUrl) {
-        File file = null;
-        try (CloseableHttpClient httpClient = HttpClients.createDefault();
-             CloseableHttpResponse response = httpClient.execute(new HttpGet(jarUrl))) {
-            // 获取响应实体
-            HttpEntity entity = response.getEntity();
-            file = File.createTempFile("tempJar", ".jar");
-            try (InputStream in = entity.getContent();
-                 OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
-
-                byte[] buffer = new byte[65536]; // 64 KB buffer
-                int bytesRead;
-                while ((bytesRead = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, bytesRead);
-                }
-            }
-            // 确保释放实体资源
-            EntityUtils.consume(entity);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error("爬取jar包失败：" + jarUrl);
-            return new ArrayList<>();
-        }
-
-        if (file == null) {
-            log.error("无效的jar包url: " + jarUrl);
-            return new ArrayList<>();
-        }
-
-        // 调用哈希算法
         List<HashDO> hashes = new ArrayList<>();
-        hashes.add(new HashDO("MD5", hash(file, "MD5")));
-        hashes.add(new HashDO("SHA-1", hash(file, "SHA-1")));
-        hashes.add(new HashDO("SHA-256", hash(file, "SHA-256")));
-        hashes.add(new HashDO("SHA-512", hash(file, "SHA-512")));
-        hashes.add(new HashDO("SHA-384", hash(file, "SHA-384")));
-        hashes.add(new HashDO("SHA3-384", hash(file, "SHA3-384")));
-        hashes.add(new HashDO("SHA3-256", hash(file, "SHA-256")));
-        hashes.add(new HashDO("SHA3-512", hash(file, "SHA-512")));
+
+        // 创建多个 MessageDigest 实例
+        MessageDigest md5Digest;
+        MessageDigest sha1Digest;
+        MessageDigest sha256Digest;
+        MessageDigest sha512Digest;
+        MessageDigest sha3_384Digest;
+        MessageDigest sha3_256Digest;
+        MessageDigest sha3_512Digest;
+
+        try {
+            md5Digest = MessageDigest.getInstance("MD5");
+            sha1Digest = MessageDigest.getInstance("SHA-1");
+            sha256Digest = MessageDigest.getInstance("SHA-256");
+            sha512Digest = MessageDigest.getInstance("SHA-512");
+            sha3_384Digest = MessageDigest.getInstance("SHA3-384");
+            sha3_256Digest = MessageDigest.getInstance("SHA3-256");
+            sha3_512Digest = MessageDigest.getInstance("SHA3-512");
+        } catch (Exception e) {
+            log.error("无法找到指定的哈希算法", e);
+            return new ArrayList<>();
+        }
+
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            // 创建 HttpGet 请求并设置请求头
+            HttpGet httpGet = new HttpGet(jarUrl);
+            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
+            httpGet.addHeader("Accept", "application/zip,application/octet-stream");
+
+            // 执行 HTTP 请求
+            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+                // 确保响应状态为200
+                if (response.getStatusLine().getStatusCode() != 200) {
+                    log.error("爬取jar包失败：" + jarUrl);
+                    return new ArrayList<>();
+                }
+
+                // 获取响应实体并在下载同时计算哈希值
+                HttpEntity entity = response.getEntity();
+                try (InputStream in = entity.getContent()) {
+                    byte[] buffer = new byte[262144]; // 256 KB buffer
+                    int bytesRead;
+
+                    // 在下载同时更新多个哈希值
+                    while ((bytesRead = in.read(buffer)) != -1) {
+                        md5Digest.update(buffer, 0, bytesRead);
+                        sha1Digest.update(buffer, 0, bytesRead);
+                        sha256Digest.update(buffer, 0, bytesRead);
+                        sha512Digest.update(buffer, 0, bytesRead);
+                        sha3_384Digest.update(buffer, 0, bytesRead);
+                        sha3_256Digest.update(buffer, 0, bytesRead);
+                        sha3_512Digest.update(buffer, 0, bytesRead);
+                    }
+
+                    // 计算最终的哈希值
+                    hashes.add(new HashDO("MD5", bytesToHex(md5Digest.digest())));
+                    hashes.add(new HashDO("SHA-1", bytesToHex(sha1Digest.digest())));
+                    hashes.add(new HashDO("SHA-256", bytesToHex(sha256Digest.digest())));
+                    hashes.add(new HashDO("SHA-512", bytesToHex(sha512Digest.digest())));
+                    hashes.add(new HashDO("SHA3-384", bytesToHex(sha3_384Digest.digest())));
+                    hashes.add(new HashDO("SHA3-256", bytesToHex(sha3_256Digest.digest())));
+                    hashes.add(new HashDO("SHA3-512", bytesToHex(sha3_512Digest.digest())));
+                }
+
+                // 确保释放实体资源
+                EntityUtils.consume(entity);
+            }
+        } catch (IOException e) {
+            log.error("爬取jar包失败：" + jarUrl, e);
+            return new ArrayList<>();
+        }
 
         return hashes;
-    }
-
-    /**
-     * 对指定文件进行hash
-     *
-     * @param file File 需要hash的文件
-     * @param alg  hash算法
-     * @return hash值
-     */
-    private static String hash(File file, String alg) {
-        try (InputStream in = Files.newInputStream(file.toPath())) {
-            MessageDigest digest = MessageDigest.getInstance(alg);
-            byte[] block = new byte[4096];
-            int length;
-            while ((length = in.read(block)) > 0) {
-                digest.update(block, 0, length);
-            }
-            return bytesToHex(digest.digest());
-        } catch (NoSuchAlgorithmException e) {
-            log.error("不存在该哈希算法: " + alg);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return null;
     }
 
     /**

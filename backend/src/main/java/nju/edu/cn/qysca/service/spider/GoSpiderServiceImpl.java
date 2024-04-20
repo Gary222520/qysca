@@ -48,6 +48,12 @@ public class GoSpiderServiceImpl implements GoSpiderService{
      */
     @Override
     public GoComponentDO crawlByNV(String name, String version) {
+        //
+        long sst = System.currentTimeMillis();
+        //
+
+
+
         GoComponentDO goComponentDO = new GoComponentDO();
         // 配置基本信息
         goComponentDO.setName(name);
@@ -68,6 +74,11 @@ public class GoSpiderServiceImpl implements GoSpiderService{
         try {
             String url = GO_REPO_BASE_URL + name.substring(11);
 
+            //
+            long st = System.currentTimeMillis();
+            //
+
+
             // 创建HttpClient对象
             CloseableHttpClient httpClient = HttpClients.createDefault();
             // 声明访问地址
@@ -85,6 +96,12 @@ public class GoSpiderServiceImpl implements GoSpiderService{
             }
             // 获取内容，解析成json，填充组件信息
             String content = EntityUtils.toString(response.getEntity(), "UTF-8");
+
+            //
+            long et = System.currentTimeMillis();
+            log.info("抓取url耗时：" + (et-st));
+            //
+
             JSONObject jsonObject = JSON.parseObject(content);
             String description = jsonObject.getString("description");
             if (null != description && description.length() != 0) {
@@ -100,11 +117,28 @@ public class GoSpiderServiceImpl implements GoSpiderService{
                 }
             }
             goComponentDO.setLicenses(licenses.toArray(new String[0]));
+
+            //
+            st = System.currentTimeMillis();
+            //
+
             goComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(name, version, "golang").toArray(new String[0]));
+
+            //
+            et = System.currentTimeMillis();
+            log.info("解析漏洞耗时："+ (et-st));
+            //
+
         } catch (Exception e) {
             log.error("通过github api获取组件信息失败: " + name + "@" + version);
             goComponentDO.setDescription("-");
         }
+
+        //
+        long eet =System.currentTimeMillis();
+        log.info("爬取组件总耗时：" + (eet-sst));
+        //
+
         return goComponentDO;
     }
 
