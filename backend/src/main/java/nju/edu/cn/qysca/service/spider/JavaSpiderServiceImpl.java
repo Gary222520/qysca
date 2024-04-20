@@ -231,15 +231,36 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
      * @return JavaComponentDO
      */
     private JavaComponentDO crawl(String url) {
+
+        //
+        log.info("开始爬取: " + url);
+        long stt = System.currentTimeMillis();
+        long st = System.currentTimeMillis();
+        //
+
         // 爬取pom文件中的组件信息
         String pomUrl = findPomUrlInDirectory(url);
         if (pomUrl == null) {
             return null;
         }
 
+        //
+        long et = System.currentTimeMillis();
+        log.info("在url目录下寻找pom文件耗时(ms)：" + (et - st));
+        //
+
+        //
+        st = System.currentTimeMillis();
+        //
+
         Document document = getDocumentByUrl(pomUrl);
         if (document == null)
             return null;
+
+        //
+        et = System.currentTimeMillis();
+        log.info("爬取pom文件耗时(ms)：" + (et - st));
+        //
 
         JavaComponentDO javaComponentDO = convertToComponentDO(document.outerHtml(), pomUrl);
         if (javaComponentDO == null)
@@ -251,11 +272,23 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
             return searchResult;
         }
 
+        //
+        st = System.currentTimeMillis();
+        //
+
         // 爬取jar包，生成hash信息
         String jarUrl = findJarUrlInDirectory(url);
         if (jarUrl != null) {
             javaComponentDO.setHashes(HashUtil.getHashes(jarUrl));
         }
+
+        //
+        et = System.currentTimeMillis();
+        log.info("爬取jar包并计算hash值耗时(ms)：" + (et - st));
+
+        long ett = System.currentTimeMillis();
+        log.info("爬取该组件总共耗时(ms)：" + (ett - stt));
+        //
 
         return javaComponentDO;
     }
@@ -351,6 +384,11 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
      * @return JavaComponentDO
      */
     private JavaComponentDO convertToComponentDO(String pomString, String pomUrl) {
+
+        //
+        long st = System.currentTimeMillis();
+        //
+
         // 从pom url中提取groupId, artifactId, and version
         String[] parts = pomUrl.split("/");
         String version = parts[parts.length - 2];
@@ -383,7 +421,21 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         for (String licenseName : license) {
             licenses.addAll(licenseService.searchLicense(licenseName));
         }
+
+        //
+        long et = System.currentTimeMillis();
+        log.info("解析pom文件，转为componentDO（不算漏洞）耗时(ms)：" + (et - st));
+
+        st = System.currentTimeMillis();
+        //
+
         javaComponentDO.setVulnerabilities(vulnerabilityService.findVulnerabilities(groupId + ":" + artifactId, version, "java").toArray(new String[0]));
+
+        //
+        et = System.currentTimeMillis();
+        log.info("解析漏洞耗时(ms)：" + (et - st));
+        //
+
         javaComponentDO.setLicenses(licenses.toArray(new String[0]));
         javaComponentDO.setCreator(null);
         javaComponentDO.setState("SUCCESS");
