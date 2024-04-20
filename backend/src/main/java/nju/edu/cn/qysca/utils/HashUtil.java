@@ -12,6 +12,13 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+
 @Slf4j
 public class HashUtil {
 
@@ -23,23 +30,31 @@ public class HashUtil {
      */
     public static List<HashDO> getHashes(String jarUrl) {
         File file = null;
-        try {
-            InputStream in = new URL(jarUrl).openStream();
-            //创建临时文件
-            file = File.createTempFile("temp", "");
-            //写入jar包
-            byte[] buffer = new byte[8192]; // 8 KB buffer
-            int bytesRead;
-            OutputStream outputStream = new FileOutputStream(file);
-            while ((bytesRead = in.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
+        try (CloseableHttpClient httpClient = HttpClients.createDefault();
+             CloseableHttpResponse response = httpClient.execute(new HttpGet(jarUrl))) {
+            // 获取响应实体
+            HttpEntity entity = response.getEntity();
+            file = File.createTempFile("tempJar", ".jar");
+            try (InputStream in = entity.getContent();
+                 OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
+
+                byte[] buffer = new byte[65536]; // 64 KB buffer
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
             }
+            // 确保释放实体资源
+            EntityUtils.consume(entity);
         } catch (Exception e) {
             e.printStackTrace();
+            log.error("爬取jar包失败：" + jarUrl);
+            return new ArrayList<>();
         }
 
         if (file == null) {
             log.error("无效的jar包url: " + jarUrl);
+            return new ArrayList<>();
         }
 
         // 调用哈希算法
