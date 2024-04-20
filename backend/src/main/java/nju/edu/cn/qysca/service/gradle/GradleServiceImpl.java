@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -79,8 +81,7 @@ public class GradleServiceImpl implements GradleService {
         File gradlewPropertiesFile = new File(new File(new File(filePath, "gradle"), "wrapper"), "gradle-wrapper.properties");
         if (!gradlewPropertiesFile.exists())
             return;
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(gradlewPropertiesFile));
-             FileWriter fileWriter = new FileWriter(gradlewPropertiesFile)){
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(gradlewPropertiesFile))){
             //读取文件
             StringBuilder lines = new StringBuilder();
             String line;
@@ -89,9 +90,11 @@ public class GradleServiceImpl implements GradleService {
             }
 
             // 将默认gradle源修改为腾讯镜像源
-            String defaultDistributionUrl = "services.gradle.org/distributions/";
-            String mirrorDistributionUrl = "mirrors.cloud.tencent.com/gradle/";
-            fileWriter.write(lines.toString().replace(defaultDistributionUrl, mirrorDistributionUrl));
+            try (FileWriter fileWriter = new FileWriter(gradlewPropertiesFile)){
+                String defaultDistributionUrl = "services.gradle.org/distributions/";
+                String mirrorDistributionUrl = "mirrors.cloud.tencent.com/gradle/";
+                fileWriter.write(lines.toString().replace(defaultDistributionUrl, mirrorDistributionUrl));
+            }
         } catch (IOException e){
             e.printStackTrace();
         }
