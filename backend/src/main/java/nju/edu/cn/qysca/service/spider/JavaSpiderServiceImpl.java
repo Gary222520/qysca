@@ -271,7 +271,8 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
             // 每次爬取url时休眠一定时间，防止被ban
             //Thread.sleep(sleepTime);
             // 连接到url并获取其内容
-            return Jsoup.connect(url).get();
+            String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36";
+            return Jsoup.connect(url).userAgent(userAgent).get();
         } catch (Exception e) {
             log.error("无法访问或url失效: " + url);
             return null;
