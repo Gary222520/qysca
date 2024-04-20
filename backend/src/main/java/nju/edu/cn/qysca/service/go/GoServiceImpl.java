@@ -318,6 +318,9 @@ public class GoServiceImpl implements GoService {
                         } else {
                             // 如果爬虫没有爬到则打印报错信息，仍继续执行
                             log.error("存在未识别的组件：" + child.getName() + ":" + child.getVersion());
+                            child.setType("opensource");
+                            child.setLicenses("-");
+                            child.setVulnerabilities("-");
                         }
                     }
                     child.setLicenses(String.join(",", goComponentDO.getLicenses()));

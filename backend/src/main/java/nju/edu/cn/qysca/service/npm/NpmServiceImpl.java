@@ -391,6 +391,8 @@ public class NpmServiceImpl implements NpmService {
                 } else {
                     // 如果爬虫没有爬到则打印报错信息，仍继续执行
                     child.setType("opensource");
+                    child.setLicenses("-");
+                    child.setVulnerabilities("-");
                     log.error("存在未识别的组件：" + entry.getKey() + ":" + entry.getValue().getVersion());
                 }
             } else {
