@@ -389,6 +389,8 @@ public class PythonServiceImpl implements PythonService {
                 componentDependencyTreeDO.setType("opensource");
             } else {
                 componentDependencyTreeDO.setType("opensource");
+                componentDependencyTreeDO.setLicenses("-");
+                componentDependencyTreeDO.setVulnerabilities("-");
                 // 如果爬虫没有爬到则打印报错信息，仍继续执行
                 System.err.println("存在未识别组件：" + componentDependencyTreeDO.getName() + ":" + componentDependencyTreeDO.getVersion());
 //                //如果爬虫没有爬到则扫描错误 通过抛出异常处理
