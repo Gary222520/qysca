@@ -128,7 +128,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, onActivated } from 'vue'
 import {
   PlusOutlined,
   FileTextOutlined,
@@ -145,10 +145,17 @@ import UpdateModal from './components/UpdateModal.vue'
 import WarnModal from '@/components/WarnModal.vue'
 import { message } from 'ant-design-vue'
 import { arrToString, ROLE, permit } from '@/utils/util.js'
+import { useStore } from 'vuex'
+
+const store = useStore()
 
 onMounted(() => {
-  getComponents()
+  if (store.getters.getComSearch) {
+    data.search = store.getters.getComSearch
+    getComponents(data.search.number, data.search.size)
+  } else getComponents()
 })
+
 const drawer = ref()
 const addModal = ref()
 const updateModal = ref()
@@ -214,6 +221,7 @@ const getComponents = (number = 1, size = 8) => {
     number,
     size
   }
+  store.dispatch('saveComSearch', { ...data.search, number, size })
   GetComponents(params)
     .then((res) => {
       // console.log('GetComponents', res)
