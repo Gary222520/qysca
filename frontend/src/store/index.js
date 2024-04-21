@@ -10,6 +10,9 @@ export default createStore({
     },
     permission: (state) => {
       return JSON.parse(sessionStorage.getItem('user')).userBuAppRoles
+    },
+    getComSearch: (state) => {
+      return JSON.parse(sessionStorage.getItem('comSearch'))
     }
   },
   mutations: {},
@@ -49,6 +52,9 @@ export default createStore({
             reject(new Error(err))
           })
       })
+    },
+    saveComSearch: (context, data) => {
+      sessionStorage.setItem('comSearch', JSON.stringify(data))
     }
   },
   modules: {}
