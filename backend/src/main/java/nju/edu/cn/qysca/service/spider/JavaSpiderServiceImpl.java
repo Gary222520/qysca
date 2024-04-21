@@ -251,8 +251,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()){
             // 创建 HttpGet 请求并设置请求头
             HttpGet httpGet = new HttpGet(pomUrl);
-            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
-            httpGet.addHeader("Accept", "application/zip,application/octet-stream");
+            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
 
             // 执行 HTTP 请求
             try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
