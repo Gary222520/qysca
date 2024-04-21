@@ -110,7 +110,11 @@ public class SBOMServiceImpl implements SBOMService {
                         List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
                                 .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
                                 .collect(Collectors.toList());
-                        sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, node.getLanguage()));
+
+                        SbomDependencyDTO sbomDependencyDTO = getDependencyDTO(component, dependencies, node.getLanguage());
+                        if (sbomDependencyDTO != null)
+                            sbomDependencyDTOList.add(sbomDependencyDTO);
+
                     }
                     for (AppComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
                         queue.offer(dependencyNode);
@@ -274,7 +278,11 @@ public class SBOMServiceImpl implements SBOMService {
                         List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
                                 .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
                                 .collect(Collectors.toList());
-                        sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, node.getLanguage()));
+
+                        SbomDependencyDTO sbomDependencyDTO = getDependencyDTO(component, dependencies, node.getLanguage());
+                        if (sbomDependencyDTO != null)
+                            sbomDependencyDTOList.add(sbomDependencyDTO);
+
                     }
                     for (AppComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
                         queue.offer(dependencyNode);
@@ -304,7 +312,11 @@ public class SBOMServiceImpl implements SBOMService {
                     List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
                             .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
                             .collect(Collectors.toList());
-                    sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, "java"));
+
+                    SbomDependencyDTO sbomDependencyDTO = getDependencyDTO(component, dependencies, "java");
+                    if (sbomDependencyDTO != null)
+                        sbomDependencyDTOList.add(sbomDependencyDTO);
+
                     for (JavaComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
                         queue.offer(dependencyNode);
                     }
@@ -333,7 +345,11 @@ public class SBOMServiceImpl implements SBOMService {
                     List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
                             .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
                             .collect(Collectors.toList());
-                    sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, "golang"));
+
+                    SbomDependencyDTO sbomDependencyDTO = getDependencyDTO(component, dependencies, "golang");
+                    if (sbomDependencyDTO != null)
+                        sbomDependencyDTOList.add(sbomDependencyDTO);
+
                     for (GoComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
                         queue.offer(dependencyNode);
                     }
@@ -362,7 +378,11 @@ public class SBOMServiceImpl implements SBOMService {
                     List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
                             .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
                             .collect(Collectors.toList());
-                    sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, "javaScript"));
+
+                    SbomDependencyDTO sbomDependencyDTO = getDependencyDTO(component, dependencies, "javaScript");
+                    if (sbomDependencyDTO != null)
+                        sbomDependencyDTOList.add(sbomDependencyDTO);
+
                     for (JsComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
                         queue.offer(dependencyNode);
                     }
@@ -391,7 +411,11 @@ public class SBOMServiceImpl implements SBOMService {
                     List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
                             .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
                             .collect(Collectors.toList());
-                    sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, "python"));
+
+                    SbomDependencyDTO sbomDependencyDTO = getDependencyDTO(component, dependencies, "python");
+                    if (sbomDependencyDTO != null)
+                        sbomDependencyDTOList.add(sbomDependencyDTO);
+
                     for (PythonComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
                         queue.offer(dependencyNode);
                     }
