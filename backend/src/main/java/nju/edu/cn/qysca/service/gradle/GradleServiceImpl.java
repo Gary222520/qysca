@@ -177,7 +177,7 @@ public class GradleServiceImpl implements GradleService {
      */
     public List<JavaComponentDependencyTreeDO> gradleDependencyTreeAnalyze(List<String> lines) {
 
-        // 用以记录直接依赖
+        // 用以记录组件
         Set<String> visited = new HashSet<>();
         List<JavaComponentDependencyTreeDO> trees = new ArrayList<>();
         int begin = 0;
@@ -223,10 +223,9 @@ public class GradleServiceImpl implements GradleService {
             String name = componentDependencyTreeDO.getName();
             String version = componentDependencyTreeDO.getVersion();
 
-            // 如果该直接依赖已记录过，或者该组件的gav缺失，则跳过
-            if (!(depth == 1 && visited.contains(name + ":" + version)) && !(name == null || version == null) && !(name.isEmpty() || version.isEmpty())) {
-                if (depth == 1)
-                    visited.add(name + ":" + version);
+            // 如果该依赖已记录过，或者该组件的gav缺失，则跳过
+            if (!visited.contains(name + ":" + version) && !(name == null || version == null) && !(name.isEmpty() || version.isEmpty())) {
+                visited.add(name + ":" + version);
 
                 // 查知识库
                 JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(name, version);
@@ -275,11 +274,23 @@ public class GradleServiceImpl implements GradleService {
      * @param tree ComponentDependencyTreeDO
      * @param line 一行文本
      */
-    private void extractGAVFromLine(JavaComponentDependencyTreeDO tree, String line) {
+    public void extractGAVFromLine(JavaComponentDependencyTreeDO tree, String line) {
 
         // "org.springframework:spring-core (n)
         // "org.springframework.boot:spring-boot-starter:3.2.3 (*)"
         if (line.contains("(n)") || line.contains("(*)")) {
+            return;
+        }
+
+        // "com.netease.cloudmusic.android:module_a:1.0.0 -> 1.1.0"
+        // "com.netease.cloudmusic.android:module_c:1.2.0 -> 1.3.0 (c)"
+        // "com.netease.cloudmusic.android:module_c:{strictly 1.0.0} -> 1.0.0"
+        String pattern3 = "^([^:]+):([^:]+):(.*?)->\\s+(\\S+).*$";
+        Pattern r3 = Pattern.compile(pattern3);
+        Matcher m3 = r3.matcher(line);
+        if (m3.find()) {
+            tree.setName(m3.group(1) + ":" + m3.group(2));
+            tree.setVersion(m3.group(4));
             return;
         }
 
@@ -304,18 +315,7 @@ public class GradleServiceImpl implements GradleService {
             tree.setVersion(m2.group(3));
             return;
         }
-
-        // "com.netease.cloudmusic.android:module_a:1.0.0 -> 1.1.0"
-        // "com.netease.cloudmusic.android:module_c:1.2.0 -> 1.3.0 (c)"
-        // "com.netease.cloudmusic.android:module_c:{strictly 1.0.0} -> 1.0.0"
-        String pattern3 = "^([^:]+):([^:]+):(.*?)->\\s+(\\S+).*$";
-        Pattern r3 = Pattern.compile(pattern3);
-        Matcher m3 = r3.matcher(line);
-        if (m3.find()) {
-            tree.setName(m3.group(1) + ":" + m3.group(2));
-            tree.setVersion(m3.group(4));
-            return;
-        }
+        
     }
 
     /**
