@@ -623,18 +623,30 @@ public class ComponentServiceImpl implements ComponentService {
         switch (componentGavDTO.getLanguage()) {
             case "java":
                 JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
+                if(javaComponentDO == null) {
+                    return null;
+                }
                 BeanUtils.copyProperties(javaComponentDO, componentDetailDTO);
                 break;
             case "javaScript":
                 JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
+                if(jsComponentDO == null) {
+                    return null;
+                }
                 BeanUtils.copyProperties(jsComponentDO, componentDetailDTO);
                 break;
             case "golang":
                 GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
+                if(goComponentDO == null) {
+                    return null;
+                }
                 BeanUtils.copyProperties(goComponentDO, componentDetailDTO);
                 break;
             case "python":
                 PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(componentGavDTO.getName(), componentGavDTO.getVersion());
+                if(pythonComponentDO == null) {
+                    return null;
+                }
                 BeanUtils.copyProperties(pythonComponentDO, componentDetailDTO);
                 break;
             case "app":

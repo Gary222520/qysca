@@ -91,6 +91,7 @@ public class NpmServiceImpl implements NpmService {
             if (!packageLock.exists()) {
                 if (builder.equals("zip")) {
                     extractFile(filePath);
+                    generatePackageLock(file.getParent());
                 } else if (builder.equals("package.json")) {
                     generatePackageLock(file.getParent());
                 }
@@ -299,7 +300,7 @@ public class NpmServiceImpl implements NpmService {
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
                 String name = entry.getName();
-                if (name.contains("package.json") || name.contains("package-lock.json")) {
+                if (name.contains("package.json")) {
                     try (InputStream inputStream = zipFile.getInputStream(entry);
                          FileOutputStream fos = new FileOutputStream(file.getParent() + FILE_SEPARATOR + name)) {
                         byte[] buffer = new byte[1024];
@@ -316,10 +317,6 @@ public class NpmServiceImpl implements NpmService {
         File packageJson = new File(file.getParent() + FILE_SEPARATOR + "package.json");
         if (!packageJson.exists()) {
             throw new PlatformException(500, "zip文件中未找到package.json文件");
-        }
-        File packageLockJson = new File(file.getParent() + FILE_SEPARATOR + "package-lock.json");
-        if (!packageLockJson.exists()) {
-            throw new PlatformException(500, "zip文件中未找到package-lock.json文件");
         }
     }
 
@@ -394,6 +391,8 @@ public class NpmServiceImpl implements NpmService {
                 } else {
                     // 如果爬虫没有爬到则打印报错信息，仍继续执行
                     child.setType("opensource");
+                    child.setLicenses("-");
+                    child.setVulnerabilities("-");
                     log.error("存在未识别的组件：" + entry.getKey() + ":" + entry.getValue().getVersion());
                 }
             } else {
