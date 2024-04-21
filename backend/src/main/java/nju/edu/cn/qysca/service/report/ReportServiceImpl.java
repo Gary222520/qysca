@@ -13,7 +13,7 @@ import nju.edu.cn.qysca.dao.license.LicenseDao;
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTableDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
 import nju.edu.cn.qysca.domain.application.dtos.ApplicationSearchDTO;
-import nju.edu.cn.qysca.domain.component.dos.ComponentDO;
+import nju.edu.cn.qysca.domain.component.dos.*;
 import nju.edu.cn.qysca.domain.license.dos.LicenseDO;
 import nju.edu.cn.qysca.domain.license.dtos.LicenseConflictInfoDTO;
 import nju.edu.cn.qysca.domain.vulnerability.dtos.VulnerabilityBriefDTO;
@@ -21,6 +21,7 @@ import nju.edu.cn.qysca.exception.PlatformException;
 import nju.edu.cn.qysca.service.license.LicenseService;
 import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
 import nju.edu.cn.qysca.utils.FolderUtil;
+import nju.edu.cn.qysca.utils.idGenerator.UUIDGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -138,16 +139,28 @@ public class ReportServiceImpl implements ReportService {
         for (AppDependencyTableDO appDependencyTableDO : appDependencyTableDOList) {
             switch (appDependencyTableDO.getLanguage()) {
                 case "java":
-                    componentDOList.add(javaComponentDao.findByNameAndVersion(appDependencyTableDO.getCName(), appDependencyTableDO.getCVersion()));
+                    JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(appDependencyTableDO.getCName(), appDependencyTableDO.getCVersion());
+                    if (null == javaComponentDO)
+                        javaComponentDO = new JavaComponentDO(UUIDGenerator.getUUID(), appDependencyTableDO.getCName(), appDependencyTableDO.getCVersion(), "-", "java","-","-","-","-","-","-",new ArrayList<>(),new String[]{},new String[]{},new ArrayList<>(),"-","-");
+                    componentDOList.add(javaComponentDO);
                     break;
                 case "golang":
-                    componentDOList.add(goComponentDao.findByNameAndVersion(appDependencyTableDO.getCName(), appDependencyTableDO.getCVersion()));
+                    GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(appDependencyTableDO.getCName(), appDependencyTableDO.getCVersion());
+                    if (null == goComponentDO)
+                        goComponentDO = new GoComponentDO(UUIDGenerator.getUUID(), appDependencyTableDO.getCName(), appDependencyTableDO.getCVersion(),"golang","-","-","-","-","-","-",new String[]{},new String[]{},"-","-");
+                    componentDOList.add(goComponentDO);
                     break;
                 case "javaScript":
-                    componentDOList.add(jsComponentDao.findByNameAndVersion(appDependencyTableDO.getCName(), appDependencyTableDO.getCVersion()));
+                    JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(appDependencyTableDO.getCName(), appDependencyTableDO.getCVersion());
+                    if (null == jsComponentDO)
+                        jsComponentDO = new JsComponentDO(UUIDGenerator.getUUID(), appDependencyTableDO.getCName(), appDependencyTableDO.getCVersion(),"-","-","-",new String[]{},"-",new String[]{},new String[]{},"-","javaScript","-","-","-");
+                    componentDOList.add(jsComponentDO);
                     break;
                 case "python":
-                    componentDOList.add(pythonComponentDao.findByNameAndVersion(appDependencyTableDO.getCName(), appDependencyTableDO.getCVersion()));
+                    PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(appDependencyTableDO.getCName(), appDependencyTableDO.getCVersion());
+                    if (null == pythonComponentDO)
+                        pythonComponentDO = new PythonComponentDO(UUIDGenerator.getUUID(), appDependencyTableDO.getCName(), appDependencyTableDO.getCVersion(), "python","-","-","-","-","-","-","-","-",new String[]{},new String[]{},"-","-");
+                    componentDOList.add(pythonComponentDO);
                     break;
             }
         }
