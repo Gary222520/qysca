@@ -194,6 +194,7 @@ public class GradleServiceImpl implements GradleService {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process2.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
+                    log.info(line);
                     lines.add(line);
                 }
                 // 等待命令执行完毕
@@ -237,6 +238,7 @@ public class GradleServiceImpl implements GradleService {
                 if (javaComponentDO == null) {
                     String groupId = name.split(":")[0];
                     String artifactId = name.split(":")[1];
+                    log.info("gradle解析爬取组件：" + groupId + ":" + artifactId + ":" + version);
                     javaComponentDO = javaSpiderService.crawlByGav(groupId, artifactId, version);
                     if (javaComponentDO != null) {
                         componentDependencyTreeDO.setType("opensource");
