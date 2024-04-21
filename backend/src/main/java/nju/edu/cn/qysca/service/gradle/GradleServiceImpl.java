@@ -13,8 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,68 +31,6 @@ public class GradleServiceImpl implements GradleService {
     @Autowired
     private JavaComponentDao javaComponentDao;
 
-    /**
-     * 调用./gradlew dependencies命令，并返回命令结果
-     *
-     * @param filePath 文件路径，用以设置工作目录
-     * @return List<String> 命令结果
-     */
-    private static List<String> runGradleCommand(String filePath) {
-        List<String> lines = new ArrayList<>();
-        try {
-            File file = new File(filePath);
-            // 创建命令 ./gradlew dependencies
-            // windows系统执行gradlew.bat，linux还是gradlew
-            List<String> command = List.of(file.getAbsolutePath() + "\\gradlew.bat", "dependencies");
-            ProcessBuilder processBuilder = new ProcessBuilder(command);
-            processBuilder.directory(file);
-            // 启动命令
-            Process process = processBuilder.start();
-            // 直接将命令执行结果保存在lines中，没有生成中间文件
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-
-                while ((line = reader.readLine()) != null) {
-                    lines.add(line);
-                }
-                // 等待命令执行完毕
-                process.waitFor();
-            }
-        } catch (IOException | InterruptedException e) {
-            throw new PlatformException(500, "gradle项目解析失败");
-        }
-        return lines;
-    }
-
-    /**
-     * 修改上传gradle项目中的gradle wrapper源
-     * @param filePath 文件路径
-     */
-    private void changeGradleSource(String filePath){
-        // 修改gradle项目中的gradle/wrapper/gradle-wrapper.properties文件中的distributionUrl
-        // 例如：从distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip
-        // 修改为distributionUrl=https\://mirrors.cloud.tencent.com/gradle/gradle-7.5.1-bin.zip
-        File gradlewPropertiesFile = new File(new File(new File(filePath, "gradle"), "wrapper"), "gradle-wrapper.properties");
-        if (!gradlewPropertiesFile.exists())
-            return;
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(gradlewPropertiesFile))){
-            //读取文件
-            StringBuilder lines = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null){
-                lines.append(line).append("\n");
-            }
-
-            // 将默认gradle源修改为腾讯镜像源
-            try (FileWriter fileWriter = new FileWriter(gradlewPropertiesFile)){
-                String defaultDistributionUrl = "services.gradle.org/distributions/";
-                String mirrorDistributionUrl = "mirrors.cloud.tencent.com/gradle/";
-                fileWriter.write(lines.toString().replace(defaultDistributionUrl, mirrorDistributionUrl));
-            }
-        } catch (IOException e){
-            e.printStackTrace();
-        }
-    }
 
     /**
      * 构造gradle java组件
@@ -170,12 +106,75 @@ public class GradleServiceImpl implements GradleService {
     }
 
     /**
+     * 调用./gradlew dependencies命令，并返回命令结果
+     *
+     * @param filePath 文件路径，用以设置工作目录
+     * @return List<String> 命令结果
+     */
+    private static List<String> runGradleCommand(String filePath) {
+        List<String> lines = new ArrayList<>();
+        try {
+            File file = new File(filePath);
+            // 创建命令 ./gradlew dependencies
+            // windows系统执行gradlew.bat，linux还是gradlew
+            List<String> command = List.of(file.getAbsolutePath() + "\\gradlew.bat", "dependencies");
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            processBuilder.directory(file);
+            // 启动命令
+            Process process = processBuilder.start();
+            // 直接将命令执行结果保存在lines中，没有生成中间文件
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    lines.add(line);
+                }
+                // 等待命令执行完毕
+                process.waitFor();
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new PlatformException(500, "gradle项目解析失败");
+        }
+        return lines;
+    }
+
+    /**
+     * 修改上传gradle项目中的gradle wrapper源
+     * @param filePath 文件路径
+     */
+    private void changeGradleSource(String filePath){
+        // 修改gradle项目中的gradle/wrapper/gradle-wrapper.properties文件中的distributionUrl
+        // 例如：从distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip
+        // 修改为distributionUrl=https\://mirrors.cloud.tencent.com/gradle/gradle-7.5.1-bin.zip
+        File gradlewPropertiesFile = new File(new File(new File(filePath, "gradle"), "wrapper"), "gradle-wrapper.properties");
+        if (!gradlewPropertiesFile.exists())
+            return;
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(gradlewPropertiesFile))){
+            //读取文件
+            StringBuilder lines = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null){
+                lines.append(line).append("\n");
+            }
+
+            // 将默认gradle源修改为腾讯镜像源
+            try (FileWriter fileWriter = new FileWriter(gradlewPropertiesFile)){
+                String defaultDistributionUrl = "services.gradle.org/distributions/";
+                String mirrorDistributionUrl = "mirrors.cloud.tencent.com/gradle/";
+                fileWriter.write(lines.toString().replace(defaultDistributionUrl, mirrorDistributionUrl));
+            }
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * 解析gradle依赖树文件
      *
      * @param lines 带解析内容 整个文件 List<String>
      * @return List<ComponentDependencyTreeDO>
      */
-    public List<JavaComponentDependencyTreeDO> gradleDependencyTreeAnalyze(List<String> lines) {
+    private List<JavaComponentDependencyTreeDO> gradleDependencyTreeAnalyze(List<String> lines) {
 
         // 用以记录组件
         Set<String> visited = new HashSet<>();
@@ -274,7 +273,7 @@ public class GradleServiceImpl implements GradleService {
      * @param tree ComponentDependencyTreeDO
      * @param line 一行文本
      */
-    public void extractGAVFromLine(JavaComponentDependencyTreeDO tree, String line) {
+    private void extractGAVFromLine(JavaComponentDependencyTreeDO tree, String line) {
 
         // "org.springframework:spring-core (n)
         // "org.springframework.boot:spring-boot-starter:3.2.3 (*)"
@@ -315,7 +314,7 @@ public class GradleServiceImpl implements GradleService {
             tree.setVersion(m2.group(3));
             return;
         }
-        
+
     }
 
     /**
