@@ -2,7 +2,7 @@
   <a-drawer v-model:open="data.open" width="800px" :closable="false" placement="right">
     <template #title><div style="font-size: 20px">组件详情</div></template>
     <a-spin :spinning="data.spinning" tip="组件信息加载中，请稍等...">
-      <div>
+      <div v-if="data.detail?.name">
         <span style="font-size: 18px; font-weight: bold">{{ data.detail?.name }}</span>
         <a-tag style="margin-left: 10px">{{ data.detail?.version }}</a-tag>
         <a-tag v-if="data.component?.type === 'opensource'">开源</a-tag>
@@ -15,7 +15,7 @@
       <div class="relative">
         <div class="drawer_title">基本信息</div>
       </div>
-      <a-descriptions>
+      <a-descriptions v-if="data.detail?.name">
         <a-descriptions-item label="名称" span="2">{{ data.detail?.name }}</a-descriptions-item>
         <a-descriptions-item label="版本">{{ data.detail?.version }}</a-descriptions-item>
         <a-descriptions-item label="语言" span="3">
@@ -39,18 +39,20 @@
         <a-descriptions-item label="下载地址" span="3">{{ data.detail?.downloadUrl || '-' }}</a-descriptions-item>
         <a-descriptions-item label="包获取地址" span="3">{{ data.detail?.purl || '-' }}</a-descriptions-item>
       </a-descriptions>
+      <div v-else>暂无</div>
 
       <div class="relative">
         <div class="drawer_title">许可证信息</div>
       </div>
 
-      <a-descriptions>
+      <a-descriptions v-if="data.detail?.name">
         <a-descriptions-item label="许可证" span="3">
           <div>
             <a-tag v-for="(item, index) in data.detail?.licenses" :key="index">{{ item }}</a-tag>
           </div>
         </a-descriptions-item>
       </a-descriptions>
+      <div v-else>暂无</div>
 
       <div class="relative">
         <div class="drawer_title">开发者信息</div>
@@ -149,10 +151,14 @@ const changeDescription = () => {
   else cutDescription(3)
 }
 const cutDescription = (line = 3) => {
-  if (!descriptionRef.value) return
+  if (!descriptionRef.value) {
+    description.showBtn = false
+    return
+  }
 
-  if (description.text) descriptionRef.value.innerHTML = description.text
-  else {
+  if (description.text) {
+    descriptionRef.value.innerHTML = description.text
+  } else {
     description.showBtn = false
     descriptionRef.value.innerHTML = '-'
     return
