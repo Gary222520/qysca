@@ -316,7 +316,6 @@ public class GradleServiceImpl implements GradleService {
             tree.setVersion(m2.group(3));
             return;
         }
-
     }
 
     /**
