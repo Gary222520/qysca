@@ -63,7 +63,7 @@ public class HashUtil {
             try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
                 // 确保响应状态为200
                 if (response.getStatusLine().getStatusCode() != 200) {
-                    log.error("爬取jar包失败：" + jarUrl);
+                    log.error("爬取jar包失败或不存在jar包：" + jarUrl);
                     return new ArrayList<>();
                 }
 

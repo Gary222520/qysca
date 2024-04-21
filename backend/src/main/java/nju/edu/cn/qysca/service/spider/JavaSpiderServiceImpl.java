@@ -15,6 +15,11 @@ import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
 import nju.edu.cn.qysca.utils.HashUtil;
 import nju.edu.cn.qysca.utils.spider.UrlConnector;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
@@ -67,8 +72,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
      */
     @Override
     public JavaComponentDO crawlByGav(String groupId, String artifactId, String version) {
-        String url = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
-        return crawl(url);
+        return crawl(groupId, artifactId, version);
     }
 
     /**
@@ -224,6 +228,60 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
     }
 
     /**
+     * （新）
+     * 爬取url下的组件，不爬取其依赖
+     * 只会获取该组件自身的组件信息
+     * 该方法做了一定调整，首先不会在去目录下寻找jar包和pom文件，而是直接拼接出pom文件和jar包的url
+     * 其次不再使用jsoup，而是使用http client
+     *
+     * @return JavaComponentDO
+     */
+    private JavaComponentDO crawl(String groupId, String artifactId, String version) {
+        JavaComponentDO searchResult = javaComponentDao.findByNameAndVersion(groupId + ":" + artifactId, version);
+        if (searchResult != null) {
+            // 表示该组件的组件信息已被爬取过
+            return searchResult;
+        }
+
+        String url = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
+
+        // 爬取pom文件中的组件信息
+        String pomUrl = url + artifactId + "-" + version + ".pom";
+        String pomContent = null;
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()){
+            // 创建 HttpGet 请求并设置请求头
+            HttpGet httpGet = new HttpGet(pomUrl);
+            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
+            httpGet.addHeader("Accept", "application/zip,application/octet-stream");
+
+            // 执行 HTTP 请求
+            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+                // 确保响应状态为200
+                if (response.getStatusLine().getStatusCode() != 200) {
+                    throw new Exception();
+                }
+                pomContent = EntityUtils.toString(response.getEntity(), "UTF-8");
+            }
+        } catch (Exception e){
+            log.error("爬取pom失败或不存在pom文件：" + pomUrl);
+            return null;
+        }
+
+        if (pomContent == null)
+            return null;
+        JavaComponentDO javaComponentDO = convertToComponentDO(pomContent, pomUrl);
+        if (javaComponentDO == null)
+            return null;
+
+        // 爬取jar包，生成hash信息
+        String jarUrl = url + artifactId + "-" + version + ".jar";
+        javaComponentDO.setHashes(HashUtil.getHashes(jarUrl));
+
+        return javaComponentDO;
+    }
+
+    /**
+     * （旧）
      * 爬取url下的组件，不爬取其依赖
      * 只会获取该组件自身的组件信息
      *
