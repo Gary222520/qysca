@@ -27,10 +27,9 @@ public class GradleServiceImpl implements GradleService {
 
     @Autowired
     private JavaSpiderService javaSpiderService;
-
     @Autowired
     private JavaComponentDao javaComponentDao;
-
+    private final String FILE_SEPARATOR = "/";
 
     /**
      * 构造gradle java组件
@@ -106,36 +105,34 @@ public class GradleServiceImpl implements GradleService {
     }
 
     /**
-     * 调用./gradlew dependencies命令，并返回命令结果
+     * 解析gradle依赖树文件
      *
-     * @param filePath 文件路径，用以设置工作目录
-     * @return List<String> 命令结果
+     * @param lines 带解析内容 整个文件 List<String>
+     * @return List<ComponentDependencyTreeDO>
      */
-    private static List<String> runGradleCommand(String filePath) {
-        List<String> lines = new ArrayList<>();
-        try {
-            File file = new File(filePath);
-            // 创建命令 ./gradlew dependencies
-            // windows系统执行gradlew.bat，linux还是gradlew
-            List<String> command = List.of(file.getAbsolutePath() + "\\gradlew.bat", "dependencies");
-            ProcessBuilder processBuilder = new ProcessBuilder(command);
-            processBuilder.directory(file);
-            // 启动命令
-            Process process = processBuilder.start();
-            // 直接将命令执行结果保存在lines中，没有生成中间文件
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
+    public List<JavaComponentDependencyTreeDO> gradleDependencyTreeAnalyze(List<String> lines) {
 
-                while ((line = reader.readLine()) != null) {
-                    lines.add(line);
-                }
-                // 等待命令执行完毕
-                process.waitFor();
+        // 用以记录组件
+        Set<String> visited = new HashSet<>();
+        List<JavaComponentDependencyTreeDO> trees = new ArrayList<>();
+        int begin = 0;
+        // 扫描文件，找出依赖树形式的文本块进行解析
+        while (begin < lines.size()) {
+            // 通过begin和end两个指针来确定依赖树文本块的位置
+            while (begin < lines.size() && !(lines.get(begin).startsWith("+---") || lines.get(begin).startsWith("\\---"))) {
+                begin++;
             }
-        } catch (IOException | InterruptedException e) {
-            throw new PlatformException(500, "gradle项目解析失败");
+            if (begin >= lines.size())
+                break;
+            //String scope = getScope(lines.get(begin-1));
+            int end = begin;
+            while (end < lines.size() && !lines.get(end).replaceAll(" ", "").isEmpty()) {
+                end++;
+            }
+            trees.addAll(parseTree(visited, lines.subList(begin, end), 1));
+            begin = end;
         }
-        return lines;
+        return trees;
     }
 
     /**
@@ -168,37 +165,45 @@ public class GradleServiceImpl implements GradleService {
         }
     }
 
+
+
     /**
-     * 解析gradle依赖树文件
+     * 调用./gradlew dependencies命令，并返回命令结果
      *
-     * @param lines 带解析内容 整个文件 List<String>
-     * @return List<ComponentDependencyTreeDO>
+     * @param filePath 文件路径，用以设置工作目录
+     * @return List<String> 命令结果
      */
-    private List<JavaComponentDependencyTreeDO> gradleDependencyTreeAnalyze(List<String> lines) {
+    private List<String> runGradleCommand(String filePath) {
+        List<String> lines = new ArrayList<>();
+        try {
+            File file = new File(filePath);
+            // 执行命令 chmod +x ..../gradlew 给该文件添加可执行权限
+            List<String> command1 = List.of("chmod", "+x", file.getAbsolutePath()+FILE_SEPARATOR +"gradlew");
+            ProcessBuilder processBuilder1 = new ProcessBuilder(command1);
+            processBuilder1.directory(file);
+            Process process1 = processBuilder1.start();
+            process1.waitFor();
 
-        // 用以记录组件
-        Set<String> visited = new HashSet<>();
-        List<JavaComponentDependencyTreeDO> trees = new ArrayList<>();
-        int begin = 0;
-        // 扫描文件，找出依赖树形式的文本块进行解析
-        while (begin < lines.size()) {
-            // 通过begin和end两个指针来确定依赖树文本块的位置
-            while (begin < lines.size() && !(lines.get(begin).startsWith("+---") || lines.get(begin).startsWith("\\---"))) {
-                begin++;
+            // 创建命令 ..../gradlew dependencies
+            // windows系统执行gradlew.bat，linux还是gradlew
+            List<String> command2 = List.of(file.getAbsolutePath()+FILE_SEPARATOR +"gradlew", "dependencies");
+            ProcessBuilder processBuilder2 = new ProcessBuilder(command2);
+            processBuilder2.directory(file);
+            Process process2 = processBuilder2.start();
+            // 直接将命令执行结果保存在lines中，没有生成中间文件
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process2.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    lines.add(line);
+                }
+                // 等待命令执行完毕
+                process2.waitFor();
             }
-            if (begin >= lines.size())
-                break;
-            //String scope = getScope(lines.get(begin-1));
-            int end = begin;
-            while (end < lines.size() && !lines.get(end).replaceAll(" ", "").isEmpty()) {
-                end++;
-            }
-            trees.addAll(parseTree(visited, lines.subList(begin, end), 1));
-            begin = end;
+        } catch (IOException | InterruptedException e) {
+            throw new PlatformException(500, "gradle项目解析失败");
         }
-        return trees;
+        return lines;
     }
-
     /**
      * 对一段依赖树进行递归解析
      *
@@ -246,8 +251,8 @@ public class GradleServiceImpl implements GradleService {
                         }
                     } else {
                         componentDependencyTreeDO.setType("opensource");
-                        componentDependencyTreeDO.setLicenses("-");
                         componentDependencyTreeDO.setVulnerabilities("-");
+                        componentDependencyTreeDO.setLicenses("-");
                         // 如果爬虫没有爬到则打印报错信息，仍继续执行
                         log.error("存在未识别的组件：" + groupId+":"+artifactId+":"+version);
                     }
@@ -316,6 +321,7 @@ public class GradleServiceImpl implements GradleService {
             tree.setVersion(m2.group(3));
             return;
         }
+
     }
 
     /**
