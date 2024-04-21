@@ -57,8 +57,9 @@ public interface ApplicationService {
      * 在保存应用依赖时将应用状态变为RUNNING
      * @param name 应用名称
      * @param version 应用版本
+     * @param state 应用状态
      */
-    void changeApplicationState(String name, String version);
+    void changeApplicationState(String name, String version, String state);
 
     /**
      * 新增/更新应用依赖信息

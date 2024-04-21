@@ -239,6 +239,7 @@ public class MavenServiceImpl implements MavenService {
                 return node;
             }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new PlatformException(500, "pom文件解析失败");
         }
     }
@@ -264,6 +265,7 @@ public class MavenServiceImpl implements MavenService {
 
             // 如果知识库中没有则爬取
             if (javaComponentDO == null) {
+                System.out.println("开始爬取" + node.getGroupId() + ":" + node.getArtifactId() + ":" + node.getVersion());
                 javaComponentDO = javaSpiderService.crawlByGav(node.getGroupId(), node.getArtifactId(), node.getVersion());
                 if (javaComponentDO != null) {
                     try {
@@ -279,6 +281,8 @@ public class MavenServiceImpl implements MavenService {
                     javaComponentDependencyTreeDO.setType("opensource");
                 } else {
                     javaComponentDependencyTreeDO.setType("opensource");
+                    javaComponentDependencyTreeDO.setLicenses("-");
+                    javaComponentDependencyTreeDO.setVulnerabilities("-");
                     // 如果爬虫没有爬到则打印报错信息，仍继续执行
                     log.error("存在未识别的组件：" + javaComponentDependencyTreeDO.getName() + ":" + javaComponentDependencyTreeDO.getVersion());
                 }

@@ -36,7 +36,7 @@ public class ApplicationDO {
     @ApiModelProperty(value = "uuid", example = "123e456-e74-b37-4d7a-9421d59bf3b")
     private String id;
 
-    @Column(name = "name")
+    @Column(name = "name",nullable = false)
     @ApiModelProperty(value = "应用名称", example = "backend")
     private String name;
 
@@ -48,7 +48,7 @@ public class ApplicationDO {
     @ApiModelProperty(value = "应用描述", example = "backend of sca system")
     private String description;
 
-    @Column(name="language", nullable = false)
+    @Column(name="language")
     @ApiModelProperty(value = "语言")
     @Type(type = "string-array")
     private String[] language;
@@ -57,11 +57,11 @@ public class ApplicationDO {
     @ApiModelProperty(value = "类型", example = "UI")
     private String type;
 
-    @Column(name = "builder", nullable = false)
+    @Column(name = "builder")
     @ApiModelProperty(value = "构建工具", example = "maven")
     private String builder;
 
-    @Column(name = "scanner", nullable = false)
+    @Column(name = "scanner")
     @ApiModelProperty(value = "扫描对象", example = "zip")
     private String scanner;
 

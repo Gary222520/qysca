@@ -91,6 +91,7 @@ public class NpmServiceImpl implements NpmService {
             if (!packageLock.exists()) {
                 if (builder.equals("zip")) {
                     extractFile(filePath);
+                    generatePackageLock(file.getParent());
                 } else if (builder.equals("package.json")) {
                     generatePackageLock(file.getParent());
                 }
@@ -232,13 +233,14 @@ public class NpmServiceImpl implements NpmService {
         List<String> lines = new ArrayList<>();
         try {
             File file = new File(filePath);
-            List<String> command = List.of("cmd.exe", "/c", "npm install", "--package-lock-only", "--legacy-peer-deps");
+            List<String> command = List.of("npm", "install", "--package-lock-only", "--legacy-peer-deps");
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.directory(file);
             Process process = processBuilder.start();
             int exitCode = process.waitFor();
         } catch (Exception e) {
             e.printStackTrace();
+            throw new PlatformException(500, "生成package-lock.json文件失败");
         }
     }
 
@@ -300,7 +302,7 @@ public class NpmServiceImpl implements NpmService {
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
                 String name = entry.getName();
-                if (name.contains("package.json") || name.contains("package-lock.json")) {
+                if (name.contains("package.json")) {
                     try (InputStream inputStream = zipFile.getInputStream(entry);
                          FileOutputStream fos = new FileOutputStream(file.getParent() + FILE_SEPARATOR + name)) {
                         byte[] buffer = new byte[1024];
@@ -317,10 +319,6 @@ public class NpmServiceImpl implements NpmService {
         File packageJson = new File(file.getParent() + FILE_SEPARATOR + "package.json");
         if (!packageJson.exists()) {
             throw new PlatformException(500, "zip文件中未找到package.json文件");
-        }
-        File packageLockJson = new File(file.getParent() + FILE_SEPARATOR + "package-lock.json");
-        if (!packageLockJson.exists()) {
-            throw new PlatformException(500, "zip文件中未找到package-lock.json文件");
         }
     }
 
@@ -379,6 +377,7 @@ public class NpmServiceImpl implements NpmService {
             JsComponentDO jsComponentDO = null;
             jsComponentDO = jsComponentDao.findByNameAndVersion(entry.getKey(), entry.getValue().getVersion());
             if (jsComponentDO == null) {
+                System.out.println("开始爬取" + entry.getKey() + ":" + entry.getValue().getVersion());
                 jsComponentDO = jsSpiderService.crawlByNV(entry.getKey(), entry.getValue().getVersion());
                 if (jsComponentDO != null) {
                     child.setType("opensource");
@@ -395,6 +394,8 @@ public class NpmServiceImpl implements NpmService {
                 } else {
                     // 如果爬虫没有爬到则打印报错信息，仍继续执行
                     child.setType("opensource");
+                    child.setLicenses("-");
+                    child.setVulnerabilities("-");
                     log.error("存在未识别的组件：" + entry.getKey() + ":" + entry.getValue().getVersion());
                 }
             } else {
