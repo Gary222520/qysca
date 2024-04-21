@@ -44,7 +44,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class JavaSpiderServiceImpl implements JavaSpiderService {
 
-
+    @Value("${MAVEN_REPO_MIRROR_URL}")
+    private String MAVEN_REPO_MIRROR_URL;
     @Value("${MAVEN_REPO_BASE_URL}")
     private String MAVEN_REPO_BASE_URL;
     @Autowired
@@ -72,7 +73,12 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
      */
     @Override
     public JavaComponentDO crawlByGav(String groupId, String artifactId, String version) {
-        return crawl(groupId, artifactId, version);
+        JavaComponentDO javaComponentDO = crawlMirror(groupId, artifactId, version);
+        if (null == javaComponentDO) {
+            log.info("爬取镜像仓库失败，开始尝试爬取中央仓库");
+            javaComponentDO = crawl(groupId, artifactId, version);
+        }
+        return javaComponentDO;
     }
 
     /**
@@ -225,6 +231,55 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         }
 
 
+    }
+
+    /**
+     * （新）
+     * 相较于crawl(g,a,v)方法，该方法爬取的是镜像仓库
+     *
+     * @return JavaComponentDO
+     */
+    private JavaComponentDO crawlMirror(String groupId, String artifactId, String version) {
+        JavaComponentDO searchResult = javaComponentDao.findByNameAndVersion(groupId + ":" + artifactId, version);
+        if (searchResult != null) {
+            // 表示该组件的组件信息已被爬取过
+            return searchResult;
+        }
+
+        String url = MAVEN_REPO_MIRROR_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
+
+        // 爬取pom文件中的组件信息
+        String pomUrl = url + artifactId + "-" + version + ".pom";
+        String pomContent = null;
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()){
+            // 创建 HttpGet 请求并设置请求头
+            HttpGet httpGet = new HttpGet(pomUrl);
+            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+
+            // 执行 HTTP 请求
+            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+                // 确保响应状态为200
+                if (response.getStatusLine().getStatusCode() != 200) {
+                    throw new Exception();
+                }
+                pomContent = EntityUtils.toString(response.getEntity(), "UTF-8");
+            }
+        } catch (Exception e){
+            log.error("爬取pom失败或不存在pom文件：" + pomUrl);
+            return null;
+        }
+
+        if (pomContent == null)
+            return null;
+        JavaComponentDO javaComponentDO = convertToComponentDO(pomContent, pomUrl);
+        if (javaComponentDO == null)
+            return null;
+
+        // 爬取jar包，生成hash信息
+        String jarUrl = url + artifactId + "-" + version + ".jar";
+        javaComponentDO.setHashes(HashUtil.getHashes(jarUrl));
+
+        return javaComponentDO;
     }
 
     /**
