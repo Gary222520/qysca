@@ -51,12 +51,8 @@ public class GradleServiceImpl implements GradleService {
             // 启动命令
             Process process = processBuilder.start();
             // 直接将命令执行结果保存在lines中，没有生成中间文件
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
-                while ((line = errorReader.readLine()) != null) {
-                    log.error(line);
-                }
 
                 while ((line = reader.readLine()) != null) {
                     lines.add(line);
@@ -148,7 +144,7 @@ public class GradleServiceImpl implements GradleService {
             throw new PlatformException(500, "gradle解析暂不支持此文件类型");
         }
 
-
+        // 修改gradle wrapper镜像源
         changeGradleSource(filePath);
 
         // 调用./gradlew dependencies命令，并获取结果
@@ -281,8 +277,9 @@ public class GradleServiceImpl implements GradleService {
      */
     private void extractGAVFromLine(JavaComponentDependencyTreeDO tree, String line) {
 
-        // "org.springframework:spring-core (n)"
-        if (line.contains("(n)")) {
+        // "org.springframework:spring-core (n)
+        // "org.springframework.boot:spring-boot-starter:3.2.3 (*)"
+        if (line.contains("(n)") || line.contains("(*)")) {
             return;
         }
 
