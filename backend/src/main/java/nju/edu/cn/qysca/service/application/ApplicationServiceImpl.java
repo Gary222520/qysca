@@ -1147,6 +1147,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private String[] getUniqueLicenseNames(String name, String version) {
         List<AppDependencyTableDO> dependencies = appDependencyTableDao.findAllByNameAndVersion(name, version);
         Set<String> uniqueLicenses = dependencies.stream().map(AppDependencyTableDO::getLicenses).filter(licenses -> !licenses.equals("-")).flatMap(licenses -> Arrays.stream(licenses.split(","))).map(String::trim).collect(Collectors.toSet());
+        uniqueLicenses.remove("");
         return uniqueLicenses.toArray(new String[0]);
     }
 
@@ -1159,6 +1160,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private String[] getUniqueVulnerabilityNames(String name, String version) {
         List<AppDependencyTableDO> dependencies = appDependencyTableDao.findAllByNameAndVersion(name, version);
         Set<String> uniqueVulnerabilities = dependencies.stream().map(AppDependencyTableDO::getVulnerabilities).filter(vulnerabilities -> !vulnerabilities.equals("-")).flatMap(vulnerabilities -> Arrays.stream(vulnerabilities.split(","))).map(String::trim).collect(Collectors.toSet());
+        uniqueVulnerabilities.remove("");
         return uniqueVulnerabilities.toArray(new String[0]);
     }
 }

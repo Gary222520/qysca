@@ -753,6 +753,7 @@ public class ComponentServiceImpl implements ComponentService {
                 uniqueLicenses = goDependencyTableDOS.stream().map(GoDependencyTableDO::getLicenses).filter(licenses -> !licenses.equals("-")).flatMap(licenses -> Arrays.stream(licenses.split(","))).map(String::trim).collect(Collectors.toSet());
                 break;
         }
+        uniqueLicenses.remove("");
         return uniqueLicenses.toArray(new String[0]);
     }
 
@@ -784,6 +785,7 @@ public class ComponentServiceImpl implements ComponentService {
                 uniqueVulnerabilities = goDependencyTableDOS.stream().map(GoDependencyTableDO::getVulnerabilities).filter(vulnerabilities -> !vulnerabilities.equals("-")).flatMap(vulnerabilities -> Arrays.stream(vulnerabilities.split(","))).map(String::trim).collect(Collectors.toSet());
                 break;
         }
+        uniqueVulnerabilities.remove("");
         return uniqueVulnerabilities.toArray(new String[0]);
     }
 }
