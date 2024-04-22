@@ -1,11 +1,15 @@
 package nju.edu.cn.qysca;
 
+import nju.edu.cn.qysca.dao.component.JavaComponentDao;
 import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTreeDO;
 import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.service.spider.JavaSpiderService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @SpringBootTest
 public class MavenTest {
@@ -30,7 +34,5 @@ public class MavenTest {
     public void test3(){
         JavaDependencyTreeDO javaDependencyTreeDO = mavenService.dependencyTreeAnalysis("src/main/resources/upload/pom.xml","maven","opensource");
         mavenService.dependencyTableAnalysis(javaDependencyTreeDO);
-
     }
-
 }
