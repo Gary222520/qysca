@@ -110,33 +110,31 @@ public class StatisticsServiceImpl implements StatisticsService {
                 put("UNKNOWN", 0);
             }};
             for (String cveId : applicationDO.getVulnerabilities()) {
-                if (!cveId.equals("")) {
-                    CveDO cveDO = cveDao.findOneByCveId(cveId);
-                    if (cveDO.getCvss3().getBaseSeverity() != null) {
-                        if(!set.contains(cveId)) {
-                            map.put(cveDO.getCvss3().getBaseSeverity(), map.get(cveDO.getCvss3().getBaseSeverity()) + 1);
-                        }
-                        currentMap.put(cveDO.getCvss3().getBaseSeverity(), currentMap.get(cveDO.getCvss3().getBaseSeverity()) + 1);
-                    } else if (cveDO.getCvss3().getImpactScore() != null) {
-                        Double score = cveDO.getCvss3().getImpactScore();
-                        String key = score > 7.5 ? "HIGH" : score > 5 ? "MEDIUM" : score > 2.5 ? "LOW" : "NONE";
-                        if(!set.contains(cveId)) {
-                            map.put(key, map.get(key) + 1);
-                        }
-                        currentMap.put(key, currentMap.get(key) + 1);
-                    } else if (cveDO.getCvss2().getImpactScore() != null) {
-                        Double score = cveDO.getCvss2().getImpactScore();
-                        String key = score > 7.5 ? "HIGH" : score > 5 ? "MEDIUM" : score > 2.5 ? "LOW" : "NONE";
-                        if(!set.contains(cveId)) {
-                            map.put(key, map.get(key) + 1);
-                        }
-                        currentMap.put(key, currentMap.get(key) + 1);
-                    } else {
-                        if(!set.contains(cveId)) {
-                            map.put("UNKNOWN", map.get("UNKNOWN") + 1);
-                        }
-                        currentMap.put("UNKNOWN", currentMap.get("UNKNOWN") + 1);
+                CveDO cveDO = cveDao.findOneByCveId(cveId);
+                if (cveDO.getCvss3().getBaseSeverity() != null) {
+                    if (!set.contains(cveId)) {
+                        map.put(cveDO.getCvss3().getBaseSeverity(), map.get(cveDO.getCvss3().getBaseSeverity()) + 1);
                     }
+                    currentMap.put(cveDO.getCvss3().getBaseSeverity(), currentMap.get(cveDO.getCvss3().getBaseSeverity()) + 1);
+                } else if (cveDO.getCvss3().getImpactScore() != null) {
+                    Double score = cveDO.getCvss3().getImpactScore();
+                    String key = score > 7.5 ? "HIGH" : score > 5 ? "MEDIUM" : score > 2.5 ? "LOW" : "NONE";
+                    if (!set.contains(cveId)) {
+                        map.put(key, map.get(key) + 1);
+                    }
+                    currentMap.put(key, currentMap.get(key) + 1);
+                } else if (cveDO.getCvss2().getImpactScore() != null) {
+                    Double score = cveDO.getCvss2().getImpactScore();
+                    String key = score > 7.5 ? "HIGH" : score > 5 ? "MEDIUM" : score > 2.5 ? "LOW" : "NONE";
+                    if (!set.contains(cveId)) {
+                        map.put(key, map.get(key) + 1);
+                    }
+                    currentMap.put(key, currentMap.get(key) + 1);
+                } else {
+                    if (!set.contains(cveId)) {
+                        map.put("UNKNOWN", map.get("UNKNOWN") + 1);
+                    }
+                    currentMap.put("UNKNOWN", currentMap.get("UNKNOWN") + 1);
                 }
             }
             vulnerabilityCompareDTO.setMap(currentMap);
@@ -148,7 +146,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         vulnerabilityStatisticsDTO.setTotalNumber(set.size());
         vulnerabilityStatisticsDTO.setCategoryCountMap(map);
         List<VulnerabilityCompareDTO> result = new ArrayList<>();
-        for(int i = 0; i < Math.min(vulnerabilityCompareDTOS.size(), 5); i++){
+        for (int i = 0; i < Math.min(vulnerabilityCompareDTOS.size(), 5); i++) {
             result.add(vulnerabilityCompareDTOS.get(i));
         }
         vulnerabilityStatisticsDTO.setCompareDTOList(result);
@@ -172,25 +170,23 @@ public class StatisticsServiceImpl implements StatisticsService {
             LicenseCompareDTO licenseCompareDTO = new LicenseCompareDTO();
             licenseCompareDTO.setName(applicationDO.getName());
             licenseCompareDTO.setVersion(applicationDO.getVersion());
-            Map<String, Integer> currentMap = new HashMap<>(){{
+            Map<String, Integer> currentMap = new HashMap<>() {{
                 put("high", 0);
                 put("medium", 0);
                 put("low", 0);
                 put("unknown", 0);
             }};
-            for(String license : applicationDO.getLicenses()) {
-                if(!license.equals("")) {
-                    if (map.containsKey(license)) {
-                        map.put(license, map.get(license) + 1);
-                    } else {
-                        map.put(license, 1);
-                    }
-                    LicenseDO licenseDO = licenseDao.findByName(license);
-                    if (licenseDO.getRiskLevel().equals("-")) {
-                        currentMap.put("unknown", currentMap.get("unknown")+ 1);
-                    } else {
-                        currentMap.put(licenseDO.getRiskLevel(), currentMap.get(licenseDO.getRiskLevel()) + 1);
-                    }
+            for (String license : applicationDO.getLicenses()) {
+                if (map.containsKey(license)) {
+                    map.put(license, map.get(license) + 1);
+                } else {
+                    map.put(license, 1);
+                }
+                LicenseDO licenseDO = licenseDao.findByName(license);
+                if (licenseDO.getRiskLevel().equals("-")) {
+                    currentMap.put("unknown", currentMap.get("unknown") + 1);
+                } else {
+                    currentMap.put(licenseDO.getRiskLevel(), currentMap.get(licenseDO.getRiskLevel()) + 1);
                 }
             }
             licenseCompareDTO.setMap(currentMap);
@@ -199,7 +195,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         }
         Collections.sort(licenseCompareDTOS);
         List<LicenseCompareDTO> result = new ArrayList<>();
-        for(int i = 0; i < Math.min(licenseCompareDTOS.size(), 5); i++){
+        for (int i = 0; i < Math.min(licenseCompareDTOS.size(), 5); i++) {
             result.add(licenseCompareDTOS.get(i));
         }
         List<Map.Entry<String, Integer>> sortedEntries = map.entrySet()
