@@ -271,7 +271,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
 
         if (pomContent == null)
             return null;
-        JavaComponentDO javaComponentDO = convertToComponentDO(pomContent, pomUrl);
+        JavaComponentDO javaComponentDO = convertToComponentDO(pomContent, pomUrl, MAVEN_REPO_MIRROR_URL);
         if (javaComponentDO == null)
             return null;
 
@@ -323,7 +323,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
 
         if (pomContent == null)
             return null;
-        JavaComponentDO javaComponentDO = convertToComponentDO(pomContent, pomUrl);
+        JavaComponentDO javaComponentDO = convertToComponentDO(pomContent, pomUrl, MAVEN_REPO_BASE_URL);
         if (javaComponentDO == null)
             return null;
 
@@ -353,7 +353,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         if (document == null)
             return null;
 
-        JavaComponentDO javaComponentDO = convertToComponentDO(document.outerHtml(), pomUrl);
+        JavaComponentDO javaComponentDO = convertToComponentDO(document.outerHtml(), pomUrl, MAVEN_REPO_BASE_URL);
         if (javaComponentDO == null)
             return null;
 
@@ -460,15 +460,16 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
      * 将爬取的pom字符串转换为JavaComponentDO
      *
      * @param pomString
-     * @param pomUrl    pom文件url
+     * @param pomUrl pom文件url
+     * @param REPO_URL 使用的仓库根地址url
      * @return JavaComponentDO
      */
-    private JavaComponentDO convertToComponentDO(String pomString, String pomUrl) {
+    private JavaComponentDO convertToComponentDO(String pomString, String pomUrl, String REPO_URL) {
         // 从pom url中提取groupId, artifactId, and version
         String[] parts = pomUrl.split("/");
         String version = parts[parts.length - 2];
         String artifactId = parts[parts.length - 3];
-        String groupId = String.join(".", Arrays.copyOfRange(parts, MAVEN_REPO_BASE_URL.split("/").length, parts.length - 3));
+        String groupId = String.join(".", Arrays.copyOfRange(parts, REPO_URL.split("/").length, parts.length - 3));
 
         // 将jsoup document转化为maven-model
         Model model = convertToModel(pomString);
@@ -486,7 +487,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         javaComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
 
         javaComponentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
-        javaComponentDO.setDownloadUrl(getDownloadUrl(pomUrl));
+        javaComponentDO.setDownloadUrl(getDownloadUrl(groupId, artifactId, version));
         javaComponentDO.setSourceUrl(model.getScm() == null ? "-" : (model.getScm().getUrl() == null ? "-" : model.getScm().getUrl()));
 
         javaComponentDO.setPUrl(getMavenPUrl(groupId, artifactId, version, model.getPackaging()));
@@ -504,14 +505,15 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
     }
 
     /**
-     * 从pomUrl中得到下载地址，即去掉pomUrl中最后一段字符串
-     * 例如：https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.8.1/即为下载地址
+     * 下载地址统一为https://repo.maven.apache.org/maven2/仓库下的地址
      *
-     * @param pomUrl pom url
-     * @return download url
+     * @param groupId    组织Id
+     * @param artifactId 工件id
+     * @param version    版本号
+     * @return 下载地址
      */
-    private String getDownloadUrl(String pomUrl) {
-        return pomUrl.substring(0, pomUrl.lastIndexOf('/') + 1);
+    private String getDownloadUrl(String groupId, String artifactId, String version) {
+        return MAVEN_REPO_BASE_URL + groupId.replace(".","/") + "/" + artifactId + "/" + version + "/";
     }
 
     /**
