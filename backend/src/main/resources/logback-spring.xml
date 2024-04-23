@@ -1,7 +1,7 @@
 <!-- 日志系统每隔 60 秒扫描一次配置文件，检查是否有更改，当配置文件发生更改时，日志系统会自动重新加载新的配置 -->
 <configuration scan="true" scanPeriod="60 seconds">
     <!-- 日志地址 -->
-    <property name="LOG_HOME" value="/root/tyhj/qysca/logs/spider/python" />
+    <property name="LOG_HOME" value="/root/tyhj/spider/logs/python" />
 
     <!-- 日志格式 -->
     <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36}:%line - %msg%n" />
