@@ -110,7 +110,11 @@ public class SBOMServiceImpl implements SBOMService {
                         List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
                                 .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
                                 .collect(Collectors.toList());
-                        sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, node.getLanguage()));
+
+                        SbomDependencyDTO sbomDependencyDTO = getDependencyDTO(component, dependencies, node.getLanguage());
+                        if (sbomDependencyDTO != null)
+                            sbomDependencyDTOList.add(sbomDependencyDTO);
+
                     }
                     for (AppComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
                         queue.offer(dependencyNode);
@@ -274,7 +278,11 @@ public class SBOMServiceImpl implements SBOMService {
                         List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
                                 .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
                                 .collect(Collectors.toList());
-                        sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, node.getLanguage()));
+
+                        SbomDependencyDTO sbomDependencyDTO = getDependencyDTO(component, dependencies, node.getLanguage());
+                        if (sbomDependencyDTO != null)
+                            sbomDependencyDTOList.add(sbomDependencyDTO);
+
                     }
                     for (AppComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
                         queue.offer(dependencyNode);
@@ -304,7 +312,11 @@ public class SBOMServiceImpl implements SBOMService {
                     List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
                             .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
                             .collect(Collectors.toList());
-                    sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, "java"));
+
+                    SbomDependencyDTO sbomDependencyDTO = getDependencyDTO(component, dependencies, "java");
+                    if (sbomDependencyDTO != null)
+                        sbomDependencyDTOList.add(sbomDependencyDTO);
+
                     for (JavaComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
                         queue.offer(dependencyNode);
                     }
@@ -333,7 +345,11 @@ public class SBOMServiceImpl implements SBOMService {
                     List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
                             .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
                             .collect(Collectors.toList());
-                    sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, "golang"));
+
+                    SbomDependencyDTO sbomDependencyDTO = getDependencyDTO(component, dependencies, "golang");
+                    if (sbomDependencyDTO != null)
+                        sbomDependencyDTOList.add(sbomDependencyDTO);
+
                     for (GoComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
                         queue.offer(dependencyNode);
                     }
@@ -362,7 +378,11 @@ public class SBOMServiceImpl implements SBOMService {
                     List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
                             .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
                             .collect(Collectors.toList());
-                    sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, "javaScript"));
+
+                    SbomDependencyDTO sbomDependencyDTO = getDependencyDTO(component, dependencies, "javaScript");
+                    if (sbomDependencyDTO != null)
+                        sbomDependencyDTOList.add(sbomDependencyDTO);
+
                     for (JsComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
                         queue.offer(dependencyNode);
                     }
@@ -391,7 +411,11 @@ public class SBOMServiceImpl implements SBOMService {
                     List<ComponentSearchNameDTO> dependencies = node.getDependencies().stream()
                             .map(dependencyNode -> new ComponentSearchNameDTO(dependencyNode.getName(), dependencyNode.getVersion()))
                             .collect(Collectors.toList());
-                    sbomDependencyDTOList.add(getDependencyDTO(component, dependencies, "python"));
+
+                    SbomDependencyDTO sbomDependencyDTO = getDependencyDTO(component, dependencies, "python");
+                    if (sbomDependencyDTO != null)
+                        sbomDependencyDTOList.add(sbomDependencyDTO);
+
                     for (PythonComponentDependencyTreeDO dependencyNode : node.getDependencies()) {
                         queue.offer(dependencyNode);
                     }
@@ -424,85 +448,92 @@ public class SBOMServiceImpl implements SBOMService {
         switch (cLanguage) {
             case "java": {
                 JavaComponentDO component = javaComponentDao.findByNameAndVersion(cName, cVersion);
-
                 SbomJavaComponentDTO sbomJavaComponentDTO = new SbomJavaComponentDTO();
-                sbomJavaComponentDTO.setGroup(component.getName().split(":")[0]);
-                sbomJavaComponentDTO.setName(component.getName().split(":")[1]);
-                sbomJavaComponentDTO.setVersion(component.getVersion());
-                sbomJavaComponentDTO.setLanguage(component.getLanguage());
-                sbomJavaComponentDTO.setOrigin(component.getType());
-                sbomJavaComponentDTO.setDescription(component.getDescription());
-                sbomJavaComponentDTO.setPUrl(component.getPUrl());
-                sbomJavaComponentDTO.setLicenses(Arrays.asList(component.getLicenses()));
-                sbomJavaComponentDTO.setExternalReferences(Stream.of(
-                                new SbomExternalReferenceDTO("website", component.getUrl()),
-                                new SbomExternalReferenceDTO("distribution", component.getDownloadUrl()),
-                                new SbomExternalReferenceDTO("sourceUrl", component.getSourceUrl())
-                        )
-                        .filter(dto -> dto.getUrl() != null) // 过滤掉为空的外部链接
-                        .collect(Collectors.toList()));
-                sbomJavaComponentDTO.setHashes(component.getHashes());
+                sbomJavaComponentDTO.setGroup(cName.split(":")[0]);
+                sbomJavaComponentDTO.setName(cName.split(":")[1]);
+                sbomJavaComponentDTO.setVersion(cVersion);
+                sbomJavaComponentDTO.setLanguage("java");
+                if (component != null){
+                    sbomJavaComponentDTO.setOrigin(component.getType());
+                    sbomJavaComponentDTO.setDescription(component.getDescription());
+                    sbomJavaComponentDTO.setPUrl(component.getPUrl());
+                    sbomJavaComponentDTO.setLicenses(Arrays.asList(component.getLicenses()));
+                    sbomJavaComponentDTO.setExternalReferences(Stream.of(
+                                    new SbomExternalReferenceDTO("website", component.getUrl()),
+                                    new SbomExternalReferenceDTO("distribution", component.getDownloadUrl()),
+                                    new SbomExternalReferenceDTO("sourceUrl", component.getSourceUrl())
+                            )
+                            .filter(dto -> dto.getUrl() != null) // 过滤掉为空的外部链接
+                            .collect(Collectors.toList()));
+                    sbomJavaComponentDTO.setHashes(component.getHashes());
+                }
                 return sbomJavaComponentDTO;
             }
             case "golang": {
                 GoComponentDO component = goComponentDao.findByNameAndVersion(cName, cVersion);
 
                 SbomGoComponentDTO sbomGoComponentDTO = new SbomGoComponentDTO();
-                sbomGoComponentDTO.setNamespace(component.getName().split("/")[0]);
-                sbomGoComponentDTO.setArtifactId(component.getName().split("/")[component.getName().split("/").length - 1]);
-                sbomGoComponentDTO.setVersion(component.getVersion());
-                sbomGoComponentDTO.setPrimaryLanguage(component.getLanguage());
-                sbomGoComponentDTO.setOrigin(component.getType());
-                sbomGoComponentDTO.setDirectDependency(direct);
-                sbomGoComponentDTO.setDescription(component.getDescription());
-                sbomGoComponentDTO.setPUrl(component.getPUrl());
-                sbomGoComponentDTO.setLicenses(Arrays.asList(component.getLicenses()));
-                sbomGoComponentDTO.setWebsite(component.getUrl());
-                sbomGoComponentDTO.setDownloadUrl(component.getDownloadUrl());
-                sbomGoComponentDTO.setRepoUrl(component.getSourceUrl());
+                sbomGoComponentDTO.setNamespace(cName.split("/")[0]);
+                sbomGoComponentDTO.setArtifactId(cName.split("/")[cName.split("/").length - 1]);
+                sbomGoComponentDTO.setVersion(cVersion);
+                sbomGoComponentDTO.setPrimaryLanguage("golang");
+                if (component != null) {
+                    sbomGoComponentDTO.setOrigin(component.getType());
+                    sbomGoComponentDTO.setDirectDependency(direct);
+                    sbomGoComponentDTO.setDescription(component.getDescription());
+                    sbomGoComponentDTO.setPUrl(component.getPUrl());
+                    sbomGoComponentDTO.setLicenses(Arrays.asList(component.getLicenses()));
+                    sbomGoComponentDTO.setWebsite(component.getUrl());
+                    sbomGoComponentDTO.setDownloadUrl(component.getDownloadUrl());
+                    sbomGoComponentDTO.setRepoUrl(component.getSourceUrl());
+                }
                 return sbomGoComponentDTO;
             }
             case "javaScript": {
                 JsComponentDO component = jsComponentDao.findByNameAndVersion(cName, cVersion);
 
                 SbomJsComponentDTO sbomJsComponentDTO = new SbomJsComponentDTO();
-                if (component.getName().contains("/")) {
-                    sbomJsComponentDTO.setNamespace(component.getName().split("/")[0]);
-                    sbomJsComponentDTO.setArtifactId(component.getName().split("/")[1]);
+                if (cName.contains("/")) {
+                    sbomJsComponentDTO.setNamespace(cName.split("/")[0]);
+                    sbomJsComponentDTO.setArtifactId(cName.split("/")[1]);
                 } else {
-                    sbomJsComponentDTO.setArtifactId(component.getName());
+                    sbomJsComponentDTO.setArtifactId(cName);
                 }
-                sbomJsComponentDTO.setVersion(component.getVersion());
-                sbomJsComponentDTO.setPrimaryLanguage(component.getLanguage());
-                sbomJsComponentDTO.setOrigin(component.getType());
-                sbomJsComponentDTO.setDirectDependency(direct);
-                sbomJsComponentDTO.setDescription(component.getDescription());
-                sbomJsComponentDTO.setPUrl(component.getPUrl());
-                sbomJsComponentDTO.setLicenses(Arrays.asList(component.getLicenses()));
-                sbomJsComponentDTO.setWebsite(component.getUrl());
-                sbomJsComponentDTO.setDownloadUrl(component.getDownloadUrl());
-                sbomJsComponentDTO.setRepoUrl(component.getSourceUrl());
-                sbomJsComponentDTO.setCopyrightStatements(component.getCopyrightStatements());
+                sbomJsComponentDTO.setVersion(cVersion);
+                sbomJsComponentDTO.setPrimaryLanguage("javaScript");
+                if (component != null) {
+                    sbomJsComponentDTO.setOrigin(component.getType());
+                    sbomJsComponentDTO.setDirectDependency(direct);
+                    sbomJsComponentDTO.setDescription(component.getDescription());
+                    sbomJsComponentDTO.setPUrl(component.getPUrl());
+                    sbomJsComponentDTO.setLicenses(Arrays.asList(component.getLicenses()));
+                    sbomJsComponentDTO.setWebsite(component.getUrl());
+                    sbomJsComponentDTO.setDownloadUrl(component.getDownloadUrl());
+                    sbomJsComponentDTO.setRepoUrl(component.getSourceUrl());
+                    sbomJsComponentDTO.setCopyrightStatements(component.getCopyrightStatements());
+                }
                 return sbomJsComponentDTO;
             }
             case "python": {
                 PythonComponentDO component = pythonComponentDao.findByNameAndVersion(cName, cVersion);
 
                 SbomPythonComponentDTO sbomPythonComponentDTO = new SbomPythonComponentDTO();
-                sbomPythonComponentDTO.setName(component.getName());
-                sbomPythonComponentDTO.setVersion(component.getVersion());
-                sbomPythonComponentDTO.setLanguage(component.getLanguage());
-                sbomPythonComponentDTO.setOrigin(component.getType());
-                sbomPythonComponentDTO.setDescription(component.getDescription());
-                sbomPythonComponentDTO.setPUrl(component.getPUrl());
-                sbomPythonComponentDTO.setLicenses(Arrays.asList(component.getLicenses()));
-                sbomPythonComponentDTO.setExternalReferences(Stream.of(
-                                new SbomExternalReferenceDTO("website", component.getUrl()),
-                                new SbomExternalReferenceDTO("distribution", component.getDownloadUrl()),
-                                new SbomExternalReferenceDTO("sourceUrl", component.getSourceUrl())
-                        )
-                        .filter(dto -> dto.getUrl() != null) // 过滤掉为空的外部链接
-                        .collect(Collectors.toList()));
+                sbomPythonComponentDTO.setName(cName);
+                sbomPythonComponentDTO.setVersion(cVersion);
+                sbomPythonComponentDTO.setLanguage("python");
+                if (component != null) {
+                    sbomPythonComponentDTO.setOrigin(component.getType());
+                    sbomPythonComponentDTO.setDescription(component.getDescription());
+                    sbomPythonComponentDTO.setPUrl(component.getPUrl());
+                    sbomPythonComponentDTO.setLicenses(Arrays.asList(component.getLicenses()));
+                    sbomPythonComponentDTO.setExternalReferences(Stream.of(
+                                    new SbomExternalReferenceDTO("website", component.getUrl()),
+                                    new SbomExternalReferenceDTO("distribution", component.getDownloadUrl()),
+                                    new SbomExternalReferenceDTO("sourceUrl", component.getSourceUrl())
+                            )
+                            .filter(dto -> dto.getUrl() != null) // 过滤掉为空的外部链接
+                            .collect(Collectors.toList()));
+                }
                 return sbomPythonComponentDTO;
             }
         }
@@ -522,31 +553,55 @@ public class SBOMServiceImpl implements SBOMService {
         SbomDependencyDTO sbomDependencyDTO = new SbomDependencyDTO();
         switch (language) {
             case "java": {
-                sbomDependencyDTO.setRef(javaComponentDao.findByNameAndVersion(component.getName(), component.getVersion()).getPUrl());
+                JavaComponentDO javaComponentDO = javaComponentDao.findByNameAndVersion(component.getName(), component.getVersion());
+                if (null == javaComponentDO)
+                    return null;
+                sbomDependencyDTO.setRef(javaComponentDO.getPUrl());
                 sbomDependencyDTO.setDependsOn(new ArrayList<>());
-                for (ComponentSearchNameDTO dependency : dependencies){
-                    sbomDependencyDTO.getDependsOn().add(javaComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion()).getPUrl());                }
+                for (ComponentSearchNameDTO dependency : dependencies) {
+                    JavaComponentDO javaComponentDO1 = javaComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion());
+                    if (javaComponentDO1 != null)
+                        sbomDependencyDTO.getDependsOn().add(javaComponentDO1.getPUrl());
+                }
                 break;
             }
             case "golang": {
-                sbomDependencyDTO.setRef(goComponentDao.findByNameAndVersion(component.getName(), component.getVersion()).getPUrl());
+                GoComponentDO goComponentDO = goComponentDao.findByNameAndVersion(component.getName(), component.getVersion());
+                if (null == goComponentDO)
+                    return null;
+                sbomDependencyDTO.setRef(goComponentDO.getPUrl());
                 sbomDependencyDTO.setDependsOn(new ArrayList<>());
                 for (ComponentSearchNameDTO dependency : dependencies){
-                    sbomDependencyDTO.getDependsOn().add(goComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion()).getPUrl());                }
+                    GoComponentDO goComponentDO1 = goComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion());
+                    if (goComponentDO1 != null)
+                        sbomDependencyDTO.getDependsOn().add(goComponentDO1.getPUrl());
+                }
                 break;
             }
             case "javaScript": {
-                sbomDependencyDTO.setRef(jsComponentDao.findByNameAndVersion(component.getName(), component.getVersion()).getPUrl());
+                JsComponentDO jsComponentDO = jsComponentDao.findByNameAndVersion(component.getName(), component.getVersion());
+                if (null == jsComponentDO)
+                    return null;
+                sbomDependencyDTO.setRef(jsComponentDO.getPUrl());
                 sbomDependencyDTO.setDependsOn(new ArrayList<>());
                 for (ComponentSearchNameDTO dependency : dependencies){
-                    sbomDependencyDTO.getDependsOn().add(jsComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion()).getPUrl());                }
+                    JsComponentDO jsComponentDO1 = jsComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion());
+                    if (jsComponentDO1 != null)
+                        sbomDependencyDTO.getDependsOn().add(jsComponentDO1.getPUrl());
+                }
                 break;
             }
             case "python": {
-                sbomDependencyDTO.setRef(pythonComponentDao.findByNameAndVersion(component.getName(), component.getVersion()).getPUrl());
+                PythonComponentDO pythonComponentDO = pythonComponentDao.findByNameAndVersion(component.getName(), component.getVersion());
+                if (null == pythonComponentDO)
+                    return null;
+                sbomDependencyDTO.setRef(pythonComponentDO.getPUrl());
                 sbomDependencyDTO.setDependsOn(new ArrayList<>());
                 for (ComponentSearchNameDTO dependency : dependencies){
-                    sbomDependencyDTO.getDependsOn().add(pythonComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion()).getPUrl());                }
+                    PythonComponentDO pythonComponentDO1 = pythonComponentDao.findByNameAndVersion(dependency.getName(), dependency.getVersion());
+                    if (pythonComponentDO1 != null)
+                        sbomDependencyDTO.getDependsOn().add(pythonComponentDO1.getPUrl());
+                }
                 break;
             }
         }

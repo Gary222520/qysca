@@ -200,7 +200,10 @@ const changeText = () => {
   else cutText(3)
 }
 const cutText = (line = 3) => {
-  if (!GPLtext.value) return
+  if (!GPLtext.value) {
+    data.showBtn = false
+    return
+  }
 
   if (data.GPLtext) GPLtext.value.innerHTML = data.GPLtext
   else return

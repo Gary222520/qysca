@@ -33,6 +33,7 @@ import nju.edu.cn.qysca.utils.FolderUtil;
 import nju.edu.cn.qysca.utils.excel.ExcelUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +41,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletResponse;
@@ -51,6 +54,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
+
+    @Autowired
+    private ApplicationContext applicationContext;
     @Autowired
     private ApplicationDao applicationDao;
     @Autowired
@@ -238,12 +244,13 @@ public class ApplicationServiceImpl implements ApplicationService {
      *
      * @param name    应用名称
      * @param version 版本
+     * @param state 状态
      */
     @Override
-    @Transactional
-    public void changeApplicationState(String name, String version) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void changeApplicationState(String name, String version, String state) {
         ApplicationDO applicationDO = applicationDao.findByNameAndVersion(name, version);
-        applicationDO.setState("RUNNING");
+        applicationDO.setState(state);
         applicationDao.save(applicationDO);
     }
 
@@ -351,9 +358,9 @@ public class ApplicationServiceImpl implements ApplicationService {
             redisTemplate.delete(file.getParentFile().getName());
             FolderUtil.deleteFolder(new File(saveApplicationDependencyDTO.getFilePath()).getParentFile().getPath());
         } catch (Exception e) {
-            ApplicationDO applicationDO = applicationDao.findByNameAndVersion(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
-            applicationDO.setState("FAILED");
-            applicationDao.save(applicationDO);
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            ApplicationService proxy = applicationContext.getBean(ApplicationService.class);
+            proxy.changeApplicationState(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "FAILED");
             File file = new File(saveApplicationDependencyDTO.getFilePath());
             redisTemplate.delete(file.getParentFile().getName());
             FolderUtil.deleteFolder(new File(saveApplicationDependencyDTO.getFilePath()).getParentFile().getPath());

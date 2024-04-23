@@ -204,7 +204,7 @@ CREATE TABLE plt_application(
 	name VARCHAR(255) NOT NULL,
 	version VARCHAR(255) NOT NULL,
 	description TEXT,
-	language VARCHAR(255),
+	language VARCHAR[],
 	type VARCHAR(255) NOT NULL,
 	builder VARCHAR(255),
 	scanner VARCHAR(255),
@@ -245,7 +245,7 @@ CREATE TABLE plt_java_component(
 DROP TABLE IF EXISTS plt_user;
 CREATE TABLE plt_user(
 	id VARCHAR(32) PRIMARY KEY,
-	uid VARCHAR(255) UNIQUE NOT NULL,
+	uid VARCHAR(32) UNIQUE NOT NULL,
 	name VARCHAR(255) NOT NULL,
 	password VARCHAR(255) NOT NULL,
 	email VARCHAR(255) NOT NULL,
@@ -411,8 +411,8 @@ CREATE TABLE plt_app_dependency_table(
     direct BOOLEAN NOT NULL,
     type VARCHAR(255) NOT NULL,
     language VARCHAR(255) NOT NULL,
-	licenses TEXT NOT NULL,
-    vulnerabilities TEXT NOT NULL
+	licenses TEXT,
+    vulnerabilities TEXT
 );
 
     

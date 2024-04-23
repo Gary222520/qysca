@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiParam;
 import nju.edu.cn.qysca.controller.ResponseMsg;
 import nju.edu.cn.qysca.domain.application.dos.AppDependencyTreeDO;
 import nju.edu.cn.qysca.domain.application.dos.ApplicationDO;
-import nju.edu.cn.qysca.domain.component.dos.JavaDependencyTreeDO;
 import nju.edu.cn.qysca.domain.component.dtos.ComponentTableDTO;
 import nju.edu.cn.qysca.domain.application.dtos.*;
 import nju.edu.cn.qysca.service.application.ApplicationService;
@@ -97,7 +96,7 @@ public class ApplicationController {
     @PostMapping("/saveApplicationDependency")
     @PreAuthorize("@my.checkAuth('/qysca/application/saveApplicationDependency')")
     public ResponseMsg<Void> saveApplicationDependency(@RequestBody SaveApplicationDependencyDTO saveApplicationDependencyDTO) {
-        applicationService.changeApplicationState(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion());
+        applicationService.changeApplicationState(saveApplicationDependencyDTO.getName(), saveApplicationDependencyDTO.getVersion(), "RUNNING");
         applicationService.saveApplicationDependency(saveApplicationDependencyDTO);
         return new ResponseMsg<>();
     }

@@ -49,6 +49,7 @@ tempPythonFolder: /root/tyhj/qysca/temp/python/
 targetUrlsPath: src/main/resources/static/target_urls.txt
 tempSBOMPath: /root/tyhj/qysca/temp/sbom/
 tempReportFolder: /root/tyhj/qysca/temp/report/
+MAVEN_REPO_MIRROR_URL: https://maven.aliyun.com/repository/central/
 MAVEN_REPO_BASE_URL: https://repo1.maven.org/maven2/
 PYPI_REPO_BASE_URL: https://pypi.org/pypi/
 NPM_REPO_BASE_URL: https://registry.npmjs.org/

@@ -15,6 +15,11 @@ import nju.edu.cn.qysca.service.maven.MavenService;
 import nju.edu.cn.qysca.service.vulnerability.VulnerabilityService;
 import nju.edu.cn.qysca.utils.HashUtil;
 import nju.edu.cn.qysca.utils.spider.UrlConnector;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
@@ -39,7 +44,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class JavaSpiderServiceImpl implements JavaSpiderService {
 
-
+    @Value("${MAVEN_REPO_MIRROR_URL}")
+    private String MAVEN_REPO_MIRROR_URL;
     @Value("${MAVEN_REPO_BASE_URL}")
     private String MAVEN_REPO_BASE_URL;
     @Autowired
@@ -67,8 +73,12 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
      */
     @Override
     public JavaComponentDO crawlByGav(String groupId, String artifactId, String version) {
-        String url = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
-        return crawl(url);
+        JavaComponentDO javaComponentDO = crawlMirror(groupId, artifactId, version);
+        if (null == javaComponentDO) {
+            log.info("爬取镜像仓库失败，开始尝试爬取中央仓库");
+            javaComponentDO = crawl(groupId, artifactId, version);
+        }
+        return javaComponentDO;
     }
 
     /**
@@ -224,6 +234,108 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
     }
 
     /**
+     * （新）
+     * 相较于crawl(g,a,v)方法，该方法爬取的是镜像仓库
+     *
+     * @return JavaComponentDO
+     */
+    private JavaComponentDO crawlMirror(String groupId, String artifactId, String version) {
+        JavaComponentDO searchResult = javaComponentDao.findByNameAndVersion(groupId + ":" + artifactId, version);
+        if (searchResult != null) {
+            // 表示该组件的组件信息已被爬取过
+            return searchResult;
+        }
+
+        String url = MAVEN_REPO_MIRROR_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
+
+        // 爬取pom文件中的组件信息
+        String pomUrl = url + artifactId + "-" + version + ".pom";
+        String pomContent = null;
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()){
+            // 创建 HttpGet 请求并设置请求头
+            HttpGet httpGet = new HttpGet(pomUrl);
+            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+
+            // 执行 HTTP 请求
+            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+                // 确保响应状态为200
+                if (response.getStatusLine().getStatusCode() != 200) {
+                    throw new Exception();
+                }
+                pomContent = EntityUtils.toString(response.getEntity(), "UTF-8");
+            }
+        } catch (Exception e){
+            log.error("爬取pom失败或不存在pom文件：" + pomUrl);
+            return null;
+        }
+
+        if (pomContent == null)
+            return null;
+        JavaComponentDO javaComponentDO = convertToComponentDO(pomContent, pomUrl, MAVEN_REPO_MIRROR_URL);
+        if (javaComponentDO == null)
+            return null;
+
+        // 爬取jar包，生成hash信息
+        String jarUrl = url + artifactId + "-" + version + ".jar";
+        javaComponentDO.setHashes(HashUtil.getHashes(jarUrl));
+
+        return javaComponentDO;
+    }
+
+    /**
+     * （新）
+     * 爬取url下的组件，不爬取其依赖
+     * 只会获取该组件自身的组件信息
+     * 该方法做了一定调整，首先不会在去目录下寻找jar包和pom文件，而是直接拼接出pom文件和jar包的url
+     * 其次不再使用jsoup，而是使用http client
+     *
+     * @return JavaComponentDO
+     */
+    private JavaComponentDO crawl(String groupId, String artifactId, String version) {
+        JavaComponentDO searchResult = javaComponentDao.findByNameAndVersion(groupId + ":" + artifactId, version);
+        if (searchResult != null) {
+            // 表示该组件的组件信息已被爬取过
+            return searchResult;
+        }
+
+        String url = MAVEN_REPO_BASE_URL + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/";
+
+        // 爬取pom文件中的组件信息
+        String pomUrl = url + artifactId + "-" + version + ".pom";
+        String pomContent = null;
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()){
+            // 创建 HttpGet 请求并设置请求头
+            HttpGet httpGet = new HttpGet(pomUrl);
+            httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+
+            // 执行 HTTP 请求
+            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+                // 确保响应状态为200
+                if (response.getStatusLine().getStatusCode() != 200) {
+                    throw new Exception();
+                }
+                pomContent = EntityUtils.toString(response.getEntity(), "UTF-8");
+            }
+        } catch (Exception e){
+            log.error("爬取pom失败或不存在pom文件：" + pomUrl);
+            return null;
+        }
+
+        if (pomContent == null)
+            return null;
+        JavaComponentDO javaComponentDO = convertToComponentDO(pomContent, pomUrl, MAVEN_REPO_BASE_URL);
+        if (javaComponentDO == null)
+            return null;
+
+        // 爬取jar包，生成hash信息
+        String jarUrl = url + artifactId + "-" + version + ".jar";
+        javaComponentDO.setHashes(HashUtil.getHashes(jarUrl));
+
+        return javaComponentDO;
+    }
+
+    /**
+     * （旧）
      * 爬取url下的组件，不爬取其依赖
      * 只会获取该组件自身的组件信息
      *
@@ -241,7 +353,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         if (document == null)
             return null;
 
-        JavaComponentDO javaComponentDO = convertToComponentDO(document.outerHtml(), pomUrl);
+        JavaComponentDO javaComponentDO = convertToComponentDO(document.outerHtml(), pomUrl, MAVEN_REPO_BASE_URL);
         if (javaComponentDO == null)
             return null;
 
@@ -271,7 +383,8 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
             // 每次爬取url时休眠一定时间，防止被ban
             //Thread.sleep(sleepTime);
             // 连接到url并获取其内容
-            return Jsoup.connect(url).get();
+            String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36";
+            return Jsoup.connect(url).userAgent(userAgent).get();
         } catch (Exception e) {
             log.error("无法访问或url失效: " + url);
             return null;
@@ -347,15 +460,16 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
      * 将爬取的pom字符串转换为JavaComponentDO
      *
      * @param pomString
-     * @param pomUrl    pom文件url
+     * @param pomUrl pom文件url
+     * @param REPO_URL 使用的仓库根地址url
      * @return JavaComponentDO
      */
-    private JavaComponentDO convertToComponentDO(String pomString, String pomUrl) {
+    private JavaComponentDO convertToComponentDO(String pomString, String pomUrl, String REPO_URL) {
         // 从pom url中提取groupId, artifactId, and version
         String[] parts = pomUrl.split("/");
         String version = parts[parts.length - 2];
         String artifactId = parts[parts.length - 3];
-        String groupId = String.join(".", Arrays.copyOfRange(parts, MAVEN_REPO_BASE_URL.split("/").length, parts.length - 3));
+        String groupId = String.join(".", Arrays.copyOfRange(parts, REPO_URL.split("/").length, parts.length - 3));
 
         // 将jsoup document转化为maven-model
         Model model = convertToModel(pomString);
@@ -373,7 +487,7 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
         javaComponentDO.setDescription(model.getDescription() == null ? "-" : model.getDescription());
 
         javaComponentDO.setUrl(model.getUrl() == null ? "-" : model.getUrl());
-        javaComponentDO.setDownloadUrl(getDownloadUrl(pomUrl));
+        javaComponentDO.setDownloadUrl(getDownloadUrl(groupId, artifactId, version));
         javaComponentDO.setSourceUrl(model.getScm() == null ? "-" : (model.getScm().getUrl() == null ? "-" : model.getScm().getUrl()));
 
         javaComponentDO.setPUrl(getMavenPUrl(groupId, artifactId, version, model.getPackaging()));
@@ -391,14 +505,15 @@ public class JavaSpiderServiceImpl implements JavaSpiderService {
     }
 
     /**
-     * 从pomUrl中得到下载地址，即去掉pomUrl中最后一段字符串
-     * 例如：https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.8.1/即为下载地址
+     * 下载地址统一为https://repo.maven.apache.org/maven2/仓库下的地址
      *
-     * @param pomUrl pom url
-     * @return download url
+     * @param groupId    组织Id
+     * @param artifactId 工件id
+     * @param version    版本号
+     * @return 下载地址
      */
-    private String getDownloadUrl(String pomUrl) {
-        return pomUrl.substring(0, pomUrl.lastIndexOf('/') + 1);
+    private String getDownloadUrl(String groupId, String artifactId, String version) {
+        return MAVEN_REPO_BASE_URL + groupId.replace(".","/") + "/" + artifactId + "/" + version + "/";
     }
 
     /**
