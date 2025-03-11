@@ -1,22 +1,38 @@
 <template>
   <a-layout style="min-height: 100vh">
-    <a-layout-sider :collapsed="data.collapsed" :trigger="null" collapsible>
-      <a-menu class="menu" v-model:selectedKeys="data.selectedKeys" theme="light" mode="inline" @click="handleMenu">
-        <div class="title">
-          <img style="width: 40px" src="@/assets/logo_big.png" />
-          <span class="text" v-if="!data.collapsed">QYSCA</span>
-        </div>
-        <a-menu-item key="summary">
-          <AppstoreOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ data.menu[0].breadcrumb }}</span>
+    <a-layout-sider class="sider" :collapsed="data.collapsed" :trigger="null" collapsible>
+      <div class="title">
+        <img style="width: 40px" src="@/assets/logo_big.png" />
+        <div class="title_text" v-if="!data.collapsed">SCA</div>
+      </div>
+      <a-menu v-model:selectedKeys="data.selectedKeys" theme="light" mode="inline" @click="handleMenu">
+        <a-menu-item v-if="permit('summary')" key="summary">
+          <PieChartOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('summary') }}</span>
         </a-menu-item>
-        <a-menu-item key="scan">
-          <SearchOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ data.menu[1].breadcrumb }}</span>
-        </a-menu-item>
-        <a-menu-item key="application">
+        <a-menu-item v-if="permit('application')" key="application">
           <ScheduleOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
-          <span>{{ data.menu[2].breadcrumb }}</span>
+          <span>{{ getTitle('application') }}</span>
+        </a-menu-item>
+        <a-menu-item v-if="permit('component')" key="component">
+          <AppstoreOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('component') }}</span>
+        </a-menu-item>
+        <a-menu-item v-if="permit('vulnerability')" key="vulnerability">
+          <BugOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('vulnerability') }}</span>
+        </a-menu-item>
+        <a-menu-item v-if="permit('license')" key="license">
+          <FileProtectOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('license') }}</span>
+        </a-menu-item>
+        <a-menu-item v-if="permit('buManage')" key="buManage">
+          <GroupOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('buManage') }}</span>
+        </a-menu-item>
+        <a-menu-item v-if="permit('userManage')" key="userManage">
+          <UserOutlined class="menu_icon" :style="{ fontSize: '18px' }" />
+          <span>{{ getTitle('userManage') }}</span>
         </a-menu-item>
       </a-menu>
     </a-layout-sider>
@@ -24,57 +40,133 @@
       <a-layout-header class="header">
         <menu-unfold-outlined v-if="data.collapsed" class="trigger" @click="() => (data.collapsed = !data.collapsed)" />
         <menu-fold-outlined v-else class="trigger" @click="() => (data.collapsed = !data.collapsed)" />
+        <div class="user">
+          <a-dropdown style="height: 50px">
+            <span>
+              <a-avatar style="color: #ffffff; background-color: #00557c">
+                <template #icon><UserOutlined /></template>
+              </a-avatar>
+              <span style="margin-left: 10px; font-size: 16px">{{ data.username }}</span>
+            </span>
+            <template #overlay>
+              <a-menu>
+                <a-menu-item @click="logout">退出登录</a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+        </div>
       </a-layout-header>
       <a-layout-content class="content">
-        <router-view></router-view>
+        <router-view />
       </a-layout-content>
     </a-layout>
   </a-layout>
 </template>
 
-<script>
-import { reactive, computed } from 'vue'
+<script setup>
+import { reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
 import routes from '@/router/routeTable'
 import {
   AppstoreOutlined,
   SearchOutlined,
   ScheduleOutlined,
+  LayoutOutlined,
   MenuUnfoldOutlined,
-  MenuFoldOutlined
+  MenuFoldOutlined,
+  PieChartOutlined,
+  UserOutlined,
+  GroupOutlined,
+  BugOutlined,
+  FileProtectOutlined
 } from '@ant-design/icons-vue'
-export default {
-  components: {
-    AppstoreOutlined,
-    SearchOutlined,
-    ScheduleOutlined,
-    MenuUnfoldOutlined,
-    MenuFoldOutlined
-  },
-  setup() {
-    const router = useRouter()
-    const data = reactive({
-      collapsed: false,
-      selectedKeys: [router.currentRoute.value.name],
-      menu: computed(() => {
-        return routes.find((item) => item.breadcrumb === '首页')?.children
-      })
-    })
-    const handleMenu = ({ item, key, keyPath }) => {
-      router.push(`/home/${key}`)
-    }
-    return { data, routes, handleMenu }
+import { Logout } from '@/api/frontend'
+import { message } from 'ant-design-vue'
+
+const router = useRouter()
+const store = useStore()
+
+onMounted(() => {
+  data.selectedKeys = [router.currentRoute.value.meta.menu]
+  data.username = JSON.parse(sessionStorage.getItem('user')).user.name
+})
+
+const data = reactive({
+  collapsed: false,
+  selectedKeys: [],
+  username: ''
+})
+const handleMenu = ({ item, key, keyPath }) => {
+  router.push(`/home/${key}`)
+}
+const getTitle = (key) => {
+  const homeRoutes = routes.find((item) => item.name === 'home')
+  return homeRoutes.children.find((item) => item.name === key)?.meta.title
+}
+const permit = (menu) => {
+  const permission = JSON.parse(sessionStorage.getItem('user')).userBuAppRoles
+  let res = true
+  switch (menu) {
+    case 'summary':
+    case 'application':
+    case 'component':
+    case 'vulnerability':
+    case 'license':
+      res = !permission.some((item) => item.role === 'Admin')
+      break
+    case 'buManage':
+      res = permission.some((item) => item.role === 'Admin')
+      break
+    case 'userManage':
+      res = permission.some((item) => item.role === 'Admin')
+      break
   }
+  return res
+}
+const logout = () => {
+  Logout()
+    .then((res) => {
+      if (res.code !== 200) {
+        message.error(res.message)
+        return
+      }
+      // console.log('Logout', res)
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
+      router.push('/login')
+    })
+    .catch((err) => {
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
+      router.push('/login')
+      console.error(err)
+    })
 }
 </script>
 
 <style lang="less" scoped>
+.sider {
+  background: #fff;
+}
 .header {
   background: #fff;
   padding: 0 20px;
   height: 50px;
+  line-height: 50px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+}
+.user {
+  margin-right: 10px;
+}
+:deep(.ant-dropdown-trigger) {
+  display: flex;
+  align-items: center;
+}
+.content {
+  margin: 15px;
 }
 .title {
   background-color: #fff;
@@ -83,15 +175,14 @@ export default {
   align-items: center;
   padding-left: 20px;
 }
-.title .text {
+.title_text {
+  height: 40px;
+  line-height: 40px;
   font-weight: bold;
   font-size: 30px;
   margin-left: 10px;
-  color: #6f005f;
+  color: #00557c;
   font-family: 'Arial Rounded MT';
-}
-.menu {
-  height: 100%;
 }
 .menu_icon {
   width: 18px;
@@ -107,11 +198,8 @@ export default {
   font-size: 15px;
 }
 :deep(.ant-menu-item-selected) {
-  background-color: #6f005f;
+  background-color: #00557c;
   color: #fff;
   font-weight: 700;
-}
-.content {
-  margin: 15px;
 }
 </style>

@@ -50,15 +50,11 @@ module.exports = {
       }
     ],
     'no-delete-var': 2,
-    'prefer-const': [
-      2,
-      {
-        ignoreReadBeforeAssign: false
-      }
-    ],
+    'prefer-const': 0,
     'template-curly-spacing': 'off',
     indent: 'off',
     'vue/multi-word-component-names': 'off',
-    'vue/no-v-model-argument': 0
+    'vue/no-v-model-argument': 0,
+    'no-unused-vars': 'off'
   }
 }

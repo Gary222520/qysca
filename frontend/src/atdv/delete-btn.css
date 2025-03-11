@@ -1,0 +1,10 @@
+:deep(.ant-btn-primary.ant-btn-dangerous) {
+  background-color: #ef0137;
+  color: #fff;
+  box-shadow: 0 2px 0 rgba(255, 77, 79, 0.1);
+}
+:deep(.ant-btn-primary.ant-btn-dangerous:not(:disabled):hover) {
+  color: #fff;
+  background-color: #ef0137;
+  opacity: 0.8;
+}

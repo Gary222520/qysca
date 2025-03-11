@@ -1,0 +1,15 @@
+/* 选项按钮样式 */
+:deep(.ant-radio-button-wrapper) {
+  text-align: center;
+}
+:deep(.ant-radio-button-wrapper:hover) {
+  color: #00557c;
+}
+:deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)) {
+  color: #fff;
+  border-color: #00557c;
+  background-color: #00557c;
+}
+:deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before) {
+  background-color: #00557c;
+}

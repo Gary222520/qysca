@@ -5,22 +5,56 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/qysca?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&useSSL=false
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://172.29.7.168:35432/qysca
+    username: qysca
+    password: qysca
+    show-sql: false
   jpa:
+    database: postgresql
     hibernate:
-      ddl-auto: update
-    dialect: org.hibernate.dialect.MySQL5InnoDBDialect
-    show-sql: true
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        temp:
+          use-jdbc-metadata-defaults: false
+  redis:
+    host: 172.29.7.168
+    port: 37379
+    database: 0
+    password:
+    timeout: 10s
+    lettuce:
+      pool:
+        # 连接池中的最小空闲连接
+        min-idle: 0
+        # 连接池中的最大空闲连接
+        max-idle: 8
+        # 连接池中的最大数据库连接数
+        max-active: 8
+        # 连接池最大阻塞等待时间 负值表示没有限制
+        max-wait: -1ms
+  thymeleaf:
+    cache: false
+    prefix: "classpath:/templates/"
+logging:
+  # 指定日志配置文件
+  config: classpath:logback-spring.xml
 
-#mybatis:
-#  mapper-locations: classpath:mapper/**/*.xml
-#  type-aliases-package: com.sentistrength.model.po
-#  configuration:
-#    map-underscore-to-camel-case: true
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-#jwt:
-#  secret: 6e12d69c-af21-4cc2-b32d-3fa949b50106
-#  expire: 86400000
+
+uploadFolder: src/main/resources/static/upload/
+tempPomFolder: src/main/resources/static/temp/pom/
+tempNpmFolder: src/main/resources/static/temp/npm/
+tempGoFolder: src/main/resources/static/temp/go/
+tempPythonFolder: src/main/resources/static/temp/python/
+targetUrlsPath: src/main/resources/static/target_urls.txt
+tempSBOMPath: src/main/resources/static/temp/sbom/
+tempReportFolder: src/main/resources/static/temp/report/
+MAVEN_REPO_BASE_URL: https://repo1.maven.org/maven2/
+PYPI_REPO_BASE_URL: https://pypi.org/pypi/
+NPM_REPO_BASE_URL: https://registry.npmjs.org/
+GO_REPO_BASE_URL: https://api.github.com/repos/
+# maxFileSize 单个数据大小
+spring.servlet.multipart.maxFileSize: 10MB
+# maxRequestSize 是总数据大小
+spring.servlet.multipart.maxRequestSize: 500MB

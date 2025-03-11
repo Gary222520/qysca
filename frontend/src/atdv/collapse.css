@@ -1,0 +1,16 @@
+:deep(.ant-collapse) {
+  border-radius: 0;
+}
+:deep(.ant-collapse .ant-collapse-content > .ant-collapse-content-box) {
+  padding: 16px 0px 16px 16px;
+}
+:deep(.ant-collapse > .ant-collapse-item:last-child),
+:deep(.ant-collapse > .ant-collapse-item:last-child > .ant-collapse-header),
+:deep(.ant-collapse .ant-collapse-item:last-child > .ant-collapse-content) {
+  border-radius: 0;
+}
+:deep(.ant-collapse > .ant-collapse-item > .ant-collapse-header) {
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.04);
+}
